@@ -37,11 +37,20 @@ Work in progress.
 | Pie | byte-identical |
 | Packet | byte-identical |
 | Info | byte-identical |
+| Flowchart | parses identically to upstream; rendering not ported yet |
 | everything else | not ported yet — `render` raises `Unsupported` |
 
 Shared infrastructure that is in place: all eleven themes, configuration
 resolution, frontmatter and directives, diagram type detection, the
-stylesheet compiler, and text measurement.
+stylesheet compiler, text measurement, and a runtime for the nineteen
+grammars mermaid writes in jison (`internal/jison`, with the tables taken
+from mermaid's own build by `scripts/extract_jison.js` and
+`scripts/gen_jison.py`).
+
+Flowcharts are laid out by ELK upstream. The port will use
+[moon_elk](https://github.com/moonbit-community/moon_elk); matching elkjs
+0.9.3 exactly needs fixes that currently live on a branch of a local
+checkout (`../moon_elk`, joined through an untracked `moon.work`).
 
 ## How "byte-identical" is checked
 
@@ -73,7 +82,7 @@ an ink overhang.
 | `config`, `theme` | configuration and theme variables |
 | `diagram` | the context renderers draw into |
 | `diagrams/*` | one package per diagram type |
-| `internal/*` | color math, CSS, DOM, d3 helpers, fonts, math, preprocessing |
+| `internal/*` | color math, CSS, DOM, d3 helpers, fonts, math, regex, parser runtimes, preprocessing |
 | `cmd/mermaid` | native CLI: `mermaid render file.mmd` |
 
 Generated sources (`theme/gen_*.mbt`, `config/gen_defaults.mbt`,
