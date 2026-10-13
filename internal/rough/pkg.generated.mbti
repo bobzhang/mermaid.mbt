@@ -1,0 +1,46 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/internal/rough"
+
+import {
+  "bobzhang/mermaid/internal/dom",
+}
+
+// Values
+pub fn circle(Double, Double, Double, Options) -> @dom.Element
+
+pub fn ellipse(Double, Double, Double, Double, Options) -> @dom.Element
+
+pub fn line(Double, Double, Double, Double, Options) -> @dom.Element
+
+pub fn path(String, Options) -> @dom.Element
+
+pub fn polygon(Array[(Double, Double)], Options) -> @dom.Element
+
+pub fn rectangle(Double, Double, Double, Double, Options) -> @dom.Element
+
+// Errors
+
+// Types and methods
+pub(all) struct Options {
+  mut max_randomness_offset : Double
+  mut roughness : Double
+  mut bowing : Double
+  mut stroke : String
+  mut stroke_width : String
+  mut curve_tightness : Double
+  mut curve_fitting : Double
+  mut curve_step_count : Double
+  mut fill_style : String
+  mut fill : String
+  mut seed : Int
+  mut disable_multi_stroke : Bool
+  mut preserve_vertices : Bool
+  mut fill_shape_roughness_gain : Double
+  mut stroke_line_dash : Array[Double]?
+  // private fields
+}
+pub fn Options::new() -> Self
+
+// Type aliases
+
+// Traits

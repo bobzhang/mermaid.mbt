@@ -1,0 +1,10 @@
+---
+config:
+  handDrawnSeed: 42
+---
+flowchart LR
+    A([Start]):::go --> B>Flag]
+    B --> C([End])
+    classDef go fill:#dfd,stroke:#090,stroke-width:3px
+    style B fill:#fdd,stroke:#900,stroke-dasharray: 4 2
+    style C stroke-width:2px

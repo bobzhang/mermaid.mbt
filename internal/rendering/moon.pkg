@@ -1,8 +1,10 @@
 import {
+  "moonbitlang/core/string",
   "bobzhang/mermaid/config",
   "bobzhang/mermaid/internal/dom",
   "bobzhang/mermaid/internal/font",
   "bobzhang/mermaid/internal/jsmath",
+  "bobzhang/mermaid/internal/rough",
   "Milky2018/moon_elk/engine/all" @elk,
 }
 

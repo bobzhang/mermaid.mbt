@@ -1,0 +1,7 @@
+import {
+  "moonbitlang/core/string",
+  "bobzhang/mermaid/internal/dom",
+  "bobzhang/mermaid/internal/jsmath",
+}
+
+warnings = "-implicit_impl_as_method"

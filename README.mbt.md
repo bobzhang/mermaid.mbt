@@ -61,9 +61,15 @@ What is missing:
   on a branch of a local checkout (`../moon_elk`, joined through an untracked
   `moon.work`). Some graphs still lay out differently; the fixtures in
   `testdata/flowchart-pending` show which.
-- Shapes upstream draws through rough.js (stadium, cylinder, the asymmetric
-  flag and most of the newer `@{ shape: ... }` shapes) are not ported;
-  `render` raises `Unsupported` for them.
+- The classic shapes are ported (rectangle, rounded, stadium, subroutine,
+  cylinder, circle, double circle, flag, diamond, hexagon, parallelograms,
+  trapezoids); the newer `@{ shape: ... }` shapes are not, and `render`
+  raises `Unsupported` for them.
+- Upstream draws several shapes (stadium, flag, ...) through rough.js even
+  outside the hand-drawn look, and rough.js places the control points of
+  every line at random. With `handDrawnSeed` set, the port (`internal/rough`)
+  reproduces upstream exactly; without a seed upstream's own output differs
+  from render to render, and the port's is merely equivalent.
 - Markdown labels are rendered as plain text; the hand-drawn look and
   non-HTML labels are not ported.
 
@@ -100,6 +106,7 @@ an ink overhang.
 | `diagram` | the context renderers draw into |
 | `diagrams/*` | one package per diagram type |
 | `internal/rendering` | the unified renderer for diagrams of nodes, edges and groups |
+| `internal/rough` | the part of rough.js mermaid draws shapes with |
 | `internal/*` | color math, CSS, DOM, d3 helpers, fonts, math, regex, parser runtimes, preprocessing |
 | `cmd/mermaid` | native CLI: `mermaid render file.mmd` |
 

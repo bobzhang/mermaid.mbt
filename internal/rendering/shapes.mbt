@@ -212,6 +212,157 @@ fn double_circle(parent : @dom.Element, node : Node, env : Env) -> @dom.Element 
 }
 
 ///|
+/// `M x,y L x,y ... Z` through points: mermaid's `createPathFromPoints`.
+fn path_from_points(points : Array[Point]) -> String {
+  let n = @dom.number
+  let parts = points.mapi((i, p) => {
+    let command = if i == 0 { "M" } else { "L" }
+    "\{command}\{n(p.x)},\{n(p.y)}"
+  })
+  parts.push("Z")
+  parts.join(" ")
+}
+
+///|
+/// Points on an arc, mirrored through the origin: mermaid's
+/// `generateCirclePoints`.
+fn circle_points(
+  center_x : Double,
+  center_y : Double,
+  radius : Double,
+  count : Int32,
+  start_angle : Double,
+  end_angle : Double,
+) -> Array[Point] {
+  let pi = 3.141592653589793
+  let start = start_angle * pi / 180.0
+  let end = end_angle * pi / 180.0
+  let step = (end - start) / (count - 1).to_double()
+  let points = []
+  for i in 0..<count {
+    let angle = start + i.to_double() * step
+    let x = center_x + radius * @jsmath.cos(angle)
+    let y = center_y + radius * @jsmath.sin(angle)
+    points.push({ x: -x, y: -y, })
+  }
+  points
+}
+
+///|
+/// Insert an outline drawn by rough.js behind the label, styled the way
+/// shapes that always go through rough.js do it.
+fn insert_rough_outline(
+  shape_svg : @dom.Element,
+  outline : @dom.Element,
+  node : Node,
+  styles : SplitStyles,
+) -> @dom.Element {
+  match shape_svg.child_elements() {
+    [first, ..] => shape_svg.insert_before(outline, first)
+    [] => shape_svg.append_child(outline)
+  }
+  outline.attr("class", "basic label-container outer-path") |> ignore
+  // An array of styles is written as its comma-joined text.
+  let css_styles = node.css_styles.join(",")
+  for path in outline.child_elements() {
+    if path.tag == "path" {
+      path.attr("style", css_styles) |> ignore
+      if styles.node_styles != "" {
+        path.attr("style", styles.node_styles) |> ignore
+      }
+    }
+  }
+  outline
+}
+
+///|
+/// A rectangle with half circles for sides.
+fn stadium(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
+  let styles = shape_styles(node)
+  let neo = node.look == "neo"
+  let padding_x = if neo { 40.0 } else { node.padding }
+  let padding_y = if neo { 24.0 } else { node.padding }
+  let labelled = label_helper(parent, node, node_classes(node), env)
+  let box = labelled.bbox
+  let arc_points = 50
+  let h = box.height + padding_y
+  let inscribed = h *
+    @jsmath.cos(3.141592653589793 / (2.0 * (arc_points - 1).to_double()))
+  let cap_width = 0.0
+    .max(inscribed * inscribed - box.height * box.height)
+    .sqrt()
+  let w = (box.width + h / 4.0 + padding_x)
+    .max(1.5 * h + (h - inscribed))
+    .max(box.width + padding_x + h - cap_width)
+  let radius = h / 2.0
+  let points = [
+    { x: -w / 2.0 + radius, y: -h / 2.0, },
+    { x: w / 2.0 - radius, y: -h / 2.0, },
+    ..circle_points(-w / 2.0 + radius, 0.0, radius, arc_points, 90.0, 270.0),
+    { x: w / 2.0 - radius, y: h / 2.0, },
+    ..circle_points(w / 2.0 - radius, 0.0, radius, arc_points, 270.0, 450.0),
+  ]
+  let outline = insert_rough_outline(
+    labelled.shape_svg,
+    @rough.path(path_from_points(points), rough_options(node, env)),
+    node,
+    styles,
+  )
+  update_node_bounds(node, outline)
+  node.intersect = Some(point => intersect_polygon(node, points, point))
+  labelled.shape_svg
+}
+
+///|
+/// A flag: a rectangle with a notch cut into its left side.
+fn rect_left_inv_arrow(
+  parent : @dom.Element,
+  node : Node,
+  env : Env,
+) -> @dom.Element {
+  let styles = shape_styles(node)
+  let neo = node.look == "neo"
+  let label_padding_x = if neo { 21.0 } else { node.padding }
+  let label_padding_y = if neo { 12.0 } else { node.padding }
+  let labelled = label_helper(parent, node, node_classes(node), env)
+  let box = labelled.bbox
+  let label_width = box.width +
+    (if neo { label_padding_x * 2.0 } else { label_padding_x })
+  let h = (box.height +
+  (if neo { label_padding_y * 2.0 } else { label_padding_y })).max(
+    node.height.unwrap_or(0.0),
+  )
+  let notch_width = h / 4.0
+  let w = label_width.max(node.width.unwrap_or(0.0) - notch_width)
+  let x = -w / 2.0
+  let y = -h / 2.0
+  let notch = y / 2.0
+  let points = [
+    { x: x + notch, y, },
+    { x, y: 0.0, },
+    { x: x + notch, y: -y, },
+    { x: -x, y: -y, },
+    { x: -x, y, },
+  ]
+  let outline = insert_rough_outline(
+    labelled.shape_svg,
+    @rough.path(path_from_points(points), rough_options(node, env)),
+    node,
+    styles,
+  )
+  let n = @dom.number
+  outline.attr("transform", "translate(\{n(-notch / 2.0)},0)") |> ignore
+  labelled.label.attr(
+    "transform",
+    "translate(\{n(-notch / 2.0 - box.width / 2.0)}, \{n(-(box.height / 2.0))})",
+  )
+  |> ignore
+  update_node_bounds(node, outline)
+  node.intersect = Some(point => intersect_polygon(node, points, point))
+  labelled.shape_svg
+}
+
+///|
 /// A cylinder: an ellipse on top, straight sides, half an ellipse below.
 fn cylinder(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
   let styles = shape_styles(node)
@@ -302,6 +453,8 @@ fn draw_shape(
       )
     "question" => question(parent, node, env)
     "cylinder" => cylinder(parent, node, env)
+    "stadium" => stadium(parent, node, env)
+    "rect_left_inv_arrow" => rect_left_inv_arrow(parent, node, env)
     "circle" => circle(parent, node, env)
     "doublecircle" => double_circle(parent, node, env)
     "subroutine" =>

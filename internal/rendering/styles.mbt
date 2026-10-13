@@ -81,3 +81,57 @@ fn shape_styles(node : Node) -> SplitStyles {
   node.label_style = split.label_styles
   split
 }
+
+///|
+/// The dash pattern of a `stroke-dasharray` style for rough.js.
+fn stroke_dash_array(style : String?) -> Array[Double] {
+  guard style is Some(style) && style != "" else { return [0.0, 0.0] }
+  let numbers = []
+  for part in style.trim().split(" ") {
+    if !part.is_empty() {
+      numbers.push(@string.parse_double(part.to_owned()) catch { _ => 0.0 })
+    }
+  }
+  match numbers {
+    [] => [0.0, 0.0]
+    [value] => [value, value]
+    [first, second, ..] => [first, second]
+  }
+}
+
+///|
+/// How rough.js draws a node's outline outside the hand-drawn look: the
+/// node's own colours over the theme's, exact lines, plain fill. Mermaid's
+/// `userNodeOverrides` with `roughness: 0` and `fillStyle: 'solid'`.
+fn rough_options(node : Node, env : Env) -> @rough.Options {
+  let theme = env.config.theme()
+  let styles = [..node.css_compiled_styles, ..node.css_styles]
+  for style in node.label_style.split(";") {
+    let style = style.trim().to_owned()
+    if style != "" {
+      styles.push(style)
+    }
+  }
+  let map = styles_map(styles)
+  let pick = (name : String, fallback : String) => {
+    match map.get(name) {
+      Some(value) if value != "" => value
+      _ => fallback
+    }
+  }
+  let options = @rough.Options::new()
+  options.roughness = 0.0
+  options.fill_style = "solid"
+  options.fill = pick("fill", theme.text("mainBkg"))
+  options.stroke = pick("stroke", theme.text("nodeBorder"))
+  options.stroke_width = match map.get("stroke-width") {
+    Some(width) if width.replace(old="px", new="") != "" =>
+      width.replace(old="px", new="")
+    _ => "1.3"
+  }
+  options.stroke_line_dash = Some(
+    stroke_dash_array(map.get("stroke-dasharray")),
+  )
+  options.seed = env.config.number("handDrawnSeed").unwrap_or(0.0).to_int()
+  options
+}
