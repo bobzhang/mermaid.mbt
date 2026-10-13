@@ -90,7 +90,6 @@ test "icons in labels" {
     content="<p><i class='fa fa-car'></i> Car and <i class='fab fa-github'></i></p>",
   )
   inspect(replace_icons("sofa: fa-x"), content="sofa: fa-x")
-  inspect(collapse_spaces("  a   b \n"), content="a b")
 }
 
 ///|

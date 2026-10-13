@@ -195,8 +195,21 @@ fn Element::local_bounds(self : Element) -> Bounds? {
       }
       bounds
     }
-    // `defs`, `marker`, `style`, `title`, `desc` and text are not part of
-    // the geometry measured here.
+    "text" =>
+      match self.text_box {
+        Some(box) => {
+          let f = Float::from_double
+          Some({
+            x: f(box.x),
+            y: f(box.y),
+            width: f(box.width),
+            height: f(box.height),
+          })
+        }
+        None => None
+      }
+    // `defs`, `marker`, `style`, `title` and `desc` are not rendered
+    // geometry.
     _ => None
   }
 }

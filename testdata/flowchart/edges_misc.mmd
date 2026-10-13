@@ -1,0 +1,8 @@
+flowchart TD
+    A --> A
+    A ---|open| B
+    B --->|long| C
+    B ----> D
+    C ~~~ D
+    A e1@--> D
+    e1@{ animate: true }

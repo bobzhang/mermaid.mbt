@@ -17,46 +17,6 @@ fn non_markdown_to_html(text : String) -> String {
 }
 
 ///|
-/// The lines the browser breaks `text` into in a box `width` wide with
-/// `white-space: break-spaces`: spaces are kept, and a line may break
-/// after any of them.
-fn wrap_lines(
-  text : String,
-  width : Double,
-  font : @font.Stack,
-  size : Double,
-) -> Int32 {
-  let tokens = []
-  let word = StringBuilder()
-  for c in text {
-    if c == ' ' {
-      if !word.is_empty() {
-        tokens.push(word.to_string())
-        word.reset()
-      }
-      tokens.push(" ")
-    } else {
-      word.write_char(c)
-    }
-  }
-  if !word.is_empty() {
-    tokens.push(word.to_string())
-  }
-  let mut lines = 1
-  let mut line = ""
-  for token in tokens {
-    let candidate = line + token
-    if line != "" && font.advance(candidate, size) > width {
-      lines += 1
-      line = token
-    } else {
-      line = candidate
-    }
-  }
-  lines
-}
-
-///|
 /// mermaid's `createText` for HTML labels: a `foreignObject` holding a
 /// `div` sized by the browser. Returns the `foreignObject` and the box of
 /// its `div`.
@@ -108,25 +68,23 @@ fn create_html_label(
   if add_background {
     div.attr("class", "labelBkg") |> ignore
   }
-  // What the browser lays out: one line unless it has to wrap.
-  let content = collapse_spaces(span.text_content())
-  let font = env.font()
+  // What the browser lays out: every line on its own unless the label
+  // has to wrap.
+  let lines = label_lines(span).map(collapse_runs)
   let line_height = 1.5 * env.font_size
-  let natural = if content == "" {
-    0.0
-  } else {
-    font.advance(content, env.font_size)
-  }
-  let rows = if html.contains("<br") { html.split("<br").count() } else { 1 }
+  let natural = lines.fold(init=0.0, (widest, line) => {
+    widest.max(runs_width(line, env))
+  })
+  let empty = lines.all(line => line.is_empty())
   let mut box : LabelBox = {
     width: match width {
       Some(width) => natural.min(width)
       None => natural
     },
-    height: if content == "" {
+    height: if empty {
       0.0
     } else {
-      line_height * rows.to_double()
+      line_height * lines.length().to_double()
     },
   }
   if width is Some(width) && box.width == width {
@@ -135,11 +93,10 @@ fn create_html_label(
     .style("white-space", "break-spaces")
     .style("width", @dom.number(width) + "px")
     |> ignore
-    box = {
-      width,
-      height: line_height *
-      wrap_lines(content, width, font, env.font_size).to_double(),
-    }
+    let rows = label_lines(span).fold(init=0, (rows, line) => {
+      rows + wrapped_rows(line, width, env)
+    })
+    box = { width, height: line_height * rows.to_double(), }
   } else if box.width < min_width {
     div
     .style("display", "table")
@@ -315,26 +272,6 @@ fn replace_icons(text : String) -> String {
     }
     out.write_char(chars[i])
     i += 1
-  }
-  out.to_string()
-}
-
-///|
-/// The text of a line as the browser lays it out without wrapping: runs
-/// of white space collapse and the ends are trimmed.
-fn collapse_spaces(text : String) -> String {
-  let out = StringBuilder()
-  let mut pending = false
-  for c in text {
-    if c is (' ' | '\t' | '\n' | '\r') {
-      pending = !out.is_empty()
-    } else {
-      if pending {
-        out.write_char(' ')
-        pending = false
-      }
-      out.write_char(c)
-    }
   }
   out.to_string()
 }

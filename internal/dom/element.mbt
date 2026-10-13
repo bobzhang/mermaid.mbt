@@ -20,6 +20,8 @@ pub struct Element {
   /// attribute. The browser writes them back lazily, which decides where
   /// the attribute lands among the others.
   priv mut style_dirty : Bool
+  /// The box of a text element, which only its creator can measure.
+  priv mut text_box : Rect?
 }
 
 ///|
@@ -32,7 +34,16 @@ pub fn Element::new(tag : String) -> Element {
     parent: None,
     declarations: [],
     style_dirty: false,
+    text_box: None,
   }
+}
+
+///|
+/// Record the box a `<text>` element renders in, in its own coordinate
+/// system. Measuring text needs fonts, so whoever creates the element says
+/// what `getBBox()` would report for it.
+pub fn Element::set_text_box(self : Element, box : Rect) -> Unit {
+  self.text_box = Some(box)
 }
 
 ///|
@@ -222,6 +233,7 @@ pub fn Element::clone_deep(self : Element) -> Element {
     parent: None,
     declarations: self.declarations.copy(),
     style_dirty: false,
+    text_box: self.text_box,
   }
   for child in self.children {
     match child {

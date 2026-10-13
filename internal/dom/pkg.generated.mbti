@@ -39,6 +39,7 @@ pub fn Element::parent(Self) -> Self?
 pub fn Element::remove(Self) -> Unit
 pub fn Element::remove_attr(Self, String) -> Self
 pub fn Element::set_inner_html(Self, String) -> Unit
+pub fn Element::set_text_box(Self, Rect) -> Unit
 pub fn Element::style(Self, String, String) -> Self
 pub fn Element::text(Self, String) -> Self
 pub fn Element::text_content(Self) -> String
