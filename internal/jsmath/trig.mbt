@@ -101,3 +101,13 @@ pub fn cos(x : Double) -> Double {
     _ => sin_series(r).to_double()
   }
 }
+
+///|
+/// `10 ** n` for a small non-negative integer `n`, exact.
+pub fn pow10(n : Int32) -> Double {
+  let mut value = 1.0
+  for _ in 0..<n {
+    value = value * 10.0
+  }
+  value
+}

@@ -1,0 +1,41 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/internal/d3"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn arc_centroid(inner_radius~ : Double, outer_radius~ : Double, start_angle~ : Double, end_angle~ : Double) -> (Double, Double)
+
+pub fn arc_path(inner_radius~ : Double, outer_radius~ : Double, start_angle~ : Double, end_angle~ : Double) -> String
+
+pub fn js_round(Double) -> Double
+
+pub fn number(Double) -> String
+
+pub fn pie(Array[Double]) -> Array[PieArc]
+
+// Errors
+
+// Types and methods
+pub struct Path {
+  // private fields
+}
+pub fn Path::arc(Self, Double, Double, Double, Double, Double, counterclockwise? : Bool) -> Unit
+pub fn Path::close(Self) -> Unit
+pub fn Path::line_to(Self, Double, Double) -> Unit
+pub fn Path::move_to(Self, Double, Double) -> Unit
+pub fn Path::new(digits? : Int) -> Self
+pub fn Path::to_string(Self) -> String
+
+pub(all) struct PieArc {
+  index : Int
+  value : Double
+  start_angle : Double
+  end_angle : Double
+} derive(@debug.Debug)
+
+// Type aliases
+
+// Traits

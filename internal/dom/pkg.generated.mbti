@@ -1,0 +1,38 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/internal/dom"
+
+// Values
+pub fn number(Double) -> String
+
+// Errors
+
+// Types and methods
+pub struct Element {
+  tag : String
+  // private fields
+}
+pub fn Element::append(Self, String) -> Self
+pub fn Element::append_child(Self, Self) -> Unit
+pub fn Element::attr(Self, String, String) -> Self
+pub fn Element::attr_number(Self, String, Double) -> Self
+pub fn Element::child_elements(Self) -> Array[Self]
+pub fn Element::children(Self) -> ArrayView[Node]
+pub fn Element::get_attr(Self, String) -> String?
+pub fn Element::insert_first(Self, String) -> Self
+pub fn Element::new(String) -> Self
+pub fn Element::parent(Self) -> Self?
+pub fn Element::remove(Self) -> Unit
+pub fn Element::remove_attr(Self, String) -> Self
+pub fn Element::style(Self, String, String) -> Self
+pub fn Element::text(Self, String) -> Self
+pub fn Element::text_content(Self) -> String
+pub fn Element::to_html(Self) -> String
+
+pub(all) enum Node {
+  Element(Element)
+  Text(String)
+}
+
+// Type aliases
+
+// Traits

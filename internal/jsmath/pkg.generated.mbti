@@ -4,6 +4,8 @@ package "bobzhang/mermaid/internal/jsmath"
 // Values
 pub fn cos(Double) -> Double
 
+pub fn pow10(Int) -> Double
+
 pub fn sin(Double) -> Double
 
 // Errors
