@@ -1,8 +1,8 @@
-// sin and cos as V8 computes them. Chrome's V8 uses the trigonometric
-// functions of the IBM Accurate Mathematical Library, whose results are
-// correctly rounded for all practical purposes, while the platform libm
-// rounds a few percent of arguments the other way. d3 prints coordinates at
-// full precision, so that last bit shows up in the output.
+// sin and cos as V8 computes them. V8 takes its trigonometric functions
+// from llvm-libc, whose sin and cos are correctly rounded, while fdlibm
+// and the platform libm round a few percent of arguments the other way.
+// d3 prints coordinates at full precision, so that last bit shows up in
+// the output.
 //
 // Here the functions are evaluated in double-double arithmetic, about 106
 // bits, and rounded once at the end.

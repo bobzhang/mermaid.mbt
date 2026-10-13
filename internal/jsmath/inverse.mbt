@@ -1,7 +1,7 @@
-// atan2 and acos as V8 computes them. Like sin and cos, Chrome's
-// results are correctly rounded for all practical purposes (fdlibm and the
-// platform libm round a few percent of arguments the other way), so they
-// are evaluated here in double-double arithmetic and rounded once.
+// atan2 and acos as V8 computes them. Like sin and cos they come from
+// llvm-libc and are correctly rounded, so they are evaluated here in
+// double-double arithmetic and rounded once. (llvm-libc's atan is not
+// correctly rounded and is not ported.)
 
 ///|
 let dd_pi : DD = { hi: 3.141592653589793, lo: 1.2246467991473532e-16, }
