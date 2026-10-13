@@ -390,6 +390,7 @@ fn insert_edge_label(
     style=edge.label_style,
     is_node=false,
     add_background=true,
+    markdown=edge.label_type == "markdown",
   )
   fo.attr_number("width", box.width).attr_number("height", box.height) |> ignore
   let n = @dom.number

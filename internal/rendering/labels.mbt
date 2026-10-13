@@ -30,10 +30,14 @@ fn create_html_label(
   style~ : String = "",
   is_node~ : Bool = true,
   add_background~ : Bool = false,
+  markdown~ : Bool = false,
 ) -> (@dom.Element, LabelBox) {
-  let html = replace_icons(
-    @dom.placeholders_to_references(non_markdown_to_html(text)),
-  )
+  let html = if markdown {
+    markdown_to_html(text, !(env.config.get("markdownAutoWrap") is False))
+  } else {
+    non_markdown_to_html(text)
+  }
+  let html = replace_icons(@dom.placeholders_to_references(html))
   let fo = parent.append("foreignObject")
   // No width means no limit: the label never wraps.
   let initial = match width {
@@ -93,10 +97,14 @@ fn create_html_label(
     .style("white-space", "break-spaces")
     .style("width", @dom.number(width) + "px")
     |> ignore
-    let rows = label_lines(span).fold(init=0, (rows, line) => {
-      rows + wrapped_rows(line, width, env)
-    })
-    box = { width, height: line_height * rows.to_double(), }
+    let mut rows = 0
+    let mut box_width = width
+    for line in label_lines(span) {
+      let (line_rows, widest) = wrapped_rows(line, width, env)
+      rows += line_rows
+      box_width = box_width.max(widest)
+    }
+    box = { width: box_width, height: line_height * rows.to_double(), }
   } else if box.width < min_width {
     div
     .style("display", "table")
@@ -162,6 +170,7 @@ fn label_helper(
     } else {
       ""
     },
+    markdown=node.label_type == "markdown",
     style=node.label_style,
   )
   let box = if box.width < min_label_width {

@@ -109,3 +109,37 @@ test "styles after a line hop" {
   inspect(fmt3(115.33333333333334), content="115.333")
   inspect(fmt3(-0.0001), content="0")
 }
+
+///|
+test "markdown labels" {
+  inspect(
+    markdown_to_html("This is **bold**, *italic*, _also_ and ***both***", true),
+    content="<p>This is <strong>bold</strong>, <em>italic</em>, <em>also</em> and <em><strong>both</strong></em></p>",
+  )
+  inspect(
+    markdown_to_html("Line one\n    Line two with a \\*literal\\* star", true),
+    content="<p>Line one<br/>Line two with a *literal* star</p>",
+  )
+  inspect(
+    markdown_to_html("snake_case_name stays and 2 * 3 * 4 too", true),
+    content="<p>snake_case_name stays and 2 * 3 * 4 too</p>",
+  )
+  inspect(
+    markdown_to_html("First\n\nSecond <b>kept</b>", true),
+    content="<p>First</p><p>Second <b>kept</b></p>",
+  )
+  inspect(markdown_to_html("a b", false), content="<p>a&nbsp;b</p>")
+  // Blocks other than paragraphs pass through as written.
+  inspect(markdown_to_html("# Heading", true), content="# Heading")
+}
+
+///|
+test "line break opportunities" {
+  inspect(breaks_between(Some('l'), '-', 'k'), content="true")
+  inspect(breaks_between(Some('a'), '-', '1'), content="true")
+  inspect(breaks_between(Some('('), '-', '1'), content="false")
+  inspect(breaks_between(None, '?', 'x'), content="true")
+  inspect(breaks_between(None, '/', 'b'), content="false")
+  inspect(breaks_between(None, '_', 'b'), content="false")
+  inspect(breaks_between(None, ')', '('), content="true")
+}

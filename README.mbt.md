@@ -70,8 +70,11 @@ What is missing:
   every line at random. With `handDrawnSeed` set, the port (`internal/rough`)
   reproduces upstream exactly; without a seed upstream's own output differs
   from render to render, and the port's is merely equivalent.
-- Markdown labels are rendered as plain text; the hand-drawn look and
-  non-HTML labels are not ported.
+- Markdown labels cover paragraphs, emphasis, escapes and inline HTML; other
+  markdown blocks pass through as text. The hand-drawn look and non-HTML
+  labels are not ported.
+- Line breaking inside labels knows Blink's rules for ASCII text; other
+  scripts break at spaces only.
 
 ## How "byte-identical" is checked
 

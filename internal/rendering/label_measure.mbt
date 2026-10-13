@@ -103,38 +103,209 @@ fn runs_width(runs : Array[Run], env : Env) -> Double {
 }
 
 ///|
-/// The number of rows a line takes in a box `width` wide with
-/// `white-space: break-spaces`: spaces are kept, and the line may break
-/// after any of them.
-fn wrapped_rows(line : Array[Run], width : Double, env : Env) -> Int32 {
-  let tokens : Array[Run] = []
-  for run in line {
-    let word = StringBuilder()
-    for c in run.text {
-      if c == ' ' {
-        if !word.is_empty() {
-          tokens.push({ ..run, text: word.to_string(), })
-          word.reset()
-        }
-        tokens.push({ ..run, text: " ", })
+/// Whether a line may break between two ASCII characters that are not
+/// spaces: Blink's table for ASCII, read off the reference browser.
+/// `before` is the character ahead of `a`, which decides whether a hyphen
+/// in front of a digit is a minus sign. Other scripts are not handled.
+fn breaks_between(before : Char?, a : Char, b : Char) -> Bool {
+  let is_alnum = (c : Char) => c is ('a'..<='z' | 'A'..<='Z' | '0'..<='9')
+  match a {
+    '-' =>
+      if b is ('0'..<='9') {
+        before is Some(c) && is_alnum(c)
       } else {
-        word.write_char(c)
+        b
+        is ('"'
+        | '#'
+        | '%'
+        | '&'
+        | '\''
+        | '('
+        | '*'
+        | '+'
+        | '-'
+        | '<'
+        | '='
+        | '>'
+        | '@'
+        | 'A'..<='Z'
+        | '['
+        | '\\'
+        | '^'
+        | '_'
+        | '`'
+        | 'a'..<='z'
+        | '{'
+        | '|'
+        | '~')
       }
-    }
-    if !word.is_empty() {
-      tokens.push({ ..run, text: word.to_string(), })
+    '?' =>
+      b
+      is ('#'
+      | '$'
+      | '%'
+      | '&'
+      | '('
+      | '*'
+      | '+'
+      | '-'
+      | '0'..<='9'
+      | '<'
+      | '='
+      | '>'
+      | '@'
+      | 'A'..<='Z'
+      | '['
+      | '\\'
+      | '^'
+      | '_'
+      | '`'
+      | 'a'..<='z'
+      | '{'
+      | '|'
+      | '~')
+    '!'
+    | '"'
+    | '#'
+    | '%'
+    | '&'
+    | ')'
+    | '*'
+    | '+'
+    | ','
+    | '.'
+    | ':'
+    | ';'
+    | '='
+    | '>'
+    | '\\'
+    | ']'
+    | '|'
+    | '}'
+    | '~' => b is ('(' | '<' | '[' | '{')
+    _ => false
+  }
+}
+
+///|
+/// Text in one face, shaped as a whole: positions inside it are measured
+/// from its start, as the browser does when it breaks lines.
+priv struct Item {
+  chars : Array[Char]
+  bold : Bool
+  italic : Bool
+  positions : Map[Int32, Double]
+}
+
+///|
+/// The distance from the start of the item to a character offset, in
+/// whole layout units.
+fn Item::position(self : Item, offset : Int32, env : Env) -> Double {
+  if offset <= 0 {
+    return 0.0
+  }
+  if self.positions.get(offset) is Some(position) {
+    return position
+  }
+  let position = env
+    .font(bold=self.bold, italic=self.italic)
+    .advance(String::from_array(self.chars[:offset]), env.font_size)
+  self.positions[offset] = position
+  position
+}
+
+///|
+/// The runs of a line merged into items: adjacent runs in one face are
+/// shaped together.
+fn line_items(line : Array[Run]) -> Array[Item] {
+  let items : Array[Item] = []
+  for run in line {
+    match items.last() {
+      Some(item) if item.bold == run.bold && item.italic == run.italic =>
+        for c in run.text {
+          item.chars.push(c)
+        }
+      _ =>
+        items.push({
+          chars: run.text.to_array(),
+          bold: run.bold,
+          italic: run.italic,
+          positions: Map([]),
+        })
     }
   }
+  items
+}
+
+///|
+/// The widths of the pieces of a line that cannot be broken with
+/// `white-space: break-spaces`: a line may break after every space and
+/// wherever `breaks_between` allows.
+fn unbreakable_widths(line : Array[Run], env : Env) -> Array[Double] {
+  let items = line_items(line)
+  // Every character with the item it is in.
+  let flat : Array[(Int32, Int32, Char)] = []
+  for index, item in items {
+    for offset, c in item.chars {
+      flat.push((index, offset, c))
+    }
+  }
+  let widths = []
+  let mut width = 0.0
+  // Where the current piece starts within the current item.
+  let mut start = 0
+  for k, entry in flat {
+    let (index, offset, c) = entry
+    let item = items[index]
+    let last_of_item = offset == item.chars.length() - 1
+    let next = if k + 1 < flat.length() { Some(flat[k + 1].2) } else { None }
+    let before = if k > 0 { Some(flat[k - 1].2) } else { None }
+    let break_after = match next {
+      None => true
+      Some(next) =>
+        if c == ' ' {
+          true
+        } else if next == ' ' {
+          // A space stays with the word before it.
+          false
+        } else {
+          breaks_between(before, c, next)
+        }
+    }
+    if break_after || last_of_item {
+      width += item.position(offset + 1, env) - item.position(start, env)
+      start = if last_of_item { 0 } else { offset + 1 }
+    }
+    if break_after {
+      widths.push(width)
+      width = 0.0
+    }
+  }
+  widths
+}
+
+///|
+/// How a line is laid out in a box `width` wide with `white-space:
+/// break-spaces`: the number of rows, and the width of the widest piece,
+/// which the box grows to when it is wider.
+fn wrapped_rows(
+  line : Array[Run],
+  width : Double,
+  env : Env,
+) -> (Int32, Double) {
   let mut rows = 1
-  let mut current : Array[Run] = []
-  for token in tokens {
-    let candidate = [..current, token]
-    if !current.is_empty() && runs_width(candidate, env) > width {
+  let mut widest = 0.0
+  let mut current = 0.0
+  let mut empty = true
+  for unit in unbreakable_widths(line, env) {
+    widest = widest.max(unit)
+    if !empty && current + unit > width {
       rows += 1
-      current = [token]
+      current = unit
     } else {
-      current = candidate
+      current += unit
+      empty = false
     }
   }
-  rows
+  (rows, widest)
 }
