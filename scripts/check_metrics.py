@@ -34,7 +34,7 @@ MEASURE = """(() => {
   document.body.appendChild(svg);
   return %s.map((c) => {
     const text = document.createElementNS(NS, 'text');
-    text.setAttribute('style', `font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:${c.size}px;` +
+    text.setAttribute('style', `font-family:${c.family};font-size:${c.size}px;` +
       `font-weight:${c.bold ? 'bold' : 'normal'};font-style:${c.italic ? 'italic' : 'normal'};white-space:pre`);
     text.textContent = c.text;
     svg.appendChild(text);
@@ -46,7 +46,7 @@ MEASURE = """(() => {
 })()"""
 
 
-def corpus(count, rng, sizes):
+def corpus(count, rng, sizes, family):
     cases = []
     alphabet = [chr(c) for c in range(0x20, 0x7F)] + list("àéîõüçñßÆøÅ€£¥©®™°±×÷“”‘’–—…•→←")
     for index in range(count):
@@ -59,6 +59,7 @@ def corpus(count, rng, sizes):
             "size": rng.choice(sizes),
             "bold": rng.random() < 0.25,
             "italic": rng.random() < 0.2,
+            "family": family,
         })
     return cases
 
@@ -68,10 +69,11 @@ def main():
     parser.add_argument("--count", type=int, default=2000)
     parser.add_argument("--seed", type=int, default=1)
     parser.add_argument("--sizes", help="comma-separated font sizes to draw from")
+    parser.add_argument("--family", default='"trebuchet ms",verdana,arial,sans-serif', help="CSS font-family list")
     args = parser.parse_args()
 
     sizes = [float(v) for v in args.sizes.split(",")] if args.sizes else SIZES
-    cases = corpus(args.count, random.Random(args.seed), sizes)
+    cases = corpus(args.count, random.Random(args.seed), sizes, args.family)
     expected = oracle.run([], {}, MEASURE % json.dumps(cases))[0]["value"]
     with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as handle:
         json.dump(cases, handle)

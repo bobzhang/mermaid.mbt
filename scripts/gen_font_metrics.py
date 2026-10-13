@@ -29,6 +29,8 @@ FACES = [
     ("verdana_bold", "Verdana Bold.ttf"),
     ("arial_regular", "Arial.ttf"),
     ("arial_bold", "Arial Bold.ttf"),
+    ("arial_italic", "Arial Italic.ttf"),
+    ("arial_bold_italic", "Arial Bold Italic.ttf"),
 ]
 
 # Code points kept from each face: Basic Latin through Latin Extended-A,
@@ -131,6 +133,99 @@ class Font:
         return pairs
 
 
+    def gpos_kerning(self):
+        """Pair adjustments of the GPOS `kern` feature, or None without one.
+
+        HarfBuzz prefers these over the legacy `kern` table. Only the
+        advance of the first glyph is read, which is all Latin kerning uses.
+        """
+        if "GPOS" not in self.tables:
+            return None
+        table = self.table("GPOS")
+        u16 = lambda at: struct.unpack(">H", table[at:at + 2])[0]
+        s16 = lambda at: struct.unpack(">h", table[at:at + 2])[0]
+        feature_list, lookup_list = u16(6), u16(8)
+        lookups = set()
+        for i in range(u16(feature_list)):
+            record = feature_list + 2 + 6 * i
+            if table[record:record + 4] == b"kern":
+                feature = feature_list + u16(record + 4)
+                lookups.update(u16(feature + 4 + 2 * j) for j in range(u16(feature + 2)))
+        if not lookups:
+            return None
+
+        def coverage(at):
+            if u16(at) == 1:
+                return [u16(at + 4 + 2 * i) for i in range(u16(at + 2))]
+            glyphs = []
+            for i in range(u16(at + 2)):
+                start, end = u16(at + 4 + 6 * i), u16(at + 6 + 6 * i)
+                glyphs += range(start, end + 1)
+            return glyphs
+
+        def class_def(at):
+            classes = {}
+            if u16(at) == 1:
+                start = u16(at + 2)
+                for i in range(u16(at + 4)):
+                    classes[start + i] = u16(at + 6 + 2 * i)
+            else:
+                for i in range(u16(at + 2)):
+                    start, end, value = (u16(at + 4 + 6 * i + 2 * k) for k in range(3))
+                    for glyph in range(start, end + 1):
+                        classes[glyph] = value
+            return classes
+
+        def value_size(fmt):
+            return 2 * bin(fmt).count("1")
+
+        def x_advance(at, fmt):
+            # XPlacement (1) and YPlacement (2) precede XAdvance (4).
+            if not fmt & 4:
+                return 0
+            return s16(at + 2 * bin(fmt & 3).count("1"))
+
+        pairs = {}
+
+        def pair_pos(at):
+            fmt, cover, f1, f2 = u16(at), coverage(at + u16(at + 2)), u16(at + 4), u16(at + 6)
+            size = 2 + value_size(f1) + value_size(f2)
+            if fmt == 1:
+                for i, first in enumerate(cover):
+                    pair_set = at + u16(at + 10 + 2 * i)
+                    for j in range(u16(pair_set)):
+                        record = pair_set + 2 + size * j
+                        pairs.setdefault((first, u16(record)), x_advance(record + 2, f1))
+            elif fmt == 2:
+                classes1, classes2 = class_def(at + u16(at + 8)), class_def(at + u16(at + 10))
+                count1, count2 = u16(at + 12), u16(at + 14)
+                record_size = value_size(f1) + value_size(f2)
+                by_class2 = {}
+                for glyph, value in classes2.items():
+                    by_class2.setdefault(value, []).append(glyph)
+                for first in cover:
+                    row = at + 16 + classes1.get(first, 0) * count2 * record_size
+                    for c2 in range(1, count2):
+                        value = x_advance(row + c2 * record_size, f1)
+                        if value:
+                            for second in by_class2.get(c2, []):
+                                pairs.setdefault((first, second), value)
+
+        for index in sorted(lookups):
+            lookup = lookup_list + u16(lookup_list + 2 + 2 * index)
+            kind = u16(lookup)
+            for i in range(u16(lookup + 4)):
+                subtable = lookup + u16(lookup + 6 + 2 * i)
+                if kind == 9:  # extension
+                    kind_here = u16(subtable + 2)
+                    subtable += struct.unpack(">I", table[subtable + 4:subtable + 8])[0]
+                else:
+                    kind_here = kind
+                if kind_here == 2:
+                    pair_pos(subtable)
+        return pairs
+
+
 def keep(code):
     return any(low <= code <= high for low, high in RANGES)
 
@@ -148,7 +243,7 @@ def emit(ident, filename):
         glyph_rows.append(f"    {code}, {glyph}, {advances[glyph]}, {x_min}, {y_min}, {x_max}, {y_max},")
     kern_rows = [
         f"    {left}, {right}, {value},"
-        for (left, right), value in sorted(font.kerning().items())
+        for (left, right), value in sorted((font.gpos_kerning() or font.kerning()).items())
         if left in kept and right in kept and value
     ]
     lines = [

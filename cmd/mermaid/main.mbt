@@ -85,7 +85,15 @@ fn measure(path : String) -> Unit raise CliError {
       } else {
       continue
     }
-    let stack = @font.Stack::default(bold=bold is True, italic=italic is True)
+    let stack = match item {
+      { "family": String(family), .. } =>
+        @font.Stack::for_family(
+          family,
+          bold=bold is True,
+          italic=italic is True,
+        )
+      _ => @font.Stack::default(bold=bold is True, italic=italic is True)
+    }
     let box = stack.bbox(text, size)
     results.push({
       "len": stack.advance(text, size),

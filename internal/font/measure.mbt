@@ -223,3 +223,51 @@ pub fn Stack::bbox(self : Stack, text : StringView, size : Double) -> Rect {
     height: box.height.to_double(),
   }
 }
+
+///|
+/// The stack a CSS `font-family` list resolves to in the reference
+/// environment. Families that are not installed there are skipped; of the
+/// installed ones, Trebuchet MS, Verdana and Arial are embedded. A list
+/// naming none of them falls back to Arial, the closest embedded face to
+/// the system sans-serif.
+pub fn Stack::for_family(
+  family : String,
+  bold~ : Bool = false,
+  italic~ : Bool = false,
+) -> Stack {
+  let faces = []
+  for name in family.split(",") {
+    let name = name.trim(chars=" \t\n\"';").to_owned().to_lower()
+    let face = match name {
+      "trebuchet ms" =>
+        Some(
+          match (bold, italic) {
+            (false, false) => trebuchet_regular
+            (true, false) => trebuchet_bold
+            (false, true) => trebuchet_italic
+            (true, true) => trebuchet_bold_italic
+          },
+        )
+      "verdana" => Some(if bold { verdana_bold } else { verdana_regular })
+      "arial" | "helvetica" | "sans-serif" => Some(arial(bold, italic))
+      _ => None
+    }
+    if face is Some(face) && !faces.iter().any(f => physical_equal(f, face)) {
+      faces.push(face)
+    }
+  }
+  if faces.is_empty() {
+    faces.push(arial(bold, italic))
+  }
+  { faces, }
+}
+
+///|
+fn arial(bold : Bool, italic : Bool) -> Face {
+  match (bold, italic) {
+    (false, false) => arial_regular
+    (true, false) => arial_bold
+    (false, true) => arial_italic
+    (true, true) => arial_bold_italic
+  }
+}
