@@ -104,10 +104,13 @@ fn fork_join(
   node.label = ""
   let shape_svg = bare_node(parent, node, node_classes(node))
   // The long side faces the edges.
-  let (long, short) = if dir is ("LR" | "RL") { (1, 0) } else { (0, 1) }
-  let sizes = [70.0, 10.0]
-  let width = sizes[long].max(node.width.unwrap_or(0.0))
-  let height = sizes[short].max(node.height.unwrap_or(0.0))
+  let (min_width, min_height) = if dir is ("LR" | "RL") {
+    (10.0, 70.0)
+  } else {
+    (70.0, 10.0)
+  }
+  let width = min_width.max(node.width.unwrap_or(0.0))
+  let height = min_height.max(node.height.unwrap_or(0.0))
   let x = -1.0 * width / 2.0
   let y = -1.0 * height / 2.0
   let options = rough_options(node, env)
