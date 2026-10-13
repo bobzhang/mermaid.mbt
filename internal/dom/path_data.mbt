@@ -305,7 +305,6 @@ fn valid_unit_divide(numer : Float, denom : Float) -> Float? {
 
 ///|
 /// The tight box of path data, as `SkPath::computeTightBounds` finds it.
-/// Cubics are bounded by their control points for now.
 fn path_bounds(data : String) -> Bounds? {
   let bounds = PointBounds::new()
   let mut x : Float = 0
@@ -339,9 +338,7 @@ fn path_bounds(data : String) -> Bounds? {
         y = py
       }
       CubicTo(c1x, c1y, c2x, c2y, px, py) => {
-        bounds.add(c1x, c1y)
-        bounds.add(c2x, c2y)
-        bounds.add(px, py)
+        cubic_extrema(x, y, c1x, c1y, c2x, c2y, px, py, bounds)
         x = px
         y = py
       }
@@ -361,6 +358,70 @@ fn path_bounds(data : String) -> Bounds? {
     }
   }
   bounds.to_bounds()
+}
+
+///|
+/// Skia's `SkFindUnitQuadRoots`: the roots of `A t^2 + B t + C` strictly
+/// inside the unit interval.
+fn unit_quad_roots(a : Float, b : Float, c : Float) -> Array[Float] {
+  let roots = []
+  if a == 0 {
+    if valid_unit_divide(-c, b) is Some(root) {
+      roots.push(root)
+    }
+    return roots
+  }
+  // In doubles, so that the discriminant cannot overflow.
+  let discriminant = b.to_double() * b.to_double() -
+    4.0 * a.to_double() * c.to_double()
+  if discriminant < 0.0 {
+    return roots
+  }
+  let r = Float::from_double(discriminant.sqrt())
+  if r.is_nan() || r.is_inf() {
+    return roots
+  }
+  let q = if b < 0 { -(b - r) / 2 } else { -(b + r) / 2 }
+  if valid_unit_divide(q, a) is Some(root) {
+    roots.push(root)
+  }
+  if valid_unit_divide(c, q) is Some(root) {
+    roots.push(root)
+  }
+  roots
+}
+
+///|
+/// Add the points where a cubic turns, and its end, to the bounds: Skia's
+/// `compute_cubic_extremas`, with `SkFindCubicExtrema` for the parameters
+/// and `SkCubicCoeff` for the points.
+fn cubic_extrema(
+  x0 : Float,
+  y0 : Float,
+  x1 : Float,
+  y1 : Float,
+  x2 : Float,
+  y2 : Float,
+  x3 : Float,
+  y3 : Float,
+  bounds : PointBounds,
+) -> Unit {
+  // The derivative over 3 is A t^2 + B t + C.
+  let two : Float = 2
+  let three : Float = 3
+  let turns = (a : Float, b : Float, c : Float, d : Float) => {
+    unit_quad_roots(d - a + three * (b - c), two * (a - b - b + c), b - a)
+  }
+  let coordinate = (a : Float, b : Float, c : Float, d : Float, t : Float) => {
+    let ca = d + three * (b - c) - a
+    let cb = three * (c - (b + b) + a)
+    let cc = three * (b - a)
+    ((ca * t + cb) * t + cc) * t + a
+  }
+  for t in [..turns(x0, x1, x2, x3), ..turns(y0, y1, y2, y3)] {
+    bounds.add(coordinate(x0, x1, x2, x3, t), coordinate(y0, y1, y2, y3, t))
+  }
+  bounds.add(x3, y3)
 }
 
 ///|
@@ -794,6 +855,10 @@ fn snap_to_zero(value : Float) -> Float {
 ///|
 /// The conics Skia builds for an SVG arc (`SkPath::arcTo`), which is the
 /// geometry `getBBox` sees. Nothing for an arc that degenerates to a line.
+///
+/// Skia takes its trigonometry from the C library, and what comes out
+/// depends on it to the last bit: these are the functions of macOS, where
+/// a sine and a cosine of the same angle are one call.
 fn arc_to_conics(
   x0 : Float,
   y0 : Float,
@@ -812,22 +877,23 @@ fn arc_to_conics(
   let mut ry = ry.abs()
   let half : Float = 0.5
   let one : Float = 1
-  let radians = angle * Float::from_double(3.141592653589793 / 180.0)
-  let sin_a = snap_to_zero(sin_f(radians))
-  let cos_a = snap_to_zero(cos_f(radians))
+  let pi = Float::from_double(3.141592653589793)
+  // The rotation by -angle that comes first has the same cosine and the
+  // opposite sine, exactly.
+  let (sin_a, cos_a) = @libm.sincosf(angle * (pi / 180))
+  let sin_a = snap_to_zero(sin_a)
+  let cos_a = snap_to_zero(cos_a)
+  // Skia holds every transform as a matrix and maps a point as
+  // `x * scale_x + y * skew_x`, so a rotation combined with the radii
+  // multiplies the two first and rounds differently from rotating and
+  // scaling in turn. Without rotation the matrix is a plain scale.
+  let rotated = !(sin_a == 0 && cos_a == 1)
   // Rotation by -angle.
   let unrotate = (px : Float, py : Float) => {
-    if sin_a == 0 && cos_a == 1 {
-      (px, py)
+    if rotated {
+      (px * cos_a + py * sin_a, py * cos_a + px * -sin_a)
     } else {
-      (cos_a * px + sin_a * py, cos_a * py - sin_a * px)
-    }
-  }
-  let rotate = (px : Float, py : Float) => {
-    if sin_a == 0 && cos_a == 1 {
       (px, py)
-    } else {
-      (cos_a * px - sin_a * py, sin_a * px + cos_a * py)
     }
   }
   let (mid_x, mid_y) = unrotate((x0 - x) * half, (y0 - y) * half)
@@ -839,9 +905,16 @@ fn arc_to_conics(
   }
   let inv_rx = one / rx
   let inv_ry = one / ry
+  // `setScale(1 / rx, 1 / ry)` then `preRotate(-angle)`.
   let to_unit = (px : Float, py : Float) => {
-    let (ux, uy) = unrotate(px, py)
-    (ux * inv_rx, uy * inv_ry)
+    if rotated {
+      (
+        px * (inv_rx * cos_a) + py * (inv_rx * sin_a),
+        py * (inv_ry * cos_a) + px * (inv_ry * -sin_a),
+      )
+    } else {
+      (px * inv_rx, py * inv_ry)
+    }
   }
   let (u0x, u0y) = to_unit(x0, y0)
   let (u1x, u1y) = to_unit(x, y)
@@ -860,9 +933,8 @@ fn arc_to_conics(
   let delta_y = delta_y * scale
   let cx = (u0x + u1x) * half + -delta_y
   let cy = (u0y + u1y) * half + delta_x
-  let theta1 = atan2_f(u0y - cy, u0x - cx)
-  let theta2 = atan2_f(u1y - cy, u1x - cx)
-  let pi = Float::from_double(3.141592653589793)
+  let theta1 = @libm.atan2f(u0y - cy, u0x - cx)
+  let theta2 = @libm.atan2f(u1y - cy, u1x - cx)
   let mut theta_arc = theta2 - theta1
   if theta_arc < 0 && sweep {
     theta_arc = theta_arc + pi * 2
@@ -874,11 +946,11 @@ fn arc_to_conics(
   }
   let segments = (theta_arc / (2 * pi / 3)).abs().ceil().to_int()
   let theta_width = theta_arc / Float::from_int(segments)
-  let t = tan_f(half * theta_width)
+  let t = @libm.tanf(half * theta_width)
   if t.is_nan() || t.is_inf() {
     return []
   }
-  let w = (half + cos_f(theta_width) * half).sqrt()
+  let w = (half + @libm.cosf(theta_width) * half).sqrt()
   let is_integer = (value : Float) => value == value.floor()
   let nearly_zero = (value : Float) => {
     value.abs() <= Float::from_int(1) / Float::from_int(4096)
@@ -888,8 +960,16 @@ fn arc_to_conics(
     is_integer(ry) &&
     is_integer(x) &&
     is_integer(y)
+  // `setRotate(angle)` then `preScale(rx, ry)`.
   let from_unit = (px : Float, py : Float) => {
-    let (mx, my) = rotate(px * rx, py * ry)
+    let (mx, my) = if rotated {
+      (
+        px * (cos_a * rx) + py * (-sin_a * ry),
+        py * (cos_a * ry) + px * (sin_a * rx),
+      )
+    } else {
+      (px * rx, py * ry)
+    }
     if expect_integers {
       ((mx + half).floor(), (my + half).floor())
     } else {
@@ -900,8 +980,9 @@ fn arc_to_conics(
   let mut start_theta = theta1
   for i in 0..<segments {
     let end_theta = start_theta + theta_width
-    let sin_end = snap_to_zero(sin_f(end_theta))
-    let cos_end = snap_to_zero(cos_f(end_theta))
+    let (sin_end, cos_end) = @libm.sincosf(end_theta)
+    let sin_end = snap_to_zero(sin_end)
+    let cos_end = snap_to_zero(cos_end)
     let end_x = cos_end + cx
     let end_y = sin_end + cy
     let ctrl_x = end_x + t * sin_end

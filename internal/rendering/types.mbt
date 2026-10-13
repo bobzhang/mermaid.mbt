@@ -3,7 +3,8 @@
 /// `rendering-util` `Node`.
 pub struct Node {
   id : String
-  label : String
+  /// Shapes that show no text clear it.
+  mut label : String
   /// `text`, `string` or `markdown`.
   label_type : String
   parent_id : String?
@@ -199,6 +200,8 @@ pub(all) struct LayoutData {
 /// What shapes and labels need from the diagram being drawn.
 priv struct Env {
   config : @config.Config
+  /// The id of the `<svg>` element, which prefixes the ids of its filters.
+  diagram_id : String
   font_family : String
   font_size : Double
   /// Whether labels are HTML in a `foreignObject` or SVG text.
@@ -206,7 +209,7 @@ priv struct Env {
 }
 
 ///|
-fn Env::new(config : @config.Config) -> Env {
+fn Env::new(config : @config.Config, diagram_id : String) -> Env {
   let theme = config.theme()
   let size = match theme.get("fontSize") {
     Number(n, ..) => n
@@ -234,6 +237,7 @@ fn Env::new(config : @config.Config) -> Env {
   }
   {
     config,
+    diagram_id,
     font_family: theme.text("fontFamily"),
     font_size: size,
     html_labels,

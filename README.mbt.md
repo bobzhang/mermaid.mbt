@@ -62,13 +62,13 @@ What is missing:
   `moon.work`). With them, every graph tried so far lays out exactly as in
   elkjs: the fixtures, upstream's documentation examples and some eight
   hundred generated graphs.
-- The classic shapes are ported (rectangle, rounded, stadium, subroutine,
-  cylinder, circle, double circle, flag, diamond, hexagon, parallelograms,
-  trapezoids); the newer `@{ shape: ... }` shapes are not, and `render`
-  raises `Unsupported` for them.
-- Upstream draws several shapes (stadium, flag, ...) through rough.js even
-  outside the hand-drawn look, and rough.js places the control points of
-  every line at random. With `handDrawnSeed` set, the port (`internal/rough`)
+- The node shapes of flowcharts are ported, the classic ones and those of
+  the `@{ shape: ... }` syntax. `render` raises `Unsupported` for the rest:
+  icons and images, `person`, collapsed groups, and `state`, which upstream
+  draws with `NaN` coordinates.
+- Upstream draws most shapes (stadium, flag, documents, ...) through
+  rough.js even outside the hand-drawn look, and rough.js places the control
+  points of every line at random. With `handDrawnSeed` set, the port (`internal/rough`)
   reproduces upstream exactly; without a seed upstream's own output differs
   from render to render, and the port's is merely equivalent.
 - Markdown labels cover paragraphs, emphasis, escapes and inline HTML; other
@@ -99,8 +99,10 @@ To match, the port reproduces a number of browser behaviors: Blink's text
 shaping arithmetic (`internal/font`), V8's results for `Math.sin`, `cos`,
 `acos`, `atan2` and `hypot` (`internal/jsmath`), CSSOM serialization of
 inline styles and colors, `getBBox` and `getTotalLength` in Blink's
-single-precision arithmetic (`internal/dom`), and the stylis CSS compiler
-(`internal/css`).
+single-precision arithmetic (`internal/dom`), the stylis CSS compiler
+(`internal/css`), and the single-precision `sinf`, `cosf`, `tanf` and
+`atan2f` of macOS on arm64 (`internal/libm`), which Skia shapes arcs with
+and which are not correctly rounded.
 
 Known limits: text outside the embedded faces (Trebuchet MS, Verdana, Arial;
 Latin and common symbols) is measured approximately, and fractional font

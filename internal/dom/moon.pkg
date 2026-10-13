@@ -2,6 +2,7 @@ import {
   "moonbitlang/core/string",
   "bobzhang/mermaid/internal/color",
   "bobzhang/mermaid/internal/jsmath",
+  "bobzhang/mermaid/internal/libm",
 }
 
 warnings = "-implicit_impl_as_method"

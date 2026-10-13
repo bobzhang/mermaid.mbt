@@ -1,0 +1,23 @@
+---
+config:
+  look: classic
+  handDrawnSeed: 7
+---
+flowchart LR
+    T@{ shape: text, label: "Text block" } --> C@{ shape: notch-rect, label: "Card" }
+    C --> L@{ shape: lin-rect, label: "Lined process" }
+    C --> D@{ shape: div-rect, label: "Divided process" }
+    L --> W@{ shape: win-pane, label: "Internal storage" }
+    D --> W
+    W --> M@{ shape: st-rect, label: "Multiple processes" }
+    M --> G@{ shape: tag-rect, label: "Tagged process" }
+    M --> S@{ shape: datastore, label: "Data store" }
+    G --> N@{ shape: note, label: "A note" }
+    S --> N
+    N --> K@{ shape: composite, label: "Composite" }
+    style D fill:#fdd,stroke:#900
+    classDef hot fill:#ffd,stroke:#f80,stroke-width:2px,color:#333
+    class T,C,L,W,M,G,S,N hot
+    style L fill:#dfd,stroke:#090,stroke-dasharray: 4 2
+    style M stroke-width:3px
+    style N color:#900

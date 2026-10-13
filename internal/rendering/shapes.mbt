@@ -225,7 +225,8 @@ fn path_from_points(points : Array[Point]) -> String {
 
 ///|
 /// Points on an arc, mirrored through the origin: mermaid's
-/// `generateCirclePoints`.
+/// `generateCirclePoints`. The right curly brace has its own copy that
+/// does not mirror.
 fn circle_points(
   center_x : Double,
   center_y : Double,
@@ -233,6 +234,7 @@ fn circle_points(
   count : Int32,
   start_angle : Double,
   end_angle : Double,
+  mirrored~ : Bool = true,
 ) -> Array[Point] {
   let pi = 3.141592653589793
   let start = start_angle * pi / 180.0
@@ -243,35 +245,53 @@ fn circle_points(
     let angle = start + i.to_double() * step
     let x = center_x + radius * @jsmath.cos(angle)
     let y = center_y + radius * @jsmath.sin(angle)
-    points.push({ x: -x, y: -y, })
+    points.push(if mirrored { { x: -x, y: -y, } } else { { x, y, } })
   }
   points
 }
 
 ///|
-/// Insert an outline drawn by rough.js behind the label, styled the way
-/// shapes that always go through rough.js do it.
+/// Put `child` first among `parent`'s children: d3's
+/// `insert(() => child, ':first-child')`.
+fn prepend(parent : @dom.Element, child : @dom.Element) -> Unit {
+  match parent.child_elements() {
+    [first, ..] => parent.insert_before(child, first)
+    [] => parent.append_child(child)
+  }
+}
+
+///|
+/// Style every path rough.js drew the way shapes do outside the hand-drawn
+/// look: the node's own styles, replaced by the compiled ones when there
+/// are any.
+fn style_rough_paths(
+  outline : @dom.Element,
+  node : Node,
+  styles : SplitStyles,
+) -> Unit {
+  // An array of styles is written as its comma-joined text.
+  let css_styles = node.css_styles.join(",")
+  for path in outline.descendants(["path"]) {
+    path.attr("style", css_styles) |> ignore
+    if styles.node_styles != "" {
+      path.attr("style", styles.node_styles) |> ignore
+    }
+  }
+}
+
+///|
+/// Insert an outline drawn by rough.js behind the label, with the classes
+/// and styles shapes that always go through rough.js give it.
 fn insert_rough_outline(
   shape_svg : @dom.Element,
   outline : @dom.Element,
   node : Node,
   styles : SplitStyles,
+  classes~ : String = "basic label-container outer-path",
 ) -> @dom.Element {
-  match shape_svg.child_elements() {
-    [first, ..] => shape_svg.insert_before(outline, first)
-    [] => shape_svg.append_child(outline)
-  }
-  outline.attr("class", "basic label-container outer-path") |> ignore
-  // An array of styles is written as its comma-joined text.
-  let css_styles = node.css_styles.join(",")
-  for path in outline.child_elements() {
-    if path.tag == "path" {
-      path.attr("style", css_styles) |> ignore
-      if styles.node_styles != "" {
-        path.attr("style", styles.node_styles) |> ignore
-      }
-    }
-  }
+  prepend(shape_svg, outline)
+  outline.attr("class", classes) |> ignore
+  style_rough_paths(outline, node, styles)
   outline
 }
 
@@ -363,70 +383,12 @@ fn rect_left_inv_arrow(
 }
 
 ///|
-/// A cylinder: an ellipse on top, straight sides, half an ellipse below.
-fn cylinder(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
-  let styles = shape_styles(node)
-  let neo = node.look == "neo"
-  let label_padding = if neo { 24.0 } else { node.padding }
-  let labelled = label_helper(parent, node, node_classes(node), env)
-  let box = labelled.bbox
-  let w = node.width.unwrap_or(0.0).max(box.width) + label_padding
-  let rx = w / 2.0
-  let ry = rx / (2.5 + w / 50.0)
-  let h = node.height.unwrap_or(0.0).max(box.height) + label_padding + ry
-  let n = @dom.number
-  let path_data = [
-    "M0,\{n(ry)}",
-    "a\{n(rx)},\{n(ry)} 0,0,0 \{n(w)},0",
-    "a\{n(rx)},\{n(ry)} 0,0,0 \{n(-w)},0",
-    "l0,\{n(h)}",
-    "a\{n(rx)},\{n(ry)} 0,0,0 \{n(w)},0",
-    "l0,\{n(-h)}",
-  ].join(" ")
-  let element = labelled.shape_svg
-    .insert_first("path")
-    .attr("d", path_data)
-    .attr("class", "basic label-container outer-path")
-    .attr("style", styles.node_styles)
-    .attr("transform", "translate(\{n(-w / 2.0)}, \{n(-(h / 2.0 + ry))})")
-  update_node_bounds(node, element)
-  labelled.label.attr(
-    "transform",
-    "translate(\{n(-(box.width / 2.0) - labelled.offset_x)}, \{n(-(box.height / 2.0) + node.padding / 1.5 - labelled.offset_y)})",
-  )
-  |> ignore
-  node.intersect = Some(point => {
-    let width = node.width.unwrap_or(0.0)
-    let height = node.height.unwrap_or(0.0)
-    let pos = intersect_rect(node.x, node.y, width, height, point)
-    let x = pos.x - node.x
-    if rx != 0.0 &&
-      (
-        x.abs() < width / 2.0 ||
-        (x.abs() == width / 2.0 && (pos.y - node.y).abs() > height / 2.0 - ry)
-      ) {
-      let mut y = ry * ry * (1.0 - x * x / (rx * rx))
-      if y > 0.0 {
-        y = y.sqrt()
-      }
-      y = ry - y
-      if point.y - node.y > 0.0 {
-        y = -y
-      }
-      { x: pos.x, y: pos.y + y, }
-    } else {
-      pos
-    }
-  })
-  labelled.shape_svg
-}
-
-///|
 /// Draw the outline and label of `node` with the shape it asks for.
 fn draw_shape(
   parent : @dom.Element,
   node : Node,
   env : Env,
+  dir : String,
 ) -> @dom.Element raise LayoutError {
   let neo = node.look == "neo"
   let padding = node.padding
@@ -457,6 +419,47 @@ fn draw_shape(
     "rect_left_inv_arrow" => rect_left_inv_arrow(parent, node, env)
     "circle" => circle(parent, node, env)
     "doublecircle" => double_circle(parent, node, env)
+    "text" => text_block(parent, node, env)
+    "card" => card(parent, node, env)
+    "shadedProcess" => shaded_process(parent, node, env)
+    "dividedRectangle" => divided_rectangle(parent, node, env)
+    "windowPane" => window_pane(parent, node, env)
+    "multiRect" => multi_rect(parent, node, env)
+    "taggedRect" => tagged_rect(parent, node, env)
+    "datastore" => datastore(parent, node, env)
+    "note" => note(parent, node, env)
+    "composite" => composite(parent, node, env)
+    "triangle" => triangle(parent, node, env, flipped=false)
+    "flippedTriangle" => triangle(parent, node, env, flipped=true)
+    "trapezoidalPentagon" => trapezoidal_pentagon(parent, node, env)
+    "slopedRect" => sloped_rect(parent, node, env)
+    "curvedTrapezoid" => curved_trapezoid(parent, node, env)
+    "halfRoundedRectangle" => half_rounded_rectangle(parent, node, env)
+    "bowTieRect" => bow_tie_rect(parent, node, env)
+    "waveEdgedRectangle" => wave_edged_rectangle(parent, node, env)
+    "linedWaveEdgedRect" => lined_wave_edged_rect(parent, node, env)
+    "multiWaveEdgedRectangle" => multi_wave_edged_rectangle(parent, node, env)
+    "waveRectangle" => wave_rectangle(parent, node, env)
+    "taggedWaveEdgedRectangle" => tagged_wave_edged_rectangle(parent, node, env)
+    "tiltedCylinder" => tilted_cylinder(parent, node, env)
+    "linedCylinder" => lined_cylinder(parent, node, env)
+    "curlyBraceLeft" | "curlyBraceRight" | "curlyBraces" =>
+      curly_brace(parent, node, env, handler)
+    "folder" => folder(parent, node, env)
+    "bucket" => bucket(parent, node, env)
+    "cloud" => cloud(parent, node, env)
+    "bang" => bang(parent, node, env)
+    "browser" => browser(parent, node, env)
+    "consoleWindow" => console_window(parent, node, env)
+    "stateStart" => state_start(parent, node, env)
+    "stateEnd" => state_end(parent, node, env)
+    "forkJoin" => fork_join(parent, node, env, dir)
+    "hourglass" => hourglass(parent, node, env)
+    "lightningBolt" => lightning_bolt(parent, node, env)
+    "filledCircle" => filled_circle(parent, node, env)
+    "crossedCircle" => crossed_circle(parent, node, env)
+    "anchor" => anchor(parent, node, env)
+    "choice" => choice(parent, node, env)
     "subroutine" =>
       polygon_shape(parent, node, env, box => {
         let label_padding_x = if neo { 28.0 } else { padding }
@@ -551,11 +554,12 @@ fn draw_shape(
 
 ///|
 /// Draw `node` into `parent` and return its element: mermaid's
-/// `insertNode`.
+/// `insertNode`. `dir` is the direction of the flow around the node.
 fn insert_node(
   parent : @dom.Element,
   node : Node,
   env : Env,
+  dir : String,
 ) -> @dom.Element raise LayoutError {
   if node.shape == "rect" {
     node.shape = "squareRect"
@@ -565,10 +569,10 @@ fn insert_node(
       // Upstream also sets `target`, which the final sanitizing pass strips
       // from SVG anchors again.
       let anchor = parent.append("a").attr("xlink:href", link)
-      (anchor, draw_shape(anchor, node, env))
+      (anchor, draw_shape(anchor, node, env, dir))
     }
     None => {
-      let element = draw_shape(parent, node, env)
+      let element = draw_shape(parent, node, env, dir)
       (element, element)
     }
   }

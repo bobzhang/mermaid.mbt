@@ -20,15 +20,21 @@ priv struct Bounds {
 }
 
 ///|
-/// The next float above a non-negative one.
-fn next_up(value : Float) -> Float {
-  Float::reinterpret_from_uint(value.reinterpret_as_uint() + 1)
+/// The next float above a size: `std::nextafter(size, +inf)`. Sizes are
+/// never negative.
+fn next_size(size : Float) -> Float {
+  if size == 0 {
+    // The smallest subnormal.
+    Float::reinterpret_from_int(1)
+  } else {
+    Float::reinterpret_from_int(size.reinterpret_as_int() + 1)
+  }
 }
 
 ///|
-/// `RectF::SetByBounds`: a box from its edges. The size is a rounded
-/// difference; where origin plus size then falls short of the far edge,
-/// the size grows by one step so that the box still covers it.
+/// `gfx::BoundingRect` of two corners, which is how a Skia rectangle
+/// becomes a `RectF`: when the size loses precision, so that origin plus
+/// size is not the far edge again, it grows to the next float.
 fn Bounds::from_edges(
   left : Float,
   top : Float,
@@ -37,27 +43,34 @@ fn Bounds::from_edges(
 ) -> Bounds {
   let mut width = right - left
   let mut height = bottom - top
-  if left + width < right {
-    width = next_up(width)
+  if left + width != right {
+    width = next_size(width)
   }
-  if top + height < bottom {
-    height = next_up(height)
+  if top + height != bottom {
+    height = next_size(height)
   }
   { x: left, y: top, width, height, }
 }
 
 ///|
-/// `RectF::UnionEvenIfEmpty`: the far edges are recomputed from origin
-/// plus size before the boxes are joined.
+/// `RectF::UnionEvenIfEmpty`: the size is the difference of the edges, and
+/// grows to the next float when rounding left the far edge outside.
 fn Bounds::unite(self : Bounds, other : Bounds) -> Bounds {
   let min = (a : Float, b : Float) => if b < a { b } else { a }
   let max = (a : Float, b : Float) => if a < b { b } else { a }
-  Bounds::from_edges(
-    min(self.x, other.x),
-    min(self.y, other.y),
-    max(self.x + self.width, other.x + other.width),
-    max(self.y + self.height, other.y + other.height),
-  )
+  let x = min(self.x, other.x)
+  let y = min(self.y, other.y)
+  let right = max(self.x + self.width, other.x + other.width)
+  let bottom = max(self.y + self.height, other.y + other.height)
+  let mut width = right - x
+  let mut height = bottom - y
+  if x + width < right {
+    width = next_size(width)
+  }
+  if y + height < bottom {
+    height = next_size(height)
+  }
+  { x, y, width, height, }
 }
 
 ///|
@@ -237,6 +250,13 @@ fn Element::local_bounds(self : Element) -> Bounds? {
       bounds.to_bounds()
     }
     "path" => path_bounds(self.get_attr("d").unwrap_or(""))
+    "line" => {
+      // A line is the path between its ends, however thin its box.
+      let bounds = PointBounds::new()
+      bounds.add(attr("x1"), attr("y1"))
+      bounds.add(attr("x2"), attr("y2"))
+      bounds.to_bounds()
+    }
     "g" | "svg" | "a" => {
       let mut bounds : Bounds? = None
       for node in self.children {
