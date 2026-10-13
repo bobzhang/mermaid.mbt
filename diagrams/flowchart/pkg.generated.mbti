@@ -1,0 +1,97 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/diagrams/flowchart"
+
+import {
+  "bobzhang/mermaid/config",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn edge_id(String, String, counter~ : Int, id? : String) -> String
+
+pub fn is_valid_shape(String) -> Bool
+
+pub fn parse(String, @config.Config) -> FlowDb raise
+
+pub fn shape_handler(String) -> String?
+
+// Errors
+pub(all) suberror FlowError {
+  FlowError(String)
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+pub struct Edge {
+  start : String
+  end : String
+  mut id : String
+  mut is_user_defined_id : Bool
+  mut kind : String?
+  mut text : String
+  mut label_type : String
+  mut stroke : String?
+  mut length : Int?
+  mut style : Array[String]?
+  mut interpolate : String?
+  classes : Array[String]
+  mut animate : Bool?
+  mut animation : String?
+}
+
+pub struct FlowDb {
+  vertices : Map[String, Vertex]
+  edges : Array[Edge]
+  classes : Map[String, StyleClass]
+  sub_graphs : Array[SubGraph]
+  tooltips : Map[String, String]
+  mut acc_title : String
+  mut acc_description : String
+  mut title : String
+  // private fields
+}
+pub fn FlowDb::default_interpolate(Self) -> String?
+pub fn FlowDb::default_style(Self) -> Array[String]?
+pub fn FlowDb::direction(Self) -> String?
+pub fn FlowDb::dump(Self) -> Json
+pub fn FlowDb::is_sub_graph(Self, String) -> Bool
+pub fn FlowDb::set_title(Self, String) -> Unit
+
+pub struct StyleClass {
+  id : String
+  styles : Array[String]
+  text_styles : Array[String]
+}
+
+pub struct SubGraph {
+  id : String
+  nodes : Array[String]
+  title : String
+  classes : Array[String]
+  dir : String?
+  label_type : String
+  metadata : Map[String, Json]
+}
+
+pub struct Vertex {
+  id : String
+  dom_id : String
+  mut text : String?
+  mut label_type : String
+  mut shape : String?
+  styles : Array[String]
+  classes : Array[String]
+  mut link : String?
+  mut link_target : String?
+  mut have_callback : Bool
+  mut icon : String?
+  mut form : String?
+  mut pos : String?
+  mut img : String?
+  mut constraint : String?
+  mut asset_width : Double?
+  mut asset_height : Double?
+}
+
+// Type aliases
+
+// Traits

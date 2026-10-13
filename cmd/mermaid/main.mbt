@@ -8,6 +8,7 @@ let usage : String =
   #|  config [site.json]     print the effective configuration as JSON
   #|  measure <cases.json>   measure text; cases are {text, size, bold, italic}
   #|  regex <cases.json>     match prefixes; cases are {source, flags, input}
+  #|  flow-db <file.mmd>...  print each flowchart's parsed database as JSON
   #|
 
 ///|
@@ -130,6 +131,38 @@ fn regex(path : String) -> Unit raise CliError {
 }
 
 ///|
+fn flow_db(paths : ArrayView[String]) -> Unit raise CliError {
+  for path in paths {
+    let source = read_text(path)
+    let line = try {
+      let processed = @preprocess.preprocess(source)
+      let config = @config.Config::new(
+        directive=processed.config,
+        diagram_type="flowchart-v2",
+      )
+      @flowchart.parse(
+        @preprocess.encode_entities(processed.code) + "\n",
+        config,
+      )
+      .dump()
+      .stringify()
+    } catch {
+      @jison.ParseError(message~, ..) => {
+        let report : Json = { "error": message }
+        report.stringify()
+      }
+      error => {
+        let report : Json = { "error": Repr(error).to_string() }
+        report.stringify()
+      }
+    } noraise {
+      text => text
+    }
+    println(line)
+  }
+}
+
+///|
 fn main {
   let arguments = @env.args()
   try {
@@ -138,6 +171,7 @@ fn main {
       ["config", .. rest] => print_config(rest)
       ["measure", path] => measure(path)
       ["regex", path] => regex(path)
+      ["flow-db", .. paths] => flow_db(paths)
       _ => println(usage)
     }
   } catch {

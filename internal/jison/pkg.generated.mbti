@@ -1,0 +1,56 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/internal/jison"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+
+// Errors
+pub(all) suberror ParseError {
+  ParseError(message~ : String, line~ : Int)
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+pub struct Grammar {
+  // private fields
+}
+pub fn Grammar::new(symbols~ : Array[String], terminals~ : Array[Int], productions~ : Array[Int], table~ : Array[Int], default_actions~ : Array[Int], rules~ : Array[(String, String)], conditions~ : Map[String, Array[Int]], lex_ops~ : Array[Array[LexOp]], flex? : Bool) -> Self
+pub fn[V] Grammar::parse(Self, String, empty~ : V, token~ : (String) -> V, reduce~ : (Reduction[V]) -> V? raise, hook? : (Int, Lexer) -> HookResult) -> V raise
+pub fn Grammar::symbol(Self, String) -> Int?
+
+pub(all) enum HookResult {
+  Continue
+  SkipNext
+  Stop
+}
+
+pub(all) enum LexOp {
+  Push(String)
+  Pop
+  Return(String)
+  Custom(Int)
+}
+
+pub struct Lexer {
+  // private fields
+}
+pub fn Lexer::line(Self) -> Int
+pub fn Lexer::pop_state(Self) -> Unit
+pub fn Lexer::push_state(Self, String) -> Unit
+pub fn Lexer::remaining(Self) -> StringView
+pub fn Lexer::set_text(Self, String) -> Unit
+pub fn Lexer::state(Self) -> String
+pub fn Lexer::text(Self) -> String
+
+pub struct Reduction[V] {
+  production : Int
+  values : ArrayView[V]
+  text : String
+  line : Int
+}
+
+// Type aliases
+
+// Traits

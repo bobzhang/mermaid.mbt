@@ -8,6 +8,8 @@ import {
 // Values
 pub fn detect_type(String) -> String raise UnknownDiagramError
 
+pub fn encode_entities(String) -> String
+
 pub fn preprocess(String) -> Diagram raise
 
 // Errors

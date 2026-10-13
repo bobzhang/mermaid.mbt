@@ -1,7 +1,10 @@
 import {
   "bobzhang/mermaid" @lib,
   "bobzhang/mermaid/config",
+  "bobzhang/mermaid/diagrams/flowchart",
   "bobzhang/mermaid/internal/font",
+  "bobzhang/mermaid/internal/jison",
+  "bobzhang/mermaid/internal/preprocess",
   "bobzhang/mermaid/internal/jsregex",
   "moonbitlang/core/env",
   "moonbitlang/core/json",
