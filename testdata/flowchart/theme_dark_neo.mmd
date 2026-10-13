@@ -1,0 +1,15 @@
+---
+config:
+  theme: dark
+  look: neo
+  handDrawnSeed: 3
+---
+flowchart TD
+    A[Start] --> B{Check}
+    B -->|yes| C([Done])
+    B -->|no| D[(Store)]
+    subgraph box [Group]
+        C
+        D
+    end
+    D --> E((End))

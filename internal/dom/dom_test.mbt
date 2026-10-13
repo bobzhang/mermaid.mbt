@@ -156,3 +156,26 @@ test "arcs are measured as the cubics Blink walks" {
     content="148.86178588867188",
   )
 }
+
+///|
+test "length attributes keep seven decimals" {
+  // 377.72996520996094 is halfway between two floats; cut to seven
+  // decimals it lands on the lower one, as in the browser.
+  let rect = @dom.Element::new("rect")
+    .attr("x", "377.72996520996094")
+    .attr("width", "1.00000049")
+    .attr("height", "1")
+  let box = rect.bbox()
+  inspect(box.x, content="377.7299499511719")
+  inspect(box.width, content="1.0000003576278687")
+}
+
+///|
+test "declarations as the CSSOM serializes them" {
+  inspect(
+    @dom.serialize_declarations(
+      "fill:#f96 !important; stroke-dasharray: 5 5; animation: dash 25s linear infinite",
+    ),
+    content="fill: rgb(255, 153, 102) !important; stroke-dasharray: 5, 5; animation: 25s linear 0s infinite normal none running dash;",
+  )
+}

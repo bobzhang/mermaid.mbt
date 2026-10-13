@@ -27,6 +27,8 @@ fn parse_declarations(text : String) -> Array[(String, String)] {
 fn normalize_value(name : String, value : String) -> String {
   if is_color_property(name) {
     serialize_color(value)
+  } else if name == "animation" {
+    serialize_animation(value)
   } else if name == "stroke-dasharray" {
     // A list: commas between the lengths.
     let parts = []
@@ -133,4 +135,88 @@ pub fn serialize_declarations(text : String) -> String {
     }
   }
   merged.map(d => "\{d.0}: \{d.1};").join(" ")
+}
+
+///|
+/// The `animation` shorthand as the CSSOM serializes it: every longhand
+/// spelled out in canonical order, the name last.
+fn serialize_animation(value : String) -> String {
+  // Only a single animation of plain keywords and times is understood;
+  // anything else is kept as written.
+  if value.contains(",") || value.contains("(") {
+    return value.trim().to_owned()
+  }
+  let mut duration = "0s"
+  let mut delay = "0s"
+  let mut timing = "ease"
+  let mut iterations = "1"
+  let mut direction = "normal"
+  let mut fill_mode = "none"
+  let mut play_state = "running"
+  let mut name = "none"
+  let mut times = 0
+  // A keyword that could be a longhand value is one only the first time.
+  let mut has_direction = false
+  let mut has_fill_mode = false
+  let mut has_play_state = false
+  let mut has_timing = false
+  let mut has_iterations = false
+  let is_time = (token : String) => {
+    let number = match token.strip_suffix("ms") {
+      Some(number) => number
+      None =>
+        match token.strip_suffix("s") {
+          Some(number) => number
+          None => return false
+        }
+    }
+    number.length() > 0 &&
+    number.iter().all(c => c is ('0'..<='9' | '.' | '-' | '+'))
+  }
+  let is_number = (token : String) => {
+    token != "" && token.iter().all(c => c is ('0'..<='9' | '.'))
+  }
+  for part in value.split(" ") {
+    let token = part.trim().to_owned()
+    if token == "" {
+      continue
+    }
+    let lower = token.to_lower()
+    if is_time(lower) {
+      if times == 0 {
+        duration = lower
+      } else {
+        delay = lower
+      }
+      times += 1
+    } else if !has_timing &&
+      lower
+      is ("linear"
+      | "ease"
+      | "ease-in"
+      | "ease-out"
+      | "ease-in-out"
+      | "step-start"
+      | "step-end") {
+      timing = lower
+      has_timing = true
+    } else if !has_iterations && (lower == "infinite" || is_number(lower)) {
+      iterations = lower
+      has_iterations = true
+    } else if !has_direction &&
+      lower is ("normal" | "reverse" | "alternate" | "alternate-reverse") {
+      direction = lower
+      has_direction = true
+    } else if !has_fill_mode &&
+      lower is ("none" | "forwards" | "backwards" | "both") {
+      fill_mode = lower
+      has_fill_mode = true
+    } else if !has_play_state && lower is ("running" | "paused") {
+      play_state = lower
+      has_play_state = true
+    } else {
+      name = token
+    }
+  }
+  "\{duration} \{timing} \{delay} \{iterations} \{direction} \{fill_mode} \{play_state} \{name}"
 }

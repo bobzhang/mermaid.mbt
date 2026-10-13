@@ -6,6 +6,27 @@ pub fn draw(
   context : @diagram.Context,
 ) -> Unit raise @rendering.LayoutError {
   let config = context.config
+  // What the port cannot draw yet is refused rather than drawn differently.
+  let layout = config.text("layout").unwrap_or("elk")
+  if layout != "elk" && layout != "elk.layered" {
+    raise @rendering.LayoutError("The \{layout} layout is not supported yet.")
+  }
+  if config.text("look") == Some("handDrawn") {
+    raise @rendering.LayoutError("The hand-drawn look is not supported yet.")
+  }
+  let html_labels = match config.get("htmlLabels") {
+    Null =>
+      match config.get("flowchart.htmlLabels") {
+        Null => true
+        value => @config.evaluate(value)
+      }
+    value => @config.evaluate(value)
+  }
+  if !html_labels {
+    raise @rendering.LayoutError(
+      "Labels without HTML (htmlLabels: false) are not supported yet.",
+    )
+  }
   let (nodes, edges) = db.layout_data()
   let data : @rendering.LayoutData = {
     nodes,

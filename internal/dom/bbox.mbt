@@ -91,20 +91,56 @@ fn PointBounds::to_bounds(self : PointBounds) -> Bounds? {
 }
 
 ///|
-/// A length attribute such as `12.5` or `120px`, as a float.
+/// A length attribute such as `12.5` or `120px`, as a float. These go
+/// through Blink's fast path for simple CSS lengths, which reads at most
+/// seven decimals; anything else gets the exact value.
 fn number_attr(element : Element, name : String) -> Float? {
   guard element.get_attr(name) is Some(text) else { return None }
   let text = text.trim().to_owned()
-  let mut end = 0
-  for i, c in text {
-    if c is ('0'..<='9' | '.' | '-' | '+' | 'e' | 'E') {
-      end = i + 1
-    } else {
-      break
+  let text = match text.strip_suffix("px") {
+    Some(number) => number.to_owned()
+    None => text
+  }
+  if text == "" {
+    return None
+  }
+  let chars = text.to_array()
+  let n = chars.length()
+  let mut i = 0
+  let negative = chars[0] == '-'
+  if negative {
+    i = 1
+  }
+  let mut whole = 0.0
+  let mut simple = i < n
+  while i < n && chars[i] is ('0'..<='9') {
+    whole = whole * 10.0 + (chars[i].to_int() - '0').to_double()
+    i += 1
+  }
+  let mut fraction = 0.0
+  let mut scale = 1.0
+  if i < n && chars[i] == '.' {
+    i += 1
+    while i < n && chars[i] is ('0'..<='9') {
+      if scale < 10000000.0 {
+        fraction = fraction * 10.0 + (chars[i].to_int() - '0').to_double()
+        scale = scale * 10.0
+      }
+      i += 1
     }
   }
-  let value = @string.parse_double(text[:end]) catch { _ => return None }
-  Some(Float::from_double(value))
+  if i < n {
+    simple = false
+  }
+  let value = if simple {
+    whole + fraction / scale
+  } else {
+    let magnitude = if negative { text[1:].to_owned() } else { text }
+    @string.parse_double(magnitude) catch {
+      _ => return None
+    }
+  }
+  Some(Float::from_double(if negative { -value } else { value }))
 }
 
 ///|
