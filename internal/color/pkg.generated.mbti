@@ -1,0 +1,56 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/internal/color"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn adjust(String, h? : Double, s? : Double, l? : Double, r? : Double, g? : Double, b? : Double, a? : Double) -> String raise ColorError
+
+pub fn darken(String, Double) -> String raise ColorError
+
+pub fn hue(String) -> Double raise ColorError
+
+pub fn invert(String, weight? : Double) -> String raise ColorError
+
+pub fn is_dark(String) -> Bool raise ColorError
+
+pub fn lighten(String, Double) -> String raise ColorError
+
+pub fn luminance(String) -> Double raise ColorError
+
+pub fn mix(String, String, weight? : Double) -> String raise ColorError
+
+pub fn rgba(Double, Double, Double, a? : Double) -> String
+
+pub fn to_rgba(String) -> String raise ColorError
+
+pub fn transparentize(String, Double) -> String raise ColorError
+
+pub fn with_alpha(String, Double) -> String raise ColorError
+
+// Errors
+pub(all) suberror ColorError {
+  Unsupported(String)
+  MixedChannels
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+pub struct Channels {
+  // private fields
+}
+pub fn Channels::a(Self) -> Double
+pub fn Channels::b(Self) -> Double
+pub fn Channels::g(Self) -> Double
+pub fn Channels::h(Self) -> Double
+pub fn Channels::l(Self) -> Double
+pub fn Channels::parse(String) -> Self raise ColorError
+pub fn Channels::r(Self) -> Double
+pub fn Channels::s(Self) -> Double
+pub fn Channels::stringify(Self) -> String
+pub fn Channels::to_rgb_string(Self) -> String
+
+// Type aliases
+
+// Traits
