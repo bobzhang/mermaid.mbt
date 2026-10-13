@@ -1,0 +1,6 @@
+import {
+  "bobzhang/mermaid/diagram",
+  "bobzhang/mermaid/internal/langium",
+}
+
+warnings = "-implicit_impl_as_method"
