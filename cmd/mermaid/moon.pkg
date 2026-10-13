@@ -2,6 +2,7 @@ import {
   "bobzhang/mermaid" @lib,
   "bobzhang/mermaid/config",
   "bobzhang/mermaid/internal/font",
+  "bobzhang/mermaid/internal/jsregex",
   "moonbitlang/core/env",
   "moonbitlang/core/json",
   "moonbitlang/x/fs",

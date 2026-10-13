@@ -7,6 +7,7 @@ let usage : String =
   #|                         render a diagram to SVG on stdout
   #|  config [site.json]     print the effective configuration as JSON
   #|  measure <cases.json>   measure text; cases are {text, size, bold, italic}
+  #|  regex <cases.json>     match prefixes; cases are {source, flags, input}
   #|
 
 ///|
@@ -97,6 +98,38 @@ fn measure(path : String) -> Unit raise CliError {
 }
 
 ///|
+fn regex(path : String) -> Unit raise CliError {
+  guard read_json(path) is Array(cases) else {
+    raise CliError("\{path} must hold an array of cases", status=2)
+  }
+  let results : Array[Json] = []
+  for item in cases {
+    guard item
+      is {
+        "source": String(source),
+        "flags": String(flags),
+        "input": String(input),
+        ..
+      } else {
+      continue
+    }
+    let compiled = @jsregex.Regex::compile(source, flags~) catch {
+      error => {
+        results.push({ "error": Repr(error).to_string() })
+        continue
+      }
+    }
+    results.push(
+      match compiled.match_prefix(input) {
+        Some(found) => Json::string(found.text())
+        None => Json::null()
+      },
+    )
+  }
+  println(Json::array(results).stringify())
+}
+
+///|
 fn main {
   let arguments = @env.args()
   try {
@@ -104,6 +137,7 @@ fn main {
       ["render", path, .. options] => render(path, options)
       ["config", .. rest] => print_config(rest)
       ["measure", path] => measure(path)
+      ["regex", path] => regex(path)
       _ => println(usage)
     }
   } catch {
