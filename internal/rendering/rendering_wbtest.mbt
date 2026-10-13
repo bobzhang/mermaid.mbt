@@ -82,3 +82,13 @@ test "line breaks in edge labels" {
   inspect(non_markdown_to_html("a\nb"), content="<p>a<br />b</p>")
   inspect(non_markdown_to_html(""), content="")
 }
+
+///|
+test "icons in labels" {
+  inspect(
+    replace_icons("<p>fa:fa-car Car and fab:fa-github</p>"),
+    content="<p><i class='fa fa-car'></i> Car and <i class='fab fa-github'></i></p>",
+  )
+  inspect(replace_icons("sofa: fa-x"), content="sofa: fa-x")
+  inspect(collapse_spaces("  a   b \n"), content="a b")
+}

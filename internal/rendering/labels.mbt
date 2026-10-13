@@ -71,7 +71,9 @@ fn create_html_label(
   is_node~ : Bool = true,
   add_background~ : Bool = false,
 ) -> (@dom.Element, LabelBox) {
-  let html = @dom.placeholders_to_references(non_markdown_to_html(text))
+  let html = replace_icons(
+    @dom.placeholders_to_references(non_markdown_to_html(text)),
+  )
   let fo = parent.append("foreignObject")
   // No width means no limit: the label never wraps.
   let initial = match width {
@@ -107,7 +109,7 @@ fn create_html_label(
     div.attr("class", "labelBkg") |> ignore
   }
   // What the browser lays out: one line unless it has to wrap.
-  let content = span.text_content()
+  let content = collapse_spaces(span.text_content())
   let font = env.font()
   let line_height = 1.5 * env.font_size
   let natural = if content == "" {
@@ -166,6 +168,7 @@ fn label_helper(
   classes : String,
   env : Env,
   unlimited~ : Bool = false,
+  ignore_min_width~ : Bool = false,
 ) -> Labelled {
   let shape_svg = parent
     .append("g")
@@ -178,7 +181,10 @@ fn label_helper(
   let wrapping_width = env.config
     .number("flowchart.wrappingWidth")
     .unwrap_or(200.0)
-  let min_label_width = if node.label != "" && node.width is None && !unlimited {
+  let min_label_width = if node.label != "" &&
+    node.width is None &&
+    !unlimited &&
+    !ignore_min_width {
     node.min_width.unwrap_or(0.0)
   } else {
     0.0
@@ -264,6 +270,70 @@ fn normalize_breaks(text : String) -> String {
     }
     out.write_char(chars[i])
     i += 1
+  }
+  out.to_string()
+}
+
+///|
+/// Turn Font Awesome references such as `fa:fa-car` into the markup that
+/// shows the icon: mermaid's `replaceIconSubstring` without registered
+/// icon packs.
+fn replace_icons(text : String) -> String {
+  guard text.contains(":fa-") else { return text }
+  let chars = text.to_array()
+  let n = chars.length()
+  let out = StringBuilder()
+  let is_word = (c : Char) => {
+    c is ('a'..<='z' | 'A'..<='Z' | '0'..<='9' | '_' | '-')
+  }
+  let mut i = 0
+  while i < n {
+    // (fa[bklrs]?):fa-([\w-]+)
+    if chars[i] == 'f' && i + 1 < n && chars[i + 1] == 'a' {
+      let mut j = i + 2
+      if j < n && chars[j] is ('b' | 'k' | 'l' | 'r' | 's') {
+        j += 1
+      }
+      if j + 3 < n &&
+        chars[j] == ':' &&
+        chars[j + 1] == 'f' &&
+        chars[j + 2] == 'a' &&
+        chars[j + 3] == '-' {
+        let mut end = j + 4
+        while end < n && is_word(chars[end]) {
+          end += 1
+        }
+        if end > j + 4 {
+          let prefix = String::from_array(chars[i:j])
+          let name = String::from_array(chars[j + 1:end])
+          out.write_string("<i class='\{prefix} \{name}'></i>")
+          i = end
+          continue
+        }
+      }
+    }
+    out.write_char(chars[i])
+    i += 1
+  }
+  out.to_string()
+}
+
+///|
+/// The text of a line as the browser lays it out without wrapping: runs
+/// of white space collapse and the ends are trimmed.
+fn collapse_spaces(text : String) -> String {
+  let out = StringBuilder()
+  let mut pending = false
+  for c in text {
+    if c is (' ' | '\t' | '\n' | '\r') {
+      pending = !out.is_empty()
+    } else {
+      if pending {
+        out.write_char(' ')
+        pending = false
+      }
+      out.write_char(c)
+    }
   }
   out.to_string()
 }

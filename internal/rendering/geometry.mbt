@@ -282,3 +282,103 @@ fn intersect_rect(
     { x: x + w, y: y + (if dx == 0.0 { 0.0 } else { w * dy / dx }), }
   }
 }
+
+///|
+/// Where two segments meet, if they do: mermaid's `intersectLine`.
+fn intersect_line(p1 : Point, p2 : Point, q1 : Point, q2 : Point) -> Point? {
+  let a1 = p2.y - p1.y
+  let b1 = p1.x - p2.x
+  let c1 = p2.x * p1.y - p1.x * p2.y
+  let r3 = a1 * q1.x + b1 * q1.y + c1
+  let r4 = a1 * q2.x + b1 * q2.y + c1
+  if r3 != 0.0 && r4 != 0.0 && r3 * r4 > 0.0 {
+    return None
+  }
+  let a2 = q2.y - q1.y
+  let b2 = q1.x - q2.x
+  let c2 = q2.x * q1.y - q1.x * q2.y
+  let r1 = a2 * p1.x + b2 * p1.y + c2
+  let r2 = a2 * p2.x + b2 * p2.y + c2
+  if r1.abs() < 1.0e-6 && r2.abs() < 1.0e-6 && r1 * r2 > 0.0 {
+    return None
+  }
+  let denom = a1 * b2 - a2 * b1
+  if denom == 0.0 {
+    return None
+  }
+  Some({ x: (b1 * c2 - b2 * c1) / denom, y: (a2 * c1 - a1 * c2) / denom, })
+}
+
+///|
+/// Where the line from a node's centre to `point` crosses its polygonal
+/// outline: mermaid's `intersect.polygon`. The polygon is given in its own
+/// coordinates and placed so that its box is the node's.
+fn intersect_polygon(node : Node, poly : Array[Point], point : Point) -> Point {
+  let centre = { x: node.x, y: node.y, }
+  let infinity = 0x7ff0000000000000L.reinterpret_as_double()
+  let mut min_x = infinity
+  let mut min_y = infinity
+  for entry in poly {
+    min_x = min_x.min(entry.x)
+    min_y = min_y.min(entry.y)
+  }
+  let left = node.x - node.width.unwrap_or(0.0) / 2.0 - min_x
+  let top = node.y - node.height.unwrap_or(0.0) / 2.0 - min_y
+  let intersections = []
+  for i, p1 in poly {
+    let p2 = poly[if i < poly.length() - 1 { i + 1 } else { 0 }]
+    let hit = intersect_line(
+      centre,
+      point,
+      { x: left + p1.x, y: top + p1.y, },
+      { x: left + p2.x, y: top + p2.y, },
+    )
+    if hit is Some(hit) {
+      intersections.push(hit)
+    }
+  }
+  if intersections.is_empty() {
+    return centre
+  }
+  // The nearest to the point; the first of equals, as a stable sort keeps.
+  let distance = (p : Point) => {
+    let dx = p.x - point.x
+    let dy = p.y - point.y
+    (dx * dx + dy * dy).sqrt()
+  }
+  let mut best = intersections[0]
+  let mut best_distance = distance(best)
+  for candidate in intersections {
+    let d = distance(candidate)
+    if d < best_distance {
+      best = candidate
+      best_distance = d
+    }
+  }
+  best
+}
+
+///|
+/// Where the line from a node's centre to `point` crosses an ellipse
+/// around the centre: mermaid's `intersect.ellipse`.
+fn intersect_ellipse(
+  node : Node,
+  rx : Double,
+  ry : Double,
+  point : Point,
+) -> Point {
+  let cx = node.x
+  let cy = node.y
+  let px = cx - point.x
+  let py = cy - point.y
+  let det = (rx * rx * py * py + ry * ry * px * px).sqrt()
+  let mut dx = (rx * ry * px / det).abs()
+  if point.x < cx {
+    dx = -dx
+  }
+  let mut dy = (rx * ry * py / det).abs()
+  if point.y < cy {
+    dy = -dy
+  }
+  { x: cx + dx, y: cy + dy, }
+}

@@ -14,11 +14,7 @@ pub fn draw(FlowDb, @diagram.Context) -> Unit raise @rendering.LayoutError
 
 pub fn edge_id(String, String, counter~ : Int, id? : String) -> String
 
-pub fn is_valid_shape(String) -> Bool
-
 pub fn parse(String, @config.Config) -> FlowDb raise
-
-pub fn shape_handler(String) -> String?
 
 pub fn styles(@theme.Theme, String, String) -> String
 

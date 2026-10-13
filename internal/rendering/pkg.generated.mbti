@@ -10,9 +10,13 @@ import {
 // Values
 pub fn insert_markers(@dom.Element, Array[String], String, String) -> Unit
 
+pub fn is_valid_shape(String) -> Bool
+
 pub fn render(LayoutData, @dom.Element) -> Unit raise LayoutError
 
 pub fn setup_viewport(@dom.Element, Double, String, Bool) -> Unit
+
+pub fn shape_handler(String) -> String?
 
 // Errors
 pub(all) suberror LayoutError {

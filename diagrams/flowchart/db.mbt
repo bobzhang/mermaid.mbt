@@ -299,7 +299,7 @@ fn FlowDb::add_vertex(
         "No such shape: \{shape}. Shape names should be lowercase.",
       )
     }
-    if !is_valid_shape(shape) {
+    if !@rendering.is_valid_shape(shape) {
       raise FlowError("No such shape: \{shape}.")
     }
     vertex.shape = Some(shape)
