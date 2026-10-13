@@ -1,0 +1,5 @@
+import {
+  "bobzhang/mermaid/internal/color",
+}
+
+warnings = "-implicit_impl_as_method"
