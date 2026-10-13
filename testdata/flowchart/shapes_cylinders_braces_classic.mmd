@@ -1,0 +1,17 @@
+---
+config:
+  look: classic
+  handDrawnSeed: 7
+---
+flowchart LR
+    H@{ shape: h-cyl, label: "Direct access storage" } --> L@{ shape: lin-cyl, label: "Disk storage" }
+    H --> B@{ shape: brace, label: "A comment" }
+    L --> R@{ shape: brace-r, label: "Comment on the right" }
+    B --> R
+    R --> P@{ shape: braces, label: "Between braces" }
+    P --> Q@{ shape: h-cyl, label: "Two lines<br/>of storage" }
+    style L fill:#fdd,stroke:#900
+    classDef hot fill:#ffd,stroke:#f80,stroke-width:2px,color:#333
+    class H,B,P hot
+    style H fill:#dfd,stroke:#090,stroke-dasharray: 4 2
+    style R stroke:#00f,stroke-width:3px
