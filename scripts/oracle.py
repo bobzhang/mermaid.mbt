@@ -38,6 +38,16 @@ PAGE = """<!doctype html>
 <script>
 const jobs = %(jobs)s;
 const expression = %(expression)s;
+// Console output is captured so mermaid's debug logging can be inspected.
+const consoleLines = [];
+for (const level of ['debug', 'info', 'log', 'warn', 'error']) {
+  console[level] = (...args) => {
+    consoleLines.push(args.map((arg) => {
+      if (typeof arg === 'string') return arg;
+      try { return JSON.stringify(arg); } catch { return String(arg); }
+    }));
+  };
+}
 const encode = (value) => {
   const bytes = new TextEncoder().encode(JSON.stringify(value));
   let binary = '';
@@ -54,8 +64,9 @@ const encode = (value) => {
     }
     for (const job of jobs) {
       try {
+        consoleLines.length = 0;
         const { svg } = await mermaid.render(job.id, job.text);
-        results.push({ svg });
+        results.push({ svg, console: consoleLines.slice() });
       } catch (error) {
         results.push({ error: String(error && error.message || error) });
       }
@@ -114,6 +125,7 @@ def main():
     parser.add_argument("--id", default="mermaid-svg", help="id of the rendered <svg> element")
     parser.add_argument("--config", default="{}", help="JSON passed to mermaid.initialize")
     parser.add_argument("--eval", dest="expression", help="JavaScript expression to evaluate in the page")
+    parser.add_argument("--console", type=pathlib.Path, help="write captured console output here as JSON lines")
     args = parser.parse_args()
 
     jobs = [{"id": args.id, "text": path.read_text()} for path in args.inputs]
@@ -122,6 +134,11 @@ def main():
         value = results.pop(0)
         print(json.dumps(value.get("value", value), indent=2, ensure_ascii=False))
     failed = False
+    if args.console:
+        with args.console.open("w") as handle:
+            for path, result in zip(args.inputs, results):
+                for line in result.get("console", []):
+                    handle.write(json.dumps({"input": path.name, "args": line}, ensure_ascii=False) + "\n")
     for path, result in zip(args.inputs, results):
         if "error" in result:
             failed = True
