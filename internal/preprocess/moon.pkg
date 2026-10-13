@@ -1,5 +1,6 @@
 import {
   "bobzhang/mermaid/config",
+  "bobzhang/mermaid/internal/jsregex",
   "moonbit-community/yaml",
   "moonbitlang/core/json",
 }

@@ -119,9 +119,10 @@ pub fn render(
     .attr("width", "100%")
     .attr("xmlns", "http://www.w3.org/2000/svg")
   let first_child = svg.append("g")
+  // Entity codes are shielded from the grammars, as in Diagram.fromText.
   let parsed = parse_diagram(
     diagram_type,
-    processed.code,
+    @preprocess.encode_entities(processed.code) + "\n",
     config,
     processed.title,
   )

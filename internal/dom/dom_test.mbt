@@ -76,3 +76,17 @@ test "the style attribute materializes when the document is serialized" {
     ),
   )
 }
+
+///|
+test "shielded entity codes come back as characters" {
+  // What `#quot;`, `#9829;` and `#nosuch;` look like after encode_entities.
+  let text = @dom.Element::new("text")
+    .attr("title", "say ﬂ°quot¶ßhiﬂ°quot¶ß")
+    .text("I ﬂ°°9829¶ß ﬂ°lt¶ßbﬂ°gt¶ß ﬂ°nosuch¶ß")
+  inspect(
+    text.to_html(),
+    content=(
+      #|<text title="say &quot;hi&quot;">I ♥ &lt;b&gt; &amp;nosuch;</text>
+    ),
+  )
+}

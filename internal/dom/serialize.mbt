@@ -53,7 +53,7 @@ fn Element::write(self : Element, out : StringBuilder) -> Unit {
     out.write_char(' ')
     out.write_string(attribute.0)
     out.write_string("=\"")
-    escape_attribute(attribute.1, out)
+    escape_attribute(decode_entities(attribute.1), out)
     out.write_char('"')
   }
   out.write_char('>')
@@ -62,7 +62,7 @@ fn Element::write(self : Element, out : StringBuilder) -> Unit {
   }
   for node in self.children {
     match node {
-      Text(content) => escape_text(content, out)
+      Text(content) => escape_text(decode_entities(content), out)
       Element(child) => child.write(out)
     }
   }
