@@ -37,7 +37,7 @@ Work in progress.
 | Pie | byte-identical |
 | Packet | byte-identical |
 | Info | byte-identical |
-| Flowchart | parses identically to upstream; rendering not ported yet |
+| Flowchart | byte-identical for the fixtures in `testdata/flowchart`; see below |
 | everything else | not ported yet — `render` raises `Unsupported` |
 
 Shared infrastructure that is in place: all eleven themes, configuration
@@ -47,10 +47,25 @@ grammars mermaid writes in jison (`internal/jison`, with the tables taken
 from mermaid's own build by `scripts/extract_jison.js` and
 `scripts/gen_jison.py`).
 
-Flowcharts are laid out by ELK upstream. The port will use
-[moon_elk](https://github.com/moonbit-community/moon_elk); matching elkjs
-0.9.3 exactly needs fixes that currently live on a branch of a local
-checkout (`../moon_elk`, joined through an untracked `moon.work`).
+### Flowcharts
+
+Flowcharts go through a port of mermaid's unified renderer
+(`internal/rendering`): HTML labels, node shapes, subgraph frames, edge
+routing with rounded corners and line hops, class and link styling. The
+layout is ELK's, as upstream, computed by
+[moon_elk](https://github.com/moonbit-community/moon_elk).
+
+What is missing:
+
+- Matching elkjs 0.9.3 exactly needs fixes to moon_elk that currently live
+  on a branch of a local checkout (`../moon_elk`, joined through an untracked
+  `moon.work`). Some graphs still lay out differently; the fixtures in
+  `testdata/flowchart-pending` show which.
+- Shapes upstream draws through rough.js (stadium, cylinder, the asymmetric
+  flag and most of the newer `@{ shape: ... }` shapes) are not ported;
+  `render` raises `Unsupported` for them.
+- Markdown labels are rendered as plain text; the hand-drawn look and
+  non-HTML labels are not ported.
 
 ## How "byte-identical" is checked
 
@@ -65,9 +80,11 @@ the default font stack resolving to Trebuchet MS.
 - `moon test --target native` runs the same comparison from `tests/`.
 
 To match, the port reproduces a number of browser behaviors: Blink's text
-shaping arithmetic (`internal/font`), V8's `Math.sin`/`Math.cos` results
-(`internal/jsmath`), CSSOM serialization of inline styles and colors
-(`internal/dom`), and the stylis CSS compiler (`internal/css`).
+shaping arithmetic (`internal/font`), V8's results for `Math.sin`, `cos`,
+`acos`, `atan2` and `hypot` (`internal/jsmath`), CSSOM serialization of
+inline styles and colors, `getBBox` and `getTotalLength` in Blink's
+single-precision arithmetic (`internal/dom`), and the stylis CSS compiler
+(`internal/css`).
 
 Known limits: text outside the embedded faces (Trebuchet MS, Verdana, Arial;
 Latin and common symbols) is measured approximately, and fractional font
@@ -82,6 +99,7 @@ an ink overhang.
 | `config`, `theme` | configuration and theme variables |
 | `diagram` | the context renderers draw into |
 | `diagrams/*` | one package per diagram type |
+| `internal/rendering` | the unified renderer for diagrams of nodes, edges and groups |
 | `internal/*` | color math, CSS, DOM, d3 helpers, fonts, math, regex, parser runtimes, preprocessing |
 | `cmd/mermaid` | native CLI: `mermaid render file.mmd` |
 
