@@ -428,6 +428,7 @@ fn draw_shape(
     "taggedRect" => tagged_rect(parent, node, env)
     "datastore" => datastore(parent, node, env)
     "note" => note(parent, node, env)
+    "composite" => composite(parent, node, env)
     "triangle" => triangle(parent, node, env, flipped=false)
     "flippedTriangle" => triangle(parent, node, env, flipped=true)
     "trapezoidalPentagon" => trapezoidal_pentagon(parent, node, env)

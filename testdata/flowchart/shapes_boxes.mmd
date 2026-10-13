@@ -13,6 +13,7 @@ flowchart TD
     M --> S@{ shape: datastore, label: "Data store" }
     G --> N@{ shape: note, label: "A note" }
     S --> N
+    N --> K@{ shape: composite, label: "Composite" }
     style D fill:#fdd,stroke:#900
     classDef hot fill:#ffd,stroke:#f80,stroke-width:2px,color:#333
     class T,C,L,W,M,G,S,N hot

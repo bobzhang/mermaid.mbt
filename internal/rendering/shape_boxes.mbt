@@ -455,3 +455,27 @@ fn note(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
   node.intersect = Some(node_intersect_rect(node))
   labelled.shape_svg
 }
+
+///|
+/// The rectangle state diagrams draw around a composite state before it
+/// is laid out; a flowchart node may ask for it by name.
+fn composite(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
+  let classes = if node.css_classes == "" {
+    "node"
+  } else {
+    "node \{node.css_classes}"
+  }
+  let labelled = label_helper(parent, node, classes, env)
+  let box = labelled.bbox
+  let half_padding = node.padding / 2.0
+  let rect = labelled.shape_svg
+    .insert_first("rect")
+    .attr("class", "basic cluster composite label-container")
+    .attr_number("x", -box.width / 2.0 - half_padding)
+    .attr_number("y", -box.height / 2.0 - half_padding)
+    .attr_number("width", box.width + node.padding)
+    .attr_number("height", box.height + node.padding)
+  update_node_bounds(node, rect)
+  node.intersect = Some(node_intersect_rect(node))
+  labelled.shape_svg
+}
