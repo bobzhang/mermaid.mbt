@@ -1,0 +1,13 @@
+---
+config:
+  handDrawnSeed: 7
+---
+flowchart TD
+    F@{ shape: folder, label: "Folder" } --> W@{ shape: browser, label: "Browser window" }
+    F --> C@{ shape: console, label: "Console" }
+    W --> D@{ shape: directory, label: "A directory with<br/>a longer name" }
+    C --> D
+    D --> B@{ shape: browser, label: "B" }
+    style W fill:#fdd,stroke:#900
+    classDef hot fill:#ffd,stroke:#f80,stroke-width:2px,color:#333
+    class F,C hot

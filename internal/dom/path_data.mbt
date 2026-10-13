@@ -876,19 +876,17 @@ fn arc_to_conics(
   let radians = angle * Float::from_double(3.141592653589793 / 180.0)
   let sin_a = snap_to_zero(sin_f(radians))
   let cos_a = snap_to_zero(cos_f(radians))
+  // Skia holds every transform as a matrix and maps a point as
+  // `x * scale_x + y * skew_x`, so a rotation combined with the radii
+  // multiplies the two first and rounds differently from rotating and
+  // scaling in turn. Without rotation the matrix is a plain scale.
+  let rotated = !(sin_a == 0 && cos_a == 1)
   // Rotation by -angle.
   let unrotate = (px : Float, py : Float) => {
-    if sin_a == 0 && cos_a == 1 {
-      (px, py)
+    if rotated {
+      (px * cos_a + py * sin_a, py * cos_a + px * -sin_a)
     } else {
-      (cos_a * px + sin_a * py, cos_a * py - sin_a * px)
-    }
-  }
-  let rotate = (px : Float, py : Float) => {
-    if sin_a == 0 && cos_a == 1 {
       (px, py)
-    } else {
-      (cos_a * px - sin_a * py, sin_a * px + cos_a * py)
     }
   }
   let (mid_x, mid_y) = unrotate((x0 - x) * half, (y0 - y) * half)
@@ -900,9 +898,16 @@ fn arc_to_conics(
   }
   let inv_rx = one / rx
   let inv_ry = one / ry
+  // `setScale(1 / rx, 1 / ry)` then `preRotate(-angle)`.
   let to_unit = (px : Float, py : Float) => {
-    let (ux, uy) = unrotate(px, py)
-    (ux * inv_rx, uy * inv_ry)
+    if rotated {
+      (
+        px * (inv_rx * cos_a) + py * (inv_rx * sin_a),
+        py * (inv_ry * cos_a) + px * (inv_ry * -sin_a),
+      )
+    } else {
+      (px * inv_rx, py * inv_ry)
+    }
   }
   let (u0x, u0y) = to_unit(x0, y0)
   let (u1x, u1y) = to_unit(x, y)
@@ -949,8 +954,16 @@ fn arc_to_conics(
     is_integer(ry) &&
     is_integer(x) &&
     is_integer(y)
+  // `setRotate(angle)` then `preScale(rx, ry)`.
   let from_unit = (px : Float, py : Float) => {
-    let (mx, my) = rotate(px * rx, py * ry)
+    let (mx, my) = if rotated {
+      (
+        px * (cos_a * rx) + py * (-sin_a * ry),
+        py * (cos_a * ry) + px * (sin_a * rx),
+      )
+    } else {
+      (px * rx, py * ry)
+    }
     if expect_integers {
       ((mx + half).floor(), (my + half).floor())
     } else {

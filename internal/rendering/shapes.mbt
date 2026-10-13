@@ -444,6 +444,9 @@ fn draw_shape(
     "linedCylinder" => lined_cylinder(parent, node, env)
     "curlyBraceLeft" | "curlyBraceRight" | "curlyBraces" =>
       curly_brace(parent, node, env, handler)
+    "folder" => folder(parent, node, env)
+    "browser" => browser(parent, node, env)
+    "consoleWindow" => console_window(parent, node, env)
     "stateStart" => state_start(parent, node, env)
     "stateEnd" => state_end(parent, node, env)
     "forkJoin" => fork_join(parent, node, env, dir)

@@ -250,6 +250,13 @@ fn Element::local_bounds(self : Element) -> Bounds? {
       bounds.to_bounds()
     }
     "path" => path_bounds(self.get_attr("d").unwrap_or(""))
+    "line" => {
+      // A line is the path between its ends, however thin its box.
+      let bounds = PointBounds::new()
+      bounds.add(attr("x1"), attr("y1"))
+      bounds.add(attr("x2"), attr("y2"))
+      bounds.to_bounds()
+    }
     "g" | "svg" | "a" => {
       let mut bounds : Bounds? = None
       for node in self.children {
