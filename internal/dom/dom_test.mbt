@@ -90,3 +90,58 @@ test "shielded entity codes come back as characters" {
     ),
   )
 }
+
+///|
+test "bounding boxes follow translated groups" {
+  let svg = @dom.Element::new("svg")
+  let group = svg.append("g").attr("transform", "translate(88, 34.5)")
+  group
+  .append("rect")
+  .attr_number("x", -76.0)
+  .attr_number("y", -22.5)
+  .attr_number("width", 152.0)
+  .attr_number("height", 45.0)
+  |> ignore
+  // An unsized rectangle renders nothing and does not count.
+  group.append("rect") |> ignore
+  debug_inspect(
+    group.bbox(),
+    content="{ x: -76, y: -22.5, width: 152, height: 45 }",
+  )
+  debug_inspect(svg.bbox(), content="{ x: 12, y: 12, width: 152, height: 45 }")
+  svg.append("path").attr("d", "M88,57L88,93Q88,100 95,100L200,100") |> ignore
+  debug_inspect(svg.bbox(), content="{ x: 12, y: 12, width: 188, height: 88 }")
+}
+
+///|
+test "path length as getTotalLength reports it" {
+  inspect(@dom.path_length("M88,57L88,93"), content="36")
+  // Values from Chrome: rounded corners are measured almost exactly.
+  inspect(
+    @dom.path_length(
+      "M114,57L114,69.92893218813452Q114,77 106.92893218813452,77L95.07106781186548,77Q88,77 88,84.07106781186548L88,93",
+    ),
+    content="56.671630859375",
+  )
+  inspect(
+    @dom.path_length(
+      "M88,142L88,154.92893218813452Q88,162 95.07106781186548,162L106.92893218813452,162Q114,162 114,169.07106781186548L114,178",
+    ),
+    content="56.67163848876953",
+  )
+}
+
+///|
+test "inner HTML" {
+  let span = @dom.Element::new("span")
+  span.set_inner_html("<p>a &amp; b<br />c</p>")
+  // Void elements come out the way the final HTML serialization has them.
+  inspect(span.to_html(), content="<span><p>a &amp; b<br>c</p></span>")
+  inspect(span.text_content(), content="a & bc")
+}
+
+///|
+test "attribute values are trimmed" {
+  let g = @dom.Element::new("g").attr("class", " node default ")
+  inspect(g.to_html(), content="<g class=\"node default\"></g>")
+}

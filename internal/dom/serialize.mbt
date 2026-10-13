@@ -53,7 +53,11 @@ fn Element::write(self : Element, out : StringBuilder) -> Unit {
     out.write_char(' ')
     out.write_string(attribute.0)
     out.write_string("=\"")
-    escape_attribute(decode_entities(attribute.1), out)
+    // The sanitizer mermaid runs its output through trims attribute values.
+    escape_attribute(
+      decode_entities(attribute.1).trim(chars=" \t\n\r\u{0c}").to_owned(),
+      out,
+    )
     out.write_char('"')
   }
   out.write_char('>')
