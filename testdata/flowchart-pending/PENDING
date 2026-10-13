@@ -1,0 +1,5 @@
+Flowcharts the port does not render identically yet: node shapes other
+than the rectangle, styled nodes and links, and one layout whose ELK result
+differs in the last bit of a coordinate. scripts/compare.py skips this
+directory unless it is named on the command line. Move a fixture to
+testdata/flowchart once it matches.

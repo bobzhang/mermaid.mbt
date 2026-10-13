@@ -22,7 +22,7 @@ priv struct Parsed {
   styles : String
   acc_title : String
   acc_description : String
-  draw : (@diagram.Context) -> Unit
+  draw : (@diagram.Context) -> Unit raise MermaidError
 }
 
 ///|
@@ -73,6 +73,30 @@ fn parse_diagram(
         acc_title: packet.acc_title,
         acc_description: packet.acc_description,
         draw: context => @packet.draw(packet, context),
+      }
+    }
+    "flowchart-v2" | "flowchart-elk" => {
+      let db = @flowchart.parse(code, config) catch {
+        @jison.ParseError(message~, ..) => raise Syntax(message)
+        @flowchart.FlowError(message) => raise Syntax(message)
+        error => raise Syntax(error.to_string())
+      }
+      if title is Some(title) && db.title == "" {
+        db.set_title(title)
+      }
+      {
+        styles: @flowchart.styles(
+          config.theme(),
+          config.text("theme").unwrap_or(""),
+          config.text("look").unwrap_or(""),
+        ),
+        acc_title: db.acc_title,
+        acc_description: db.acc_description,
+        draw: context => {
+          @flowchart.draw(db, context) catch {
+            @rendering.LayoutError(message) => raise Unsupported(message)
+          }
+        },
       }
     }
     other => raise Unsupported(other)

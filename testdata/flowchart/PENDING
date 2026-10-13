@@ -1,4 +1,0 @@
-The flowchart renderer is not ported yet. These inputs are parsed by
-scripts/check_flow_parse.py; scripts/compare.py skips this directory
-unless it is named on the command line. Remove this file once the
-flowchart renders.

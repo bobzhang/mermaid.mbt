@@ -1,13 +1,16 @@
 import {
   "bobzhang/mermaid/config",
   "bobzhang/mermaid/diagram",
+  "bobzhang/mermaid/diagrams/flowchart",
   "bobzhang/mermaid/diagrams/info",
   "bobzhang/mermaid/diagrams/packet",
   "bobzhang/mermaid/diagrams/pie",
   "bobzhang/mermaid/internal/css",
   "bobzhang/mermaid/internal/dom",
+  "bobzhang/mermaid/internal/jison",
   "bobzhang/mermaid/internal/langium",
   "bobzhang/mermaid/internal/preprocess",
+  "bobzhang/mermaid/internal/rendering",
 }
 
 warnings = "-implicit_impl_as_method"

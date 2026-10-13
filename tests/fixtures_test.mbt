@@ -57,3 +57,8 @@ test "info" {
 test "packet" {
   json_inspect(mismatches("packet"), content=[])
 }
+
+///|
+test "flowchart" {
+  json_inspect(mismatches("flowchart"), content=[])
+}
