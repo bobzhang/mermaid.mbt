@@ -11,3 +11,7 @@ license = "MIT"
 keywords = [ "mermaid", "diagram", "flowchart", "svg" ]
 
 description = "A port of Mermaid (text-to-diagram toolkit) to MoonBit"
+
+import {
+  "moonbitlang/x@0.5.5",
+}

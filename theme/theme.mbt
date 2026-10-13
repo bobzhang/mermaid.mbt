@@ -157,3 +157,16 @@ fn update_colors(name : String, theme : Theme) -> Unit raise @color.ColorError {
     _ => ()
   }
 }
+
+///|
+/// Rebuild a theme from variables previously exported with `to_json`,
+/// without recomputing derived colors.
+pub fn Theme::from_variables(variables : Map[String, Json]) -> Theme {
+  { vars: variables.copy(), }
+}
+
+///|
+/// Whether `name` is one of `theme_names`.
+pub fn is_theme_name(name : String) -> Bool {
+  theme_names.contains(name)
+}
