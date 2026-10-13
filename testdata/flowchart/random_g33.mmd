@@ -1,0 +1,18 @@
+flowchart BT
+    C ==> F
+    B ==>|no| E
+    E --> F
+    E --- H
+    F --> H
+    E --> G
+    B --- G
+    A -.-> C
+    F ==> I
+    C --> H
+    E -.->|no| D
+    I ---|maybe so| G
+    subgraph S1
+        A
+        B
+        C
+    end

@@ -1,0 +1,14 @@
+flowchart TD
+    B --- D
+    D -.-> F
+    D --- G
+    E --> G
+    B -->|no| E
+    G --- A
+    D --> E
+    C -->|yes| D
+    subgraph S1
+        A
+        B
+        C
+    end

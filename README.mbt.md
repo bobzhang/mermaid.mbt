@@ -59,8 +59,9 @@ What is missing:
 
 - Matching elkjs 0.9.3 exactly needs fixes to moon_elk that currently live
   on a branch of a local checkout (`../moon_elk`, joined through an untracked
-  `moon.work`). Some graphs still lay out differently; the fixtures in
-  `testdata/flowchart-pending` show which.
+  `moon.work`). With them, every graph tried so far lays out exactly as in
+  elkjs: the fixtures, upstream's documentation examples and some eight
+  hundred generated graphs.
 - The classic shapes are ported (rectangle, rounded, stadium, subroutine,
   cylinder, circle, double circle, flag, diamond, hexagon, parallelograms,
   trapezoids); the newer `@{ shape: ... }` shapes are not, and `render`

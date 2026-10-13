@@ -1,0 +1,18 @@
+flowchart LR
+    E -.-> F
+    C ==> J
+    F --> I
+    A ==>|maybe so| G
+    G --> J
+    G ---|x| A
+    B ==>|x| F
+    G --- I
+    D ==>|yes| F
+    I --- D
+    C --> D
+    B -.-> C
+    subgraph S1
+        A
+        B
+        C
+    end
