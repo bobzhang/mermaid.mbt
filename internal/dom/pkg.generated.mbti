@@ -12,6 +12,8 @@ pub fn path_length(String) -> Double
 
 pub fn placeholders_to_references(String) -> String
 
+pub fn serialize_declarations(String) -> String
+
 // Errors
 
 // Types and methods
@@ -26,6 +28,9 @@ pub fn Element::attr_number(Self, String, Double) -> Self
 pub fn Element::bbox(Self) -> Rect
 pub fn Element::child_elements(Self) -> Array[Self]
 pub fn Element::children(Self) -> ArrayView[Node]
+pub fn Element::clone_deep(Self) -> Self
+pub fn Element::descendants(Self, Array[String]) -> Array[Self]
+pub fn Element::find_by_id(Self, String) -> Self?
 pub fn Element::get_attr(Self, String) -> String?
 pub fn Element::insert_before(Self, Self, Self) -> Unit
 pub fn Element::insert_first(Self, String) -> Self

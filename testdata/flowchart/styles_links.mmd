@@ -1,0 +1,11 @@
+flowchart TD
+    A --> B
+    A -.-> C
+    B ==> D
+    C --x D
+    D --o E
+    linkStyle 0 stroke:#f00
+    linkStyle 2,3 stroke:blue,stroke-width:2px
+    linkStyle 4 stroke:rgb(10, 20, 30)
+    click B "https://example.com/path?q=1" "A tooltip"
+    click C href "https://example.org" "Other tip" _self

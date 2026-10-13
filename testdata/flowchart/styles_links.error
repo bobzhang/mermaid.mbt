@@ -1,0 +1,4 @@
+Parse error on line 9:
+...nkStyle 4 stroke:rgb(10, 20, 30)    cli
+-----------------------^
+Expecting 'SEMI', 'NEWLINE', 'SPACE', 'EOF', 'COLON', 'STYLE', 'NUM', 'COMMA', 'NODE_STRING', 'UNIT', 'BRKT', 'PCT', got 'PS'

@@ -61,7 +61,7 @@ fn split_styles(styles : Array[String]) -> SplitStyles {
 }
 
 ///|
-/// `styles2String` of a node; also records the label styles on it.
+/// `styles2String` of a node.
 fn node_styles(node : Node) -> SplitStyles {
   let styles = [..node.css_compiled_styles, ..node.css_styles]
   for style in node.label_style.split(";") {
@@ -70,7 +70,14 @@ fn node_styles(node : Node) -> SplitStyles {
       styles.push(style)
     }
   }
-  let split = split_styles(styles)
+  split_styles(styles)
+}
+
+///|
+/// `styles2String` of a node as shapes use it: the label styles are
+/// recorded on the node for its label.
+fn shape_styles(node : Node) -> SplitStyles {
+  let split = node_styles(node)
   node.label_style = split.label_styles
   split
 }

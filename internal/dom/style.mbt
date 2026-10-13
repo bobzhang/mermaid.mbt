@@ -8,7 +8,15 @@ fn parse_declarations(text : String) -> Array[(String, String)] {
     let name = part[:colon].trim().to_owned()
     let value = part[colon + 1:].trim().to_owned()
     if name != "" && value != "" {
-      declarations.push((name, normalize_value(name, value)))
+      // Priority is kept apart from the value while it is normalized.
+      let lower = value.to_lower()
+      let value = if lower.has_suffix("!important") {
+        let base = value[:value.length() - 10].trim().to_owned()
+        normalize_value(name, base) + " !important"
+      } else {
+        normalize_value(name, value)
+      }
+      declarations.push((name, value))
     }
   }
   declarations
@@ -19,6 +27,15 @@ fn parse_declarations(text : String) -> Array[(String, String)] {
 fn normalize_value(name : String, value : String) -> String {
   if is_color_property(name) {
     serialize_color(value)
+  } else if name == "stroke-dasharray" {
+    // A list: commas between the lengths.
+    let parts = []
+    for part in value.replace_all(old=",", new=" ").split(" ") {
+      if !part.is_empty() {
+        parts.push(part.to_owned())
+      }
+    }
+    parts.join(", ")
   } else {
     value.trim().to_owned()
   }
@@ -99,4 +116,21 @@ fn Element::sync_style(self : Element) -> Unit {
     }
   }
   self.attributes.push(("style", text))
+}
+
+///|
+/// The declarations of a rule as the CSSOM serializes them: `name: value;`
+/// pairs with colors resolved, later duplicates replacing earlier ones.
+pub fn serialize_declarations(text : String) -> String {
+  let merged : Array[(String, String)] = []
+  for declaration in parse_declarations(text) {
+    match merged.search_by(existing => existing.0 == declaration.0) {
+      Some(index) => {
+        merged.remove(index) |> ignore
+        merged.push(declaration)
+      }
+      None => merged.push(declaration)
+    }
+  }
+  merged.map(d => "\{d.0}: \{d.1};").join(" ")
 }

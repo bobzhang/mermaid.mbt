@@ -182,18 +182,20 @@ fn marker_kind(arrow_type : String) -> (String, Bool)? {
 }
 
 ///|
-/// Point one end of a path at its marker.
+/// Point one end of a path at its marker. An edge with its own stroke
+/// colour gets a copy of the marker in that colour.
 fn add_edge_marker(
   path : @dom.Element,
   at_start : Bool,
   arrow_type : String,
   data : LayoutData,
   use_margin : Bool,
+  stroke_color : String?,
 ) -> Unit {
   if arrow_type == "" || arrow_type == "none" {
     return
   }
-  guard marker_kind(arrow_type) is Some((kind, _)) else { return }
+  guard marker_kind(arrow_type) is Some((kind, filled)) else { return }
   let margin_support = kind
     is ("cross"
     | "point"
@@ -206,9 +208,60 @@ fn add_edge_marker(
     | "barb")
   let suffix = if at_start { "Start" } else { "End" }
   let offset = if use_margin && margin_support { "-margin" } else { "" }
-  let id = "\{data.diagram_id}_\{data.diagram_type}-\{kind}\{suffix}\{offset}"
+  let original_id = "\{data.diagram_id}_\{data.diagram_type}-\{kind}\{suffix}\{offset}"
   let position = if at_start { "start" } else { "end" }
-  path.attr("marker-\{position}", "url(#\{id})") |> ignore
+  guard stroke_color is Some(color) && color.trim().to_owned() != "" else {
+    path.attr("marker-\{position}", "url(#\{original_id})") |> ignore
+    return
+  }
+  let color_id = StringBuilder()
+  for c in color {
+    color_id.write_char(
+      if c is ('0'..<='9' | 'A'..<='Z' | 'a'..<='z') {
+        c
+      } else {
+        '_'
+      },
+    )
+  }
+  let colored_id = "\{original_id}_\{color_id.to_string()}"
+  let root = document_root(path)
+  if root.find_by_id(colored_id) is None &&
+    root.find_by_id(original_id) is Some(original) &&
+    original.parent() is Some(parent) {
+    let colored = original.clone_deep().attr("id", colored_id)
+    for shape in colored.descendants(["path", "circle", "line"]) {
+      shape.attr("stroke", color) |> ignore
+      if filled {
+        shape.attr("fill", color) |> ignore
+      }
+    }
+    parent.append_child(colored)
+  }
+  path.attr("marker-\{position}", "url(#\{colored_id})") |> ignore
+}
+
+///|
+/// The topmost ancestor of an element.
+fn document_root(element : @dom.Element) -> @dom.Element {
+  let mut current = element
+  while current.parent() is Some(parent) {
+    current = parent
+  }
+  current
+}
+
+///|
+/// The stroke colour an inline style asks for: `/stroke:([^;]+)/`.
+fn stroke_color_of(style : String) -> String? {
+  guard style.find("stroke:") is Some(start) else { return None }
+  let rest = style[start + 7:]
+  let end = rest.find(";").unwrap_or(rest.length())
+  if end == 0 {
+    None
+  } else {
+    Some(rest[:end].to_owned())
+  }
 }
 
 ///|
@@ -290,8 +343,23 @@ fn insert_edge(group : @dom.Element, edge : Edge, data : LayoutData) -> Unit {
   .attr("data-look", edge.look)
   |> ignore
   let use_margin = !animated && edge.look == "neo"
-  add_edge_marker(path, true, edge.arrow_type_start, data, use_margin)
-  add_edge_marker(path, false, edge.arrow_type_end, data, use_margin)
+  let stroke_color = stroke_color_of(path_style)
+  add_edge_marker(
+    path,
+    true,
+    edge.arrow_type_start,
+    data,
+    use_margin,
+    stroke_color,
+  )
+  add_edge_marker(
+    path,
+    false,
+    edge.arrow_type_end,
+    data,
+    use_margin,
+    stroke_color,
+  )
 }
 
 ///|

@@ -1,0 +1,11 @@
+flowchart TB
+    subgraph one [First group]
+        a1 --> a2
+    end
+    subgraph two
+        b1 --> b2
+    end
+    one --> two
+    classDef hl fill:#ffd,stroke:#f66,color:#900
+    class one hl
+    style two fill:#eef,stroke:#00f,stroke-width:2px

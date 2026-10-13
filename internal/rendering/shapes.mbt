@@ -26,7 +26,7 @@ fn draw_rect(
   label_padding_y~ : Double,
   radius? : Double,
 ) -> @dom.Element {
-  let styles = node_styles(node)
+  let styles = shape_styles(node)
   let labelled = label_helper(parent, node, node_classes(node), env)
   let total_width = (labelled.bbox.width + label_padding_x * 2.0).max(
     node.width.unwrap_or(0.0),
@@ -87,7 +87,7 @@ fn polygon_shape(
   env : Env,
   outline : (LabelBox) -> (Double, Double, Array[Point]),
 ) -> @dom.Element {
-  let styles = node_styles(node)
+  let styles = shape_styles(node)
   let labelled = label_helper(parent, node, node_classes(node), env)
   let (w, h, points) = outline(labelled.bbox)
   let polygon = insert_polygon(labelled.shape_svg, w, h, points)
@@ -102,7 +102,7 @@ fn polygon_shape(
 ///|
 /// A diamond: mermaid's `question`.
 fn question(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
-  let styles = node_styles(node)
+  let styles = shape_styles(node)
   let labelled = label_helper(parent, node, node_classes(node), env)
   let w = labelled.bbox.width + node.padding
   let h = labelled.bbox.height + node.padding
@@ -134,7 +134,7 @@ fn question(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
 ///|
 /// A circle around the label.
 fn circle(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
-  let styles = node_styles(node)
+  let styles = shape_styles(node)
   let labelled = label_helper(
     parent,
     node,
@@ -165,7 +165,7 @@ fn circle(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
 ///|
 /// Two concentric circles around the label.
 fn double_circle(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
-  let styles = node_styles(node)
+  let styles = shape_styles(node)
   let neo = node.look == "neo"
   let gap = if neo { 12.0 } else { 5.0 }
   let label_padding = if neo { 16.0 } else { node.padding }
@@ -349,15 +349,9 @@ fn insert_node(
   }
   let (outer, inner) = match node.link {
     Some(link) => {
-      let target = if env.config.text("securityLevel") == Some("sandbox") {
-        Some("_top")
-      } else {
-        node.link_target
-      }
+      // Upstream also sets `target`, which the final sanitizing pass strips
+      // from SVG anchors again.
       let anchor = parent.append("a").attr("xlink:href", link)
-      if target is Some(target) {
-        anchor.attr("target", target) |> ignore
-      }
       (anchor, draw_shape(anchor, node, env))
     }
     None => {

@@ -1,8 +1,16 @@
 ///|
+/// A class defined in the diagram text with `classDef`.
+priv struct StyleClass {
+  id : String
+  styles : Array[String]
+  text_styles : Array[String]
+}
+
+///|
 /// The rules mermaid derives from configuration rather than from a theme:
 /// the font custom properties. Upstream builds them in a `CSSStyleSheet`
 /// and reads back the browser's serialization.
-fn user_styles(config : @config.Config) -> String {
+fn user_styles(config : @config.Config, classes : Array[StyleClass]) -> String {
   let rules = []
   let declaration = (value : String) => value.trim(chars=" \t\n;").to_owned()
   if config.text("fontFamily") is Some(family) {
@@ -10,6 +18,39 @@ fn user_styles(config : @config.Config) -> String {
   }
   if config.text("altFontFamily") is Some(family) {
     rules.push(":root { --mermaid-alt-font-family: \{declaration(family)}; }")
+  }
+  // Classes the diagram text defines. Labels are HTML unless configured
+  // otherwise, and the rules address them accordingly.
+  let html_labels = match config.get("htmlLabels") {
+    Null =>
+      match config.get("flowchart.htmlLabels") {
+        Null => true
+        value => @config.evaluate(value)
+      }
+    value => @config.evaluate(value)
+  }
+  let elements = if html_labels {
+    ["> *", "span"]
+  } else {
+    ["rect", "polygon", "ellipse", "circle", "path"]
+  }
+  let important = (styles : Array[String]) => {
+    @dom.serialize_declarations(styles.join(" !important; ") + " !important;")
+  }
+  for style_class in classes {
+    if !style_class.styles.is_empty() {
+      for element in elements {
+        rules.push(
+          ".\{style_class.id} \{element} { \{important(style_class.styles)} }",
+        )
+      }
+    }
+    if !style_class.text_styles.is_empty() {
+      let styles = style_class.text_styles.map(style => {
+        style.replace(old="color", new="fill")
+      })
+      rules.push(".\{style_class.id} tspan { \{important(styles)} }")
+    }
   }
   let theme_css = match config.text("themeCSS") {
     Some(css) => css + "\n"
@@ -25,6 +66,7 @@ fn diagram_stylesheet(
   svg_id : String,
   diagram_styles : String,
   config : @config.Config,
+  classes : Array[StyleClass],
 ) -> String {
   let theme = config.theme()
   let v = (name : String) => theme.text(name)
@@ -166,7 +208,7 @@ fn diagram_stylesheet(
     $|    filter: \{shadow};
     $|  }
     $|
-    $|  \{user_styles(config)}
+    $|  \{user_styles(config, classes)}
     $|
   )
 }
@@ -177,7 +219,11 @@ fn compiled_styles(
   id : String,
   diagram_styles : String,
   config : @config.Config,
+  classes : Array[StyleClass],
 ) -> String {
   let svg_id = "#" + id
-  @css.compile(svg_id, diagram_stylesheet(svg_id, diagram_styles, config))
+  @css.compile(
+    svg_id,
+    diagram_stylesheet(svg_id, diagram_styles, config, classes),
+  )
 }

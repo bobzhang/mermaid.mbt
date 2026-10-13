@@ -209,3 +209,65 @@ pub fn number(value : Double) -> String {
     value.to_string()
   }
 }
+
+///|
+/// A detached copy of the element and everything below it, like
+/// `cloneNode(true)`.
+pub fn Element::clone_deep(self : Element) -> Element {
+  self.sync_style()
+  let copy : Element = {
+    tag: self.tag,
+    attributes: self.attributes.copy(),
+    children: [],
+    parent: None,
+    declarations: self.declarations.copy(),
+    style_dirty: false,
+  }
+  for child in self.children {
+    match child {
+      Element(element) => {
+        let element = element.clone_deep()
+        element.parent = Some(copy)
+        copy.children.push(Element(element))
+      }
+      Text(text) => copy.children.push(Text(text))
+    }
+  }
+  copy
+}
+
+///|
+/// The first element at or below this one with the given `id`.
+pub fn Element::find_by_id(self : Element, id : String) -> Element? {
+  if self.get_attr("id") == Some(id) {
+    return Some(self)
+  }
+  for child in self.children {
+    if child is Element(element) && element.find_by_id(id) is Some(found) {
+      return Some(found)
+    }
+  }
+  None
+}
+
+///|
+/// Every element below this one with one of the given tags, in document
+/// order.
+pub fn Element::descendants(
+  self : Element,
+  tags : Array[String],
+) -> Array[Element] {
+  let found = []
+  fn visit(element : Element) {
+    for child in element.children {
+      if child is Element(child) {
+        if tags.contains(child.tag) {
+          found.push(child)
+        }
+        visit(child)
+      }
+    }
+  }
+  visit(self)
+  found
+}

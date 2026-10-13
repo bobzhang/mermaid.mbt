@@ -22,6 +22,8 @@ priv struct Parsed {
   styles : String
   acc_title : String
   acc_description : String
+  /// Classes defined in the diagram text, which become stylesheet rules.
+  classes : Array[StyleClass]
   draw : (@diagram.Context) -> Unit raise MermaidError
 }
 
@@ -46,6 +48,7 @@ fn parse_diagram(
         styles: @pie.styles(config.theme()),
         acc_title: pie.acc_title,
         acc_description: pie.acc_description,
+        classes: [],
         draw: context => @pie.draw(pie, context),
       }
     }
@@ -57,6 +60,7 @@ fn parse_diagram(
         styles: "",
         acc_title: "",
         acc_description: "",
+        classes: [],
         draw: context => @info.draw(context),
       }
     }
@@ -72,6 +76,7 @@ fn parse_diagram(
         styles: @packet.styles(config.theme()),
         acc_title: packet.acc_title,
         acc_description: packet.acc_description,
+        classes: [],
         draw: context => @packet.draw(packet, context),
       }
     }
@@ -92,6 +97,10 @@ fn parse_diagram(
         ),
         acc_title: db.acc_title,
         acc_description: db.acc_description,
+        classes: db.classes
+        .values()
+        .map(c => { id: c.id, styles: c.styles, text_styles: c.text_styles, })
+        .collect(),
         draw: context => {
           @flowchart.draw(db, context) catch {
             @rendering.LayoutError(message) => raise Unsupported(message)
@@ -151,7 +160,7 @@ pub fn render(
     processed.title,
   )
   let style = @dom.Element::new("style").text(
-    compiled_styles(id, parsed.styles, config),
+    compiled_styles(id, parsed.styles, config, parsed.classes),
   )
   svg.insert_before(style, first_child)
   (parsed.draw)(@diagram.Context::new(id, config, svg))
