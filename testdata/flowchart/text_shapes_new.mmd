@@ -1,0 +1,19 @@
+---
+config:
+  htmlLabels: false
+  handDrawnSeed: 9
+---
+flowchart LR
+    A@{ shape: doc, label: "Document" } --> B@{ shape: lin-cyl, label: "Disk" }
+    B --> C@{ shape: h-cyl, label: "Queue" }
+    C --> D@{ shape: tri, label: "Extract" }
+    D --> E@{ shape: flip-tri, label: "Merge" }
+    E --> F@{ shape: win-pane, label: "Storage" }
+    F --> G@{ shape: st-rect, label: "Many" }
+    G --> H@{ shape: brace, label: "A comment on the side" }
+    H --> I@{ shape: cloud, label: "Cloud" }
+    I --> J@{ shape: bang, label: "Bang" }
+    J --> K@{ shape: sl-rect, label: "Manual input" }
+    K --> L@{ shape: div-rect, label: "Divided" }
+    L --> M@{ shape: fr-rect, label: "Subprocess" }
+    M --> N@{ shape: tag-doc, label: "Tagged" }

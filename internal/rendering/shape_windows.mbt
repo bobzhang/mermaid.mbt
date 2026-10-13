@@ -268,7 +268,7 @@ fn cloud(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
     .attr("class", "basic label-container")
     .attr("style", styles.node_styles)
     .attr("d", path)
-  place_label(labelled, -box.width / 2.0, -box.height / 2.0)
+  place_label_at(labelled, -box.width / 2.0, -box.height / 2.0)
   element.attr("transform", "translate(\{n(-w / 2.0)}, \{n(-h / 2.0)})")
   |> ignore
   update_node_bounds(node, element)
@@ -288,7 +288,7 @@ fn bang(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
   let r = 0.15 * w
   let ew = w.max(box.width + 20.0)
   let eh = h.max(box.height + 20.0)
-  place_label(labelled, -box.width / 2.0, -box.height / 2.0)
+  place_label_at(labelled, -box.width / 2.0, -box.height / 2.0)
   let n = @dom.number
   let arc = "    a\{n(r)},\{n(r)} 1 0,0 "
   let small_arc = "    a\{n(r * 0.8)},\{n(r * 0.8)} 1 0,0 "

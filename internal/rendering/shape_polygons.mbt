@@ -88,13 +88,19 @@ fn triangle(
   update_node_bounds(node, outline)
   // The label goes where the triangle is widest.
   if flipped {
-    place_label(labelled, -box.width / 2.0, -h / 2.0 + node.padding / 2.0)
+    // Upstream adds the box's start here where every other shape
+    // subtracts it.
+    place_label_at(
+      labelled,
+      -box.width / 2.0 - labelled.offset_x,
+      -h / 2.0 + node.padding / 2.0 + labelled.offset_y,
+    )
   } else {
     let divisor = if flowchart_html_labels(env) { 2.0 } else { 1.0 }
-    place_label(
+    place_label_at(
       labelled,
-      -box.width / 2.0,
-      h / 2.0 - (box.height + node.padding / divisor),
+      -box.width / 2.0 - labelled.offset_x,
+      h / 2.0 - (box.height + node.padding / divisor - labelled.offset_y),
     )
   }
   node.intersect = Some(point => intersect_polygon(node, points, point))

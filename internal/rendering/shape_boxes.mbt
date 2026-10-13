@@ -34,10 +34,18 @@ fn node_intersect_rect(node : Node) -> (Point) -> Point {
 }
 
 ///|
-/// Move the label of a shape.
-fn place_label(labelled : Labelled, x : Double, y : Double) -> Unit {
+/// Move the label of a shape to exactly `x`, `y`.
+fn place_label_at(labelled : Labelled, x : Double, y : Double) -> Unit {
   let n = @dom.number
   labelled.label.attr("transform", "translate(\{n(x)}, \{n(y)})") |> ignore
+}
+
+///|
+/// Move the label of a shape so that its box starts at `x`, `y`: most
+/// shapes subtract where the label's own box starts, which is the origin
+/// for HTML labels and the text's box for SVG ones.
+fn place_label(labelled : Labelled, x : Double, y : Double) -> Unit {
+  place_label_at(labelled, x - labelled.offset_x, y - labelled.offset_y)
 }
 
 ///|

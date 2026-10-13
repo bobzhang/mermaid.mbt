@@ -32,7 +32,11 @@ fn sine_wave_points(
 /// a space.
 fn place_label_tight(labelled : Labelled, x : Double, y : Double) -> Unit {
   let n = @dom.number
-  labelled.label.attr("transform", "translate(\{n(x)},\{n(y)})") |> ignore
+  labelled.label.attr(
+    "transform",
+    "translate(\{n(x - labelled.offset_x)},\{n(y - labelled.offset_y)})",
+  )
+  |> ignore
 }
 
 ///|
