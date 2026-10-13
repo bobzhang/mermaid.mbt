@@ -1,0 +1,9 @@
+import {
+  "bobzhang/mermaid/config",
+  "bobzhang/mermaid/internal/dom",
+  "bobzhang/mermaid/internal/font",
+  "bobzhang/mermaid/internal/jsmath",
+  "Milky2018/moon_elk/engine/all" @elk,
+}
+
+warnings = "-implicit_impl_as_method"
