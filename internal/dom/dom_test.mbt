@@ -179,3 +179,75 @@ test "declarations as the CSSOM serializes them" {
     content="fill: rgb(255, 153, 102) !important; stroke-dasharray: 5, 5; animation: 25s linear 0s infinite normal none running dash;",
   )
 }
+
+///|
+test "bounding boxes of curves, and sizes that lose precision" {
+  // Expected values are `getBBox()` in Chrome.
+  let box = (element : @dom.Element) => {
+    let b = element.bbox()
+    "\{b.x} \{b.y} \{b.width} \{b.height}"
+  }
+  let path = (d : String) => @dom.Element::new("path").attr("d", d)
+  // The far edge is not origin plus size in floats, so the size grows.
+  inspect(
+    box(path("M-77.2620999227555 0 L77.24899843587303 0")),
+    content="-77.26210021972656 0 154.51112365722656 0",
+  )
+  // A cubic turns inside its control points.
+  inspect(
+    box(
+      path(
+        "M111.97801537018165 -228.44996749454515 C163.6962945294681 151.26646089651956, -48.467741942810164 285.810341109, -171.4908796168238 -21.22984280638002",
+      ),
+    ),
+    content="-171.49087524414062 -228.44996643066406 291.4410705566406 376.7292785644531",
+  )
+  // Two cubics in a row.
+  inspect(
+    box(
+      path(
+        "M-190.9763765561687 47.01169119962162 C232.37896140000908 -53.94684631876456, 129.96863614898564 -140.86731731959964, -152.90001048379617 187.5489759530529 C-1.0191707871600215 -50.47673943342576, 136.65548093163062 277.94978865143867, -114.28247298077417 122.4358692626891",
+      ),
+    ),
+    content="-190.97637939453125 -44.37568283081055 284.4175720214844 231.92466735839844",
+  )
+  // A group unites its children after their translations.
+  let group = @dom.Element::new("g")
+  group
+  .append("path")
+  .attr(
+    "d", "M297.8692865280327 -147.40125681995073 L-88.71412726549013 226.09939329491408 L62.448110554479115 240.5827139313826 L197.80889773789903 283.7247307891016 L265.1240026639301 32.4492572785453 L151.85947148870525 235.41046151496948",
+  )
+  |> ignore
+  group
+  .append("path")
+  .attr(
+    "d", "M132.84526380917669 -236.64207234937936 C-30.30718296061974 34.99717010089114, 162.5328216293263 -242.917111428956, 16.223624482380615 171.52069906640327 L179.5561678913814 208.57469591786736 L95.2920484038226 155.05373581425079 C261.2886495937661 284.2517054986122, 158.64948124447795 -10.969010175044048, 193.22186977343534 62.91109965464443 L30.709222435161905 151.5182619159126 Z",
+  )
+  .attr("transform", "translate(-16.643146610414327, 1.642530231428708)")
+  |> ignore
+  inspect(
+    box(group),
+    content="-88.71412658691406 -234.99954223632812 386.58343505859375 518.7243041992188",
+  )
+  // Uniting two boxes rounds the far edge inwards; the size grows again.
+  let pair = @dom.Element::new("g")
+  pair
+  .append("rect")
+  .attr("x", "77.92963409423828125")
+  .attr("y", "175.7861175537109375")
+  .attr("width", "28.327625274658203125")
+  .attr("height", "91.0900421142578125")
+  |> ignore
+  pair
+  .append("rect")
+  .attr("x", "-245.5976715087890625")
+  .attr("y", "185.7867279052734375")
+  .attr("width", "208.06219482421875")
+  .attr("height", "12.65991306304931640625")
+  |> ignore
+  inspect(
+    box(pair),
+    content="-245.59767150878906 175.78611755371094 351.8549499511719 91.09004211425781",
+  )
+}

@@ -20,26 +20,57 @@ priv struct Bounds {
 }
 
 ///|
+/// The next float above a size: `std::nextafter(size, +inf)`. Sizes are
+/// never negative.
+fn next_size(size : Float) -> Float {
+  if size == 0 {
+    // The smallest subnormal.
+    Float::reinterpret_from_int(1)
+  } else {
+    Float::reinterpret_from_int(size.reinterpret_as_int() + 1)
+  }
+}
+
+///|
+/// `gfx::BoundingRect` of two corners, which is how a Skia rectangle
+/// becomes a `RectF`: when the size loses precision, so that origin plus
+/// size is not the far edge again, it grows to the next float.
 fn Bounds::from_edges(
   left : Float,
   top : Float,
   right : Float,
   bottom : Float,
 ) -> Bounds {
-  { x: left, y: top, width: right - left, height: bottom - top, }
+  let mut width = right - left
+  let mut height = bottom - top
+  if left + width != right {
+    width = next_size(width)
+  }
+  if top + height != bottom {
+    height = next_size(height)
+  }
+  { x: left, y: top, width, height, }
 }
 
 ///|
-/// `RectF::UnionEvenIfEmpty`.
+/// `RectF::UnionEvenIfEmpty`: the size is the difference of the edges, and
+/// grows to the next float when rounding left the far edge outside.
 fn Bounds::unite(self : Bounds, other : Bounds) -> Bounds {
   let min = (a : Float, b : Float) => if b < a { b } else { a }
   let max = (a : Float, b : Float) => if a < b { b } else { a }
-  Bounds::from_edges(
-    min(self.x, other.x),
-    min(self.y, other.y),
-    max(self.x + self.width, other.x + other.width),
-    max(self.y + self.height, other.y + other.height),
-  )
+  let x = min(self.x, other.x)
+  let y = min(self.y, other.y)
+  let right = max(self.x + self.width, other.x + other.width)
+  let bottom = max(self.y + self.height, other.y + other.height)
+  let mut width = right - x
+  let mut height = bottom - y
+  if x + width < right {
+    width = next_size(width)
+  }
+  if y + height < bottom {
+    height = next_size(height)
+  }
+  { x, y, width, height, }
 }
 
 ///|

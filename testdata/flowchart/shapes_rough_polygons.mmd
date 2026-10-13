@@ -1,0 +1,18 @@
+---
+config:
+  handDrawnSeed: 7
+---
+flowchart TD
+    T@{ shape: tri, label: "Extract" } --> F@{ shape: flip-tri, label: "Manual file" }
+    T --> P@{ shape: notch-pent, label: "Loop limit" }
+    F --> S@{ shape: sl-rect, label: "Manual input" }
+    P --> S
+    S --> C@{ shape: curv-trap, label: "Display" }
+    S --> D@{ shape: delay, label: "Delay" }
+    C --> B@{ shape: bow-rect, label: "Stored data" }
+    D --> B
+    B --> L@{ shape: delay, label: "A delay that takes<br/>three lines<br/>to describe" }
+    B --> K@{ shape: curv-trap, label: "A display<br/>with three<br/>lines" }
+    style P fill:#fdd,stroke:#900
+    classDef hot fill:#ffd,stroke:#f80,stroke-width:2px,color:#333
+    class T,S,C,B hot
