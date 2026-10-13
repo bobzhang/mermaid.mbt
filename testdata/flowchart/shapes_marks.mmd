@@ -1,0 +1,18 @@
+---
+config:
+  handDrawnSeed: 7
+---
+flowchart TD
+    S@{ shape: sm-circ, label: "Small start" } --> F@{ shape: fork, label: "Fork" }
+    F --> J@{ shape: f-circ, label: "Junction" }
+    F --> X@{ shape: cross-circ, label: "Summary" }
+    J --> H@{ shape: hourglass, label: "Collate" }
+    X --> H
+    H --> C@{ shape: choice }
+    C --> B@{ shape: bolt, label: "Link" }
+    C --> N@{ shape: anchor }
+    B --> E@{ shape: fr-circ, label: "Stop" }
+    N --> E
+    style X fill:#fdd,stroke:#900
+    classDef hot fill:#ffd,stroke:#f80,stroke-width:2px
+    class J,H,B,E,F,C hot

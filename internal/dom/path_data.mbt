@@ -305,7 +305,6 @@ fn valid_unit_divide(numer : Float, denom : Float) -> Float? {
 
 ///|
 /// The tight box of path data, as `SkPath::computeTightBounds` finds it.
-/// Cubics are bounded by their control points for now.
 fn path_bounds(data : String) -> Bounds? {
   let bounds = PointBounds::new()
   let mut x : Float = 0
@@ -339,9 +338,7 @@ fn path_bounds(data : String) -> Bounds? {
         y = py
       }
       CubicTo(c1x, c1y, c2x, c2y, px, py) => {
-        bounds.add(c1x, c1y)
-        bounds.add(c2x, c2y)
-        bounds.add(px, py)
+        cubic_extrema(x, y, c1x, c1y, c2x, c2y, px, py, bounds)
         x = px
         y = py
       }
@@ -361,6 +358,70 @@ fn path_bounds(data : String) -> Bounds? {
     }
   }
   bounds.to_bounds()
+}
+
+///|
+/// Skia's `SkFindUnitQuadRoots`: the roots of `A t^2 + B t + C` strictly
+/// inside the unit interval.
+fn unit_quad_roots(a : Float, b : Float, c : Float) -> Array[Float] {
+  let roots = []
+  if a == 0 {
+    if valid_unit_divide(-c, b) is Some(root) {
+      roots.push(root)
+    }
+    return roots
+  }
+  // In doubles, so that the discriminant cannot overflow.
+  let discriminant = b.to_double() * b.to_double() -
+    4.0 * a.to_double() * c.to_double()
+  if discriminant < 0.0 {
+    return roots
+  }
+  let r = Float::from_double(discriminant.sqrt())
+  if r.is_nan() || r.is_inf() {
+    return roots
+  }
+  let q = if b < 0 { -(b - r) / 2 } else { -(b + r) / 2 }
+  if valid_unit_divide(q, a) is Some(root) {
+    roots.push(root)
+  }
+  if valid_unit_divide(c, q) is Some(root) {
+    roots.push(root)
+  }
+  roots
+}
+
+///|
+/// Add the points where a cubic turns, and its end, to the bounds: Skia's
+/// `compute_cubic_extremas`, with `SkFindCubicExtrema` for the parameters
+/// and `SkCubicCoeff` for the points.
+fn cubic_extrema(
+  x0 : Float,
+  y0 : Float,
+  x1 : Float,
+  y1 : Float,
+  x2 : Float,
+  y2 : Float,
+  x3 : Float,
+  y3 : Float,
+  bounds : PointBounds,
+) -> Unit {
+  // The derivative over 3 is A t^2 + B t + C.
+  let two : Float = 2
+  let three : Float = 3
+  let turns = (a : Float, b : Float, c : Float, d : Float) => {
+    unit_quad_roots(d - a + three * (b - c), two * (a - b - b + c), b - a)
+  }
+  let coordinate = (a : Float, b : Float, c : Float, d : Float, t : Float) => {
+    let ca = d + three * (b - c) - a
+    let cb = three * (c - (b + b) + a)
+    let cc = three * (b - a)
+    ((ca * t + cb) * t + cc) * t + a
+  }
+  for t in [..turns(x0, x1, x2, x3), ..turns(y0, y1, y2, y3)] {
+    bounds.add(coordinate(x0, x1, x2, x3, t), coordinate(y0, y1, y2, y3, t))
+  }
+  bounds.add(x3, y3)
 }
 
 ///|

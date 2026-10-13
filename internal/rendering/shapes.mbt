@@ -249,29 +249,47 @@ fn circle_points(
 }
 
 ///|
-/// Insert an outline drawn by rough.js behind the label, styled the way
-/// shapes that always go through rough.js do it.
+/// Put `child` first among `parent`'s children: d3's
+/// `insert(() => child, ':first-child')`.
+fn prepend(parent : @dom.Element, child : @dom.Element) -> Unit {
+  match parent.child_elements() {
+    [first, ..] => parent.insert_before(child, first)
+    [] => parent.append_child(child)
+  }
+}
+
+///|
+/// Style every path rough.js drew the way shapes do outside the hand-drawn
+/// look: the node's own styles, replaced by the compiled ones when there
+/// are any.
+fn style_rough_paths(
+  outline : @dom.Element,
+  node : Node,
+  styles : SplitStyles,
+) -> Unit {
+  // An array of styles is written as its comma-joined text.
+  let css_styles = node.css_styles.join(",")
+  for path in outline.descendants(["path"]) {
+    path.attr("style", css_styles) |> ignore
+    if styles.node_styles != "" {
+      path.attr("style", styles.node_styles) |> ignore
+    }
+  }
+}
+
+///|
+/// Insert an outline drawn by rough.js behind the label, with the classes
+/// and styles shapes that always go through rough.js give it.
 fn insert_rough_outline(
   shape_svg : @dom.Element,
   outline : @dom.Element,
   node : Node,
   styles : SplitStyles,
+  classes~ : String = "basic label-container outer-path",
 ) -> @dom.Element {
-  match shape_svg.child_elements() {
-    [first, ..] => shape_svg.insert_before(outline, first)
-    [] => shape_svg.append_child(outline)
-  }
-  outline.attr("class", "basic label-container outer-path") |> ignore
-  // An array of styles is written as its comma-joined text.
-  let css_styles = node.css_styles.join(",")
-  for path in outline.child_elements() {
-    if path.tag == "path" {
-      path.attr("style", css_styles) |> ignore
-      if styles.node_styles != "" {
-        path.attr("style", styles.node_styles) |> ignore
-      }
-    }
-  }
+  prepend(shape_svg, outline)
+  outline.attr("class", classes) |> ignore
+  style_rough_paths(outline, node, styles)
   outline
 }
 
@@ -427,6 +445,7 @@ fn draw_shape(
   parent : @dom.Element,
   node : Node,
   env : Env,
+  dir : String,
 ) -> @dom.Element raise LayoutError {
   let neo = node.look == "neo"
   let padding = node.padding
@@ -457,6 +476,15 @@ fn draw_shape(
     "rect_left_inv_arrow" => rect_left_inv_arrow(parent, node, env)
     "circle" => circle(parent, node, env)
     "doublecircle" => double_circle(parent, node, env)
+    "stateStart" => state_start(parent, node, env)
+    "stateEnd" => state_end(parent, node, env)
+    "forkJoin" => fork_join(parent, node, env, dir)
+    "hourglass" => hourglass(parent, node, env)
+    "lightningBolt" => lightning_bolt(parent, node, env)
+    "filledCircle" => filled_circle(parent, node, env)
+    "crossedCircle" => crossed_circle(parent, node, env)
+    "anchor" => anchor(parent, node, env)
+    "choice" => choice(parent, node, env)
     "subroutine" =>
       polygon_shape(parent, node, env, box => {
         let label_padding_x = if neo { 28.0 } else { padding }
@@ -551,11 +579,12 @@ fn draw_shape(
 
 ///|
 /// Draw `node` into `parent` and return its element: mermaid's
-/// `insertNode`.
+/// `insertNode`. `dir` is the direction of the flow around the node.
 fn insert_node(
   parent : @dom.Element,
   node : Node,
   env : Env,
+  dir : String,
 ) -> @dom.Element raise LayoutError {
   if node.shape == "rect" {
     node.shape = "squareRect"
@@ -565,10 +594,10 @@ fn insert_node(
       // Upstream also sets `target`, which the final sanitizing pass strips
       // from SVG anchors again.
       let anchor = parent.append("a").attr("xlink:href", link)
-      (anchor, draw_shape(anchor, node, env))
+      (anchor, draw_shape(anchor, node, env, dir))
     }
     None => {
-      let element = draw_shape(parent, node, env)
+      let element = draw_shape(parent, node, env, dir)
       (element, element)
     }
   }

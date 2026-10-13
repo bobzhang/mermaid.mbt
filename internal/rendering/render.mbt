@@ -91,6 +91,28 @@ pub fn setup_viewport(
 }
 
 ///|
+/// The direction of the flow around a node: that of the nearest group
+/// around it that sets one, else the diagram's. Mermaid's `resolveNodeDir`.
+fn node_dir(node : Node, by_id : Map[String, Node], diagram : String) -> String {
+  let seen : Set[String] = Set([])
+  let mut current = node
+  while true {
+    if current.dir is Some(dir) && dir != "" {
+      return dir
+    }
+    guard current.parent_id is Some(parent_id) &&
+      parent_id != "" &&
+      !seen.contains(parent_id) else {
+      break
+    }
+    seen.add(parent_id)
+    guard by_id.get(parent_id) is Some(parent) else { break }
+    current = parent
+  }
+  diagram
+}
+
+///|
 /// Lay out and draw `data` into the first group of `svg`.
 pub fn render(data : LayoutData, svg : @dom.Element) -> Unit raise LayoutError {
   // Ids are unique across the diagrams of a page.
@@ -102,18 +124,23 @@ pub fn render(data : LayoutData, svg : @dom.Element) -> Unit raise LayoutError {
     raise LayoutError("the svg element has no group to draw into")
   }
   insert_markers(element, data.markers, data.diagram_type, data.diagram_id)
-  let env = Env::new(data.config)
+  let env = Env::new(data.config, data.diagram_id)
   // Measure: every node is drawn once to learn its size.
   let root = element.append("g").attr("class", "root")
   let clusters = root.append("g").attr("class", "clusters")
   let edge_paths = root.append("g").attr("class", "edges edgePaths")
   let edge_labels = root.append("g").attr("class", "edgeLabels")
   let nodes_group = root.append("g").attr("class", "nodes")
+  let by_id : Map[String, Node] = Map([])
+  for node in data.nodes {
+    by_id[node.id] = node
+  }
   for node in data.nodes {
     if node.is_group {
       measure_group_label(nodes_group, node, env)
     } else {
-      let element = insert_node(nodes_group, node, env)
+      let dir = node_dir(node, by_id, data.direction)
+      let element = insert_node(nodes_group, node, env, dir)
       let box = element.bbox()
       node.width = Some(box.width)
       node.height = Some(box.height)

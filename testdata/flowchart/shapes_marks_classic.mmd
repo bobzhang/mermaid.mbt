@@ -1,0 +1,22 @@
+---
+config:
+  look: classic
+  handDrawnSeed: 7
+---
+flowchart LR
+    S@{ shape: sm-circ, label: "Small start" } --> F@{ shape: fork, label: "Fork" }
+    F --> J@{ shape: f-circ, label: "Junction" }
+    F --> X@{ shape: cross-circ, label: "Summary" }
+    J --> H@{ shape: hourglass, label: "Collate" }
+    X --> H
+    H --> C@{ shape: choice }
+    C --> B@{ shape: bolt, label: "Link" }
+    C --> N@{ shape: anchor }
+    B --> E@{ shape: fr-circ, label: "Stop" }
+    N --> E
+    subgraph G
+      direction TB
+      F2@{ shape: join } --> X2@{ shape: cross-circ }
+    end
+    E --> F2
+    style S fill:#fdd,stroke:#900

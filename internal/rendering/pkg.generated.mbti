@@ -61,7 +61,7 @@ pub(all) struct LayoutData {
 
 pub struct Node {
   id : String
-  label : String
+  mut label : String
   label_type : String
   parent_id : String?
   padding : Double
