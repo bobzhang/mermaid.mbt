@@ -1,0 +1,13 @@
+---
+config:
+  handDrawnSeed: 7
+---
+flowchart TD
+    D@{ shape: doc, label: "Document" } --> L@{ shape: lin-doc, label: "Lined document" }
+    D --> M@{ shape: docs, label: "Multiple documents" }
+    L --> F@{ shape: flag, label: "Paper tape" }
+    M --> F
+    F --> T@{ shape: tag-doc, label: "Tagged document" }
+    style M fill:#fdd,stroke:#900
+    classDef hot fill:#ffd,stroke:#f80,stroke-width:2px,color:#333
+    class D,F,T hot
