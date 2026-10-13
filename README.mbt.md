@@ -92,6 +92,8 @@ the default font stack resolving to Trebuchet MS.
 - `scripts/compare.py` keeps a reference SVG next to every
   `testdata/**/*.mmd` and diffs the port against it.
 - `moon test --target native` runs the same comparison from `tests/`.
+- `scripts/check_examples.py` does it for the examples in upstream's own
+  documentation.
 
 To match, the port reproduces a number of browser behaviors: Blink's text
 shaping arithmetic (`internal/font`), V8's results for `Math.sin`, `cos`,
