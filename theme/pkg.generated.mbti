@@ -1,0 +1,28 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/theme"
+
+import {
+  "bobzhang/mermaid/internal/color",
+}
+
+// Values
+pub let theme_names : Array[String]
+
+// Errors
+
+// Types and methods
+pub struct Theme {
+  // private fields
+}
+pub fn Theme::flag(Self, String) -> Bool
+pub fn Theme::get(Self, String) -> Json
+pub fn Theme::names(Self) -> Array[String]
+pub fn Theme::nested(Self, String, String) -> Json
+pub fn Theme::new(String, overrides? : Map[String, Json]) -> Self? raise @color.ColorError
+pub fn Theme::number(Self, String) -> Double?
+pub fn Theme::text(Self, String) -> String
+pub impl ToJson for Theme
+
+// Type aliases
+
+// Traits
