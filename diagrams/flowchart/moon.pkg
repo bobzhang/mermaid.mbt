@@ -1,7 +1,11 @@
 import {
   "bobzhang/mermaid/config",
+  "bobzhang/mermaid/diagram",
+  "bobzhang/mermaid/internal/color",
+  "bobzhang/mermaid/theme",
   "bobzhang/mermaid/internal/jison",
   "bobzhang/mermaid/internal/jsregex",
+  "bobzhang/mermaid/internal/rendering",
   "moonbit-community/yaml",
 }
 
