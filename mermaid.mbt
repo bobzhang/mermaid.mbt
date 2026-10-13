@@ -102,7 +102,7 @@ fn parse_diagram(
         .map(c => { id: c.id, styles: c.styles, text_styles: c.text_styles, })
         .collect(),
         draw: context => {
-          @flowchart.draw(db, context) catch {
+          @flowchart.draw(db, context, diagram_type~) catch {
             @rendering.LayoutError(message) => raise Unsupported(message)
           }
         },

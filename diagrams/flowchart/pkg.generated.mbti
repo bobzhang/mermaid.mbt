@@ -10,7 +10,7 @@ import {
 }
 
 // Values
-pub fn draw(FlowDb, @diagram.Context) -> Unit raise @rendering.LayoutError
+pub fn draw(FlowDb, @diagram.Context, diagram_type? : String) -> Unit raise @rendering.LayoutError
 
 pub fn edge_id(String, String, counter~ : Int, id? : String) -> String
 

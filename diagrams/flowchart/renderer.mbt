@@ -4,6 +4,7 @@
 pub fn draw(
   db : FlowDb,
   context : @diagram.Context,
+  diagram_type~ : String = "flowchart-v2",
 ) -> Unit raise @rendering.LayoutError {
   let config = context.config
   // What the port cannot draw yet is refused rather than drawn differently.
@@ -19,7 +20,8 @@ pub fn draw(
     nodes,
     edges,
     config,
-    diagram_type: "flowchart-v2",
+    // The type the text was detected as names the markers.
+    diagram_type,
     diagram_id: context.id,
     direction: db.direction().unwrap_or("TB"),
     markers: ["point", "circle", "cross"],
