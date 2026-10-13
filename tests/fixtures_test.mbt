@@ -47,3 +47,13 @@ fn mismatches(directory : String) -> Array[String] raise {
 test "pie" {
   json_inspect(mismatches("pie"), content=[])
 }
+
+///|
+test "info" {
+  json_inspect(mismatches("info"), content=[])
+}
+
+///|
+test "packet" {
+  json_inspect(mismatches("packet"), content=[])
+}

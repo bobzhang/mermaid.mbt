@@ -1,0 +1,38 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/diagrams/packet"
+
+import {
+  "bobzhang/mermaid/config",
+  "bobzhang/mermaid/diagram",
+  "bobzhang/mermaid/internal/langium",
+  "bobzhang/mermaid/theme",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn draw(Packet, @diagram.Context) -> Unit
+
+pub fn parse(String, @config.Config) -> Packet raise @langium.ParseError
+
+pub fn styles(@theme.Theme) -> String
+
+// Errors
+
+// Types and methods
+pub struct Block {
+  start : Int
+  end : Int
+  label : String
+} derive(@debug.Debug)
+
+pub struct Packet {
+  rows : Array[Array[Block]]
+  title : String
+  acc_title : String
+  acc_description : String
+}
+pub fn Packet::with_title(Self, String) -> Self
+
+// Type aliases
+
+// Traits

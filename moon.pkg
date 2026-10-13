@@ -1,6 +1,8 @@
 import {
   "bobzhang/mermaid/config",
   "bobzhang/mermaid/diagram",
+  "bobzhang/mermaid/diagrams/info",
+  "bobzhang/mermaid/diagrams/packet",
   "bobzhang/mermaid/diagrams/pie",
   "bobzhang/mermaid/internal/css",
   "bobzhang/mermaid/internal/dom",

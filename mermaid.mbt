@@ -49,6 +49,32 @@ fn parse_diagram(
         draw: context => @pie.draw(pie, context),
       }
     }
+    "info" => {
+      @info.parse(code) catch {
+        @langium.ParseError(message~, ..) => raise Syntax(message)
+      }
+      {
+        styles: "",
+        acc_title: "",
+        acc_description: "",
+        draw: context => @info.draw(context),
+      }
+    }
+    "packet" => {
+      let packet = @packet.parse(code, config) catch {
+        @langium.ParseError(message~, ..) => raise Syntax(message)
+      }
+      let packet = match title {
+        Some(title) if packet.title == "" => packet.with_title(title)
+        _ => packet
+      }
+      {
+        styles: @packet.styles(config.theme()),
+        acc_title: packet.acc_title,
+        acc_description: packet.acc_description,
+        draw: context => @packet.draw(packet, context),
+      }
+    }
     other => raise Unsupported(other)
   }
 }
