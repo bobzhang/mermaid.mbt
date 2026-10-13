@@ -1,11 +1,15 @@
 import {
+  "bobzhang/mermaid" @lib,
   "bobzhang/mermaid/config",
   "bobzhang/mermaid/internal/font",
   "moonbitlang/core/env",
   "moonbitlang/core/json",
   "moonbitlang/x/fs",
+  "moonbitlang/x/sys",
 }
 
 supported_targets = "native"
+
+warnings = "-implicit_impl_as_method"
 
 pkgtype(kind: "executable")

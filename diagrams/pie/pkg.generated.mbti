@@ -1,0 +1,31 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/diagrams/pie"
+
+import {
+  "bobzhang/mermaid/diagram",
+  "bobzhang/mermaid/internal/langium",
+  "bobzhang/mermaid/theme",
+}
+
+// Values
+pub fn draw(Pie, @diagram.Context) -> Unit
+
+pub fn parse(String) -> Pie raise @langium.ParseError
+
+pub fn styles(@theme.Theme) -> String
+
+// Errors
+
+// Types and methods
+pub struct Pie {
+  sections : Map[String, Double]
+  show_data : Bool
+  title : String
+  acc_title : String
+  acc_description : String
+}
+pub fn Pie::with_title(Self, String) -> Self
+
+// Type aliases
+
+// Traits

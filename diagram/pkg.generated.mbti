@@ -1,0 +1,32 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/diagram"
+
+import {
+  "bobzhang/mermaid/config",
+  "bobzhang/mermaid/internal/dom",
+  "bobzhang/mermaid/internal/font",
+  "bobzhang/mermaid/theme",
+}
+
+// Values
+pub fn configure_svg_size(@dom.Element, Double, Double, Bool) -> Unit
+
+pub fn parse_font_size(String) -> Double?
+
+pub fn to_fixed0(Double) -> String
+
+// Errors
+
+// Types and methods
+pub struct Context {
+  id : String
+  config : @config.Config
+  svg : @dom.Element
+}
+pub fn Context::font(Self, bold? : Bool, italic? : Bool) -> @font.Stack
+pub fn Context::new(String, @config.Config, @dom.Element) -> Self
+pub fn Context::theme(Self) -> @theme.Theme
+
+// Type aliases
+
+// Traits

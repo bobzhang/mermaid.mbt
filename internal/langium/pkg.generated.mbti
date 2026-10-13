@@ -1,0 +1,35 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/internal/langium"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+
+// Errors
+pub(all) suberror ParseError {
+  ParseError(message~ : String, offset~ : Int)
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+pub struct Lexer {
+  // private fields
+}
+pub fn Lexer::acc_descr(Self) -> String?
+pub fn Lexer::acc_title(Self) -> String?
+pub fn Lexer::at_end(Self) -> Bool
+pub fn Lexer::eol(Self) -> Bool
+pub fn[T] Lexer::fail(Self, String) -> T raise ParseError
+pub fn Lexer::keyword(Self, String) -> Bool
+pub fn Lexer::new(String) -> Self
+pub fn Lexer::newline(Self) -> Bool
+pub fn Lexer::number(Self, signed? : Bool) -> Double?
+pub fn Lexer::offset(Self) -> Int
+pub fn Lexer::string(Self) -> String?
+pub fn Lexer::symbol(Self, String) -> Bool
+pub fn Lexer::title(Self) -> String?
+
+// Type aliases
+
+// Traits

@@ -1,9 +1,20 @@
 // Generated using `moon info`, DON'T EDIT IT
 package "bobzhang/mermaid"
 
+import {
+  "moonbitlang/core/debug",
+}
+
 // Values
+pub fn render(String, id? : String, config? : Json) -> String raise MermaidError
 
 // Errors
+pub(all) suberror MermaidError {
+  UnknownDiagram(String)
+  Syntax(String)
+  Config(String)
+  Unsupported(String)
+} derive(Eq, @debug.Debug)
 
 // Types and methods
 

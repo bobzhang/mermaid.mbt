@@ -3,68 +3,113 @@ let usage : String =
   #|usage: mermaid <command> [arguments]
   #|
   #|commands:
-  #|  config [site.json]   print the effective configuration as JSON
-  #|  measure <cases.json> measure text; cases are {text, size, bold, italic}
+  #|  render <file.mmd> [--id ID] [--config site.json]
+  #|                         render a diagram to SVG on stdout
+  #|  config [site.json]     print the effective configuration as JSON
+  #|  measure <cases.json>   measure text; cases are {text, size, bold, italic}
   #|
 
 ///|
-fn read_json(path : String) -> Json raise {
-  @json.parse(@fs.read_file_to_string(path))
+/// A command-line failure: the message to print and the exit status.
+suberror CliError {
+  CliError(String, status~ : Int32)
+}
+
+///|
+fn read_text(path : String) -> String raise CliError {
+  @fs.read_file_to_string(path) catch {
+    _ => raise CliError("cannot read \{path}", status=2)
+  }
+}
+
+///|
+fn read_json(path : String) -> Json raise CliError {
+  @json.parse(read_text(path)) catch {
+    _ => raise CliError("\{path} is not valid JSON", status=2)
+  }
+}
+
+///|
+fn render(path : String, options : ArrayView[String]) -> Unit raise CliError {
+  let mut id = "mermaid-svg"
+  let mut site : Json = Json::object(Map([]))
+  let mut rest = options
+  while true {
+    match rest {
+      ["--id", value, .. tail] => {
+        id = value
+        rest = tail
+      }
+      ["--config", value, .. tail] => {
+        site = read_json(value)
+        rest = tail
+      }
+      [] => break
+      [other, ..] => raise CliError("unknown option \{other}", status=2)
+    }
+  }
+  let svg = @lib.render(read_text(path), id~, config=site) catch {
+    error => raise CliError(Repr(error).to_string(), status=1)
+  }
+  println(svg)
+}
+
+///|
+fn print_config(arguments : ArrayView[String]) -> Unit raise CliError {
+  let site = match arguments {
+    [path, ..] => read_json(path)
+    [] => Json::object(Map([]))
+  }
+  let config = @config.Config::new(site~) catch {
+    error => raise CliError(Repr(error).to_string(), status=1)
+  }
+  println(Json(config).stringify())
+}
+
+///|
+fn measure(path : String) -> Unit raise CliError {
+  guard read_json(path) is Array(cases) else {
+    raise CliError("\{path} must hold an array of cases", status=2)
+  }
+  let results : Array[Json] = []
+  for item in cases {
+    guard item
+      is {
+        "text": String(text),
+        "size": Number(size, ..),
+        "bold": bold,
+        "italic": italic,
+        ..
+      } else {
+      continue
+    }
+    let stack = @font.Stack::default(bold=bold is True, italic=italic is True)
+    let box = stack.bbox(text, size)
+    results.push({
+      "len": stack.advance(text, size),
+      "x": box.x,
+      "y": box.y,
+      "w": box.width,
+      "h": box.height,
+    })
+  }
+  println(Json::array(results).stringify())
 }
 
 ///|
 fn main {
-  let args = @env.args()
-  match args[1:] {
-    ["config", .. rest] => {
-      let config = try {
-        match rest {
-          [path, ..] => @config.Config::new(site=read_json(path))
-          [] => @config.Config::new()
-        }
-      } catch {
-        error => {
-          println("error: \{error}")
-          return
-        }
-      }
-      println(Json(config).stringify())
+  let arguments = @env.args()
+  try {
+    match arguments[1:] {
+      ["render", path, .. options] => render(path, options)
+      ["config", .. rest] => print_config(rest)
+      ["measure", path] => measure(path)
+      _ => println(usage)
     }
-    ["measure", path] => {
-      let cases = read_json(path) catch {
-        error => {
-          println("error: \{error}")
-          return
-        }
-      }
-      guard cases is Array(cases) else { return }
-      let results : Array[Json] = []
-      for item in cases {
-        guard item
-          is {
-            "text": String(text),
-            "size": Number(size, ..),
-            "bold": bold,
-            "italic": italic,
-            ..
-          } else {
-          continue
-        }
-        let stack = @font.Stack::default(
-          bold=bold is True,
-          italic=italic is True,
-        )
-        let box = stack.bbox(text, size)
-        results.push({
-          "len": stack.advance(text, size),
-          "x": box.x,
-          "y": box.y,
-          "w": box.width,
-          "h": box.height,
-        })
-      }
-      println(Json::array(results).stringify())
+  } catch {
+    CliError(message, status~) => {
+      println("error: \{message}")
+      @sys.exit(status)
     }
-    _ => println(usage)
   }
 }
