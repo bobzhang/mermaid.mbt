@@ -20,17 +20,35 @@ priv struct Bounds {
 }
 
 ///|
+/// The next float above a non-negative one.
+fn next_up(value : Float) -> Float {
+  Float::reinterpret_from_uint(value.reinterpret_as_uint() + 1)
+}
+
+///|
+/// `RectF::SetByBounds`: a box from its edges. The size is a rounded
+/// difference; where origin plus size then falls short of the far edge,
+/// the size grows by one step so that the box still covers it.
 fn Bounds::from_edges(
   left : Float,
   top : Float,
   right : Float,
   bottom : Float,
 ) -> Bounds {
-  { x: left, y: top, width: right - left, height: bottom - top, }
+  let mut width = right - left
+  let mut height = bottom - top
+  if left + width < right {
+    width = next_up(width)
+  }
+  if top + height < bottom {
+    height = next_up(height)
+  }
+  { x: left, y: top, width, height, }
 }
 
 ///|
-/// `RectF::UnionEvenIfEmpty`.
+/// `RectF::UnionEvenIfEmpty`: the far edges are recomputed from origin
+/// plus size before the boxes are joined.
 fn Bounds::unite(self : Bounds, other : Bounds) -> Bounds {
   let min = (a : Float, b : Float) => if b < a { b } else { a }
   let max = (a : Float, b : Float) => if a < b { b } else { a }

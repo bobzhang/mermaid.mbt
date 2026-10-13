@@ -1,0 +1,19 @@
+---
+config:
+  handDrawnSeed: 30
+---
+flowchart RL
+    N0[A longer label for wrapping purposes]
+    N1[Stop here]
+    N2((Gamma))
+    N4([Alpha])
+    N5{{Data store}}
+    N6{{Stop here}}
+    N7[/Go\]
+    N8[/Data store/]
+    N0 -->|no| N3
+    N7 --x N8
+    N2 --x|yes| N8
+    N0 --> N1
+    N4 <--> N8
+    N0 --> N2

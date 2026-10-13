@@ -179,3 +179,14 @@ test "declarations as the CSSOM serializes them" {
     content="fill: rgb(255, 153, 102) !important; stroke-dasharray: 5, 5; animation: 25s linear 0s infinite normal none running dash;",
   )
 }
+
+///|
+test "a box built from edges still covers its far edge" {
+  // 475.1377258300781 - 155.06886291503906 rounds down as a float; added
+  // back to the origin it would stop short of the right edge, so the
+  // width takes the next float, as in the browser.
+  let path = @dom.Element::new("path").attr(
+    "d", "M155.06886291503906,83L475.1377258300781,109",
+  )
+  inspect(path.bbox().width, content="320.0688781738281")
+}

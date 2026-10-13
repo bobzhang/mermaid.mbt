@@ -1,0 +1,23 @@
+---
+config:
+  handDrawnSeed: 11
+  htmlLabels: false
+---
+flowchart BT
+    N0{A longer label for wrapping purposes}
+    N1[/A longer label for wrapping purposes/]
+    N2[\x\]
+    N4[(A longer label for wrapping purposes)]
+    N7[\Ünï\]
+    N8((A longer label for wrapping purposes))
+    N1 --> N5
+    N1 --o N2
+    N0 ==> N8
+    N4 --x N5
+    N2 --o N8
+    N1 <--> N7
+    N8 -->|yes| N1
+    subgraph S1 [Group one]
+        N0
+        N1
+    end

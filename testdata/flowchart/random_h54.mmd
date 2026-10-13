@@ -1,0 +1,25 @@
+---
+config:
+  handDrawnSeed: 55
+---
+flowchart TB
+    N0[[Stop here]]
+    N4(x)
+    N5((A longer label for wrapping purposes))
+    N6[\x\]
+    N1 ==> N2
+    N1 --> N5
+    N6 ==>|yes| N0
+    N0 -->|maybe so| N1
+    N0 <--> N5
+    N1 -.-> N5
+    N4 ==> N6
+    subgraph S1 [Group one]
+        N0
+        N1
+    end
+    subgraph S2
+        N5
+        N6
+    end
+    S1 --> S2

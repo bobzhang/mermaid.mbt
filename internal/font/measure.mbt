@@ -107,13 +107,23 @@ priv struct RectF {
 }
 
 ///|
+/// `RectF::SetByBounds`: where origin plus the rounded size falls short
+/// of the far edge, the size grows by one step.
 fn RectF::from_edges(
   left : Float,
   top : Float,
   right : Float,
   bottom : Float,
 ) -> RectF {
-  { x: left, y: top, width: right - left, height: bottom - top, }
+  let mut width = right - left
+  let mut height = bottom - top
+  if left + width < right {
+    width = Float::reinterpret_from_uint(width.reinterpret_as_uint() + 1)
+  }
+  if top + height < bottom {
+    height = Float::reinterpret_from_uint(height.reinterpret_as_uint() + 1)
+  }
+  { x: left, y: top, width, height, }
 }
 
 ///|

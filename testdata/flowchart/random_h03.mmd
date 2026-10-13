@@ -1,0 +1,26 @@
+---
+config:
+  handDrawnSeed: 4
+  htmlLabels: false
+---
+flowchart LR
+    N0[[Beta node]]
+    N2([Alpha])
+    N5([Beta node])
+    N6[[Ünï]]
+    N8[(Gamma)]
+    N9(Alpha)
+    N10(((Go)))
+    N0 --- N4
+    N5 --> N7
+    N5 --o N6
+    N1 ==> N10
+    N6 --o N4
+    N1 --> N4
+    N5 -->|yes| N8
+    N1 ==>|maybe so| N9
+    N0 --o N6
+    N3 --> N6
+    N2 <--> N8
+    N8 -.->|no| N10
+    N6 --> N7
