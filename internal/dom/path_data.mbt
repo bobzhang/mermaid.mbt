@@ -8,6 +8,8 @@ priv enum PathSegment {
   LineTo(Float, Float)
   QuadTo(Float, Float, Float, Float)
   CubicTo(Float, Float, Float, Float, Float, Float)
+  /// Radii, x-axis rotation in degrees, large-arc flag, sweep flag, end.
+  ArcTo(Float, Float, Float, Bool, Bool, Float, Float)
   Close
 }
 
@@ -120,8 +122,7 @@ fn tokenize_path(data : String) -> Array[(Char, Array[Float])] {
 }
 
 ///|
-/// Parse path data into absolute segments. Arcs are not supported yet and
-/// become straight lines to their end point.
+/// Parse path data into absolute segments.
 fn parse_path(data : String) -> Array[PathSegment] {
   let segments = []
   let mut x : Float = 0
@@ -256,7 +257,17 @@ fn parse_path(data : String) -> Array[PathSegment] {
           let by : Float = if relative { y } else { 0 }
           x = args[i + 5] + bx
           y = args[i + 6] + by
-          segments.push(LineTo(x, y))
+          segments.push(
+            ArcTo(
+              args[i],
+              args[i + 1],
+              args[i + 2],
+              args[i + 3] != 0,
+              args[i + 4] != 0,
+              x,
+              y,
+            ),
+          )
         }
         control = None
       }
@@ -330,6 +341,41 @@ fn path_bounds(data : String) -> Bounds? {
       CubicTo(c1x, c1y, c2x, c2y, px, py) => {
         bounds.add(c1x, c1y)
         bounds.add(c2x, c2y)
+        bounds.add(px, py)
+        x = px
+        y = py
+      }
+      ArcTo(rx, ry, angle, large, sweep, px, py) => {
+        match arc_geometry(x, y, rx, ry, angle, large, sweep, px, py) {
+          Some(arc) if angle == 0 => {
+            // The points where the ellipse turns, if the arc passes them.
+            let quarter = 1.5707963267948966
+            let from = arc.theta1.to_double()
+            let sweep_angle = arc.theta_arc.to_double()
+            let lo = from.min(from + sweep_angle)
+            let hi = from.max(from + sweep_angle)
+            for k = -8; k <= 8; k = k + 1 {
+              let turn = k.to_double() * quarter
+              if turn > lo && turn < hi {
+                let (ux, uy) : (Float, Float) = match (k % 4 + 4) % 4 {
+                  0 => (1, 0)
+                  1 => (0, 1)
+                  2 => (-1, 0)
+                  _ => (0, -1)
+                }
+                bounds.add((arc.cx + ux) * arc.rx, (arc.cy + uy) * arc.ry)
+              }
+            }
+          }
+          Some(_) =>
+            // A rotated ellipse: bounded by its cubic approximation.
+            for
+              cubic in arc_to_cubics(x, y, rx, ry, angle, large, sweep, px, py) {
+              bounds.add(cubic.x1, cubic.y1)
+              bounds.add(cubic.x2, cubic.y2)
+            }
+          None => ()
+        }
         bounds.add(px, py)
         x = px
         y = py
@@ -461,9 +507,21 @@ pub fn path_length(data : String) -> Double {
   let mut y : Float = 0
   let mut start_x : Float = 0
   let mut start_y : Float = 0
+  // Where the path data puts the pen, which an arc's rounding can leave
+  // a hair away from where the walk is.
+  let mut pen_x : Float = 0
+  let mut pen_y : Float = 0
   let third : Float = Float::from_int(1) / Float::from_int(3)
   let blend = (a : Float, b : Float) => (a + 2 * b) * third
   for segment in parse_path(data) {
+    let (next_x, next_y) = match segment {
+      MoveTo(px, py)
+      | LineTo(px, py)
+      | QuadTo(_, _, px, py)
+      | CubicTo(_, _, _, _, px, py)
+      | ArcTo(_, _, _, _, _, px, py) => (px, py)
+      Close => (start_x, start_y)
+    }
     match segment {
       MoveTo(px, py) => {
         x = px
@@ -508,12 +566,229 @@ pub fn path_length(data : String) -> Double {
         x = px
         y = py
       }
+      ArcTo(rx, ry, angle, large, sweep, px, py) => {
+        // The arc is placed from where the path says the pen is; its first
+        // curve starts where the walk actually arrived.
+        let cubics = arc_to_cubics(
+          pen_x, pen_y, rx, ry, angle, large, sweep, px, py,
+        )
+        if cubics.is_empty() {
+          // Degenerate arcs are straight lines.
+          total = total + point_distance(x, y, px, py)
+          x = px
+          y = py
+        }
+        for i, cubic in cubics {
+          let cubic = if i == 0 { { ..cubic, x0: x, y0: y, } } else { cubic }
+          total = total + cubic_length(cubic)
+          x = cubic.x3
+          y = cubic.y3
+        }
+      }
       Close => {
         total = total + point_distance(x, y, start_x, start_y)
         x = start_x
         y = start_y
       }
     }
+    pen_x = next_x
+    pen_y = next_y
   }
   total.to_double()
+}
+
+///|
+/// An elliptical arc in the unit-circle space Blink decomposes it in:
+/// centre, radii, start angle and signed sweep.
+priv struct ArcGeometry {
+  cx : Float
+  cy : Float
+  rx : Float
+  ry : Float
+  theta1 : Float
+  theta_arc : Float
+}
+
+///|
+/// Single-precision library functions, taken as correctly rounded.
+fn sin_f(x : Float) -> Float {
+  Float::from_double(@jsmath.sin(x.to_double()))
+}
+
+///|
+fn cos_f(x : Float) -> Float {
+  Float::from_double(@jsmath.cos(x.to_double()))
+}
+
+///|
+fn tan_f(x : Float) -> Float {
+  let x = x.to_double()
+  Float::from_double(@jsmath.sin(x) / @jsmath.cos(x))
+}
+
+///|
+fn atan2_f(y : Float, x : Float) -> Float {
+  Float::from_double(@jsmath.atan2(y.to_double(), x.to_double()))
+}
+
+///|
+/// The conversion of an SVG arc from end points to a centre, as Blink's
+/// `SVGPathNormalizer::DecomposeArcToCubic` does it. Nothing for an arc
+/// that degenerates to a line.
+fn arc_geometry(
+  x0 : Float,
+  y0 : Float,
+  rx : Float,
+  ry : Float,
+  angle : Float,
+  large : Bool,
+  sweep : Bool,
+  x1 : Float,
+  y1 : Float,
+) -> ArcGeometry? {
+  let mut rx = rx.abs()
+  let mut ry = ry.abs()
+  if rx == 0 || ry == 0 {
+    return None
+  }
+  if x0 == x1 && y0 == y1 {
+    return None
+  }
+  let half : Float = 0.5
+  let mid_x = (x0 - x1) * half
+  let mid_y = (y0 - y1) * half
+  // The transforms are held in doubles and applied to float points.
+  let radians = angle.to_double() * (3.141592653589793 / 180.0)
+  let sin_angle = @jsmath.sin(-radians)
+  let cos_angle = @jsmath.cos(-radians)
+  let rotate = (x : Float, y : Float) => {
+    (
+      Float::from_double(cos_angle * x.to_double() - sin_angle * y.to_double()),
+      Float::from_double(sin_angle * x.to_double() + cos_angle * y.to_double()),
+    )
+  }
+  let (tx, ty) = rotate(mid_x, mid_y)
+  let radii_scale = tx * tx / (rx * rx) + ty * ty / (ry * ry)
+  if radii_scale > 1 {
+    rx = rx * radii_scale.sqrt()
+    ry = ry * radii_scale.sqrt()
+  }
+  let one : Float = 1
+  let sx = (one / rx).to_double()
+  let sy = (one / ry).to_double()
+  // Scale(1/rx, 1/ry) then Rotate(-angle).
+  let map = (x : Float, y : Float) => {
+    (
+      Float::from_double(
+        sx * cos_angle * x.to_double() + sy * -sin_angle * y.to_double(),
+      ),
+      Float::from_double(
+        sx * sin_angle * x.to_double() + sy * cos_angle * y.to_double(),
+      ),
+    )
+  }
+  let (p1x, p1y) = map(x0, y0)
+  let (p2x, p2y) = map(x1, y1)
+  let delta_x = p2x - p1x
+  let delta_y = p2y - p1y
+  let d = delta_x * delta_x + delta_y * delta_y
+  let quarter : Float = 0.25
+  let squared = one / d - quarter
+  let squared : Float = if squared > 0 { squared } else { 0 }
+  let mut scale = squared.sqrt()
+  if sweep == large {
+    scale = -scale
+  }
+  let delta_x = delta_x * scale
+  let delta_y = delta_y * scale
+  let cx = (p1x + p2x) * half + -delta_y
+  let cy = (p1y + p2y) * half + delta_x
+  let theta1 = atan2_f(p1y - cy, p1x - cx)
+  let theta2 = atan2_f(p2y - cy, p2x - cx)
+  let two_pi = Float::from_double(6.283185307179586)
+  let mut theta_arc = theta2 - theta1
+  if theta_arc < 0 && sweep {
+    theta_arc = theta_arc + two_pi
+  } else if theta_arc > 0 && !sweep {
+    theta_arc = theta_arc - two_pi
+  }
+  Some({ cx, cy, rx, ry, theta1, theta_arc, })
+}
+
+///|
+/// The cubic curves Blink replaces an arc with when it walks a path.
+fn arc_to_cubics(
+  x0 : Float,
+  y0 : Float,
+  rx : Float,
+  ry : Float,
+  angle : Float,
+  large : Bool,
+  sweep : Bool,
+  x1 : Float,
+  y1 : Float,
+) -> Array[Cubic] {
+  guard arc_geometry(x0, y0, rx, ry, angle, large, sweep, x1, y1) is Some(arc) else {
+    return []
+  }
+  let radians = angle.to_double() * (3.141592653589793 / 180.0)
+  let sin_angle = @jsmath.sin(radians)
+  let cos_angle = @jsmath.cos(radians)
+  let rx = arc.rx.to_double()
+  let ry = arc.ry.to_double()
+  // Rotate(angle) then Scale(rx, ry).
+  let map = (x : Float, y : Float) => {
+    (
+      Float::from_double(
+        cos_angle * rx * x.to_double() + -sin_angle * ry * y.to_double(),
+      ),
+      Float::from_double(
+        sin_angle * rx * x.to_double() + cos_angle * ry * y.to_double(),
+      ),
+    )
+  }
+  let half_pi = Float::from_double(1.5707963267948966)
+  let step : Float = half_pi + Float::from_double(0.001)
+  let segments = (arc.theta_arc / step).abs().ceil().to_int()
+  let cubics = []
+  let count = Float::from_int(segments)
+  let factor : Float = Float::from_int(8) / Float::from_int(6)
+  let quarter : Float = 0.25
+  let mut start_x = x0
+  let mut start_y = y0
+  for i in 0..<segments {
+    let start_theta = arc.theta1 + Float::from_int(i) * arc.theta_arc / count
+    let end_theta = arc.theta1 + Float::from_int(i + 1) * arc.theta_arc / count
+    let t = factor * tan_f(quarter * (end_theta - start_theta))
+    if t.is_nan() || t.is_inf() {
+      return []
+    }
+    let sin_start = sin_f(start_theta)
+    let cos_start = cos_f(start_theta)
+    let sin_end = sin_f(end_theta)
+    let cos_end = cos_f(end_theta)
+    let p1x = cos_start - t * sin_start + arc.cx
+    let p1y = sin_start + t * cos_start + arc.cy
+    let tx = cos_end + arc.cx
+    let ty = sin_end + arc.cy
+    let p2x = tx + t * sin_end
+    let p2y = ty + -t * cos_end
+    let (c1x, c1y) = map(p1x, p1y)
+    let (c2x, c2y) = map(p2x, p2y)
+    let (ex, ey) = map(tx, ty)
+    cubics.push({
+      x0: start_x,
+      y0: start_y,
+      x1: c1x,
+      y1: c1y,
+      x2: c2x,
+      y2: c2y,
+      x3: ex,
+      y3: ey,
+      depth: 0,
+    })
+    start_x = ex
+    start_y = ey
+  }
+  cubics
 }

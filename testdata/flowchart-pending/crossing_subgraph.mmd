@@ -1,0 +1,13 @@
+flowchart TB
+    subgraph left
+        a1 --> a2
+        a1 --> a3
+    end
+    subgraph right
+        b1 --> b2
+        b1 --> b3
+    end
+    a2 --> b3
+    a3 --> b2
+    b2 --> a2
+    a1 --> b1

@@ -145,3 +145,14 @@ test "attribute values are trimmed" {
   let g = @dom.Element::new("g").attr("class", " node default ")
   inspect(g.to_html(), content="<g class=\"node default\"></g>")
 }
+
+///|
+test "arcs are measured as the cubics Blink walks" {
+  // Values from Chrome.
+  inspect(
+    @dom.path_length(
+      "M164,115.333 L176.929,115.333 Q184,115.333 184,108.262 L184,84.071 Q184,77 191.071,77 L198,77 A6,6 0 0 1 210,77 L216.929,77 Q224,77 224,69.929 L224,45.738 Q224,38.667 231.071,38.667 L240,38.667",
+    ),
+    content="148.86178588867188",
+  )
+}

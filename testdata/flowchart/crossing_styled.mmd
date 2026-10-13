@@ -1,0 +1,11 @@
+flowchart LR
+    A -->|one| D
+    B -.->|two| C
+    A --x C
+    B --o D
+    C <--> E
+    D --> F
+    C --> F
+    D --> E
+    linkStyle 0 stroke:red
+    linkStyle 3 stroke:#00f,stroke-width:2px

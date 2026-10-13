@@ -267,7 +267,11 @@ fn stroke_color_of(style : String) -> String? {
 ///|
 /// Draw an edge along its route: mermaid's `insertEdge` for routes that
 /// are already clipped to their nodes.
-fn insert_edge(group : @dom.Element, edge : Edge, data : LayoutData) -> Unit {
+fn insert_edge(
+  group : @dom.Element,
+  edge : Edge,
+  data : LayoutData,
+) -> @dom.Element {
   let points = edge.points
   let points_attr = base64(points_json(points))
   let line_data = points.filter(p => !p.y.is_nan())
@@ -360,6 +364,7 @@ fn insert_edge(group : @dom.Element, edge : Edge, data : LayoutData) -> Unit {
     use_margin,
     stroke_color,
   )
+  path
 }
 
 ///|

@@ -139,6 +139,22 @@ fn regex(path : String) -> Unit raise CliError {
 }
 
 ///|
+/// Print the length of each path in a JSON array of path data, for
+/// comparing with `getTotalLength()`.
+fn path_lengths(path : String) -> Unit raise CliError {
+  guard read_json(path) is Array(cases) else {
+    raise CliError("\{path} must hold an array of path data", status=2)
+  }
+  let results : Array[Json] = []
+  for item in cases {
+    if item is String(data) {
+      results.push(Json::number(@dom.path_length(data)))
+    }
+  }
+  println(Json::array(results).stringify())
+}
+
+///|
 fn flow_db(paths : ArrayView[String]) -> Unit raise CliError {
   for path in paths {
     let source = read_text(path)
@@ -180,6 +196,7 @@ fn main {
       ["measure", path] => measure(path)
       ["regex", path] => regex(path)
       ["flow-db", .. paths] => flow_db(paths)
+      ["path-length", path] => path_lengths(path)
       _ => println(usage)
     }
   } catch {

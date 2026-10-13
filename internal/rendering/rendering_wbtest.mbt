@@ -92,3 +92,21 @@ test "icons in labels" {
   inspect(replace_icons("sofa: fa-x"), content="sofa: fa-x")
   inspect(collapse_spaces("  a   b \n"), content="a b")
 }
+
+///|
+test "styles after a line hop" {
+  inspect(
+    replace_dasharray(
+      "stroke-dasharray: 0 0 32 4; stroke-dashoffset: 0;stroke:red;;;stroke:red",
+      "0 0 40.5 4",
+    ),
+    content="stroke-dasharray: 0 0 40.5 4; stroke-dashoffset: 0;stroke:red;stroke:red",
+  )
+  debug_inspect(
+    dash_gaps("stroke-dasharray: 0 0 2 2 2 2 4; stroke-dashoffset: 0;"),
+    content="Some((\"0\", \"2\"))",
+  )
+  debug_inspect(dash_gaps("fill:none"), content="None")
+  inspect(fmt3(115.33333333333334), content="115.333")
+  inspect(fmt3(-0.0001), content="0")
+}

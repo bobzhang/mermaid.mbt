@@ -151,8 +151,12 @@ pub fn render(data : LayoutData, svg : @dom.Element) -> Unit raise LayoutError {
     .number("flowchart.subGraphTitleMargin.top")
     .unwrap_or(0.0) +
     data.config.number("flowchart.subGraphTitleMargin.bottom").unwrap_or(0.0)
+  let paths : Map[String, @dom.Element] = Map([])
   for edge in data.edges {
-    insert_edge(edge_paths, edge, data)
+    let path = insert_edge(edge_paths, edge, data)
+    if !paths.contains(edge.id) {
+      paths[edge.id] = path
+    }
     if edge.label != "" {
       let element = match label_elements.get(edge.id) {
         Some(element) => element
@@ -170,4 +174,5 @@ pub fn render(data : LayoutData, svg : @dom.Element) -> Unit raise LayoutError {
       |> ignore
     }
   }
+  apply_line_jumps(data, paths)
 }
