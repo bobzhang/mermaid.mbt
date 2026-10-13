@@ -1,0 +1,7 @@
+import {
+  "bobzhang/mermaid/config",
+  "moonbit-community/yaml",
+  "moonbitlang/core/json",
+}
+
+warnings = "-implicit_impl_as_method"

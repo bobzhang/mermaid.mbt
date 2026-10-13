@@ -14,4 +14,5 @@ description = "A port of Mermaid (text-to-diagram toolkit) to MoonBit"
 
 import {
   "moonbitlang/x@0.5.5",
+  "moonbit-community/yaml@0.0.7",
 }

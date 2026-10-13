@@ -1,0 +1,27 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/internal/preprocess"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn detect_type(String) -> String raise UnknownDiagramError
+
+pub fn preprocess(String) -> Diagram raise
+
+// Errors
+pub(all) suberror UnknownDiagramError {
+  UnknownDiagramError(String)
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+pub struct Diagram {
+  code : String
+  title : String?
+  config : Json
+}
+
+// Type aliases
+
+// Traits
