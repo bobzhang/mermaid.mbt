@@ -354,7 +354,7 @@ fn rect_left_inv_arrow(
   outline.attr("transform", "translate(\{n(-notch / 2.0)},0)") |> ignore
   labelled.label.attr(
     "transform",
-    "translate(\{n(-notch / 2.0 - box.width / 2.0)}, \{n(-(box.height / 2.0))})",
+    "translate(\{n(-notch / 2.0 - box.width / 2.0 - labelled.offset_x)}, \{n(-(box.height / 2.0) - labelled.offset_y)})",
   )
   |> ignore
   update_node_bounds(node, outline)
@@ -392,7 +392,7 @@ fn cylinder(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
   update_node_bounds(node, element)
   labelled.label.attr(
     "transform",
-    "translate(\{n(-(box.width / 2.0))}, \{n(-(box.height / 2.0) + node.padding / 1.5)})",
+    "translate(\{n(-(box.width / 2.0) - labelled.offset_x)}, \{n(-(box.height / 2.0) + node.padding / 1.5 - labelled.offset_y)})",
   )
   |> ignore
   node.intersect = Some(point => {

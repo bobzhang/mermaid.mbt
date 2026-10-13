@@ -123,6 +123,11 @@ priv struct Labelled {
   shape_svg : @dom.Element
   label : @dom.Element
   bbox : LabelBox
+  /// `bbox.x - bbox.left` and `bbox.y - bbox.top` of upstream's label box:
+  /// zero for HTML labels, whose box has `left` and `top`; the origin of
+  /// the text box for SVG labels, whose box does not.
+  offset_x : Double
+  offset_y : Double
 }
 
 ///|
@@ -155,38 +160,66 @@ fn label_helper(
   } else {
     0.0
   }
-  let (fo, box) = create_html_label(
-    label,
-    node.label,
-    env,
-    width?=if unlimited {
-      None
-    } else {
-      Some(node.width.unwrap_or(wrapping_width))
-    },
-    min_width=min_label_width,
-    classes=if node.label_type == "markdown" {
-      "markdown-node-label"
-    } else {
-      ""
-    },
-    markdown=node.label_type == "markdown",
-    style=node.label_style,
-  )
-  let box = if box.width < min_label_width {
-    { ..box, width: min_label_width, }
+  let label_width = if unlimited {
+    None
   } else {
+    Some(node.width.unwrap_or(wrapping_width))
+  }
+  let markdown = node.label_type == "markdown"
+  let n = @dom.number
+  let mut offset_x = 0.0
+  let mut offset_y = 0.0
+  let box = if env.html_labels {
+    let (fo, box) = create_html_label(
+      label,
+      node.label,
+      env,
+      width?=label_width,
+      min_width=min_label_width,
+      classes=if markdown { "markdown-node-label" } else { "" },
+      markdown~,
+      style=node.label_style,
+    )
+    let box = if box.width < min_label_width {
+      { ..box, width: min_label_width, }
+    } else {
+      box
+    }
+    fo.attr_number("width", box.width).attr_number("height", box.height)
+    |> ignore
+    label.attr(
+      "transform",
+      "translate(\{n(-box.width / 2.0)}, \{n(-box.height / 2.0)})",
+    )
+    |> ignore
+    box
+  } else {
+    // Text is centred by its anchor; only the height needs a shift.
+    let text = create_svg_label(
+      label,
+      node.label,
+      env,
+      width?=label_width,
+      style=node.label_style,
+      markdown~,
+      anchor_middle=true,
+    )
+    let box : LabelBox = {
+      width: text.text_box.width.max(min_label_width),
+      height: text.text_box.height,
+    }
+    // A box widened to the minimum width is centred on the text.
+    offset_x = if text.text_box.width < min_label_width {
+      text.text_box.x - (min_label_width - text.text_box.width) / 2.0
+    } else {
+      text.text_box.x
+    }
+    offset_y = text.text_box.y
+    label.attr("transform", "translate(0, \{n(-box.height / 2.0)})") |> ignore
     box
   }
-  fo.attr_number("width", box.width).attr_number("height", box.height) |> ignore
-  let n = @dom.number
-  label.attr(
-    "transform",
-    "translate(\{n(-box.width / 2.0)}, \{n(-box.height / 2.0)})",
-  )
-  |> ignore
   label.insert_first("rect") |> ignore
-  { shape_svg, label, bbox: box, }
+  { shape_svg, label, bbox: box, offset_x, offset_y, }
 }
 
 ///|

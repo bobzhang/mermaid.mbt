@@ -14,19 +14,6 @@ pub fn draw(
   if config.text("look") == Some("handDrawn") {
     raise @rendering.LayoutError("The hand-drawn look is not supported yet.")
   }
-  let html_labels = match config.get("htmlLabels") {
-    Null =>
-      match config.get("flowchart.htmlLabels") {
-        Null => true
-        value => @config.evaluate(value)
-      }
-    value => @config.evaluate(value)
-  }
-  if !html_labels {
-    raise @rendering.LayoutError(
-      "Labels without HTML (htmlLabels: false) are not supported yet.",
-    )
-  }
   let (nodes, edges) = db.layout_data()
   let data : @rendering.LayoutData = {
     nodes,

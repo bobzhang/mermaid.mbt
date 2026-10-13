@@ -143,3 +143,33 @@ test "line break opportunities" {
   inspect(breaks_between(None, '_', 'b'), content="false")
   inspect(breaks_between(None, ')', '('), content="true")
 }
+
+///|
+test "text labels split into lines of words" {
+  let words = (lines : Array[Array[Word]]) => {
+    lines.map(line => {
+      line.map(word => {
+        if word.kind == "normal" {
+          word.content
+        } else {
+          "\{word.kind}:\{word.content}"
+        }
+      })
+    })
+  }
+  json_inspect(words(non_markdown_to_lines("one two<br/>three <b>four</b>")), content=[
+    ["one", "two"],
+    ["three", "<b>", "four", "</b>"],
+  ])
+  json_inspect(words(non_markdown_to_lines(" ")), content=[[]])
+  json_inspect(words(markdown_to_lines("The **cat**\n  in the *hat* \\*")), content=[
+    ["The", "strong:cat"],
+    ["in", "the", "em:hat"],
+  ])
+  inspect(
+    drop_declarations("fill:red;color:blue;stroke-width:2px", [
+      "stroke", "stroke-width", "fill",
+    ]),
+    content="color:blue;",
+  )
+}

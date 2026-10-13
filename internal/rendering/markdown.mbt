@@ -72,33 +72,36 @@ fn starts_other_block(line : Array[Char], in_paragraph~ : Bool = false) -> Bool 
 }
 
 ///|
-/// The inline tokens of a paragraph, as HTML.
-fn inline_markdown(text : Array[Char], auto_wrap : Bool) -> String {
-  let out = StringBuilder()
+/// An inline token of marked's lexer, as far as labels need them.
+priv enum MdToken {
+  MdText(String)
+  MdStrong(Array[MdToken])
+  MdEm(Array[MdToken])
+  /// Inline HTML, kept as written.
+  MdHtml(String)
+  /// A character behind a backslash.
+  MdEscape(Char)
+  /// Anything else (code spans): written out as it stands in HTML labels
+  /// and left out of text labels.
+  MdRaw(String)
+}
+
+///|
+/// A block of markdown: a paragraph, or anything else as raw text.
+priv enum MdBlock {
+  Paragraph(Array[MdToken])
+  Raw(String)
+}
+
+///|
+/// The inline tokens of a paragraph.
+fn inline_tokens(text : Array[Char]) -> Array[MdToken] {
+  let out : Array[MdToken] = []
   let pending = StringBuilder()
-  // Text between other tokens: line breaks become `<br/>`.
   let flush = () => {
-    if pending.is_empty() {
-      return
-    }
-    let chars = pending.to_string().to_array()
-    pending.reset()
-    let mut i = 0
-    while i < chars.length() {
-      if chars[i] == '\n' {
-        out.write_string("<br/>")
-        i += 1
-        while i < chars.length() && chars[i] == ' ' {
-          i += 1
-        }
-      } else {
-        if chars[i] == ' ' && !auto_wrap {
-          out.write_string("&nbsp;")
-        } else {
-          out.write_char(chars[i])
-        }
-        i += 1
-      }
+    if !pending.is_empty() {
+      out.push(MdText(pending.to_string()))
+      pending.reset()
     }
   }
   let n = text.length()
@@ -108,7 +111,7 @@ fn inline_markdown(text : Array[Char], auto_wrap : Bool) -> String {
     // A backslash before punctuation is an escape.
     if c == '\\' && i + 1 < n && is_md_punctuation(text[i + 1]) {
       flush()
-      out.write_char(text[i + 1])
+      out.push(MdEscape(text[i + 1]))
       i += 2
       continue
     }
@@ -122,12 +125,12 @@ fn inline_markdown(text : Array[Char], auto_wrap : Bool) -> String {
       }
       if j < n && text[j] == '>' {
         flush()
-        out.write_string(String::from_array(text[i:j + 1]))
+        out.push(MdHtml(String::from_array(text[i:j + 1])))
         i = j + 1
         continue
       }
     }
-    // Code spans are passed through with their backticks.
+    // Code spans are not supported upstream either.
     if c == '`' {
       let mut ticks = i
       while ticks < n && text[ticks] == '`' {
@@ -153,7 +156,7 @@ fn inline_markdown(text : Array[Char], auto_wrap : Bool) -> String {
       }
       if close >= 0 {
         flush()
-        out.write_string(String::from_array(text[i:close]))
+        out.push(MdRaw(String::from_array(text[i:close])))
         i = close
         continue
       }
@@ -202,17 +205,17 @@ fn inline_markdown(text : Array[Char], auto_wrap : Bool) -> String {
         if close >= 0 {
           let used = if run < close_len { run } else { close_len }
           let used = if used > 3 { 3 } else { used }
-          flush()
           // Unmatched opening delimiters stay text.
           for _ in 0..<(run - used) {
-            out.write_char(c)
+            pending.write_char(c)
           }
-          let inner = inline_markdown(text[run_end:close].to_owned(), auto_wrap)
-          out.write_string(
+          flush()
+          let inner = inline_tokens(text[run_end:close].to_owned())
+          out.push(
             match used {
-              1 => "<em>\{inner}</em>"
-              2 => "<strong>\{inner}</strong>"
-              _ => "<em><strong>\{inner}</strong></em>"
+              1 => MdEm(inner)
+              2 => MdStrong(inner)
+              _ => MdEm([MdStrong(inner)])
             },
           )
           i = close + used
@@ -229,12 +232,58 @@ fn inline_markdown(text : Array[Char], auto_wrap : Bool) -> String {
     i += 1
   }
   flush()
-  out.to_string()
+  out
 }
 
 ///|
-/// Markdown to the HTML of a label.
-fn markdown_to_html(markdown : String, auto_wrap : Bool) -> String {
+/// Inline tokens as the HTML of a label.
+fn tokens_to_html(
+  tokens : Array[MdToken],
+  auto_wrap : Bool,
+  out : StringBuilder,
+) -> Unit {
+  for token in tokens {
+    match token {
+      MdText(text) => {
+        // Line breaks, with the indentation after them, become `<br/>`.
+        let chars = text.to_array()
+        let mut i = 0
+        while i < chars.length() {
+          if chars[i] == '\n' {
+            out.write_string("<br/>")
+            i += 1
+            while i < chars.length() && chars[i] == ' ' {
+              i += 1
+            }
+          } else {
+            if chars[i] == ' ' && !auto_wrap {
+              out.write_string("&nbsp;")
+            } else {
+              out.write_char(chars[i])
+            }
+            i += 1
+          }
+        }
+      }
+      MdStrong(inner) => {
+        out.write_string("<strong>")
+        tokens_to_html(inner, auto_wrap, out)
+        out.write_string("</strong>")
+      }
+      MdEm(inner) => {
+        out.write_string("<em>")
+        tokens_to_html(inner, auto_wrap, out)
+        out.write_string("</em>")
+      }
+      MdHtml(text) | MdRaw(text) => out.write_string(text)
+      MdEscape(c) => out.write_char(c)
+    }
+  }
+}
+
+///|
+/// The blocks of a markdown text.
+fn markdown_blocks(markdown : String) -> Array[MdBlock] {
   let source = markdown
     .replace_all(old="\r\n", new="\n")
     .replace_all(old="\r", new="\n")
@@ -242,7 +291,7 @@ fn markdown_to_html(markdown : String, auto_wrap : Bool) -> String {
     .split("\n")
     .map(line => line.to_owned().to_array())
     .collect()
-  let out = StringBuilder()
+  let blocks = []
   let is_blank = (line : Array[Char]) => line.all(c => c is (' ' | '\t'))
   let mut index = 0
   while index < lines.length() {
@@ -261,11 +310,8 @@ fn markdown_to_html(markdown : String, auto_wrap : Bool) -> String {
         .map(line => String::from_array(line))
         .collect()
         .join("\n")
-      out.write_string(raw)
       // The raw text of a block includes the line break after it.
-      if index < lines.length() {
-        out.write_string("\n")
-      }
+      blocks.push(Raw(if index < lines.length() { raw + "\n" } else { raw }))
       continue
     }
     index += 1
@@ -293,7 +339,24 @@ fn markdown_to_html(markdown : String, auto_wrap : Bool) -> String {
     while text.last() is Some(' ' | '\t') {
       text.pop() |> ignore
     }
-    out.write_string("<p>\{inline_markdown(text, auto_wrap)}</p>")
+    blocks.push(Paragraph(inline_tokens(text)))
+  }
+  blocks
+}
+
+///|
+/// Markdown to the HTML of a label.
+fn markdown_to_html(markdown : String, auto_wrap : Bool) -> String {
+  let out = StringBuilder()
+  for block in markdown_blocks(markdown) {
+    match block {
+      Paragraph(tokens) => {
+        out.write_string("<p>")
+        tokens_to_html(tokens, auto_wrap, out)
+        out.write_string("</p>")
+      }
+      Raw(text) => out.write_string(text)
+    }
   }
   out.to_string()
 }

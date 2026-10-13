@@ -29,13 +29,35 @@ fn insert_cluster(parent : @dom.Element, node : Node, env : Env) -> Unit {
     .attr("data-look", node.look)
   stamp_color_slot(shape_svg, node.color_index, env)
   let label = shape_svg.append("g").attr("class", "cluster-label ")
-  let (fo, box) = create_html_label(
-    label,
-    node.label,
-    env,
-    style=node.label_style,
-  )
-  fo.attr_number("width", box.width).attr_number("height", box.height) |> ignore
+  let markdown = node.label_type == "markdown"
+  let (fo, box) = if env.html_labels {
+    let (fo, box) = create_html_label(
+      label,
+      node.label,
+      env,
+      width?=if markdown { node.width } else { None },
+      style=node.label_style,
+      markdown~,
+    )
+    fo.attr_number("width", box.width).attr_number("height", box.height)
+    |> ignore
+    (Some(fo), box)
+  } else {
+    let text = create_svg_label(
+      label,
+      node.label,
+      env,
+      width?=if markdown { node.width } else { None },
+      style=node.label_style,
+      markdown~,
+      anchor_middle=false,
+    )
+    let box : LabelBox = {
+      width: text.text_box.width,
+      height: text.text_box.height,
+    }
+    (None, box)
+  }
   let node_width = node.width.unwrap_or(0.0)
   let height = node.height.unwrap_or(0.0)
   let width = if node_width <= box.width + node.padding {
@@ -60,7 +82,7 @@ fn insert_cluster(parent : @dom.Element, node : Node, env : Env) -> Unit {
     "translate(\{n(node.x - box.width / 2.0)}, \{n(node.y - height / 2.0 + title_top)})",
   )
   |> ignore
-  if styles.label_styles != "" {
+  if styles.label_styles != "" && fo is Some(fo) {
     for span in fo.child_elements() {
       for inner in span.child_elements() {
         if inner.tag == "span" {

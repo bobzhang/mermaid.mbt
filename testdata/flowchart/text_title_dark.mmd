@@ -1,0 +1,18 @@
+---
+title: Text labels in the dark theme
+config:
+  htmlLabels: false
+  theme: dark
+  look: classic
+---
+flowchart TD
+    A[Start] -->|go on| B{Decide}
+    B -->|yes| C[Left side with a long label that wraps]
+    B -->|no| D[Right]
+    subgraph one [First]
+        C
+    end
+    subgraph two [Second]
+        D
+    end
+    C --> D

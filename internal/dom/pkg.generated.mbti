@@ -12,6 +12,8 @@ pub fn path_length(String) -> Double
 
 pub fn placeholders_to_references(String) -> String
 
+pub fn sanitized_text(String) -> String
+
 pub fn serialize_declarations(String) -> String
 
 // Errors

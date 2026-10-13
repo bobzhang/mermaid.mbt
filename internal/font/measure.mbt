@@ -200,6 +200,62 @@ pub fn Stack::advance(self : Stack, text : StringView, size : Double) -> Double 
 }
 
 ///|
+/// The widths of consecutive pieces of text shaped as one run, as SVG
+/// text lays out the `<tspan>`s of a line: kerning reaches across the
+/// pieces (the adjustment belongs to the earlier glyph), and every piece
+/// takes whole layout units.
+pub fn Stack::item_advances(
+  self : Stack,
+  items : Array[String],
+  size : Double,
+) -> Array[Double] {
+  let size = effective_size(size)
+  let sums : Array[Float] = items.map(_ => 0.0)
+  let mut previous : (Face, Glyph, Int32)? = None
+  for index, item in items {
+    for c in item {
+      let face = self.face_for(c)
+      guard face.glyphs.get(c.to_int()) is Some(glyph) else {
+        let em = if c.to_int() >= 0x1100 { 1.0 } else { 0.5 }
+        sums[index] = sums[index] + Float::from_double(size * em)
+        previous = None
+        continue
+      }
+      if previous is Some((left_face, left, left_index)) &&
+        physical_equal(left_face, face) &&
+        face.kerning.get(left.id * 65536 + glyph.id) is Some(adjust) {
+        sums[left_index] = sums[left_index] +
+          Float::from_int(face.scale_fixed(adjust, size)) / HB_ONE
+      }
+      sums[index] = sums[index] +
+        Float::from_int(face.advance_fixed(glyph.advance, size)) / HB_ONE
+      previous = Some((face, glyph, index))
+    }
+  }
+  sums.map(sum => ceil_layout_unit(sum))
+}
+
+///|
+/// The ink of `text` at `size` pixels around its origin on the baseline,
+/// y down; an empty box when nothing is drawn.
+pub fn Stack::ink(self : Stack, text : StringView, size : Double) -> Rect {
+  let ink = self.shape(text, size).ink
+  {
+    x: ink.x.to_double(),
+    y: ink.y.to_double(),
+    width: ink.width.to_double(),
+    height: ink.height.to_double(),
+  }
+}
+
+///|
+/// The ascent and descent of the stack's first face at `size` pixels,
+/// which is what lines of text are as tall as.
+pub fn Stack::line_metrics(self : Stack, size : Double) -> (Double, Double) {
+  (self.faces[0].ascent(size), self.faces[0].descent(size))
+}
+
+///|
 /// The bounding box of `text` at `size` pixels: what `getBBox()` reports
 /// for an SVG text element positioned at the origin. It is the cell
 /// (advance by ascent plus descent) united with the ink of the glyphs,

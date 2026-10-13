@@ -1,0 +1,14 @@
+---
+config:
+  htmlLabels: false
+---
+flowchart TD
+    A["`This is **bold**, *italic*, _also italic_ and ***both***`"]
+    B["`Line one
+    Line two with a \*literal\* star`"]
+    C["`A markdown label that wraps over more than one line`"]
+    A --> B -->|"`**yes**
+    no`"| C
+    subgraph "`**Two** words`"
+        C
+    end

@@ -382,6 +382,31 @@ fn insert_edge_label(
     .append("g")
     .attr("class", "label")
     .attr("data-id", edge.id)
+  let n = @dom.number
+  let markdown = edge.label_type == "markdown"
+  if !env.html_labels {
+    let text = create_svg_label(
+      label,
+      edge.label,
+      env,
+      width=200.0,
+      style=edge.label_style,
+      is_node=false,
+      add_background=true,
+      markdown~,
+    )
+    // The label is as large as its background, and centred on its text.
+    let box = text.group.bbox()
+    let centre = text.text_box
+    label.attr(
+      "transform",
+      "translate(\{n(-(centre.x + centre.width / 2.0))}, \{n(-(centre.y + centre.height / 2.0))})",
+    )
+    |> ignore
+    edge.width = box.width
+    edge.height = box.height
+    return edge_label
+  }
   let (fo, box) = create_html_label(
     label,
     edge.label,
@@ -390,10 +415,9 @@ fn insert_edge_label(
     style=edge.label_style,
     is_node=false,
     add_background=true,
-    markdown=edge.label_type == "markdown",
+    markdown~,
   )
   fo.attr_number("width", box.width).attr_number("height", box.height) |> ignore
-  let n = @dom.number
   label.attr(
     "transform",
     "translate(\{n(-box.width / 2.0)}, \{n(-box.height / 2.0)})",

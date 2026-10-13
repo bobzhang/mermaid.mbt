@@ -72,8 +72,12 @@ What is missing:
   reproduces upstream exactly; without a seed upstream's own output differs
   from render to render, and the port's is merely equivalent.
 - Markdown labels cover paragraphs, emphasis, escapes and inline HTML; other
-  markdown blocks pass through as text. The hand-drawn look and non-HTML
-  labels are not ported.
+  markdown blocks pass through as text.
+- Labels are HTML in a `foreignObject` by default, as upstream; with
+  `htmlLabels: false` they are plain SVG text, which every SVG viewer
+  shows.
+- Not ported: the hand-drawn look, and layouts other than ELK (`layout:
+  dagre` and the rest). `render` raises `Unsupported` for them.
 - Line breaking inside labels knows Blink's rules for ASCII text; other
   scripts break at spaces only.
 

@@ -183,3 +183,38 @@ pub fn placeholders_to_references(text : String) -> String {
   .replace_all(old="ﬂ°", new="&")
   .replace_all(old="¶ß", new=";")
 }
+
+///|
+/// The text an HTML fragment's character data sanitizes to: every
+/// character reference becomes its character, except that `&`, `<` and
+/// `>` stay written as references, as HTML serialization writes them.
+pub fn sanitized_text(text : String) -> String {
+  let out = StringBuilder()
+  let mut rest = text[:]
+  while rest.find("&") is Some(start) {
+    out.write_view(rest[:start])
+    let after = rest[start + 1:]
+    // A reference ends at its semicolon, a few characters on.
+    match after.find(";") {
+      Some(end) if end > 0 && end <= 32 => {
+        let reference = "&" + after[:end].to_owned() + ";"
+        let resolved = resolve_references(reference)
+        out.write_string(
+          match resolved {
+            "&" => "&amp;"
+            "<" => "&lt;"
+            ">" => "&gt;"
+            _ => resolved
+          },
+        )
+        rest = after[end + 1:]
+      }
+      _ => {
+        out.write_string("&")
+        rest = after
+      }
+    }
+  }
+  out.write_view(rest)
+  out.to_string()
+}

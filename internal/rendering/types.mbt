@@ -201,6 +201,8 @@ priv struct Env {
   config : @config.Config
   font_family : String
   font_size : Double
+  /// Whether labels are HTML in a `foreignObject` or SVG text.
+  html_labels : Bool
 }
 
 ///|
@@ -222,7 +224,20 @@ fn Env::new(config : @config.Config) -> Env {
     }
     _ => 16.0
   }
-  { config, font_family: theme.text("fontFamily"), font_size: size, }
+  let html_labels = match config.get("htmlLabels") {
+    Null =>
+      match config.get("flowchart.htmlLabels") {
+        Null => true
+        value => @config.evaluate(value)
+      }
+    value => @config.evaluate(value)
+  }
+  {
+    config,
+    font_family: theme.text("fontFamily"),
+    font_size: size,
+    html_labels,
+  }
 }
 
 ///|

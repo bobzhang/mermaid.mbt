@@ -1,0 +1,18 @@
+---
+config:
+  htmlLabels: false
+  theme: default
+  look: classic
+---
+flowchart LR
+    A[First line<br>second line] -->|one<br/>two| B(Rounded with a fairly long label inside it)
+    B --> C{{Hex}}
+    C -->|supercalifragilisticexpialidocious-and-then-some-more| D((End))
+    subgraph box [A group with a title]
+        C
+        D
+    end
+    classDef hot fill:#fdd,stroke:#900,color:#900
+    class A hot
+    style B color:blue,font-weight:bold
+    linkStyle 0 stroke:red,color:green
