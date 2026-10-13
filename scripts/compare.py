@@ -71,10 +71,13 @@ def build():
     done = subprocess.run(["moon", "build", "--target", "native", "cmd/mermaid"], cwd=ROOT, capture_output=True, text=True)
     if done.returncode != 0:
         sys.exit(done.stdout + done.stderr)
-    for candidate in (ROOT / "_build" / "native").rglob("mermaid.exe"):
-        if candidate.parent.name == "mermaid":
-            return candidate
-    sys.exit("cannot find the built cmd/mermaid executable")
+    # The path depends on whether the module is built inside a workspace;
+    # take the executable this build just produced.
+    candidates = [candidate for candidate in (ROOT / "_build" / "native").rglob("mermaid.exe")
+                  if candidate.is_file() and candidate.parent.name == "mermaid"]
+    if not candidates:
+        sys.exit("cannot find the built cmd/mermaid executable")
+    return max(candidates, key=lambda candidate: candidate.stat().st_mtime)
 
 
 def render(binary, path):
