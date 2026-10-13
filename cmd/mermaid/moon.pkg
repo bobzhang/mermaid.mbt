@@ -1,5 +1,6 @@
 import {
   "bobzhang/mermaid/config",
+  "bobzhang/mermaid/internal/font",
   "moonbitlang/core/env",
   "moonbitlang/core/json",
   "moonbitlang/x/fs",

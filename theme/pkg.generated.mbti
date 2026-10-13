@@ -6,6 +6,8 @@ import {
 }
 
 // Values
+pub fn is_theme_name(String) -> Bool
+
 pub let theme_names : Array[String]
 
 // Errors
@@ -15,6 +17,7 @@ pub struct Theme {
   // private fields
 }
 pub fn Theme::flag(Self, String) -> Bool
+pub fn Theme::from_variables(Map[String, Json]) -> Self
 pub fn Theme::get(Self, String) -> Json
 pub fn Theme::names(Self) -> Array[String]
 pub fn Theme::nested(Self, String, String) -> Json

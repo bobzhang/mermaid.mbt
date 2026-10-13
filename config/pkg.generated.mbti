@@ -1,0 +1,39 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/config"
+
+import {
+  "bobzhang/mermaid/theme",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn assign_with_depth(Json, Json, depth? : Int) -> Json
+
+pub fn diagram_config_key(String) -> String
+
+pub fn evaluate(Json) -> Bool
+
+pub fn sanitize_css(String) -> String
+
+pub fn sanitize_directive(Json) -> Json
+
+// Errors
+pub(all) suberror ConfigError {
+  InvalidColor(String)
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+pub struct Config {
+  // private fields
+}
+pub fn Config::flag(Self, String) -> Bool
+pub fn Config::get(Self, String) -> Json
+pub fn Config::new(site? : Json, directive? : Json, diagram_type? : String) -> Self raise ConfigError
+pub fn Config::number(Self, String) -> Double?
+pub fn Config::text(Self, String) -> String?
+pub fn Config::theme(Self) -> @theme.Theme
+pub impl ToJson for Config
+
+// Type aliases
+
+// Traits

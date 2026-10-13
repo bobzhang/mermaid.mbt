@@ -1,0 +1,36 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/internal/font"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+pub struct Face {
+  // private fields
+}
+pub fn Face::ascent(Self, Double) -> Double
+pub fn Face::covers(Self, Char) -> Bool
+pub fn Face::descent(Self, Double) -> Double
+
+pub(all) struct Rect {
+  x : Double
+  y : Double
+  width : Double
+  height : Double
+} derive(Eq, @debug.Debug)
+
+pub struct Stack {
+  // private fields
+}
+pub fn Stack::advance(Self, StringView, Double) -> Double
+pub fn Stack::bbox(Self, StringView, Double) -> Rect
+pub fn Stack::default(bold? : Bool, italic? : Bool) -> Self
+
+// Type aliases
+
+// Traits
