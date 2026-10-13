@@ -251,3 +251,34 @@ test "bounding boxes of curves, and sizes that lose precision" {
     content="-245.59767150878906 175.78611755371094 351.8549499511719 91.09004211425781",
   )
 }
+
+///|
+test "bounding boxes of arcs" {
+  // Expected values are `getBBox()` in Chrome on macOS: Skia turns arcs
+  // into conics with the system's trigonometry.
+  let box = (d : String) => {
+    let b = @dom.Element::new("path").attr("d", d).bbox()
+    "\{b.x} \{b.y} \{b.width} \{b.height}"
+  }
+  // Half an ellipse over the top overshoots its ends by a hair, because
+  // the angle of the negative x axis is the float below pi.
+  inspect(
+    box(
+      "M-153.98362679895644,-25.078441135218753 L-110.86821129524863,37.07844113521875 A110.86821129524863,12 0 0 0 110.86821129524863,37.07844113521875 L153.98362679895644,-25.078441135218753 A153.98362679895644,12 0 0 0 -153.98362679895644,-25.078441135218753 Z",
+    ),
+    content="-153.98362731933594 -37.07844161987305 307.9673156738281 86.15689849853516",
+  )
+  inspect(
+    box(
+      "M0,13.792400321006971 a76.91432998616759,13.792400321006971 0,0,0 153.82865997233517,0 a76.91432998616759,13.792400321006971 0,0,0 -153.82865997233517,0",
+    ),
+    content="0 -8.220912377510103e-7 153.8286590576172 27.584800720214844",
+  )
+  // A rotated ellipse.
+  inspect(
+    box(
+      "M-24.04875609683708 -76.79505773550784 a245.49697502080326,161.09179053669672 -95.37116834113249 1,0 98.44038936223407,62.28005076197567",
+    ),
+    content="-186.13119506835938 -77.59929656982422 324.0448913574219 489.767578125",
+  )
+}

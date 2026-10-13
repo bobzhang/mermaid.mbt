@@ -855,6 +855,10 @@ fn snap_to_zero(value : Float) -> Float {
 ///|
 /// The conics Skia builds for an SVG arc (`SkPath::arcTo`), which is the
 /// geometry `getBBox` sees. Nothing for an arc that degenerates to a line.
+///
+/// Skia takes its trigonometry from the C library, and what comes out
+/// depends on it to the last bit: these are the functions of macOS, where
+/// a sine and a cosine of the same angle are one call.
 fn arc_to_conics(
   x0 : Float,
   y0 : Float,
@@ -873,9 +877,12 @@ fn arc_to_conics(
   let mut ry = ry.abs()
   let half : Float = 0.5
   let one : Float = 1
-  let radians = angle * Float::from_double(3.141592653589793 / 180.0)
-  let sin_a = snap_to_zero(sin_f(radians))
-  let cos_a = snap_to_zero(cos_f(radians))
+  let pi = Float::from_double(3.141592653589793)
+  // The rotation by -angle that comes first has the same cosine and the
+  // opposite sine, exactly.
+  let (sin_a, cos_a) = @libm.sincosf(angle * (pi / 180))
+  let sin_a = snap_to_zero(sin_a)
+  let cos_a = snap_to_zero(cos_a)
   // Skia holds every transform as a matrix and maps a point as
   // `x * scale_x + y * skew_x`, so a rotation combined with the radii
   // multiplies the two first and rounds differently from rotating and
@@ -926,9 +933,8 @@ fn arc_to_conics(
   let delta_y = delta_y * scale
   let cx = (u0x + u1x) * half + -delta_y
   let cy = (u0y + u1y) * half + delta_x
-  let theta1 = atan2_f(u0y - cy, u0x - cx)
-  let theta2 = atan2_f(u1y - cy, u1x - cx)
-  let pi = Float::from_double(3.141592653589793)
+  let theta1 = @libm.atan2f(u0y - cy, u0x - cx)
+  let theta2 = @libm.atan2f(u1y - cy, u1x - cx)
   let mut theta_arc = theta2 - theta1
   if theta_arc < 0 && sweep {
     theta_arc = theta_arc + pi * 2
@@ -940,11 +946,11 @@ fn arc_to_conics(
   }
   let segments = (theta_arc / (2 * pi / 3)).abs().ceil().to_int()
   let theta_width = theta_arc / Float::from_int(segments)
-  let t = tan_f(half * theta_width)
+  let t = @libm.tanf(half * theta_width)
   if t.is_nan() || t.is_inf() {
     return []
   }
-  let w = (half + cos_f(theta_width) * half).sqrt()
+  let w = (half + @libm.cosf(theta_width) * half).sqrt()
   let is_integer = (value : Float) => value == value.floor()
   let nearly_zero = (value : Float) => {
     value.abs() <= Float::from_int(1) / Float::from_int(4096)
@@ -974,8 +980,9 @@ fn arc_to_conics(
   let mut start_theta = theta1
   for i in 0..<segments {
     let end_theta = start_theta + theta_width
-    let sin_end = snap_to_zero(sin_f(end_theta))
-    let cos_end = snap_to_zero(cos_f(end_theta))
+    let (sin_end, cos_end) = @libm.sincosf(end_theta)
+    let sin_end = snap_to_zero(sin_end)
+    let cos_end = snap_to_zero(cos_end)
     let end_x = cos_end + cx
     let end_y = sin_end + cy
     let ctrl_x = end_x + t * sin_end

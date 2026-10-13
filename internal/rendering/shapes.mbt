@@ -445,6 +445,9 @@ fn draw_shape(
     "curlyBraceLeft" | "curlyBraceRight" | "curlyBraces" =>
       curly_brace(parent, node, env, handler)
     "folder" => folder(parent, node, env)
+    "bucket" => bucket(parent, node, env)
+    "cloud" => cloud(parent, node, env)
+    "bang" => bang(parent, node, env)
     "browser" => browser(parent, node, env)
     "consoleWindow" => console_window(parent, node, env)
     "stateStart" => state_start(parent, node, env)

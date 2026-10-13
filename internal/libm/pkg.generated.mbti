@@ -1,0 +1,19 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/internal/libm"
+
+// Values
+pub fn atan2f(Float, Float) -> Float
+
+pub fn cosf(Float) -> Float
+
+pub fn sincosf(Float) -> (Float, Float)
+
+pub fn tanf(Float) -> Float
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits
