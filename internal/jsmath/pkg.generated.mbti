@@ -2,7 +2,13 @@
 package "bobzhang/mermaid/internal/jsmath"
 
 // Values
+pub fn acos(Double) -> Double
+
+pub fn atan2(Double, Double) -> Double
+
 pub fn cos(Double) -> Double
+
+pub fn hypot(Double, Double) -> Double
 
 pub fn pow10(Int) -> Double
 
