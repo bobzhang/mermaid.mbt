@@ -46,6 +46,7 @@ fn is_void(tag : String) -> Bool {
 
 ///|
 fn Element::write(self : Element, out : StringBuilder) -> Unit {
+  self.sync_style()
   out.write_char('<')
   out.write_string(self.tag)
   for attribute in self.attributes {

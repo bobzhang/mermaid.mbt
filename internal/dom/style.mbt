@@ -1,5 +1,6 @@
 ///|
-/// Parse the declarations of a `style` attribute.
+/// Parse the declarations of a `style` attribute, normalizing values as
+/// the CSSOM would.
 fn parse_declarations(text : String) -> Array[(String, String)] {
   let declarations = []
   for part in text.split(";") {
@@ -7,10 +8,20 @@ fn parse_declarations(text : String) -> Array[(String, String)] {
     let name = part[:colon].trim().to_owned()
     let value = part[colon + 1:].trim().to_owned()
     if name != "" && value != "" {
-      declarations.push((name, value))
+      declarations.push((name, normalize_value(name, value)))
     }
   }
   declarations
+}
+
+///|
+/// A declaration value as the CSSOM serializes it.
+fn normalize_value(name : String, value : String) -> String {
+  if is_color_property(name) {
+    serialize_color(value)
+  } else {
+    value.trim().to_owned()
+  }
 }
 
 ///|
@@ -40,10 +51,7 @@ fn serialize_color(value : String) -> String {
     return lower
   }
   let channels = @color.Channels::parse(trimmed) catch { _ => return trimmed }
-  let channel = (v : Double) => (v + 0.5).floor().to_int()
-  let r = channel(channels.r())
-  let g = channel(channels.g())
-  let b = channel(channels.b())
+  let (r, g, b) = channels.to_css_rgb()
   if channels.a() < 1.0 {
     "rgba(\{r}, \{g}, \{b}, \{number(channels.a())})"
   } else {
@@ -52,31 +60,43 @@ fn serialize_color(value : String) -> String {
 }
 
 ///|
-/// Set an inline style property, like d3's `selection.style`. The browser
-/// re-serializes the whole `style` attribute from its parsed declarations,
-/// so values come out normalized: `name: value;` pairs separated by spaces,
-/// colors resolved.
+/// Set an inline style property, like d3's `selection.style`.
+///
+/// The browser keeps the declarations in the CSSOM and only writes the
+/// `style` attribute back when something reads it — in practice when the
+/// document is serialized. The attribute therefore appears after
+/// attributes that were set later, and its text is re-serialized from the
+/// parsed declarations: `name: value;` pairs, colors resolved.
 pub fn Element::style(self : Element, name : String, value : String) -> Element {
-  let declarations = match self.get_attr("style") {
-    Some(text) => parse_declarations(text)
-    None => []
-  }
-  let value = if is_color_property(name) {
-    serialize_color(value)
-  } else {
-    value.trim().to_owned()
-  }
+  let value = normalize_value(name, value)
   let mut found = false
-  for i, declaration in declarations {
+  for i, declaration in self.declarations {
     if declaration.0 == name {
-      declarations[i] = (name, value)
+      self.declarations[i] = (name, value)
       found = true
       break
     }
   }
   if !found {
-    declarations.push((name, value))
+    self.declarations.push((name, value))
   }
-  let text = declarations.map(d => "\{d.0}: \{d.1};").join(" ")
-  self.attr("style", text)
+  self.style_dirty = true
+  self
+}
+
+///|
+/// Write pending declarations to the `style` attribute.
+fn Element::sync_style(self : Element) -> Unit {
+  if !self.style_dirty {
+    return
+  }
+  self.style_dirty = false
+  let text = self.declarations.map(d => "\{d.0}: \{d.1};").join(" ")
+  for i, attribute in self.attributes {
+    if attribute.0 == "style" {
+      self.attributes[i] = ("style", text)
+      return
+    }
+  }
+  self.attributes.push(("style", text))
 }

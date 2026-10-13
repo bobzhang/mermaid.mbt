@@ -1,0 +1,8 @@
+import {
+  "bobzhang/mermaid/config",
+  "bobzhang/mermaid/internal/dom",
+  "bobzhang/mermaid/internal/font",
+  "bobzhang/mermaid/theme",
+}
+
+warnings = "-implicit_impl_as_method"

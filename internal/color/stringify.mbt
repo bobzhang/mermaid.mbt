@@ -61,3 +61,61 @@ fn Channels::to_hex_string(self : Channels) -> String {
   let alpha = if self.alpha < 1.0 { hex_byte(self.alpha * 255.0) } else { "" }
   "#\{hex_byte(r)}\{hex_byte(g)}\{hex_byte(b)}\{alpha}"
 }
+
+///|
+/// The 8-bit sRGB channels a browser resolves this color to. An HSL color
+/// is converted in 32-bit floats with the CSS Color 4 formula, as Blink
+/// does, which decides the rounding of channels that land on a half.
+pub fn Channels::to_css_rgb(self : Channels) -> (Int32, Int32, Int32) {
+  let round = (value : Float) => {
+    let scaled = value * 255.0
+    let rounded = if scaled < 0.0 {
+      -((-scaled).to_double() + 0.5).floor()
+    } else {
+      (scaled.to_double() + 0.5).floor()
+    }
+    let n = rounded.to_int()
+    if n < 0 {
+      0
+    } else if n > 255 {
+      255
+    } else {
+      n
+    }
+  }
+  guard self.red is None else {
+    let (r, g, b) = self.rgb_data()
+    return (
+      round(Float::from_double(r / 255.0)),
+      round(Float::from_double(g / 255.0)),
+      round(Float::from_double(b / 255.0)),
+    )
+  }
+  let (h, s, l) = self.hsl_data()
+  let h = Float::from_double(h)
+  // Percentages become floats before they are scaled down.
+  let hundred : Float = 100.0
+  let s = Float::from_double(s) / hundred
+  let l = Float::from_double(l) / hundred
+  if s == 0.0 {
+    return (round(l), round(l), round(l))
+  }
+  let channel = (n : Float) => {
+    let k = Float::from_double((n + h / 30.0).to_double() % 12.0)
+    let a = s * (if l < 1.0 - l { l } else { 1.0 - l })
+    let nine : Float = 9.0
+    let one : Float = 1.0
+    let mut m : Float = k - 3.0
+    if nine - k < m {
+      m = nine - k
+    }
+    if m > one {
+      m = one
+    }
+    if m < -one {
+      m = -one
+    }
+    l - a * m
+  }
+  (round(channel(0.0)), round(channel(8.0)), round(channel(4.0)))
+}

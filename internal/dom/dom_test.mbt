@@ -43,3 +43,36 @@ test "tree edits" {
   inspect(root.append("text").text("hi").text_content(), content="hi")
   inspect(@dom.number(-0.0), content="0")
 }
+
+///|
+test "the style attribute materializes when the document is serialized" {
+  // Declarations set through `style` are written back lazily, so the
+  // attribute lands after ones that were set later.
+  let text = @dom.Element::new("text")
+    .attr("transform", "translate(1,2)")
+    .style("text-anchor", "middle")
+    .attr("class", "slice")
+  inspect(
+    text.to_html(),
+    content=(
+      #|<text transform="translate(1,2)" class="slice" style="text-anchor: middle;"></text>
+    ),
+  )
+  // An explicit style attribute keeps its position and its raw text until
+  // a declaration changes.
+  let svg = @dom.Element::new("svg")
+    .attr("style", "max-width: 10px;")
+    .attr("role", "img")
+  inspect(
+    svg.to_html(),
+    content=(
+      #|<svg style="max-width: 10px;" role="img"></svg>
+    ),
+  )
+  inspect(
+    svg.style("fill", "#fff").to_html(),
+    content=(
+      #|<svg style="max-width: 10px; fill: rgb(255, 255, 255);" role="img"></svg>
+    ),
+  )
+}

@@ -13,12 +13,26 @@ pub struct Element {
   priv attributes : Array[(String, String)]
   priv children : Array[Node]
   priv mut parent : Element?
+  /// Inline style declarations set through `style`, as the CSSOM holds
+  /// them.
+  priv declarations : Array[(String, String)]
+  /// Whether `declarations` has changes not yet written to the `style`
+  /// attribute. The browser writes them back lazily, which decides where
+  /// the attribute lands among the others.
+  priv mut style_dirty : Bool
 }
 
 ///|
 /// Create a detached element.
 pub fn Element::new(tag : String) -> Element {
-  { tag, attributes: [], children: [], parent: None, }
+  {
+    tag,
+    attributes: [],
+    children: [],
+    parent: None,
+    declarations: [],
+    style_dirty: false,
+  }
 }
 
 ///|
@@ -39,6 +53,25 @@ pub fn Element::insert_first(self : Element, tag : String) -> Element {
   child.parent = Some(self)
   self.children.insert(0, Element(child))
   child
+}
+
+///|
+/// Insert a detached element before `reference`, a child of this element.
+/// Without such a child it goes last.
+pub fn Element::insert_before(
+  self : Element,
+  child : Element,
+  reference : Element,
+) -> Unit {
+  child.remove()
+  child.parent = Some(self)
+  for i, node in self.children {
+    if node is Element(element) && physical_equal(element, reference) {
+      self.children.insert(i, Element(child))
+      return
+    }
+  }
+  self.children.push(Element(child))
 }
 
 ///|
@@ -87,6 +120,15 @@ pub fn Element::child_elements(self : Element) -> Array[Element] {
 /// Set an attribute and return the element for chaining. A new attribute
 /// goes last; an existing one keeps its position.
 pub fn Element::attr(self : Element, name : String, value : String) -> Element {
+  if name == "style" {
+    // Setting the attribute first flushes pending declarations, then
+    // replaces them with what the new text declares.
+    self.sync_style()
+    self.declarations.clear()
+    for declaration in parse_declarations(value) {
+      self.declarations.push(declaration)
+    }
+  }
   for i, attribute in self.attributes {
     if attribute.0 == name {
       self.attributes[i] = (name, value)
@@ -109,6 +151,9 @@ pub fn Element::attr_number(
 
 ///|
 pub fn Element::get_attr(self : Element, name : String) -> String? {
+  if name == "style" {
+    self.sync_style()
+  }
   for attribute in self.attributes {
     if attribute.0 == name {
       return Some(attribute.1)
