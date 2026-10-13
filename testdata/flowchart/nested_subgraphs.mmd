@@ -1,0 +1,13 @@
+flowchart LR
+    subgraph outer
+        direction TB
+        subgraph inner1
+            a --> b
+        end
+        subgraph inner2
+            c --> d
+        end
+        inner1 --> inner2
+    end
+    x --> outer
+    outer --> y

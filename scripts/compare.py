@@ -33,7 +33,15 @@ def collect(paths):
     inputs = []
     for path in paths:
         path = pathlib.Path(path)
-        inputs += sorted(path.rglob("*.mmd")) if path.is_dir() else [path]
+        if not path.is_dir():
+            inputs.append(path)
+            continue
+        for file in sorted(path.rglob("*.mmd")):
+            # A directory marked PENDING holds inputs for a diagram that
+            # does not render yet; it is only compared when asked for.
+            if (file.parent / "PENDING").exists() and file.parent != path:
+                continue
+            inputs.append(file)
     return inputs
 
 
