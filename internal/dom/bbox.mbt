@@ -9,33 +9,90 @@ pub(all) struct Rect {
 } derive(Eq, Debug)
 
 ///|
-/// An axis-aligned box by its edges, in 32-bit floats.
+/// A box as Blink's `gfx::RectF` holds it: origin and size in 32-bit
+/// floats. The far edges are sums, so they round again whenever they are
+/// needed.
 priv struct Bounds {
+  x : Float
+  y : Float
+  width : Float
+  height : Float
+}
+
+///|
+fn Bounds::from_edges(
+  left : Float,
+  top : Float,
+  right : Float,
+  bottom : Float,
+) -> Bounds {
+  { x: left, y: top, width: right - left, height: bottom - top, }
+}
+
+///|
+/// `RectF::UnionEvenIfEmpty`.
+fn Bounds::unite(self : Bounds, other : Bounds) -> Bounds {
+  let min = (a : Float, b : Float) => if b < a { b } else { a }
+  let max = (a : Float, b : Float) => if a < b { b } else { a }
+  Bounds::from_edges(
+    min(self.x, other.x),
+    min(self.y, other.y),
+    max(self.x + self.width, other.x + other.width),
+    max(self.y + self.height, other.y + other.height),
+  )
+}
+
+///|
+/// The box of a set of points, as Skia bounds a path.
+priv struct PointBounds {
   mut left : Float
   mut top : Float
   mut right : Float
   mut bottom : Float
+  mut empty : Bool
 }
 
 ///|
-fn Bounds::unite(self : Bounds, other : Bounds) -> Unit {
-  if other.left < self.left {
-    self.left = other.left
+fn PointBounds::new() -> PointBounds {
+  { left: 0, top: 0, right: 0, bottom: 0, empty: true, }
+}
+
+///|
+fn PointBounds::add(self : PointBounds, x : Float, y : Float) -> Unit {
+  if self.empty {
+    self.left = x
+    self.right = x
+    self.top = y
+    self.bottom = y
+    self.empty = false
+    return
   }
-  if other.top < self.top {
-    self.top = other.top
+  if x < self.left {
+    self.left = x
   }
-  if other.right > self.right {
-    self.right = other.right
+  if x > self.right {
+    self.right = x
   }
-  if other.bottom > self.bottom {
-    self.bottom = other.bottom
+  if y < self.top {
+    self.top = y
+  }
+  if y > self.bottom {
+    self.bottom = y
   }
 }
 
 ///|
-/// A leading number of an attribute such as `12.5` or `120px`.
-fn number_attr(element : Element, name : String) -> Double? {
+fn PointBounds::to_bounds(self : PointBounds) -> Bounds? {
+  if self.empty {
+    None
+  } else {
+    Some(Bounds::from_edges(self.left, self.top, self.right, self.bottom))
+  }
+}
+
+///|
+/// A length attribute such as `12.5` or `120px`, as a float.
+fn number_attr(element : Element, name : String) -> Float? {
   guard element.get_attr(name) is Some(text) else { return None }
   let text = text.trim().to_owned()
   let mut end = 0
@@ -47,89 +104,83 @@ fn number_attr(element : Element, name : String) -> Double? {
     }
   }
   let value = @string.parse_double(text[:end]) catch { _ => return None }
-  Some(value)
+  Some(Float::from_double(value))
+}
+
+///|
+/// Numbers separated by spaces or commas, read with the SVG number parser.
+fn svg_numbers(text : StringView) -> Array[Float] {
+  let numbers = []
+  for part in text.to_owned().replace_all(old=",", new=" ").split(" ") {
+    let part = part.trim()
+    if !part.is_empty() {
+      numbers.push(parse_svg_number(part))
+    }
+  }
+  numbers
 }
 
 ///|
 /// The translation of a `transform` attribute. Only `translate(x, y)` is
 /// understood; that is the one transform the renderers position with.
-fn translation(element : Element) -> (Double, Double) {
-  guard element.get_attr("transform") is Some(transform) else {
-    return (0.0, 0.0)
-  }
-  guard transform.find("translate(") is Some(start) else { return (0.0, 0.0) }
+fn translation(element : Element) -> (Float, Float) {
+  guard element.get_attr("transform") is Some(transform) else { return (0, 0) }
+  guard transform.find("translate(") is Some(start) else { return (0, 0) }
   let rest = transform[start + 10:]
-  guard rest.find(")") is Some(end) else { return (0.0, 0.0) }
-  let parts = []
-  for part in rest[:end].to_owned().replace_all(old=",", new=" ").split(" ") {
-    if !part.is_empty() {
-      parts.push(@string.parse_double(part) catch { _ => 0.0 })
-    }
-  }
-  match parts {
+  guard rest.find(")") is Some(end) else { return (0, 0) }
+  match svg_numbers(rest[:end]) {
     [x, y, ..] => (x, y)
-    [x] => (x, 0.0)
-    [] => (0.0, 0.0)
+    [x] => (x, 0)
+    [] => (0, 0)
   }
 }
 
 ///|
 /// The element's box in its own coordinate system, before its transform.
+/// Nothing for an element that renders no geometry.
 fn Element::local_bounds(self : Element) -> Bounds? {
-  let f = Float::from_double
+  let attr = (name : String) => number_attr(self, name).unwrap_or(0)
   match self.tag {
     "rect" | "foreignObject" | "image" => {
-      let width = number_attr(self, "width").unwrap_or(0.0)
-      let height = number_attr(self, "height").unwrap_or(0.0)
-      // A shape without area is not rendered and adds nothing.
-      if self.tag == "rect" && (width <= 0.0 || height <= 0.0) {
+      let width = attr("width")
+      let height = attr("height")
+      if width <= 0 || height <= 0 {
         return None
       }
-      let x = f(number_attr(self, "x").unwrap_or(0.0))
-      let y = f(number_attr(self, "y").unwrap_or(0.0))
-      Some({ left: x, top: y, right: x + f(width), bottom: y + f(height), })
+      Some({ x: attr("x"), y: attr("y"), width, height, })
     }
     "circle" => {
-      let r = f(number_attr(self, "r").unwrap_or(0.0))
-      if r <= 0.0 {
+      let r = attr("r")
+      if r <= 0 {
         return None
       }
-      let cx = f(number_attr(self, "cx").unwrap_or(0.0))
-      let cy = f(number_attr(self, "cy").unwrap_or(0.0))
-      Some({ left: cx - r, top: cy - r, right: cx + r, bottom: cy + r, })
+      Some({
+        x: attr("cx") - r,
+        y: attr("cy") - r,
+        width: r * 2,
+        height: r * 2,
+      })
     }
     "ellipse" => {
-      let rx = f(number_attr(self, "rx").unwrap_or(0.0))
-      let ry = f(number_attr(self, "ry").unwrap_or(0.0))
-      if rx <= 0.0 || ry <= 0.0 {
+      let rx = attr("rx")
+      let ry = attr("ry")
+      if rx <= 0 || ry <= 0 {
         return None
       }
-      let cx = f(number_attr(self, "cx").unwrap_or(0.0))
-      let cy = f(number_attr(self, "cy").unwrap_or(0.0))
-      Some({ left: cx - rx, top: cy - ry, right: cx + rx, bottom: cy + ry, })
+      Some({
+        x: attr("cx") - rx,
+        y: attr("cy") - ry,
+        width: rx * 2,
+        height: ry * 2,
+      })
     }
     "polygon" | "polyline" => {
-      let points = self.get_attr("points").unwrap_or("")
-      let numbers = []
-      for part in points.replace_all(old=",", new=" ").split(" ") {
-        if !part.is_empty() {
-          numbers.push(@string.parse_double(part) catch { _ => 0.0 })
-        }
-      }
-      let mut bounds : Bounds? = None
+      let numbers = svg_numbers(self.get_attr("points").unwrap_or(""))
+      let bounds = PointBounds::new()
       for i = 0; i + 1 < numbers.length(); i = i + 2 {
-        let point = {
-          left: f(numbers[i]),
-          top: f(numbers[i + 1]),
-          right: f(numbers[i]),
-          bottom: f(numbers[i + 1]),
-        }
-        match bounds {
-          Some(bounds) => bounds.unite(point)
-          None => bounds = Some(point)
-        }
+        bounds.add(numbers[i], numbers[i + 1])
       }
-      bounds
+      bounds.to_bounds()
     }
     "path" => path_bounds(self.get_attr("d").unwrap_or(""))
     "g" | "svg" | "a" => {
@@ -137,9 +188,9 @@ fn Element::local_bounds(self : Element) -> Bounds? {
       for node in self.children {
         guard node is Element(child) else { continue }
         guard child.bounds() is Some(child_bounds) else { continue }
-        match bounds {
-          Some(bounds) => bounds.unite(child_bounds)
-          None => bounds = Some(child_bounds)
+        bounds = match bounds {
+          Some(bounds) => Some(bounds.unite(child_bounds))
+          None => Some(child_bounds)
         }
       }
       bounds
@@ -151,22 +202,15 @@ fn Element::local_bounds(self : Element) -> Bounds? {
 }
 
 ///|
-/// The element's box in its parent's coordinate system.
+/// The element's box in its parent's coordinate system: moved by its
+/// translation, size unchanged.
 fn Element::bounds(self : Element) -> Bounds? {
   guard self.local_bounds() is Some(bounds) else { return None }
   let (dx, dy) = translation(self)
-  if dx == 0.0 && dy == 0.0 {
+  if dx == 0 && dy == 0 {
     return Some(bounds)
   }
-  let shift = (value : Float, delta : Double) => {
-    Float::from_double(value.to_double() + delta)
-  }
-  Some({
-    left: shift(bounds.left, dx),
-    top: shift(bounds.top, dy),
-    right: shift(bounds.right, dx),
-    bottom: shift(bounds.bottom, dy),
-  })
+  Some({ ..bounds, x: bounds.x + dx, y: bounds.y + dy, })
 }
 
 ///|
@@ -177,10 +221,10 @@ pub fn Element::bbox(self : Element) -> Rect {
   match self.local_bounds() {
     Some(bounds) =>
       {
-        x: bounds.left.to_double(),
-        y: bounds.top.to_double(),
-        width: (bounds.right - bounds.left).to_double(),
-        height: (bounds.bottom - bounds.top).to_double(),
+        x: bounds.x.to_double(),
+        y: bounds.y.to_double(),
+        width: bounds.width.to_double(),
+        height: bounds.height.to_double(),
       }
     None => { x: 0.0, y: 0.0, width: 0.0, height: 0.0, }
   }

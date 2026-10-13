@@ -296,20 +296,13 @@ fn valid_unit_divide(numer : Float, denom : Float) -> Float? {
 /// The tight box of path data, as `SkPath::computeTightBounds` finds it.
 /// Cubics are bounded by their control points for now.
 fn path_bounds(data : String) -> Bounds? {
-  let mut bounds : Bounds? = None
-  let add = (x : Float, y : Float) => {
-    let point = { left: x, top: y, right: x, bottom: y, }
-    match bounds {
-      Some(bounds) => bounds.unite(point)
-      None => bounds = Some(point)
-    }
-  }
+  let bounds = PointBounds::new()
   let mut x : Float = 0
   let mut y : Float = 0
   for segment in parse_path(data) {
     match segment {
       MoveTo(px, py) | LineTo(px, py) => {
-        add(px, py)
+        bounds.add(px, py)
         x = px
         y = py
       }
@@ -319,8 +312,10 @@ fn path_bounds(data : String) -> Bounds? {
         let ay = py - (cy + cy) + y
         let bx = cx - x + (cx - x)
         let by = cy - y + (cy - y)
+        let sx = x
+        let sy = y
         let eval = (t : Float) => {
-          add((ax * t + bx) * t + x, (ay * t + by) * t + y)
+          bounds.add((ax * t + bx) * t + sx, (ay * t + by) * t + sy)
         }
         if valid_unit_divide(x - cx, x - cx - cx + px) is Some(t) {
           eval(t)
@@ -328,21 +323,21 @@ fn path_bounds(data : String) -> Bounds? {
         if valid_unit_divide(y - cy, y - cy - cy + py) is Some(t) {
           eval(t)
         }
-        add(px, py)
+        bounds.add(px, py)
         x = px
         y = py
       }
       CubicTo(c1x, c1y, c2x, c2y, px, py) => {
-        add(c1x, c1y)
-        add(c2x, c2y)
-        add(px, py)
+        bounds.add(c1x, c1y)
+        bounds.add(c2x, c2y)
+        bounds.add(px, py)
         x = px
         y = py
       }
       Close => ()
     }
   }
-  bounds
+  bounds.to_bounds()
 }
 
 ///|
