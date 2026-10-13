@@ -293,3 +293,22 @@ test "bounding boxes of arcs" {
     content="-186.13119506835938 -77.59929656982422 324.0448913574219 489.767578125",
   )
 }
+
+///|
+test "lengths of elliptical arcs" {
+  // Values from Chrome: rotated, scaled-up and large arcs.
+  inspect(
+    @dom.path_length("M24.516,17.722 A148.074,21.336 0 0 1 127.258,-44.994"),
+    content="460.391357421875",
+  )
+  inspect(
+    @dom.path_length(
+      "M-199.782,-116.113 A136.631,71.028 172.929 1 0 -173.285,-236.717",
+    ),
+    content="486.3040466308594",
+  )
+  inspect(
+    @dom.path_length("M169.026,5.682 A57.462,1.245 0 1 1 -8.43,-66.519"),
+    content="3341.4716796875",
+  )
+}
