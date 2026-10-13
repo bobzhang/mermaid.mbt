@@ -156,6 +156,7 @@ fn create_html_label(
 /// and the label's box.
 priv struct Labelled {
   shape_svg : @dom.Element
+  label : @dom.Element
   bbox : LabelBox
 }
 
@@ -219,7 +220,7 @@ fn label_helper(
   )
   |> ignore
   label.insert_first("rect") |> ignore
-  { shape_svg, bbox: box, }
+  { shape_svg, label, bbox: box, }
 }
 
 ///|

@@ -212,6 +212,65 @@ fn double_circle(parent : @dom.Element, node : Node, env : Env) -> @dom.Element 
 }
 
 ///|
+/// A cylinder: an ellipse on top, straight sides, half an ellipse below.
+fn cylinder(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
+  let styles = shape_styles(node)
+  let neo = node.look == "neo"
+  let label_padding = if neo { 24.0 } else { node.padding }
+  let labelled = label_helper(parent, node, node_classes(node), env)
+  let box = labelled.bbox
+  let w = node.width.unwrap_or(0.0).max(box.width) + label_padding
+  let rx = w / 2.0
+  let ry = rx / (2.5 + w / 50.0)
+  let h = node.height.unwrap_or(0.0).max(box.height) + label_padding + ry
+  let n = @dom.number
+  let path_data = [
+    "M0,\{n(ry)}",
+    "a\{n(rx)},\{n(ry)} 0,0,0 \{n(w)},0",
+    "a\{n(rx)},\{n(ry)} 0,0,0 \{n(-w)},0",
+    "l0,\{n(h)}",
+    "a\{n(rx)},\{n(ry)} 0,0,0 \{n(w)},0",
+    "l0,\{n(-h)}",
+  ].join(" ")
+  let element = labelled.shape_svg
+    .insert_first("path")
+    .attr("d", path_data)
+    .attr("class", "basic label-container outer-path")
+    .attr("style", styles.node_styles)
+    .attr("transform", "translate(\{n(-w / 2.0)}, \{n(-(h / 2.0 + ry))})")
+  update_node_bounds(node, element)
+  labelled.label.attr(
+    "transform",
+    "translate(\{n(-(box.width / 2.0))}, \{n(-(box.height / 2.0) + node.padding / 1.5)})",
+  )
+  |> ignore
+  node.intersect = Some(point => {
+    let width = node.width.unwrap_or(0.0)
+    let height = node.height.unwrap_or(0.0)
+    let pos = intersect_rect(node.x, node.y, width, height, point)
+    let x = pos.x - node.x
+    if rx != 0.0 &&
+      (
+        x.abs() < width / 2.0 ||
+        (x.abs() == width / 2.0 && (pos.y - node.y).abs() > height / 2.0 - ry)
+      ) {
+      let mut y = ry * ry * (1.0 - x * x / (rx * rx))
+      if y > 0.0 {
+        y = y.sqrt()
+      }
+      y = ry - y
+      if point.y - node.y > 0.0 {
+        y = -y
+      }
+      { x: pos.x, y: pos.y + y, }
+    } else {
+      pos
+    }
+  })
+  labelled.shape_svg
+}
+
+///|
 /// Draw the outline and label of `node` with the shape it asks for.
 fn draw_shape(
   parent : @dom.Element,
@@ -242,6 +301,7 @@ fn draw_shape(
         radius=env.config.theme().number("radius").unwrap_or(5.0),
       )
     "question" => question(parent, node, env)
+    "cylinder" => cylinder(parent, node, env)
     "circle" => circle(parent, node, env)
     "doublecircle" => double_circle(parent, node, env)
     "subroutine" =>

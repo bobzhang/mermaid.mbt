@@ -346,35 +346,12 @@ fn path_bounds(data : String) -> Bounds? {
         y = py
       }
       ArcTo(rx, ry, angle, large, sweep, px, py) => {
-        match arc_geometry(x, y, rx, ry, angle, large, sweep, px, py) {
-          Some(arc) if angle == 0 => {
-            // The points where the ellipse turns, if the arc passes them.
-            let quarter = 1.5707963267948966
-            let from = arc.theta1.to_double()
-            let sweep_angle = arc.theta_arc.to_double()
-            let lo = from.min(from + sweep_angle)
-            let hi = from.max(from + sweep_angle)
-            for k = -8; k <= 8; k = k + 1 {
-              let turn = k.to_double() * quarter
-              if turn > lo && turn < hi {
-                let (ux, uy) : (Float, Float) = match (k % 4 + 4) % 4 {
-                  0 => (1, 0)
-                  1 => (0, 1)
-                  2 => (-1, 0)
-                  _ => (0, -1)
-                }
-                bounds.add((arc.cx + ux) * arc.rx, (arc.cy + uy) * arc.ry)
-              }
-            }
-          }
-          Some(_) =>
-            // A rotated ellipse: bounded by its cubic approximation.
-            for
-              cubic in arc_to_cubics(x, y, rx, ry, angle, large, sweep, px, py) {
-              bounds.add(cubic.x1, cubic.y1)
-              bounds.add(cubic.x2, cubic.y2)
-            }
-          None => ()
+        let mut sx = x
+        let mut sy = y
+        for conic in arc_to_conics(x, y, rx, ry, angle, large, sweep, px, py) {
+          conic_extrema(sx, sy, conic, bounds)
+          sx = conic.x2
+          sy = conic.y2
         }
         bounds.add(px, py)
         x = px
@@ -791,4 +768,214 @@ fn arc_to_cubics(
     start_y = ey
   }
   cubics
+}
+
+///|
+/// A rational quadratic segment: control point, end point and weight.
+priv struct Conic {
+  x1 : Float
+  y1 : Float
+  x2 : Float
+  y2 : Float
+  w : Float
+}
+
+///|
+/// `SkScalarSinSnapToZero` and its cosine twin.
+fn snap_to_zero(value : Float) -> Float {
+  let tolerance : Float = Float::from_int(1) / Float::from_int(65536)
+  if value.abs() <= tolerance {
+    0
+  } else {
+    value
+  }
+}
+
+///|
+/// The conics Skia builds for an SVG arc (`SkPath::arcTo`), which is the
+/// geometry `getBBox` sees. Nothing for an arc that degenerates to a line.
+fn arc_to_conics(
+  x0 : Float,
+  y0 : Float,
+  rx : Float,
+  ry : Float,
+  angle : Float,
+  large : Bool,
+  sweep : Bool,
+  x : Float,
+  y : Float,
+) -> Array[Conic] {
+  if rx == 0 || ry == 0 || (x0 == x && y0 == y) {
+    return []
+  }
+  let mut rx = rx.abs()
+  let mut ry = ry.abs()
+  let half : Float = 0.5
+  let one : Float = 1
+  let radians = angle * Float::from_double(3.141592653589793 / 180.0)
+  let sin_a = snap_to_zero(sin_f(radians))
+  let cos_a = snap_to_zero(cos_f(radians))
+  // Rotation by -angle.
+  let unrotate = (px : Float, py : Float) => {
+    if sin_a == 0 && cos_a == 1 {
+      (px, py)
+    } else {
+      (cos_a * px + sin_a * py, cos_a * py - sin_a * px)
+    }
+  }
+  let rotate = (px : Float, py : Float) => {
+    if sin_a == 0 && cos_a == 1 {
+      (px, py)
+    } else {
+      (cos_a * px - sin_a * py, sin_a * px + cos_a * py)
+    }
+  }
+  let (mid_x, mid_y) = unrotate((x0 - x) * half, (y0 - y) * half)
+  let radii_scale = mid_x * mid_x / (rx * rx) + mid_y * mid_y / (ry * ry)
+  if radii_scale > 1 {
+    let scale = radii_scale.sqrt()
+    rx = rx * scale
+    ry = ry * scale
+  }
+  let inv_rx = one / rx
+  let inv_ry = one / ry
+  let to_unit = (px : Float, py : Float) => {
+    let (ux, uy) = unrotate(px, py)
+    (ux * inv_rx, uy * inv_ry)
+  }
+  let (u0x, u0y) = to_unit(x0, y0)
+  let (u1x, u1y) = to_unit(x, y)
+  let delta_x = u1x - u0x
+  let delta_y = u1y - u0y
+  let d = delta_x * delta_x + delta_y * delta_y
+  let quarter : Float = 0.25
+  let squared = one / d - quarter
+  let squared : Float = if squared > 0 { squared } else { 0 }
+  let mut scale = squared.sqrt()
+  // Skia's direction is clockwise for a set sweep flag.
+  if !sweep != large {
+    scale = -scale
+  }
+  let delta_x = delta_x * scale
+  let delta_y = delta_y * scale
+  let cx = (u0x + u1x) * half + -delta_y
+  let cy = (u0y + u1y) * half + delta_x
+  let theta1 = atan2_f(u0y - cy, u0x - cx)
+  let theta2 = atan2_f(u1y - cy, u1x - cx)
+  let pi = Float::from_double(3.141592653589793)
+  let mut theta_arc = theta2 - theta1
+  if theta_arc < 0 && sweep {
+    theta_arc = theta_arc + pi * 2
+  } else if theta_arc > 0 && !sweep {
+    theta_arc = theta_arc - pi * 2
+  }
+  if theta_arc.abs() < pi / Float::from_int(1000000) {
+    return []
+  }
+  let segments = (theta_arc / (2 * pi / 3)).abs().ceil().to_int()
+  let theta_width = theta_arc / Float::from_int(segments)
+  let t = tan_f(half * theta_width)
+  if t.is_nan() || t.is_inf() {
+    return []
+  }
+  let w = (half + cos_f(theta_width) * half).sqrt()
+  let is_integer = (value : Float) => value == value.floor()
+  let nearly_zero = (value : Float) => {
+    value.abs() <= Float::from_int(1) / Float::from_int(4096)
+  }
+  let expect_integers = nearly_zero(pi / 2 - theta_width.abs()) &&
+    is_integer(rx) &&
+    is_integer(ry) &&
+    is_integer(x) &&
+    is_integer(y)
+  let from_unit = (px : Float, py : Float) => {
+    let (mx, my) = rotate(px * rx, py * ry)
+    if expect_integers {
+      ((mx + half).floor(), (my + half).floor())
+    } else {
+      (mx, my)
+    }
+  }
+  let conics = []
+  let mut start_theta = theta1
+  for i in 0..<segments {
+    let end_theta = start_theta + theta_width
+    let sin_end = snap_to_zero(sin_f(end_theta))
+    let cos_end = snap_to_zero(cos_f(end_theta))
+    let end_x = cos_end + cx
+    let end_y = sin_end + cy
+    let ctrl_x = end_x + t * sin_end
+    let ctrl_y = end_y + -t * cos_end
+    let (x1, y1) = from_unit(ctrl_x, ctrl_y)
+    let (x2, y2) = from_unit(end_x, end_y)
+    // The arc ends exactly where it was asked to.
+    let (x2, y2) = if i == segments - 1 { (x, y) } else { (x2, y2) }
+    conics.push({ x1, y1, x2, y2, w, })
+    start_theta = end_theta
+  }
+  conics
+}
+
+///|
+/// Skia's `SkFindUnitQuadRoots` for the single root a conic's derivative
+/// has in the unit interval.
+fn unit_quad_root(a : Float, b : Float, c : Float) -> Float? {
+  if a == 0 {
+    return valid_unit_divide(-c, b)
+  }
+  let discriminant = b.to_double() * b.to_double() -
+    4.0 * a.to_double() * c.to_double()
+  if discriminant < 0.0 {
+    return None
+  }
+  let r = Float::from_double(discriminant.sqrt())
+  if r.is_nan() || r.is_inf() {
+    return None
+  }
+  let q = if b < 0 { -(b - r) / 2 } else { -(b + r) / 2 }
+  match valid_unit_divide(q, a) {
+    Some(root) => Some(root)
+    None => valid_unit_divide(c, q)
+  }
+}
+
+///|
+/// Add the points where a conic turns, and its end, to the bounds:
+/// Skia's `compute_conic_extremas`.
+fn conic_extrema(
+  x0 : Float,
+  y0 : Float,
+  conic : Conic,
+  bounds : PointBounds,
+) -> Unit {
+  let w = conic.w
+  let root = (p0 : Float, p1 : Float, p2 : Float) => {
+    let p20 = p2 - p0
+    let p10 = p1 - p0
+    let wp10 = w * p10
+    unit_quad_root(w * p20 - p20, p20 - 2 * wp10, wp10)
+  }
+  let eval = (t : Float) => {
+    let coordinate = (p0 : Float, p1 : Float, p2 : Float) => {
+      let p1w = p1 * w
+      let numer_a = p2 - (p1w + p1w) + p0
+      let numer_b = p1w - p0 + (p1w - p0)
+      let one : Float = 1
+      let denom_b = w - one + (w - one)
+      let zero : Float = 0
+      let denom_a = zero - denom_b
+      ((numer_a * t + numer_b) * t + p0) / ((denom_a * t + denom_b) * t + one)
+    }
+    bounds.add(
+      coordinate(x0, conic.x1, conic.x2),
+      coordinate(y0, conic.y1, conic.y2),
+    )
+  }
+  if root(x0, conic.x1, conic.x2) is Some(t) {
+    eval(t)
+  }
+  if root(y0, conic.y1, conic.y2) is Some(t) {
+    eval(t)
+  }
+  bounds.add(conic.x2, conic.y2)
 }
