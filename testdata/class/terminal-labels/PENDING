@@ -1,7 +1,12 @@
 These fixtures have labels at the ends of edges (cardinalities), which the
 port hands to ELK as head and tail labels. They are byte-identical once
-moon_elk writes edge labels back by origin rather than by position:
-until then every label of such an edge gets the geometry of another one.
+moon_elk
+
+- writes edge labels back by origin rather than by position: until then
+  every label of such an edge gets the geometry of another one;
+- stacks the labels of a self loop by the direction the graph was given
+  (self_loop_lr, random_self_loop): until then a self loop with two labels
+  in a graph laid out to the right or left gets them side by side.
 
 Remove this file, and the `#skip` in tests/class_test.mbt, when the layout
-engine in use has that fix.
+engine in use has both fixes.

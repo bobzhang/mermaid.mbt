@@ -1,0 +1,39 @@
+---
+config:
+  handDrawnSeed: 3
+  htmlLabels: false
+  theme: redux
+---
+classDiagram
+  direction LR
+  namespace Pkg {
+    class Group
+  }
+  class Product {
+    -get(a, b)*
+    +stop(a, b) bool
+  }
+  class Policy {
+    ~bool size$
+    -run(List~int~ xs) int
+    #set(a) int$
+  }
+  class Role {
+    String id$
+    #get(a) List~T~
+  }
+  class Car {
+    #String total
+    #String size
+  }
+  Cat .. "1" Stop
+  Car "0..1" -- "0..n" Car
+  Group *--o Role : refers to
+  Car -- Role : x
+  Group "1..*" *--o Car : uses
+  Product "n" .. "n" Policy : uses
+  Group "0..1" <|-- Stop : uses
+  Customer ..|> "n" Product
+  Car "many" <.. "*" Product : owns
+  note for Policy "a note\nfor it"
+  Customer --() Iface

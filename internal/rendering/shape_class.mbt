@@ -29,6 +29,13 @@ fn class_add_text(
   if @dom.placeholders_to_references(text).contains("<") {
     raise LayoutError("class diagram text with markup: \{text}")
   }
+  // Upstream measures the text line by line, and gives up on a line that
+  // has no box: one of nothing but white space.
+  for line in normalize_breaks(text).split("\n") {
+    if !line.is_empty() && line.iter().all(c => c is (' ' | '\t' | '\r')) {
+      raise LayoutError("svg element not in render tree")
+    }
+  }
   let width = calculate_text_width(text, env.config) + 50.0
   let n = @dom.number
   let bold = style == "font-weight: bolder"
