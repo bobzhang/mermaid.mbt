@@ -16,6 +16,8 @@ pub fn axis(@dom.Element, Orient, Array[(Double, String)], (Double, Double), tic
 
 pub fn js_round(Double) -> Double
 
+pub fn line(Array[(Double, Double)]) -> String?
+
 pub fn number(Double) -> String
 
 pub fn pie(Array[Double]) -> Array[PieArc]
@@ -47,6 +49,21 @@ pub fn time_year(@jsdate.Zone) -> TimeInterval
 // Errors
 
 // Types and methods
+pub struct BandScale {
+  // private fields
+}
+pub fn BandScale::apply(Self, String) -> Double?
+pub fn BandScale::bandwidth(Self) -> Double
+pub fn BandScale::new(domain~ : Array[String], range~ : (Double, Double), padding_inner? : Double, padding_outer? : Double, align? : Double, round? : Bool) -> Self
+pub fn BandScale::step(Self) -> Double
+
+pub struct LinearScale {
+  // private fields
+}
+pub fn LinearScale::apply(Self, Double) -> Double?
+pub fn LinearScale::new(domain~ : (Double, Double), range~ : (Double, Double)) -> Self
+pub fn LinearScale::ticks(Self, count? : Double) -> Array[Double]
+
 pub(all) enum Orient {
   Top
   Right
