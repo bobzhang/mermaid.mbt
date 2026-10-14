@@ -128,10 +128,17 @@ fn line_box(
   line : String,
   size : Double,
   baseline~ : @font.Baseline = Alphabetic,
-) -> (Double, Double) {
+) -> (Double, Double) raise SequenceError {
   let text = collapse_spaces(line)
   if text == "" {
     return (0.0, 0.0)
+  }
+  if stack.first_uncovered(text) is Some(c) {
+    // The browser would fall back to a system font this port has no
+    // metrics for.
+    raise SequenceError(
+      "Unsupported: no font metrics for the character U+\{c.to_int().to_string(radix=16).to_upper()}",
+    )
   }
   let box = stack.bbox(text, size, baseline~)
   (box.width, box.height)

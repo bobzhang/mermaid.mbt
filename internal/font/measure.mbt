@@ -212,6 +212,19 @@ fn Stack::glyphs(self : Stack, text : StringView) -> Array[Drawn] {
 }
 
 ///|
+/// The first character of `text` that no face of the stack has. The
+/// reference browser draws such a character from some other system font,
+/// and the measures here only approximate it.
+pub fn Stack::first_uncovered(self : Stack, text : StringView) -> Char? {
+  for drawn in self.glyphs(text) {
+    if drawn is Missing(c) {
+      return Some(c)
+    }
+  }
+  None
+}
+
+///|
 /// Shape `text` at `size` pixels. Consecutive characters of the same face
 /// kern against each other; a change of face starts a new run.
 fn Stack::shape(self : Stack, text : StringView, size : Double) -> Shaped {
