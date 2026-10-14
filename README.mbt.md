@@ -39,10 +39,10 @@ Work in progress.
 | Info | byte-identical |
 | Flowchart | byte-identical for the fixtures in `testdata/flowchart`; see below |
 | Git graph | byte-identical, all orientations and options; upstream's documentation examples match |
-| Entity relationship | byte-identical with the default ELK layout |
-| Requirement | byte-identical with the default ELK layout |
-| State | byte-identical with the default ELK layout, `stateDiagram` and `stateDiagram-v2` |
-| Class | byte-identical with the default ELK layout, including cardinalities, namespaces and notes |
+| Entity relationship | byte-identical with the ELK and dagre layouts |
+| Requirement | byte-identical with the ELK and dagre layouts |
+| State | byte-identical with the ELK and dagre layouts, `stateDiagram` and `stateDiagram-v2` |
+| Class | byte-identical with the ELK and dagre layouts, including cardinalities, namespaces and notes |
 | User journey | byte-identical, all `journey:` options |
 | Timeline | byte-identical, horizontal and vertical, both looks |
 | Gantt | byte-identical; see the note on time below |
@@ -124,8 +124,9 @@ What is missing:
 - Labels are HTML in a `foreignObject` by default, as upstream; with
   `htmlLabels: false` they are plain SVG text, which every SVG viewer
   shows.
-- Not ported: the hand-drawn look, and layouts other than ELK (`layout:
-  dagre` and the rest). `render` raises `Unsupported` for them.
+- Layouts: ELK (the default) and dagre, as upstream for `layout: dagre`
+  and for layout names mermaid does not register. The hand-drawn look is
+  not ported for these diagrams; `render` raises `Unsupported` for it.
 - Line breaking inside labels knows Blink's rules for ASCII text; other
   scripts break at spaces only.
 
