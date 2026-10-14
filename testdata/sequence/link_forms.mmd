@@ -1,0 +1,11 @@
+sequenceDiagram
+    participant A
+    participant B
+    link A: No separator
+    link A: @ https://only-url.example
+    link A: Label @
+    link A: Two @ parts @ here
+    link B: Dash - board @ https://b.example/x?y=1&z=2
+    links B: not json
+    links B: {"Null": null, "10": "https://ten.example", "2": "https://two.example", "Z": "https://z.example", "": "https://empty.example"}
+    A->>B: x

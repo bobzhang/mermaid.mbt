@@ -122,9 +122,11 @@ pub fn Stack::default(bold~ : Bool = false, italic~ : Bool = false) -> Stack {
 
 ///|
 /// The face that draws `code`: the first one covering it, else the primary.
+/// A face that would draw the character from pieces ends the search: it is
+/// returned although it has no glyph for the character.
 fn Stack::face_for(self : Stack, code : Char) -> Face {
   for face in self.faces {
-    if face.covers(code) {
+    if face.covers(code) || face.composed.contains(code.to_int()) {
       return face
     }
   }
@@ -207,45 +209,126 @@ fn RectF::union(self : RectF, other : RectF) -> RectF {
 }
 
 ///|
-/// `text` with the ligatures its faces form: a pair of characters from one
-/// face that has a ligature for them becomes the ligature's character.
-fn Stack::ligated(self : Stack, text : StringView) -> Array[Char] {
-  let chars = text.to_array()
-  if self.faces.iter().all(face => face.ligatures.is_empty()) {
-    return chars
+/// What draws one character, or one ligature of two.
+priv enum Drawn {
+  /// A glyph of an embedded face.
+  Glyph(Face, Glyph)
+  /// A character no embedded face has.
+  Missing(Char)
+  /// A default-ignorable character such as a zero-width space: shaped to
+  /// an invisible glyph without advance.
+  Ignorable
+  /// The script changes here. Blink shapes each script's run on its own,
+  /// so neither kerning nor ligatures reach across.
+  ScriptChange
+}
+
+///|
+fn is_default_ignorable(c : Char) -> Bool {
+  c is ('\u{AD}' | '\u{200B}'..<='\u{200F}' | '\u{2060}' | '\u{FEFF}')
+}
+
+///|
+/// The scripts that have letters in the embedded faces. Everything else
+/// (digits, punctuation, spaces, symbols) is common to all of them and
+/// stays in the run it follows.
+priv enum Script {
+  Latin
+  Greek
+  Cyrillic
+} derive(Eq)
+
+///|
+/// The Unicode script of `c`, for the ranges the embedded faces cover.
+fn script_of(c : Char) -> Script? {
+  match c {
+    'A'..<='Z'
+    | 'a'..<='z'
+    | '\u{AA}'
+    | '\u{BA}'
+    | '\u{C0}'..<='\u{D6}'
+    | '\u{D8}'..<='\u{F6}'
+    | '\u{F8}'..<='\u{2B8}'
+    | '\u{2E0}'..<='\u{2E4}'
+    | '\u{1E00}'..<='\u{1EFF}'
+    | '\u{2071}'
+    | '\u{207F}'
+    | '\u{2090}'..<='\u{209C}'
+    | '\u{212A}'..<='\u{212B}'
+    | '\u{2132}'
+    | '\u{214E}'
+    | '\u{2160}'..<='\u{2188}'
+    | '\u{FB00}'..<='\u{FB06}' => Some(Latin)
+    '\u{37E}' | '\u{385}' | '\u{387}' => None
+    '\u{370}'..<='\u{3E1}'
+    | '\u{3F0}'..<='\u{3FF}'
+    | '\u{1F00}'..<='\u{1FFF}'
+    | '\u{2126}' => Some(Greek)
+    '\u{400}'..<='\u{52F}' => Some(Cyrillic)
+    _ => None
   }
-  let out = []
-  let mut i = 0
-  while i < chars.length() {
-    let c = chars[i]
-    if i + 1 < chars.length() {
-      let face = self.face_for(c)
-      if physical_equal(face, self.face_for(chars[i + 1])) &&
-        face.ligatures.get(c.to_int() * 65536 + chars[i + 1].to_int())
-        is Some(ligature) {
-        out.push(ligature)
-        i += 2
-        continue
-      }
+}
+
+///|
+/// The glyphs `text` is drawn with. Two characters of one face that it
+/// has a ligature for (`fi` and `fl` in Times and Helvetica) become one
+/// glyph.
+fn Stack::glyphs(self : Stack, text : StringView) -> Array[Drawn] {
+  let drawn : Array[Drawn] = []
+  let mut run : Script? = None
+  for c in text {
+    if is_default_ignorable(c) {
+      drawn.push(Ignorable)
+      continue
     }
-    out.push(c)
-    i += 1
+    if script_of(c) is Some(script) {
+      if run is Some(current) && current != script {
+        drawn.push(ScriptChange)
+      }
+      run = Some(script)
+    }
+    let face = self.face_for(c)
+    guard face.glyphs.get(c.to_int()) is Some(glyph) else {
+      drawn.push(Missing(c))
+      continue
+    }
+    if drawn.last() is Some(Glyph(left_face, left)) &&
+      physical_equal(left_face, face) &&
+      face.ligatures.get(left.id * 65536 + glyph.id) is Some(code) &&
+      face.glyphs.get(code) is Some(ligature) {
+      drawn[drawn.length() - 1] = Glyph(face, ligature)
+      continue
+    }
+    drawn.push(Glyph(face, glyph))
   }
-  out
+  drawn
+}
+
+///|
+/// The first character of `text` that no face of the stack has. The
+/// reference browser draws such a character from some other system font,
+/// and the measures here only approximate it.
+pub fn Stack::first_uncovered(self : Stack, text : StringView) -> Char? {
+  for drawn in self.glyphs(text) {
+    if drawn is Missing(c) {
+      return Some(c)
+    }
+  }
+  None
 }
 
 ///|
 /// The stack of the font a page falls back to when a style names no
 /// family the browser accepts: Times on the reference system.
-pub fn Stack::page_default() -> Stack {
-  { faces: [times_regular], }
+pub fn Stack::page_default(bold~ : Bool = false) -> Stack {
+  { faces: [if bold { times_bold } else { times_regular }], }
 }
 
 ///|
 /// The stack of the generic `sans-serif` family: Helvetica on the
 /// reference system.
-pub fn Stack::sans_serif() -> Stack {
-  { faces: [helvetica_regular], }
+pub fn Stack::sans_serif(bold~ : Bool = false) -> Stack {
+  { faces: [if bold { helvetica_bold } else { helvetica_regular }], }
 }
 
 ///|
@@ -366,8 +449,8 @@ fn Face::glyph_bounds(self : Face, glyph : Glyph, size : Double) -> RectF? {
 
 ///|
 /// Shape `text` at `size` pixels. Consecutive characters of the same face
-/// form a run and kern against each other; a change of face starts a new
-/// run, where the one before ends.
+/// and script form a run and kern against each other; a change of either
+/// starts a new run, where the one before ends.
 fn Stack::shape(self : Stack, text : StringView, size : Double) -> Shaped {
   let size = effective_size(size)
   let shaped = { pen: 0.0, ink: { x: 0.0, y: 0.0, width: 0.0, height: 0.0, }, }
@@ -379,13 +462,28 @@ fn Stack::shape(self : Stack, text : StringView, size : Double) -> Shaped {
     shaped.pen = shaped.pen + fixed_to_float(total)
   }
   let mut current : Run? = None
-  for c in self.ligated(text) {
-    let face = self.face_for(c)
-    guard face.glyphs.get(c.to_int()) is Some(glyph) else {
-      close(current)
-      current = None
-      shaped.pen = shaped.pen + fallback_advance(c, size)
-      continue
+  for drawn in self.glyphs(text) {
+    let (face, glyph) = match drawn {
+      Glyph(face, glyph) => (face, glyph)
+      Missing(c) => {
+        close(current)
+        current = None
+        shaped.pen = shaped.pen + fallback_advance(c, size)
+        continue
+      }
+      ScriptChange => {
+        close(current)
+        current = None
+        continue
+      }
+      Ignorable => {
+        // An invisible glyph without advance stands between its
+        // neighbours: they do not kern.
+        if current is Some(run) {
+          run.previous = None
+        }
+        continue
+      }
     }
     let run = match current {
       Some(run) if physical_equal(run.face, face) => run
@@ -490,22 +588,77 @@ pub fn Stack::line_descent(self : Stack, size : Double) -> Double {
 }
 
 ///|
+/// The baseline SVG text sits on: `dominant-baseline`.
+pub(all) enum Baseline {
+  /// The default.
+  Alphabetic
+  /// `middle`: half the x-height above the alphabetic baseline.
+  Middle
+} derive(Eq)
+
+///|
+/// Blink's `LayoutUnit::FromFloatRound`, in pixels.
+fn round_layout_unit(value : Float) -> Float {
+  (value * 64.0 + 0.5).floor() / 64.0
+}
+
+///|
+/// The x-height in pixels. On macOS Blink measures the glyph of `x`
+/// rather than trusting the font's own figure (Times says 929 units where
+/// its `x` is 919 tall, and 919 is what the browser aligns by).
+fn Face::x_height(self : Face, size : Double) -> Float {
+  guard self.glyphs.get('x'.to_int()) is Some(glyph) else { return 0.0 }
+  Float::from_double(
+    effective_size(size) *
+    glyph.y_max.to_double() /
+    self.units_per_em.to_double(),
+  )
+}
+
+///|
 /// The bounding box of `text` at `size` pixels: what `getBBox()` reports
 /// for an SVG text element positioned at the origin. It is the cell
 /// (advance by ascent plus descent) united with the ink of the glyphs,
 /// which can overhang the cell.
-pub fn Stack::bbox(self : Stack, text : StringView, size : Double) -> Rect {
+///
+/// On the `Middle` baseline the glyphs move down by half the x-height.
+/// The cell's ascent and descent are each rounded to a layout unit after
+/// that, so the cell can come out 1/64 pixel taller than on the
+/// alphabetic baseline.
+pub fn Stack::bbox(
+  self : Stack,
+  text : StringView,
+  size : Double,
+  baseline~ : Baseline = Alphabetic,
+) -> Rect {
   let shaped = self.shape(text, size)
   let primary = self.faces[0]
-  let ascent = Float::from_double(primary.ascent(size))
-  let descent = Float::from_double(primary.descent(size))
+  let font_ascent = Float::from_double(primary.ascent(size))
+  let font_descent = Float::from_double(primary.descent(size))
+  let (ascent, descent) = match baseline {
+    Alphabetic => (font_ascent, font_descent)
+    Middle => {
+      let half = primary.x_height(size) / 2.0
+      (
+        round_layout_unit(font_ascent - half),
+        round_layout_unit(font_descent + half),
+      )
+    }
+  }
+  // How far below the reference line the glyphs' own baseline is.
+  let shift = font_ascent - ascent
   let cell : RectF = {
     x: 0.0,
     y: -ascent,
     width: Float::from_double(ceil_layout_unit(shaped.pen)),
     height: ascent + descent,
   }
-  let box = shaped.ink.union(cell)
+  let ink = if shaped.ink.is_empty() {
+    shaped.ink
+  } else {
+    { ..shaped.ink, y: shaped.ink.y + shift, }
+  }
+  let box = ink.union(cell)
   {
     x: box.x.to_double(),
     y: box.y.to_double(),
@@ -515,16 +668,12 @@ pub fn Stack::bbox(self : Stack, text : StringView, size : Double) -> Rect {
 }
 
 ///|
-/// The stack a CSS `font-family` list resolves to in the reference
-/// environment. Families that are not installed there are skipped; of the
-/// installed ones, Trebuchet MS, Verdana and Arial are embedded. A list
-/// naming none of them falls back to Arial, the closest embedded face to
-/// the system sans-serif.
-pub fn Stack::for_family(
-  family : String,
-  bold~ : Bool = false,
-  italic~ : Bool = false,
-) -> Stack {
+/// The embedded faces a CSS `font-family` list names, in order. Families
+/// that are not installed in the reference environment are skipped; of the
+/// installed ones, Trebuchet MS, Verdana, Arial, Helvetica and Times are
+/// embedded. The generic `sans-serif` is Helvetica there and `serif` is
+/// Times.
+fn listed_faces(family : String, bold : Bool, italic : Bool) -> Array[Face] {
   let faces = []
   for name in family.split(",") {
     let name = name.trim(chars=" \t\n\"';").to_owned().to_lower()
@@ -539,15 +688,44 @@ pub fn Stack::for_family(
           },
         )
       "verdana" => Some(if bold { verdana_bold } else { verdana_regular })
-      "arial" | "helvetica" | "sans-serif" => Some(arial(bold, italic))
+      "arial" => Some(arial(bold, italic))
+      // The obliques are not embedded; the upright faces stand in.
+      "helvetica" | "sans-serif" =>
+        Some(if bold { helvetica_bold } else { helvetica_regular })
+      "times" | "serif" => Some(if bold { times_bold } else { times_regular })
       _ => None
     }
     if face is Some(face) && !faces.iter().any(f => physical_equal(f, face)) {
       faces.push(face)
     }
   }
+  faces
+}
+
+///|
+/// The stack a CSS `font-family` list resolves to in the reference
+/// environment. A list naming no embedded face falls back to Arial, the
+/// closest one to what flowchart themes ask for.
+pub fn Stack::for_family(
+  family : String,
+  bold~ : Bool = false,
+  italic~ : Bool = false,
+) -> Stack {
+  let faces = listed_faces(family, bold, italic)
   if faces.is_empty() {
     faces.push(arial(bold, italic))
+  }
+  { faces, }
+}
+
+///|
+/// Like `for_family`, with the browser's own last resort after the listed
+/// families: its standard font.
+pub fn Stack::for_css(family : String, bold~ : Bool = false) -> Stack {
+  let faces = listed_faces(family, bold, false)
+  let standard = if bold { times_bold } else { times_regular }
+  if !faces.iter().any(face => physical_equal(face, standard)) {
+    faces.push(standard)
   }
   { faces, }
 }
@@ -568,26 +746,13 @@ fn arial(bold : Bool, italic : Bool) -> Face {
 /// reference browser, and measured here only roughly; a caller that needs
 /// exact measurements can refuse such text.
 pub fn Stack::covers(self : Stack, text : StringView) -> Bool {
-  for c in text {
-    if !self.faces.iter().any(face => face.covers(c)) {
-      return false
-    }
-  }
-  true
+  self.first_uncovered(text) is None
 }
 
 ///|
 /// The x-height of the stack's first face at `size` pixels: what `1ex`
 /// measures, and twice the distance from the alphabetic baseline to the
-/// one `dominant-baseline: middle` aligns. The reference platform reports
-/// the face's OS/2 x-height or, for a face without one, the height of its
-/// `x`; in the embedded faces the two are the same number.
+/// one `dominant-baseline: middle` aligns.
 pub fn Stack::x_height(self : Stack, size : Double) -> Double {
-  let face = self.faces[0]
-  guard face.glyphs.get('x'.to_int()) is Some(glyph) else { return 0.0 }
-  Float::from_double(
-    effective_size(size) *
-    glyph.y_max.to_double() /
-    face.units_per_em.to_double(),
-  ).to_double()
+  self.faces[0].x_height(size).to_double()
 }

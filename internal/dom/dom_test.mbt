@@ -315,6 +315,26 @@ test "lengths of elliptical arcs" {
 }
 
 ///|
+test "what the output sanitizer removes" {
+  // Names that shadow a property of the document or of a form.
+  inspect(@dom.is_clobbering_name("title"), content="true")
+  inspect(@dom.is_clobbering_name("links"), content="true")
+  inspect(@dom.is_clobbering_name("URL"), content="true")
+  inspect(@dom.is_clobbering_name("Title"), content="false")
+  inspect(@dom.is_clobbering_name("Alice"), content="false")
+  // Addresses with a scheme other than the well-known ones.
+  inspect(@dom.is_allowed_uri("https://x.example/"), content="true")
+  inspect(@dom.is_allowed_uri("mailto:a@b.example"), content="true")
+  inspect(@dom.is_allowed_uri("relative/path"), content="true")
+  inspect(@dom.is_allowed_uri("rgb(0, 0, 0)"), content="true")
+  inspect(@dom.is_allowed_uri("#fragment"), content="true")
+  inspect(@dom.is_allowed_uri(""), content="true")
+  inspect(@dom.is_allowed_uri("about:blank"), content="false")
+  inspect(@dom.is_allowed_uri("java script:alert(1)"), content="false")
+  inspect(@dom.is_allowed_uri("my:color"), content="false")
+}
+
+///|
 /// The box of an `<svg>` holding `markup`, as `x y width height`.
 fn box_of(markup : String) -> String {
   let svg = @dom.Element::new("svg")

@@ -1,0 +1,16 @@
+sequenceDiagram
+    loop Outer loop with quite a long title that will need to be wrapped across lines
+        A->>B: one
+        alt inner alt
+            B->>C: two
+            opt innermost
+                C->>C: think
+                Note right of C: a note inside
+            end
+        else other
+            B->>A: three
+        end
+    end
+    loop
+        A->>B: empty title
+    end

@@ -1,0 +1,13 @@
+sequenceDiagram
+    participant A
+    link A: L10 @ javascript:alert(1)
+    link A: L11 @ /relative/path
+    link A: L12 @ ./relative
+    link A: L13 @ relative/path
+    link A: L14 @ https:x.example
+    link A: L15 @ https:///x.example//a//b
+    link A: L16 @ https://x.example/%7Efoo
+    link A: L17 @ https://x.example/café
+    link A: L18 @ https://127.0.0.1/x
+    link A: L19 @ data:text/html,hi
+    A->>A: x

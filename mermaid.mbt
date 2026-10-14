@@ -283,6 +283,30 @@ fn parse_diagram(
         },
       }
     }
+    "sequence" => {
+      let db = @sequence.parse(code, config) catch {
+        @jison.ParseError(message~, ..) => raise Syntax(message)
+        @sequence.SequenceError(message) => raise Syntax(message)
+        error => raise Syntax(error.to_string())
+      }
+      if title is Some(title) && db.title == "" {
+        db.set_title(title)
+      }
+      {
+        styles: @sequence.styles(
+          config.theme(),
+          config.text("look").unwrap_or(""),
+        ),
+        acc_title: db.acc_title,
+        acc_description: db.acc_description,
+        classes: [],
+        draw: context => {
+          @sequence.draw(db, context) catch {
+            @sequence.SequenceError(message) => raise Unsupported(message)
+          }
+        },
+      }
+    }
     other => raise Unsupported(other)
   }
 }

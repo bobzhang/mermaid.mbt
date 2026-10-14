@@ -1,0 +1,16 @@
+---
+config:
+  sequence:
+    wrap: true
+    width: 100
+---
+sequenceDiagram
+    participant Alice as Alice the first of her name and many more words
+    participant B as Supercalifragilisticexpialidocious
+    Alice->>B: This is a long message that should be wrapped because it is far wider than the space
+    B-->>Alice: Pneumonoultramicroscopicsilicovolcanoconiosis is a long word
+    Note over Alice: A note that wraps because of the configuration setting
+    box Aqua A box title that also wraps when it is long enough to need it really
+    participant C
+    end
+    B->>C: hello

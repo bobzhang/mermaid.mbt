@@ -1,0 +1,17 @@
+sequenceDiagram
+    Alice->>+John: Hello John, how are you?
+    Alice->>+John: John, can you hear me?
+    John-->>-Alice: Hi Alice, I can hear you!
+    John-->>-Alice: I feel great!
+    activate Alice
+    Alice->>John: explicit
+    activate John
+    activate John
+    activate John
+    John->>John: stacked
+    deactivate John
+    deactivate John
+    deactivate John
+    deactivate Alice
+    Alice->>+Alice: self activate
+    Alice-->>-Alice: self deactivate

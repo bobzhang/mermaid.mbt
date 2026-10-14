@@ -21,6 +21,7 @@ Environment: CHROME overrides the Chrome binary.
 
 import argparse
 import base64
+import concurrent.futures
 import json
 import os
 import pathlib
@@ -122,12 +123,42 @@ def pin_random_ids(svg):
     return RANDOM_STATE_ID.sub(lambda match: names[match.group(0)], svg)
 
 
+# Diagram types whose renderer keeps state for as long as the page lives: the
+# sequence diagram numbers the participants of everything it has drawn
+# (`actor0`, `actor1`, ... never restart). Each such diagram gets a page of
+# its own, so its reference does not depend on what was rendered before it.
+STATEFUL = re.compile(r"^\s*sequenceDiagram\b", re.M)
+
+
 def run(jobs, config, expression=None, now=None):
     """Render `jobs` (dicts with `id` and `text`) and return one result each.
 
     `now` (milliseconds since the epoch) stops the page's clock there, for
-    diagrams that show the present.
+    diagrams that show the present. With an `expression`, its value comes
+    first; it is evaluated in every page before the jobs of that page.
     """
+    if len(jobs) <= 1 or not any(STATEFUL.search(job["text"]) for job in jobs):
+        return run_page(jobs, config, expression, now)
+    alone = [index for index, job in enumerate(jobs) if STATEFUL.search(job["text"])]
+    others = [index for index in range(len(jobs)) if index not in alone]
+    lead = 0 if expression is None else 1
+    rendered, value = {}, None
+    with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:
+        pages = {index: pool.submit(run_page, [jobs[index]], config, expression, now) for index in alone}
+        if others:
+            results = run_page([jobs[index] for index in others], config, expression, now)
+            value = results[:lead]
+            for index, result in zip(others, results[lead:]):
+                rendered[index] = result
+        for index, page in pages.items():
+            results = page.result()
+            value = value or results[:lead]
+            rendered[index] = results[lead]
+    return (value or []) + [rendered[index] for index in range(len(jobs))]
+
+
+def run_page(jobs, config, expression=None, now=None):
+    """Load one page, evaluate `expression` in it and render `jobs` in order."""
     if not BUNDLE.exists():
         sys.exit(f"missing {BUNDLE}; see the setup notes in {__file__}")
     page = PAGE % {

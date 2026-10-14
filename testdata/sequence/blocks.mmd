@@ -1,0 +1,49 @@
+sequenceDiagram
+    participant A
+    participant B
+    participant C
+    loop Every minute
+        A->>B: ping
+        B-->>A: pong
+    end
+    alt success
+        A->>C: ok
+    else failure
+        A->>C: not ok
+    else
+        A->>C: no title
+    end
+    opt maybe
+        C->>A: optional
+    end
+    par Alice to Bob
+        A->>B: p1
+    and Alice to John
+        A->>C: p2
+    and
+        B->>C: p3
+    end
+    critical Establish a connection
+        A->>B: connect
+    option Network timeout
+        A-->>A: Log error
+    option Credentials rejected
+        A-->>A: Log different error
+    end
+    break when the booking process fails
+        A-->>C: show failure
+    end
+    rect rgb(191, 223, 255)
+        A->>B: in rect
+        rect rgba(200, 150, 255, 0.4)
+            B->>C: nested
+        end
+    end
+    rect
+        C->>A: default rect
+    end
+    par_over Overlap
+        A->>B: po1
+    and second
+        A->>C: po2
+    end

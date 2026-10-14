@@ -1,0 +1,12 @@
+sequenceDiagram
+    participant A as wrap:A participant with a very long description that needs to wrap over lines
+    participant B
+    A->>B: wrap:This is a long message that should be wrapped because it is far wider than the space between the two participants
+    B-->>A: nowrap:This is a long message that is not wrapped at all and so pushes the participants apart
+    Note over A,B: wrap:A long note over both of the participants, long enough that it has to wrap into several lines of text
+    Note right of B: wrap:Right of B, another quite long note which will be wrapped as well
+    Note left of A: wrap:Left of A wrapped text is here for you to read
+    A->>A: wrap:A self message with a long text that needs wrapping too, obviously
+    loop wrap:A loop title that is long and wraps, hopefully over more than one line of text
+        A->>B: short
+    end

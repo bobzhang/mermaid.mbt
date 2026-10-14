@@ -1,0 +1,12 @@
+sequenceDiagram
+    participant A
+    create participant B@{ "type": "boundary" }
+    A->>B: b
+    create participant C@{ "type": "queue" }
+    A->>C: c
+    create participant D@{ "type": "collections" }
+    B->>D: d
+    destroy D
+    D->>A: bye
+    destroy C
+    A-xC: bye
