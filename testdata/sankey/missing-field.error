@@ -1,0 +1,4 @@
+Parse error on line 2:
+sankey-betaa,b
+--------------^
+Expecting 'COMMA', got 'EOF'

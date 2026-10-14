@@ -1,0 +1,49 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/diagrams/treemap"
+
+import {
+  "bobzhang/mermaid/diagram",
+  "bobzhang/mermaid/theme",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn draw(Treemap, @diagram.Context) -> Unit raise TreemapError
+
+pub fn parse(String) -> Treemap raise
+
+pub fn styles(@theme.Theme) -> String
+
+// Errors
+pub(all) suberror TreemapError {
+  Invalid(String)
+  Unsupported(String)
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+pub struct Node {
+  name : String
+  children : Array[Node]?
+  value : Double?
+  class_selector : String?
+  css_compiled_styles : Array[String]
+}
+
+pub struct StyleClass {
+  id : String
+  styles : Array[String]
+  text_styles : Array[String]
+}
+
+pub struct Treemap {
+  outer_nodes : Array[Node]
+  classes : Map[String, StyleClass]
+  mut title : String
+  acc_title : String
+  acc_description : String
+}
+pub fn Treemap::set_title(Self, String) -> Unit
+
+// Type aliases
+
+// Traits

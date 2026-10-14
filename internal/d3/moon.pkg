@@ -1,7 +1,10 @@
 import {
+  "bobzhang/mermaid/internal/jsregex",
+  "bobzhang/mermaid/internal/jsmath",
+  "moonbitlang/core/cmp",
+  "moonbitlang/core/string",
   "bobzhang/mermaid/internal/dom",
   "bobzhang/mermaid/internal/jsdate",
-  "bobzhang/mermaid/internal/jsmath",
   "moonbitlang/core/double",
 }
 

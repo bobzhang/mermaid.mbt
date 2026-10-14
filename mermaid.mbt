@@ -307,6 +307,71 @@ fn parse_diagram(
         },
       }
     }
+    "sankey" => {
+      let sankey = @sankey.parse(code, config) catch {
+        @jison.ParseError(message~, ..) => raise Syntax(message)
+        @sankey.Invalid(message) => raise Syntax(message)
+        @sankey.Unsupported(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      {
+        styles: @sankey.styles(config.theme()),
+        acc_title: "",
+        acc_description: "",
+        classes: [],
+        draw: context => {
+          @sankey.draw(sankey, context) catch {
+            @sankey.Invalid(message) => raise Syntax(message)
+            @sankey.Unsupported(message) => raise Unsupported(message)
+          }
+        },
+      }
+    }
+    "radar" => {
+      let radar = @radar.parse(code) catch {
+        @langium.ParseError(message~, ..) => raise Syntax(message)
+        @radar.Invalid(message) => raise Syntax(message)
+        @radar.Unsupported(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      let radar = match title {
+        Some(title) if radar.title == "" => radar.with_title(title)
+        _ => radar
+      }
+      {
+        styles: @radar.styles(config.theme()),
+        acc_title: radar.acc_title,
+        acc_description: radar.acc_description,
+        classes: [],
+        draw: context => @radar.draw(radar, context),
+      }
+    }
+    "treemap" => {
+      let treemap = @treemap.parse(code) catch {
+        @langium.ParseError(message~, ..) => raise Syntax(message)
+        @treemap.Invalid(message) => raise Syntax(message)
+        @treemap.Unsupported(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      if title is Some(title) && treemap.title == "" {
+        treemap.set_title(title)
+      }
+      {
+        styles: @treemap.styles(config.theme()),
+        acc_title: treemap.acc_title,
+        acc_description: treemap.acc_description,
+        classes: treemap.classes
+        .values()
+        .map(c => { id: c.id, styles: c.styles, text_styles: c.text_styles, })
+        .collect(),
+        draw: context => {
+          @treemap.draw(treemap, context) catch {
+            @treemap.Invalid(message) => raise Syntax(message)
+            @treemap.Unsupported(message) => raise Unsupported(message)
+          }
+        },
+      }
+    }
     other => raise Unsupported(other)
   }
 }

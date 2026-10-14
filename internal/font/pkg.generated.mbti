@@ -13,7 +13,13 @@ import {
 pub(all) enum Baseline {
   Alphabetic
   Middle
+  Central
+  Hanging
+  Mathematical
+  TextBeforeEdge
+  TextAfterEdge
 } derive(Eq)
+pub fn Baseline::from_css(String) -> Self
 
 pub struct Face {
   // private fields
@@ -46,6 +52,8 @@ pub fn Stack::line_descent(Self, Double) -> Double
 pub fn Stack::line_metrics(Self, Double) -> (Double, Double)
 pub fn Stack::page_default(bold? : Bool) -> Self
 pub fn Stack::sans_serif(bold? : Bool) -> Self
+pub fn Stack::svg_text_box(Self, StringView, Double, x~ : Double, y~ : Double, anchor? : String, baseline? : Baseline, scale? : Double) -> Rect
+pub fn Stack::svg_text_length(Self, StringView, Double, scale? : Double) -> Double
 pub fn Stack::x_height(Self, Double) -> Double
 
 // Type aliases

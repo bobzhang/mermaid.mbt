@@ -594,7 +594,32 @@ pub(all) enum Baseline {
   Alphabetic
   /// `middle`: half the x-height above the alphabetic baseline.
   Middle
+  /// `central`: halfway between ascent and descent.
+  Central
+  /// `hanging`: at 80% of the ascent.
+  Hanging
+  /// `mathematical`: at half the ascent.
+  Mathematical
+  /// `text-before-edge`: the top of the line.
+  TextBeforeEdge
+  /// `text-after-edge` and `ideographic`: the bottom of the line.
+  TextAfterEdge
 } derive(Eq)
+
+///|
+/// The baseline a `dominant-baseline` value names; anything unknown is
+/// the alphabetic one, like `auto`.
+pub fn Baseline::from_css(value : String) -> Baseline {
+  match value {
+    "middle" => Middle
+    "central" => Central
+    "hanging" => Hanging
+    "mathematical" => Mathematical
+    "text-before-edge" => TextBeforeEdge
+    "text-after-edge" | "ideographic" => TextAfterEdge
+    _ => Alphabetic
+  }
+}
 
 ///|
 /// Blink's `LayoutUnit::FromFloatRound`, in pixels.
@@ -616,6 +641,31 @@ fn Face::x_height(self : Face, size : Double) -> Float {
 }
 
 ///|
+/// How far a line of this face reaches above and below `baseline`, in
+/// pixels: `FontMetrics::FixedAscent(baseline)` and `FixedDescent`. Off
+/// the alphabetic baseline each is rounded to a layout unit on its own,
+/// so their sum can be 1/64 pixel more than ascent plus descent.
+fn Face::baseline_extents(
+  self : Face,
+  baseline : Baseline,
+  size : Double,
+) -> (Float, Float) {
+  let ascent = Float::from_double(self.ascent(size))
+  let descent = Float::from_double(self.descent(size))
+  // How far the baseline lies above the alphabetic one.
+  let rise : Float = match baseline {
+    Alphabetic => return (ascent, descent)
+    Middle => self.x_height(size) / 2.0
+    Central => ascent - (ascent + descent) / 2.0
+    Hanging => ascent * 8.0 / 10.0
+    Mathematical => ascent / 2.0
+    TextBeforeEdge => ascent
+    TextAfterEdge => -descent
+  }
+  (round_layout_unit(ascent - rise), round_layout_unit(descent + rise))
+}
+
+///|
 /// The bounding box of `text` at `size` pixels: what `getBBox()` reports
 /// for an SVG text element positioned at the origin. It is the cell
 /// (advance by ascent plus descent) united with the ink of the glyphs,
@@ -634,17 +684,7 @@ pub fn Stack::bbox(
   let shaped = self.shape(text, size)
   let primary = self.faces[0]
   let font_ascent = Float::from_double(primary.ascent(size))
-  let font_descent = Float::from_double(primary.descent(size))
-  let (ascent, descent) = match baseline {
-    Alphabetic => (font_ascent, font_descent)
-    Middle => {
-      let half = primary.x_height(size) / 2.0
-      (
-        round_layout_unit(font_ascent - half),
-        round_layout_unit(font_descent + half),
-      )
-    }
-  }
+  let (ascent, descent) = primary.baseline_extents(baseline, size)
   // How far below the reference line the glyphs' own baseline is.
   let shift = font_ascent - ascent
   let cell : RectF = {

@@ -1,0 +1,56 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/diagrams/radar"
+
+import {
+  "bobzhang/mermaid/diagram",
+  "bobzhang/mermaid/theme",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn draw(Radar, @diagram.Context) -> Unit
+
+pub fn parse(String) -> Radar raise
+
+pub fn styles(@theme.Theme) -> String
+
+// Errors
+pub(all) suberror RadarError {
+  Invalid(String)
+  Unsupported(String)
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+pub struct Axis {
+  name : String
+  label : String
+} derive(@debug.Debug)
+
+pub struct Curve {
+  name : String
+  label : String
+  entries : Array[Double]
+} derive(@debug.Debug)
+
+pub(all) enum Graticule {
+  Circle
+  Polygon
+} derive(Eq, @debug.Debug)
+
+pub struct Radar {
+  axes : Array[Axis]
+  curves : Array[Curve]
+  show_legend : Bool
+  ticks : Double
+  max : Double?
+  min : Double
+  graticule : Graticule
+  title : String
+  acc_title : String
+  acc_description : String
+}
+pub fn Radar::with_title(Self, String) -> Self
+
+// Type aliases
+
+// Traits

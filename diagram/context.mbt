@@ -77,41 +77,60 @@ pub fn Context::container_width(self : Context) -> Double {
 /// `0 0 width height`, the way the view box is fitted into the element
 /// (`preserveAspectRatio` at its default).
 ///
-/// The element is as wide as its container and as tall as the view box's
-/// proportions make it; when that is taller than the viewport has room
-/// for, the page gets a scrollbar, the container narrows and the diagram
-/// shrinks with it. A diagram that measures text after setting its view
-/// box gets its measurements at this scale.
+/// The element is as wide as its container, or as `max_width` when its
+/// style limits it to less, and as tall as the view box's proportions
+/// make it; when that is taller than the viewport has room for, the page
+/// gets a scrollbar, the container narrows and the diagram shrinks with
+/// it. A diagram that measures text after setting its view box gets its
+/// measurements at this scale.
+///
+/// With `fixed`, the element has `width` and `height` attributes of the
+/// size of the view box instead, and the page does not matter.
 pub fn Context::view_box_scale(
   self : Context,
   width : Double,
   height : Double,
+  max_width? : Double,
+  fixed~ : Bool = false,
 ) -> Double {
   let page = self.page
-  let mut container = self.container_width()
-  // Below the `<svg>`, an inline element, the line it stands on keeps
-  // room for descenders in the font of the block mermaid renders into.
-  let line_descent = match self.config.text("fontFamily") {
-    Some(family) => @font.Stack::for_family(family).line_descent(16.0)
-    // No font of its own: the default serif of the page.
-    None => 4.0
+  // The width the element takes in a container.
+  let fitted = (container : Double) => {
+    match max_width {
+      Some(limit) if floor_layout_unit(limit) < container =>
+        floor_layout_unit(limit)
+      _ => container
+    }
   }
-  let used_height = floor_layout_unit(container * height / width)
-  // The page scrolls when its content, rounded to whole pixels, is
-  // taller than the viewport; the scrollbar stays even if the narrower
-  // content would fit again.
-  if (used_height + line_descent + 2.0 * page.margin + 0.5).floor() >
-    page.viewport_height {
-    container -= page.scrollbar
+  let (used_width, used_height) = if fixed {
+    (floor_layout_unit(width), floor_layout_unit(height))
+  } else {
+    let mut container = self.container_width()
+    // Below the `<svg>`, an inline element, the line it stands on keeps
+    // room for descenders in the font of the block mermaid renders into.
+    let line_descent = match self.config.text("fontFamily") {
+      Some(family) => @font.Stack::for_family(family).line_descent(16.0)
+      // No font of its own: the default serif of the page.
+      None => 4.0
+    }
+    let used_height = floor_layout_unit(fitted(container) * height / width)
+    // The page scrolls when its content, rounded to whole pixels, is
+    // taller than the viewport; the scrollbar stays even if the narrower
+    // content would fit again.
+    if (used_height + line_descent + 2.0 * page.margin + 0.5).floor() >
+      page.viewport_height {
+      container -= page.scrollbar
+    }
+    let used_width = fitted(container)
+    (used_width, floor_layout_unit(used_width * height / width))
   }
-  let used_height = floor_layout_unit(container * height / width)
   // SVG lengths are single precision.
   let width = Float::from_double(width).to_double()
   let height = Float::from_double(height).to_double()
-  if width / height < container / used_height {
+  if width / height < used_width / used_height {
     used_height / height
   } else {
-    container / width
+    used_width / width
   }
 }
 
