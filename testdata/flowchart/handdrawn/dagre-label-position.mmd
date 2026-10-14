@@ -1,0 +1,26 @@
+---
+config:
+  look: handDrawn
+  handDrawnSeed: 15
+  layout: dagre
+  htmlLabels: false
+---
+flowchart TD
+  n0@{ shape: stadium, label: "Done!" }
+  n1@{ shape: fr-circ, label: "Alpha" }
+  n2@{ shape: notch-pent, label: "A longer label here" }
+  n3[\Beta\]
+  n4@{ shape: doc, label: "Done!" }
+  n5@{ shape: cyl, label: "Done!" }
+  subgraph G1 [Group one]
+    n1
+    n5
+  end
+  n1 o--o n5
+  n2 ---|A longer label here| n0
+  n3 x--x n2
+  n2 ~~~ n1
+  n2 ==> n4
+  n0 <--> n2
+  n2 ---|Beta| n0
+  style n3 fill:#bbf,stroke:#f66,stroke-dasharray: 5 5
