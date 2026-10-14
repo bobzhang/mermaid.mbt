@@ -31,8 +31,7 @@ pub fn Context::font(
   bold~ : Bool = false,
   italic~ : Bool = false,
 ) -> @font.Stack {
-  ignore(self)
-  @font.Stack::default(bold~, italic~)
+  @font.Stack::for_family(self.theme().text("fontFamily"), bold~, italic~)
 }
 
 ///|
