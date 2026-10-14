@@ -296,7 +296,11 @@ fn parse_diagram(
         acc_title: chart.acc_title,
         acc_description: chart.acc_description,
         classes: [],
-        draw: context => @quadrant.draw(chart, context),
+        draw: context => {
+          @quadrant.draw(chart, context) catch {
+            @quadrant.Unsupported(message) => raise Unsupported(message)
+          }
+        },
       }
     }
     other => raise Unsupported(other)

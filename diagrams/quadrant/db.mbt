@@ -6,6 +6,12 @@ pub(all) suberror QuadrantError {
 } derive(Eq, Debug)
 
 ///|
+/// A chart whose rendering depends on something that is not ported.
+pub(all) suberror Unsupported {
+  Unsupported(String)
+} derive(Eq, Debug)
+
+///|
 /// How a point is drawn where it departs from the configuration: the
 /// styles written after a point, or those of a `classDef`.
 priv struct Styles {

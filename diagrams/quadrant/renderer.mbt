@@ -1,17 +1,36 @@
 ///|
-/// The builder's defaults, for what the configuration leaves out.
-fn default_number(name : String) -> Double {
-  match name {
-    "chartWidth" | "chartHeight" => 500.0
-    "titlePadding" => 10.0
-    "titleFontSize" => 20.0
-    "xAxisLabelFontSize" | "yAxisLabelFontSize" | "quadrantLabelFontSize" =>
-      16.0
-    "pointLabelFontSize" => 12.0
-    "quadrantInternalBorderStrokeWidth" => 1.0
-    "quadrantExternalBorderStrokeWidth" => 2.0
-    _ => 5.0
+/// The numbers of the `quadrantChart` configuration.
+let number_options : Array[String] = [
+  "chartWidth", "chartHeight", "titleFontSize", "titlePadding", "quadrantPadding",
+  "xAxisLabelPadding", "yAxisLabelPadding", "xAxisLabelFontSize", "yAxisLabelFontSize",
+  "quadrantLabelFontSize", "quadrantTextTopPadding", "pointTextPadding", "pointLabelFontSize",
+  "pointRadius", "quadrantInternalBorderStrokeWidth", "quadrantExternalBorderStrokeWidth",
+]
+
+///|
+/// The numbers of the configuration by name. Upstream computes with
+/// whatever the configuration holds, and JavaScript's arithmetic on
+/// anything but numbers (a size written as a string is appended, not
+/// added) is not reproduced.
+fn numbers(config : @config.Config) -> Map[String, Double] raise Unsupported {
+  let numbers = Map([])
+  for name in number_options {
+    guard config.number("quadrantChart." + name) is Some(value) else {
+      raise Unsupported("quadrantChart.\{name} is not a number")
+    }
+    numbers[name] = value
   }
+  numbers
+}
+
+///|
+/// A color set through the CSSOM is dropped when the browser does not
+/// take it for one; only colors known to be valid are let through.
+fn checked_color(color : String) -> String raise Unsupported {
+  let _ = @color.Channels::parse(color) catch {
+    _ => raise Unsupported("the border color \{color}")
+  }
+  color
 }
 
 ///|
@@ -46,14 +65,16 @@ fn place(text : @dom.Element, data : PlacedText) -> Unit {
 
 ///|
 /// Draw the quadrant chart into the context's `<svg>` element.
-pub fn draw(chart : Quadrant, context : @diagram.Context) -> Unit {
+pub fn draw(
+  chart : Quadrant,
+  context : @diagram.Context,
+) -> Unit raise Unsupported {
   let n = @dom.number
   let config = context.config
   let theme = context.theme()
   let svg = context.svg
-  let number = (name : String) => {
-    config.number("quadrantChart." + name).unwrap_or(default_number(name))
-  }
+  let numbers = numbers(config)
+  let number = (name : String) => numbers.get(name).unwrap_or(0.0)
   let group = svg.append("g").attr("class", "main")
   let width = number("chartWidth")
   let height = number("chartHeight")
@@ -61,7 +82,9 @@ pub fn draw(chart : Quadrant, context : @diagram.Context) -> Unit {
     svg,
     height,
     width,
-    config.get("quadrantChart.useMaxWidth") != Json::boolean(false),
+    // On unless switched off; anything set counts by its truthiness.
+    config.get("quadrantChart.useMaxWidth") is Null ||
+    config.flag("quadrantChart.useMaxWidth"),
   )
   svg.attr("viewBox", "0 0 \{n(width)} \{n(height)}") |> ignore
   let builder : Builder = {
@@ -92,7 +115,7 @@ pub fn draw(chart : Quadrant, context : @diagram.Context) -> Unit {
     .attr_number("y1", line.y1)
     .attr_number("x2", line.x2)
     .attr_number("y2", line.y2)
-    .style("stroke", line.stroke_fill)
+    .style("stroke", checked_color(line.stroke_fill))
     .style("stroke-width", n(line.stroke_width))
     |> ignore
   }

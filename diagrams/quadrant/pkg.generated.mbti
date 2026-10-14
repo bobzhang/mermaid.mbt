@@ -8,13 +8,17 @@ import {
 }
 
 // Values
-pub fn draw(Quadrant, @diagram.Context) -> Unit
+pub fn draw(Quadrant, @diagram.Context) -> Unit raise Unsupported
 
 pub fn parse(String, title? : String) -> Quadrant raise
 
 // Errors
 pub(all) suberror QuadrantError {
   QuadrantError(String)
+} derive(Eq, @debug.Debug)
+
+pub(all) suberror Unsupported {
+  Unsupported(String)
 } derive(Eq, @debug.Debug)
 
 // Types and methods
