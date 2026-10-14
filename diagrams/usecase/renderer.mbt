@@ -203,6 +203,39 @@ fn annotate(
 }
 
 ///|
+/// Refuse text the port cannot measure: characters none of the embedded
+/// faces of the diagram's fonts has, which the browser takes from some
+/// other system font.
+fn check_measurable(
+  texts : Array[String],
+  families : Array[String],
+) -> Unit raise UsecaseError {
+  let stacks = []
+  for family in families {
+    stacks.push(@font.Stack::for_family(family))
+    stacks.push(@font.Stack::for_family(family, bold=true))
+    stacks.push(@font.Stack::for_family(family, italic=true))
+  }
+  for text in texts {
+    // What the label shows: entities resolved, lines apart.
+    // White space collapses to spaces.
+    let shown = @dom.sanitized_text(@dom.placeholders_to_references(text))
+      .replace_all(old="\t", new=" ")
+      .replace_all(old="\r", new=" ")
+      .replace_all(old="\u{0c}", new=" ")
+    for line in shown.split("\n") {
+      for stack in stacks {
+        if stack.first_uncovered(line) is Some(c) {
+          raise Unsupported(
+            "The character \{c} cannot be measured: no embedded font has it.",
+          )
+        }
+      }
+    }
+  }
+}
+
+///|
 /// Draw the diagram into the context's `<svg>` element.
 pub fn draw(
   db : UsecaseDb,
@@ -234,6 +267,27 @@ pub fn draw(
   }
   let (nodes, edges) = db.layout_data()
   prepare_layout_data(nodes, edges)
+  let texts = []
+  for node in nodes {
+    texts.push(node.label)
+    if node.stereotype is Some(stereotype) {
+      texts.push("«\{stereotype}»")
+    }
+    for row in node.json_rows {
+      texts.push(row.key)
+      texts.push(row.value)
+    }
+  }
+  for edge in edges {
+    if edge.label is Some(label) {
+      texts.push(label)
+    }
+  }
+  check_measurable(texts, [
+    config.theme().text("fontFamily"),
+    fonts.actor_family,
+    fonts.usecase_family,
+  ])
   let svg = context.svg
   fonts.apply(svg)
   // The browser writes the declarations out as the `style` attribute

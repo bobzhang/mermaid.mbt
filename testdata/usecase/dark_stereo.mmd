@@ -1,0 +1,13 @@
+---
+config:
+  theme: redux-dark-color
+---
+usecase-beta
+actor A("Agent")@{ business: true } <<Employee>>
+actor H@{ type: hollow } <<Machine>>
+U("Use")@{ business: true } <<Core>>
+V("Plain") <<Rule>>
+W[Rect] <<Rec>>
+A --> U
+H --> V
+U --> W

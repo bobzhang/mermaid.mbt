@@ -1,0 +1,18 @@
+---
+config:
+  theme: neutral
+  usecase:
+    actorFontSize: 12
+    actorFontFamily: "Trebuchet MS, sans-serif"
+    usecaseFontSize: 16
+    usecaseFontFamily: Helvetica
+    usecaseFontWeight: bold
+---
+usecase-beta
+actor Customer <<VIP>>
+Browse("Browse catalog")
+Biz("Biz")@{ business: true } <<Core>>
+R[Rect thing]
+Customer --> Browse
+Customer --> Biz
+Biz --> R
