@@ -19,6 +19,16 @@ fn node_text_centred(diagram_type : String) -> Bool {
 }
 
 ///|
+/// The environment inside a label group that carries `style`: a font
+/// size there is the size of everything in the group.
+fn Env::styled(self : Env, style : String) -> Env {
+  match label_font(style).size {
+    Some(size) => { ..self, font_size: size, }
+    None => self
+  }
+}
+
+///|
 /// The face and size an inline label style asks for.
 priv struct LabelFont {
   bold : Bool

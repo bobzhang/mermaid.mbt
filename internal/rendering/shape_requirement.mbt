@@ -43,6 +43,7 @@ fn requirement_add_text(
     |> ignore
     return place(box.width, box.height)
   }
+  let env = env.styled(style)
   let svg_label = create_svg_label(
     label,
     text,
@@ -53,7 +54,7 @@ fn requirement_add_text(
     anchor_middle=false,
   )
   // The words of the first line take the style, and the anchor; the box is
-  // read after that. A size in the style applies to the whole text.
+  // read after that.
   let font = label_font(style)
   if svg_label.element.child_elements() is [first, ..] {
     if style != "" {
@@ -68,11 +69,7 @@ fn requirement_add_text(
       }
     }
   }
-  let sized_env = match font.size {
-    Some(size) => { ..env, font_size: size, }
-    None => env
-  }
-  let box = text_box(svg_label.lines, sized_env, false, restyle=(line, run) => {
+  let box = text_box(svg_label.lines, env, false, restyle=(line, run) => {
     if line == 0 {
       { ..run, bold: run.bold || font.bold, italic: run.italic || font.italic, }
     } else {

@@ -218,7 +218,7 @@ fn label_helper(
     let text = create_svg_label(
       label,
       node.label,
-      env,
+      env.styled(node.label_style),
       width?=label_width,
       style=node.label_style,
       markdown~,

@@ -177,6 +177,7 @@ fn er_add_text(
     }
     return box
   }
+  let env = env.styled(style)
   let svg_label = create_svg_label(
     label,
     text,
