@@ -1,0 +1,18 @@
+---
+config:
+  flowchart:
+    htmlLabels: false
+    curve: rounded
+    subGraphTitleMargin:
+      top: 10
+      bottom: 6
+---
+block-beta
+  columns 3
+  a["Alpha"] space b("Beta")
+  space c space
+  a -- "label here" --> b
+  a --> c
+  c <--> b
+  classDef c1 fill:#f96,color:#00f
+  class a c1
