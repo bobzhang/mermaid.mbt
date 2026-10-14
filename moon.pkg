@@ -11,6 +11,7 @@ import {
   "bobzhang/mermaid/diagrams/requirement",
   "bobzhang/mermaid/diagrams/state",
   "bobzhang/mermaid/diagrams/timeline",
+  "bobzhang/mermaid/diagrams/treeview",
   "bobzhang/mermaid/internal/css",
   "bobzhang/mermaid/internal/dom",
   "bobzhang/mermaid/internal/jison",

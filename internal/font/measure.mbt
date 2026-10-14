@@ -514,7 +514,15 @@ pub fn Stack::for_family(
             (true, true) => trebuchet_bold_italic
           },
         )
-      "verdana" => Some(if bold { verdana_bold } else { verdana_regular })
+      "verdana" =>
+        Some(
+          match (bold, italic) {
+            (false, false) => verdana_regular
+            (true, false) => verdana_bold
+            (false, true) => verdana_italic
+            (true, true) => verdana_bold_italic
+          },
+        )
       "arial" | "helvetica" | "sans-serif" => Some(arial(bold, italic))
       _ => None
     }

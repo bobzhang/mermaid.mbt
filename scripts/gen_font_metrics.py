@@ -27,6 +27,8 @@ FACES = [
     ("trebuchet_bold_italic", "Trebuchet MS Bold Italic.ttf"),
     ("verdana_regular", "Verdana.ttf"),
     ("verdana_bold", "Verdana Bold.ttf"),
+    ("verdana_italic", "Verdana Italic.ttf"),
+    ("verdana_bold_italic", "Verdana Bold Italic.ttf"),
     ("arial_regular", "Arial.ttf"),
     ("arial_bold", "Arial Bold.ttf"),
     ("arial_italic", "Arial Italic.ttf"),

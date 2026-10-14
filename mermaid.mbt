@@ -261,6 +261,27 @@ fn parse_diagram(
         },
       }
     }
+    "treeView" => {
+      let tree = @treeview.parse(code) catch {
+        @treeview.TreeViewError(message) => raise Syntax(message)
+        @treeview.Unsupported(message) => raise Unsupported(message)
+        @journeycommon.SanitizeError(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      {
+        styles: @treeview.styles(config.theme()),
+        acc_title: tree.acc_title,
+        acc_description: tree.acc_description,
+        classes: [],
+        draw: context => {
+          @treeview.draw(tree, context) catch {
+            @treeview.TreeViewError(message) => raise Syntax(message)
+            @treeview.Unsupported(message) => raise Unsupported(message)
+            error => raise Unsupported(error.to_string())
+          }
+        },
+      }
+    }
     other => raise Unsupported(other)
   }
 }
