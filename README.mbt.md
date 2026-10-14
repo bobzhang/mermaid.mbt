@@ -57,6 +57,8 @@ Work in progress.
 | Tree view | byte-identical; emoji labels are refused |
 | Ishikawa | byte-identical, including the hand-drawn look with a seed |
 | Cynefin | byte-identical |
+| Railroad | byte-identical, all four front ends (railroad, EBNF, ABNF, PEG) |
+| Event modeling | byte-identical |
 | everything else | not ported yet — `render` raises `Unsupported` |
 
 Git graphs name commits at random upstream (`Math.random`), so a graph
