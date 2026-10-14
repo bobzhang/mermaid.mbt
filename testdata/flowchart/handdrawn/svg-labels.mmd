@@ -1,0 +1,18 @@
+---
+config:
+  look: handDrawn
+  handDrawnSeed: 21
+  htmlLabels: false
+  theme: forest
+---
+flowchart TD
+  A[Christmas] -->|Get money| B(Go shopping)
+  B --> C{Let me think}
+  C -->|One| D[Laptop]
+  C -->|Two| E[iPhone]
+  C -->|Three| F[fa:fa-car Car]
+  subgraph S [Shops]
+    D
+    E
+  end
+  F --> G@{ shape: lean-r, label: "Out" }

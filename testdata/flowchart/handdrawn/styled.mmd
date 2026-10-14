@@ -1,0 +1,18 @@
+---
+config:
+  look: handDrawn
+  handDrawnSeed: 42
+  theme: default
+---
+flowchart TD
+  A[Start]:::hot --> B{Check}
+  B -- ok --> C(Done)
+  B -. retry .-> A
+  B == fail ==> D[(Store)]
+  C --o E((End))
+  D --x E
+  E <--> F[Other]
+  classDef hot fill:#f96,stroke:#333,stroke-width:4px
+  style C fill:#bbf,stroke:#f66,stroke-width:2px,color:#fff,stroke-dasharray: 5 5
+  linkStyle 0 stroke:#ff3,stroke-width:4px
+  linkStyle 3 stroke:red

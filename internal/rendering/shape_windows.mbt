@@ -263,11 +263,15 @@ fn cloud(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
     "    a\{n(r1)},\{n(r1)} 1 0,1 \{n(-1.0 * w * 0.1)},\{n(-1.0 * h * 0.35)}\n" +
     "    a\{n(r4)},\{n(r4)} 1 0,1 \{n(w * 0.1)},\{n(-1.0 * h * 0.65)}\n" +
     "  H0 V0 Z"
-  let element = labelled.shape_svg
+  let element = if hand_drawn(node) {
+    sketched_outline(labelled.shape_svg, node, env, path)
+  } else {
+    labelled.shape_svg
     .insert_first("path")
     .attr("class", "basic label-container")
     .attr("style", styles.node_styles)
     .attr("d", path)
+  }
   place_label_at(labelled, -box.width / 2.0, -box.height / 2.0)
   element.attr("transform", "translate(\{n(-w / 2.0)}, \{n(-h / 2.0)})")
   |> ignore
@@ -309,12 +313,17 @@ fn bang(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
     "\{small_arc}0,\{n(-1.0 * eh * 0.34)}\n" +
     "\{arc}\{n(ew * 0.1)},\{n(-1.0 * eh * 0.33)}\n" +
     "  H0 V0 Z"
-  let element = labelled.shape_svg
+  let element = if hand_drawn(node) {
+    sketched_outline(labelled.shape_svg, node, env, path)
+  } else {
+    labelled.shape_svg
     .insert_first("path")
     .attr("class", "basic label-container")
     .attr("style", styles.node_styles)
     .attr("d", path)
-    .attr("transform", "translate(\{n(-ew / 2.0)}, \{n(-eh / 2.0)})")
+  }
+  element.attr("transform", "translate(\{n(-ew / 2.0)}, \{n(-eh / 2.0)})")
+  |> ignore
   update_node_bounds(node, element)
   node.intersect = Some(node_intersect_rect(node))
   labelled.shape_svg

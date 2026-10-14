@@ -363,7 +363,7 @@ fn tagged_wave_edged_rectangle(
   let options = rough_options(node, env)
   let document = @rough.path(path_from_points(points), options)
   // The tag is the outer group; the document goes inside it, first.
-  let tag = @rough.path(path_from_points(tag_points), options)
+  let tag = @rough.path(path_from_points(tag_points), solid_options(options))
   prepend(tag, document)
   insert_rough_outline(labelled.shape_svg, tag, node, styles) |> ignore
   let n = @dom.number

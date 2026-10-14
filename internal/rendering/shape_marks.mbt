@@ -38,6 +38,15 @@ fn state_start(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
   mark_size(node)
   let shape_svg = bare_node(parent, node, "node default")
   let width = node.width.unwrap_or(14.0)
+  if hand_drawn(node) {
+    let circle = sketched_state_start(shape_svg, node, env)
+    update_node_bounds(node, circle)
+    node.intersect = Some(point => {
+      let radius = node.width.unwrap_or(7.0) / 2.0
+      intersect_ellipse(node, radius, radius, point)
+    })
+    return shape_svg
+  }
   let circle = shape_svg
     .insert_first("circle")
     .attr("class", "state-start")
@@ -75,12 +84,16 @@ fn state_end(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
   dot_options.fill = inner_fill
   dot_options.stroke = inner_fill
   dot_options.stroke_width = "2"
+  dot_options.fill_style = "solid"
   let dot = @rough.circle(0.0, 0.0, width * 5.0 / 14.0, dot_options)
   prepend(shape_svg, ring)
   ring.append_child(dot)
-  ring.attr("class", "outer-path") |> ignore
-  style_rough_paths(ring, node, styles)
-  if small_shadow(node, env) is Some(filter) {
+  if !hand_drawn(node) {
+    ring.attr("class", "outer-path") |> ignore
+  }
+  // Styled in every look.
+  style_paths(ring, node, styles)
+  if small_shadow(node, env) is Some(filter) && !hand_drawn(node) {
     ring.attr("style", filter) |> ignore
   }
   update_node_bounds(node, ring)
@@ -213,16 +226,18 @@ fn filled_circle(parent : @dom.Element, node : Node, env : Env) -> @dom.Element 
   node.label = ""
   let shape_svg = bare_node(parent, node, node_classes(node))
   let radius = 7.0
-  let disc = @rough.circle(0.0, 0.0, radius * 2.0, rough_options(node, env))
+  let options = rough_options(node, env)
+  options.fill_style = "solid"
+  let disc = @rough.circle(0.0, 0.0, radius * 2.0, options)
   prepend(shape_svg, disc)
   let node_border = env.config.theme().text("nodeBorder")
   for path in disc.descendants(["path"]) {
     path.attr("style", "fill: \{node_border} !important;") |> ignore
     // Unlike elsewhere, an empty list of styles leaves the fill alone.
-    if !node.css_styles.is_empty() {
+    if !node.css_styles.is_empty() && !hand_drawn(node) {
       path.attr("style", node.css_styles.join(",")) |> ignore
     }
-    if styles.node_styles != "" {
+    if styles.node_styles != "" && !hand_drawn(node) {
       path.attr("style", styles.node_styles) |> ignore
     }
   }
@@ -275,6 +290,7 @@ fn anchor(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
   let options = rough_options(node, env)
   options.fill = "black"
   options.stroke = "none"
+  options.fill_style = "solid"
   let dot = @rough.circle(0.0, 0.0, radius * 2.0, options)
   prepend(shape_svg, dot)
   dot.attr("class", "anchor").attr("style", node.css_styles.join(",")) |> ignore

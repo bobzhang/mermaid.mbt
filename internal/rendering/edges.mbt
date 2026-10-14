@@ -237,7 +237,11 @@ fn add_edge_marker(
     root.find_by_id(original_id) is Some(original) &&
     original.parent() is Some(parent) {
     let colored = original.clone_deep().attr("id", colored_id)
+    // The sanitizer drops a colour that looks like an address with a
+    // scheme, such as the `stroke:red` of the hand-drawn look.
+    let kept = @dom.is_allowed_uri(color)
     for shape in colored.descendants(["path", "circle", "line"]) {
+      guard kept else { break }
       shape.attr("stroke", color) |> ignore
       if filled {
         shape.attr("fill", color) |> ignore
@@ -324,15 +328,31 @@ fn insert_edge(
   let classes = " \{thickness} \{pattern}" +
     (if edge.classes != "" { " " + edge.classes } else { "" }) +
     (if animation_class != "" { " " + animation_class } else { "" })
-  let path = group
-    .append("path")
-    .attr("d", line_path)
+  let (path, sketched_stroke) = if edge.look == "handDrawn" {
+    let (path, stroke) = sketched_edge(group, line_path, edge, data)
+    let classes = " \{thickness} \{pattern} transition" +
+      classes[thickness.length() + pattern.length() + 2:].to_owned()
+    path
     .attr("id", "\{data.diagram_id}-\{edge.id}")
     .attr("class", classes)
-    .attr("style", path_style)
-  let animated = edge.animate ||
-    edge.animation is Some(_) ||
-    styles_from_classes.contains("animation")
+    .attr("style", edge.style.map(style => ";" + style).join(""))
+    |> ignore
+    (path, Some(stroke))
+  } else {
+    let path = group
+      .append("path")
+      .attr("d", line_path)
+      .attr("id", "\{data.diagram_id}-\{edge.id}")
+      .attr("class", classes)
+      .attr("style", path_style)
+    (path, None)
+  }
+  let animated = sketched_stroke is None &&
+    (
+      edge.animate ||
+      edge.animation is Some(_) ||
+      styles_from_classes.contains("animation")
+    )
   if edge.look == "neo" && !animated {
     let len = @dom.path_length(line_path)
     let start = marker_offset2(edge.arrow_type_start)
@@ -359,7 +379,10 @@ fn insert_edge(
     path.attr("data-look", edge.look) |> ignore
   }
   let use_margin = !animated && edge.look == "neo"
-  let stroke_color = stroke_color_of(path_style)
+  let stroke_color = match sketched_stroke {
+    Some(stroke) => stroke
+    None => stroke_color_of(path_style)
+  }
   add_edge_marker(
     path,
     true,

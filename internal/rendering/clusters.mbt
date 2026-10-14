@@ -79,13 +79,25 @@ fn insert_cluster(
   } else {
     node_width
   }
-  let outline = shape_svg
+  let outline = if hand_drawn(node) {
+    sketched_cluster_rect(
+      shape_svg,
+      node,
+      env,
+      node.x - width / 2.0,
+      node.y - height / 2.0,
+      width,
+      height,
+    )
+  } else {
+    shape_svg
     .insert_first("rect")
     .attr("style", styles.node_styles)
     .attr_number("x", node.x - width / 2.0)
     .attr_number("y", node.y - height / 2.0)
     .attr_number("width", width)
     .attr_number("height", height)
+  }
   let title_top = env.config
     .number("flowchart.subGraphTitleMargin.top")
     .unwrap_or(0.0)
