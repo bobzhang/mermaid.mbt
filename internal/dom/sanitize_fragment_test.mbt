@@ -1,8 +1,7 @@
 ///|
 fn sanitized(text : String) -> String {
-  sanitize_text(text) catch {
-    Unsupported(_) => "unsupported"
-    Invalid(_) => "invalid"
+  @dom.sanitize_fragment(text) catch {
+    _ => "unsupported"
   }
 }
 

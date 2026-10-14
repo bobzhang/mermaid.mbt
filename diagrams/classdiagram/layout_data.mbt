@@ -30,7 +30,7 @@ fn ClassDb::explicit_ancestor(self : ClassDb, id : String?) -> String? {
 /// The nodes and edges to lay out: mermaid's `ClassDB.getData`.
 fn ClassDb::layout_data(
   self : ClassDb,
-) -> (Array[@rendering.Node], Array[@rendering.Edge]) {
+) -> (Array[@rendering.Node], Array[@rendering.Edge]) raise ClassError {
   let config = self.config
   let look = config.text("look").unwrap_or("default")
   let theme = config.theme()
@@ -106,10 +106,17 @@ fn ClassDb::layout_data(
     color_index += 1
   }
   for _, note in self.notes {
+    // The text of a note reaches the sanitizer when its label is made.
+    let decoded = @dom.placeholders_to_references(note.text)
+    let label = if decoded.contains("<") {
+      sanitize_text(decoded)
+    } else {
+      note.text
+    }
     nodes.push(
       @rendering.Node::new(
         id=note.id,
-        label=note.text,
+        label~,
         label_type="markdown",
         parent_id?=parent_of(note.parent),
         padding=config.number("class.padding").unwrap_or(6.0),

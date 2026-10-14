@@ -16,7 +16,10 @@ pub fn draw(
   if config.text("look") == Some("handDrawn") {
     raise @rendering.LayoutError("The hand-drawn look is not supported yet.")
   }
-  let (nodes, edges) = db.layout_data()
+  let (nodes, edges) = db.layout_data() catch {
+    Unsupported(message) | Invalid(message) =>
+      raise @rendering.LayoutError(message)
+  }
   let data : @rendering.LayoutData = {
     nodes,
     edges,

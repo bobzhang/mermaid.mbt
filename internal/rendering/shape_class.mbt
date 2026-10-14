@@ -25,9 +25,16 @@ fn class_add_text(
     raise LayoutError("KaTeX in class diagrams is not supported yet.")
   }
   // Upstream sanitizes the text here, which rewrites anything that has
-  // markup in it.
-  if @dom.placeholders_to_references(text).contains("<") {
-    raise LayoutError("class diagram text with markup: \{text}")
+  // markup in it: the title of a class that has both a label and a
+  // generic type loses the type, written `<T>`, that way. The width the
+  // text may take is still that of the text as it was.
+  let decoded = @dom.placeholders_to_references(text)
+  let shown = if decoded.contains("<") {
+    @dom.sanitize_fragment(decoded) catch {
+      _ => raise LayoutError("class diagram text with markup: \{text}")
+    }
+  } else {
+    text
   }
   // Upstream measures the text line by line, and gives up on a line that
   // has no box: one of nothing but white space.
@@ -43,7 +50,7 @@ fn class_add_text(
     let face = label_font(style)
     let (fo, box) = create_html_label(
       label,
-      text,
+      shown,
       { ..env, bold: bold || face.bold, italic: face.italic, },
       width~,
       classes="markdown-node-label",
@@ -55,7 +62,7 @@ fn class_add_text(
   } else {
     let svg_label = create_svg_label(
       label,
-      text,
+      shown,
       env,
       width~,
       markdown=true,
