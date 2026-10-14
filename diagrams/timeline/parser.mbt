@@ -26,16 +26,10 @@ fn Timeline::reduce(
       self.title = @journeycommon.sanitize_text(title)
       Some(title)
     }
-    12 => {
-      let title = @journeycommon.js_trim(v(0))
-      self.acc_title = @journeycommon.acc_title(title)
-      Some(title)
-    }
-    13 | 14 => {
-      let description = @journeycommon.js_trim(v(0))
-      self.acc_description = @journeycommon.acc_description(description)
-      Some(description)
-    }
+    // `accTitle` and `accDescr` are stored where nothing reads them:
+    // mermaid asks the diagram's database for them, and this one does not
+    // pass the common getters on.
+    12 | 13 | 14 => Some(@journeycommon.js_trim(v(0)))
     15 => {
       let section = v(0)[8:].to_owned()
       self.current_section = section

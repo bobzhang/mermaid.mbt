@@ -12,8 +12,6 @@ pub struct Task {
 /// A parsed timeline.
 pub struct Timeline {
   mut title : String
-  mut acc_title : String
-  mut acc_description : String
   /// `LR` for a timeline running left to right, `TD` for top down.
   mut direction : String
   /// The sections in the order declared; a name may repeat.
@@ -31,19 +29,5 @@ pub(all) suberror TimelineError {
 
 ///|
 fn Timeline::new() -> Timeline {
-  {
-    title: "",
-    acc_title: "",
-    acc_description: "",
-    direction: "LR",
-    sections: [],
-    tasks: [],
-    current_section: "",
-  }
-}
-
-///|
-/// Use `title` as the diagram title, as a frontmatter `title` does.
-pub fn Timeline::set_title(self : Timeline, title : String) -> Unit {
-  self.title = title
+  { title: "", direction: "LR", sections: [], tasks: [], current_section: "", }
 }

@@ -1,0 +1,4 @@
+Parse error on line 4:
+... Sec # tion      10:30 : not what you t
+----------------------^
+Expecting 'EOF', 'SPACE', 'NEWLINE', 'title', 'acc_title', 'acc_descr', 'acc_descr_multiline_value', 'section', 'period', 'event', got 'INVALID'

@@ -139,17 +139,17 @@ fn parse_diagram(
         @timeline.TimelineError(message) => raise Syntax(message)
         error => raise Syntax(error.to_string())
       }
-      if title is Some(title) && timeline.title == "" {
-        timeline.set_title(title)
-      }
+      // The timeline's database exposes neither `setDiagramTitle` nor the
+      // accessibility getters to the renderer, so a frontmatter title and
+      // `accTitle`/`accDescr` leave no trace in the output.
       {
         styles: @timeline.styles(
           config.theme(),
           config.text("theme").unwrap_or(""),
           id,
         ),
-        acc_title: timeline.acc_title,
-        acc_description: timeline.acc_description,
+        acc_title: "",
+        acc_description: "",
         classes: [],
         draw: context => {
           @timeline.draw(timeline, context) catch {

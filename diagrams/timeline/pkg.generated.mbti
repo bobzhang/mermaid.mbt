@@ -28,14 +28,11 @@ pub struct Task {
 
 pub struct Timeline {
   mut title : String
-  mut acc_title : String
-  mut acc_description : String
   mut direction : String
   sections : Array[String]
   tasks : Array[Task]
   // private fields
 }
-pub fn Timeline::set_title(Self, String) -> Unit
 
 // Type aliases
 

@@ -8,3 +8,8 @@ import {
 }
 
 warnings = "-implicit_impl_as_method"
+
+import {
+  "bobzhang/mermaid/internal/font",
+  "bobzhang/mermaid/theme",
+} for "test"
