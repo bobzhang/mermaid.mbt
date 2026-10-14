@@ -16,6 +16,8 @@ priv struct TerminalLabel {
   height : Double
   /// Where the layout puts the centre of the label, if it places it.
   mut centre : Point?
+  /// The port ELK routed the edge from at the end the label belongs to.
+  mut port : Point?
 }
 
 ///|
@@ -164,7 +166,15 @@ fn insert_terminal_labels(group : @dom.Element, edge : Edge, env : Env) -> Unit 
       |> ignore
       (box.width, box.height)
     }
-    edge.terminals.push({ key, text, element, width, height, centre: None, })
+    edge.terminals.push({
+      key,
+      text,
+      element,
+      width,
+      height,
+      centre: None,
+      port: None,
+    })
   }
 }
 
@@ -514,14 +524,10 @@ fn put_terminal_labels_on_their_side(
 }
 
 ///|
-/// Read where ELK put the terminal labels and move them to where they
-/// belong on the finished routes: the terminal-label part of mermaid's
-/// `applyElkEdgeLayout`.
-fn place_terminal_labels(
-  data : LayoutData,
-  state : ElkState,
-  graph : Json,
-) -> Unit {
+/// Read where ELK put the terminal labels, and the ports it routed their
+/// edges between: the terminal-label part of the loop over the laid-out
+/// edges in mermaid's `applyElkEdgeLayout`.
+fn read_terminal_labels(state : ElkState, graph : Json) -> Unit {
   let elk_edges : Map[String, ElkEdge] = Map([])
   for edge in state.edges {
     if !elk_edges.contains(edge.edge.id) {
@@ -538,7 +544,7 @@ fn place_terminal_labels(
       continue
     }
     let offset = state.edge_offset(edge.start, edge.end)
-    // The ports ELK routed between, in the edge's own direction.
+    // The ports, in the edge's own direction.
     let first = json_point(json_field(section, "startPoint"))
     let last = json_point(json_field(section, "endPoint"))
     let (first, last) = if elk_edge.reversed {
@@ -551,7 +557,6 @@ fn place_terminal_labels(
     // The labels after the centre label are the terminal labels, in the
     // order they were handed over.
     let labels = json_items(result, "labels")
-    let mut placed = false
     for index, terminal in edge.terminals {
       guard index + 1 < labels.length() else { break }
       let label = labels[index + 1]
@@ -565,34 +570,47 @@ fn place_terminal_labels(
         x: x + offset.x + json_number(label, "width") / 2.0,
         y: y + offset.y + json_number(label, "height") / 2.0,
       })
-      placed = true
-    }
-    // ELK places the labels beside the ports it routed from; clipping and
-    // straightening can move an end of the route afterwards, and the
-    // labels follow it: mermaid's `followMovedEndpoints`.
-    let points = edge.points
-    if placed && !points.is_empty() {
-      let end = points[points.length() - 1]
-      let moved_start = {
-        x: points[0].x - start_port.x,
-        y: points[0].y - start_port.y,
-      }
-      let moved_end = { x: end.x - end_port.x, y: end.y - end_port.y, }
-      for terminal in edge.terminals {
-        guard terminal.centre is Some(centre) else { continue }
-        let delta = if terminal.key.has_prefix("start") {
-          moved_start
+      terminal.port = Some(
+        if terminal.key.has_prefix("start") {
+          start_port
         } else {
-          moved_end
-        }
-        terminal.centre = Some({ x: centre.x + delta.x, y: centre.y + delta.y, })
+          end_port
+        },
+      )
+    }
+  }
+}
+
+///|
+/// Move the terminal labels to where they belong on the finished routes:
+/// what mermaid's `applyElkEdgeLayout` does with them once the routes are
+/// clipped and straightened.
+fn settle_terminal_labels(edges : Array[Edge], nodes : Array[Node]) -> Unit {
+  // ELK places the labels beside the ports it routed from; clipping and
+  // straightening can move an end of the route afterwards, and the labels
+  // follow it: mermaid's `followMovedEndpoints`.
+  for edge in edges {
+    let points = edge.points
+    guard !points.is_empty() else { continue }
+    for terminal in edge.terminals {
+      guard terminal.centre is Some(centre) && terminal.port is Some(port) else {
+        continue
       }
+      let end = if terminal.key.has_prefix("start") {
+        points[0]
+      } else {
+        points[points.length() - 1]
+      }
+      terminal.centre = Some({
+        x: centre.x + (end.x - port.x),
+        y: centre.y + (end.y - port.y),
+      })
     }
   }
   // Off the frames first: the mirrored spot of a label across a frame is
   // across it too.
-  slide_terminal_labels_off_frames(data.edges, data.nodes)
-  put_terminal_labels_on_their_side(data.edges, data.nodes)
+  slide_terminal_labels_off_frames(edges, nodes)
+  put_terminal_labels_on_their_side(edges, nodes)
 }
 
 ///|

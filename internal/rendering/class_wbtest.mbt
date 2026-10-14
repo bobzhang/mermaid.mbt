@@ -69,6 +69,7 @@ fn edge_with_terminal(
     width: 10.0,
     height: 10.0,
     centre: Some(centre),
+    port: None,
   })
   edge
 }

@@ -181,8 +181,8 @@ pub fn render(data : LayoutData, svg : @dom.Element) -> Unit raise LayoutError {
   let routed = result_edges(graph)
   apply_node_positions(json_items(graph, "children"), state, 0.0, 0.0)
   even_group_frames(state.children, state, routed)
+  read_terminal_labels(state, graph)
   apply_edge_layout(data, state, routed)
-  place_terminal_labels(data, state, graph)
   order_nodes_for_paint(data.nodes)
   // Paint.
   let n = @dom.number

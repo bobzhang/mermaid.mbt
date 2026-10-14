@@ -1,0 +1,11 @@
+---
+config:
+  handDrawnSeed: 7
+  htmlLabels: false
+---
+classDiagram
+    Alpha "1..*" *-- "0..1" Beta : contains many things
+    Beta "many" ..> "one" Alpha : refers back to
+    namespace N {
+      class Beta
+    }
