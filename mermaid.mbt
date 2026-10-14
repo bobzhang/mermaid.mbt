@@ -119,7 +119,9 @@ fn parse_diagram(
         error => raise Syntax(error.to_string())
       }
       if title is Some(title) && graph.title == "" {
-        graph.set_title(title)
+        graph.set_title(title) catch {
+          @gitgraph.Unsupported(message) => raise Unsupported(message)
+        }
       }
       {
         styles: @gitgraph.styles(config, "#" + id),

@@ -346,6 +346,9 @@ pub fn GitGraph::branch_names(self : GitGraph) -> Array[String] {
 ///|
 /// Give the diagram a title, as a frontmatter `title` does when the text
 /// has none.
-pub fn GitGraph::set_title(self : GitGraph, title : String) -> Unit {
-  self.title = title
+pub fn GitGraph::set_title(
+  self : GitGraph,
+  title : String,
+) -> Unit raise Unsupported {
+  self.title = sanitize_common(title)
 }

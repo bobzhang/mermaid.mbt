@@ -1,19 +1,42 @@
 ///|
-/// A CSS font size in pixels. The stylesheet takes the theme's sizes as
-/// they are written; only pixel lengths can be measured here.
-fn css_pixels(name : String, value : Json) -> Double raise Unsupported {
-  let unsupported = () => {
-    Unsupported("\{name} is not a length in pixels: \{value.stringify()}")
+/// The font size the browser computes for `value`, a theme variable the
+/// stylesheet writes after `font-size:`. `parent` is the size inherited
+/// when the declaration is invalid, as a bare number is, and the size
+/// relative units refer to.
+fn css_font_size(
+  name : String,
+  value : Json,
+  parent : Double,
+) -> Double raise Unsupported {
+  let text = match value {
+    String(text) => text.trim(chars=" \t\n").to_owned().to_lower()
+    // Written without a unit: not a length.
+    _ => return parent
   }
-  guard value is String(text) else { raise unsupported() }
-  guard text.trim().strip_suffix("px") is Some(digits) else {
-    raise unsupported()
+  let mut digits = 0
+  for c in text {
+    guard c is ('0'..<='9' | '.') else { break }
+    digits += 1
   }
-  let size = @string.parse_double(digits) catch { _ => raise unsupported() }
+  let unsupported = Unsupported(
+    "\{name} is not a font size the port measures: \{text}",
+  )
+  let number = @string.parse_double(text[:digits]) catch {
+    _ => raise unsupported
+  }
+  let size = match text[digits:] {
+    "px" => number
+    "em" => number * parent
+    "rem" => number * 16.0
+    "%" => number / 100.0 * parent
+    "pt" => number * 4.0 / 3.0
+    "" => return parent
+    _ => raise unsupported
+  }
   if size > 0.0 {
     size
   } else {
-    raise unsupported()
+    raise unsupported
   }
 }
 

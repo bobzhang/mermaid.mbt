@@ -61,6 +61,9 @@ pub fn draw(graph : GitGraph, context : @diagram.Context) -> Unit raise {
   let theme = config.theme()
   let svg = context.svg
   let theme_name = config.text("theme").unwrap_or("")
+  // The `<svg>` element takes the theme's font size; the page around it
+  // has the browser's default.
+  let font_size = css_font_size("fontSize", theme.get("fontSize"), 16.0)
   let renderer : Renderer = {
     graph,
     config,
@@ -72,14 +75,16 @@ pub fn draw(graph : GitGraph, context : @diagram.Context) -> Unit raise {
     lanes: [],
     max_pos: 0.0,
     family: theme.text("fontFamily"),
-    font_size: css_pixels("fontSize", theme.get("fontSize")),
-    commit_label_size: css_pixels(
+    font_size,
+    commit_label_size: css_font_size(
       "commitLabelFontSize",
       theme.get("commitLabelFontSize"),
+      font_size,
     ),
-    tag_label_size: css_pixels(
+    tag_label_size: css_font_size(
       "tagLabelFontSize",
       theme.get("tagLabelFontSize"),
+      font_size,
     ),
   }
   if theme.flag("useGradient") {

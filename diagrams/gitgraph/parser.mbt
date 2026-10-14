@@ -272,13 +272,13 @@ pub fn parse(source : String, config : @config.Config) -> GitGraph raise {
   // The whole text is parsed before anything reaches the database.
   let graph = GitGraph::new(config)
   if acc_description is Some(text) && text != "" {
-    graph.acc_description = text
+    graph.acc_description = sanitize_common(text)
   }
   if acc_title is Some(text) && text != "" {
-    graph.acc_title = text
+    graph.acc_title = sanitize_common(text)
   }
   if title is Some(text) && text != "" {
-    graph.title = text
+    graph.title = sanitize_common(text)
   }
   if direction is Some(direction) {
     graph.direction = direction

@@ -54,7 +54,7 @@ pub struct GitGraph {
 }
 pub fn GitGraph::branch_names(Self) -> Array[String]
 pub fn GitGraph::dump(Self) -> Json
-pub fn GitGraph::set_title(Self, String) -> Unit
+pub fn GitGraph::set_title(Self, String) -> Unit raise Unsupported
 
 // Type aliases
 
