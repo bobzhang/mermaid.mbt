@@ -1,0 +1,11 @@
+---
+config:
+  htmlLabels: false
+  theme: forest
+---
+usecase-beta
+direction TB
+actor Icon("Registered icon")@{ icon: "fa:user" } <<System>>
+actor Plain@{ icon: "x" }
+Icon --> Manage
+Plain --> Manage

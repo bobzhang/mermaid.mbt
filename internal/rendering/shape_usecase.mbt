@@ -178,10 +178,7 @@ const HOLLOW_BODY_PATH : String = "M -22 -10 H 22 V 0 H 6 L 22 17 L 13 28 L 0 13
 
 ///|
 /// The figure of an actor, drawn into its glyph group.
-fn draw_actor_glyph(
-  group : @dom.Element,
-  variant : String,
-) -> Unit raise LayoutError {
+fn draw_actor_glyph(group : @dom.Element, variant : String) -> Unit {
   match variant {
     "normal" =>
       group
@@ -211,10 +208,50 @@ fn draw_actor_glyph(
       .attr("fill", "none")
       |> ignore
     }
-    _ =>
-      raise LayoutError(
-        "Icon actors are not supported yet: icon packs are not ported.",
+    _ => {
+      group
+      .append("rect")
+      .attr("class", "usecase-actor-icon-frame")
+      .attr("x", "-26")
+      .attr("y", "-28")
+      .attr("width", "52")
+      .attr("height", "52")
+      .attr("rx", "4")
+      .attr("ry", "4")
+      |> ignore
+      // No icon pack is registered: every name draws the unknown icon, an
+      // `<svg>` 42 pixels square, whose box is its viewport.
+      let icon = group
+        .append("g")
+        .attr("class", "usecase-actor-icon-symbol usecase-actor-icon-fallback")
+        .attr("aria-hidden", "true")
+      let symbol = icon
+        .append("g")
+        .append("svg")
+        .attr("xmlns", "http://www.w3.org/2000/svg")
+        .attr("width", "42")
+        .attr("height", "42")
+        .attr("viewBox", "0 0 80 80")
+        .append("g")
+      symbol
+      .append("rect")
+      .attr("width", "80")
+      .attr("height", "80")
+      .attr("style", "fill: #087ebf; stroke-width: 0px;")
+      |> ignore
+      symbol
+      .append("text")
+      .attr("transform", "translate(21.16 64.67)")
+      .attr(
+        "style", "fill: #fff; font-family: ArialMT, Arial; font-size: 67.75px;",
       )
+      .append("tspan")
+      .attr("x", "0")
+      .attr("y", "0")
+      .text("?")
+      |> ignore
+      icon.attr("transform", "translate(-21,-23)") |> ignore
+    }
   }
 }
 

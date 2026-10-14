@@ -234,11 +234,6 @@ pub fn draw(
   }
   let (nodes, edges) = db.layout_data()
   prepare_layout_data(nodes, edges)
-  for node in nodes {
-    if node.shape == "usecaseActorIcon" {
-      raise Unsupported("Icon actors are not supported yet.")
-    }
-  }
   let svg = context.svg
   fonts.apply(svg)
   // The browser writes the declarations out as the `style` attribute
