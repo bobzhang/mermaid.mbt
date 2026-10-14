@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-"""Check the port's `Date` emulation against Chrome on a random corpus.
+"""Check the port's `Date` (and some of `Math`) against Chrome on a random corpus.
 
 Generates date strings (ISO forms, legacy forms, garbage), constructor
 arguments, time values and setter calls — many of them around the
 daylight saving changes of the emulated time zone — evaluates each in the
 oracle browser and with `cmd/mermaid dates`, and reports every difference.
+The same goes for the two `Math` functions d3's tick computation rests on:
+`Math.pow(10, n)` and the floor of `Math.log10(x)`.
 
 Usage: python3 scripts/check_dates.py [--count N] [--seed S]
 """
@@ -13,6 +15,7 @@ import argparse
 import json
 import pathlib
 import random
+import struct
 import subprocess
 import sys
 import tempfile
@@ -25,6 +28,12 @@ EVALUATE = """(() => %s.map((c) => {
   const clean = (v) => (Number.isNaN(v) ? null : v);
   if ('parse' in c) return clean(new Date(c.parse).getTime());
   if ('make' in c) return clean(new Date(...c.make).getTime());
+  if ('log10' in c || 'pow10' in c) {
+    const f = new Float64Array(1), u = new BigUint64Array(f.buffer);
+    if ('pow10' in c) { f[0] = Math.pow(10, c.pow10); return u[0].toString(16); }
+    u[0] = BigInt('0x' + c.log10);
+    return Math.floor(Math.log10(f[0]));
+  }
   if ('fields' in c) {
     const d = new Date(c.fields);
     return [d.getFullYear(), d.getMonth(), d.getDate(), d.getDay(), d.getHours(), d.getMinutes(),
@@ -115,8 +124,27 @@ def argument(rng, low, high):
     return rng.choice([1e9, -1e9, 1e21, 0.5, -0.5])
 
 
+def bits(value):
+    return struct.unpack("<Q", struct.pack("<d", value))[0]
+
+
+def math_cases(count, rng):
+    """`Math.pow(10, n)` and `Math.floor(Math.log10(x))`, mostly next to powers of ten."""
+    cases = [{"pow10": n} for n in range(-330, 311)]
+    for _ in range(count):
+        kind = rng.random()
+        if kind < 0.6:
+            value = bits(float(f"1e{rng.randint(-300, 300)}")) + rng.randint(-12, 12)
+        elif kind < 0.8:
+            value = bits(rng.choice([1, 2, 5, 9.99, 0.1, 0.5, 123.456]) * 10.0 ** rng.randint(-20, 20))
+        else:
+            value = bits(rng.random() * 10.0 ** rng.randint(-300, 300))
+        cases.append({"log10": format(value, "x")})
+    return cases
+
+
 def corpus(count, rng):
-    cases = []
+    cases = math_cases(count // 4, rng)
     for index in range(count):
         kind = index % 8
         if kind == 0:

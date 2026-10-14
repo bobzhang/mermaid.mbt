@@ -21,7 +21,9 @@ fn numbers(values : Array[Json]) -> Array[Double] {
 /// Evaluate `Date` operations in the emulated time zone, for comparing
 /// with the reference browser. Each case is one of
 /// `{"parse": text}`, `{"make": [year, month, ...]}`,
-/// `{"fields": time}` and `{"set": name, "time": time, "args": [...]}`.
+/// `{"fields": time}`, `{"set": name, "time": time, "args": [...]}`,
+/// `{"log10": bits}` (the floor of the logarithm of the double with these
+/// bits, in hexadecimal) and `{"pow10": n}` (the bits of `10 ** n`).
 fn dates(path : String) -> Unit raise CliError {
   guard read_json(path) is Array(cases) else {
     raise CliError("\{path} must hold an array of cases", status=2)
@@ -101,6 +103,14 @@ fn dates(path : String) -> Unit raise CliError {
           },
         )
       }
+      { "log10": String(bits), .. } => {
+        let x = (@string.parse_int64(bits, base=16) catch { _ => 0L }).reinterpret_as_double()
+        number_or_null(@jsmath.floor_log10(x))
+      }
+      { "pow10": Number(n, ..), .. } =>
+        Json::string(
+          @jsmath.pow10(n.to_int()).reinterpret_as_int64().to_string(radix=16),
+        )
       _ => Json::null()
     }
     results.push(result)
