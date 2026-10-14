@@ -38,7 +38,15 @@ Work in progress.
 | Packet | byte-identical |
 | Info | byte-identical |
 | Flowchart | byte-identical for the fixtures in `testdata/flowchart`; see below |
+| Git graph | byte-identical, all orientations and options; upstream's documentation examples match |
+| Entity relationship | byte-identical with the default ELK layout |
+| Requirement | byte-identical with the default ELK layout |
 | everything else | not ported yet — `render` raises `Unsupported` |
+
+Git graphs name commits at random upstream (`Math.random`), so a graph
+whose commits have no explicit `id:` differs from render to render there;
+the fixtures seed the generator (`testdata/gitgraph/oracle-prelude.js`) and
+the port draws the same sequence.
 
 Shared infrastructure that is in place: all eleven themes, configuration
 resolution, frontmatter and directives, diagram type detection, the
@@ -49,8 +57,8 @@ from mermaid's own build by `scripts/extract_jison.js` and
 
 ### Flowcharts
 
-Flowcharts go through a port of mermaid's unified renderer
-(`internal/rendering`): HTML labels, node shapes, subgraph frames, edge
+Flowcharts, entity relationship and requirement diagrams go through a port
+of mermaid's unified renderer (`internal/rendering`): HTML labels, node shapes, subgraph frames, edge
 routing with rounded corners and line hops, class and link styling. The
 layout is ELK's, as upstream, computed by
 [moon_elk](https://github.com/moonbit-community/moon_elk).
