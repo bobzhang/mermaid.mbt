@@ -1,0 +1,16 @@
+---
+config:
+  handDrawnSeed: 7
+  layout: dagre
+  look: classic
+---
+flowchart BT
+  A[Bottom] -->|up| B(Round)
+  B ---> C[(Database)]
+  B -.-> D>Flag]
+  C ==> E[/Lean/]
+  D --o E
+  E --x F[\Back\]
+  A <--> F
+  linkStyle 0 interpolate linear
+  linkStyle 2 interpolate stepBefore

@@ -12,6 +12,8 @@ pub fn insert_markers(@dom.Element, Array[String], String, String, config? : @co
 
 pub fn insert_title(@dom.Element, String, String, Double, @config.Config) -> Unit
 
+pub fn is_dagre_layout(String) -> Bool
+
 pub fn is_valid_shape(String) -> Bool
 
 pub fn node_palette_rules(@config.Config) -> String
@@ -61,6 +63,8 @@ pub struct Edge {
   start_label_right : String
   end_label_left : String
   end_label_right : String
+  minlen : Double?
+  labelpos : String?
   mut label_style : String
   mut curve : String
   mut points : Array[Point]
@@ -69,7 +73,7 @@ pub struct Edge {
   mut position : Point?
   // private fields
 }
-pub fn Edge::new(id~ : String, start~ : String, end~ : String, label? : String, label_type? : String, thickness? : String, pattern? : String, classes? : String, arrow_type_start? : String, arrow_type_end? : String, css_compiled_styles? : Array[String], style? : Array[String], look~ : String, animate? : Bool, animation? : String, start_label_left? : String, start_label_right? : String, end_label_left? : String, end_label_right? : String) -> Self
+pub fn Edge::new(id~ : String, start~ : String, end~ : String, label? : String, label_type? : String, thickness? : String, pattern? : String, classes? : String, arrow_type_start? : String, arrow_type_end? : String, css_compiled_styles? : Array[String], style? : Array[String], look~ : String, animate? : Bool, animation? : String, start_label_left? : String, start_label_right? : String, end_label_left? : String, end_label_right? : String, minlen? : Double, labelpos? : String, curve? : String) -> Self
 
 pub(all) struct EntityAttribute {
   type_ : String

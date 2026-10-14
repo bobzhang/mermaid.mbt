@@ -6,6 +6,10 @@ import {
 }
 
 // Values
+pub fn js_max(Double, Double) -> Double
+
+pub fn js_min(Double, Double) -> Double
+
 pub fn layout(GraphAttrs, Array[NodeAttrs], Array[EdgeAttrs]) -> Layout raise LayoutError
 
 pub fn layout_json(Json) -> Json raise LayoutError

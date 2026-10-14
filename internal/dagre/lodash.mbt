@@ -15,7 +15,7 @@ fn unique_id(prefix : String) -> String {
 
 ///|
 /// `Math.max` of two numbers.
-fn js_max(a : Double, b : Double) -> Double {
+pub fn js_max(a : Double, b : Double) -> Double {
   if a.is_nan() || b.is_nan() {
     @double.not_a_number
   } else if a > b {
@@ -32,7 +32,7 @@ fn js_max(a : Double, b : Double) -> Double {
 
 ///|
 /// `Math.min` of two numbers.
-fn js_min(a : Double, b : Double) -> Double {
+pub fn js_min(a : Double, b : Double) -> Double {
   if a.is_nan() || b.is_nan() {
     @double.not_a_number
   } else if a < b {
