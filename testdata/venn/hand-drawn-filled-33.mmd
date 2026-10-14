@@ -1,0 +1,21 @@
+---
+config:
+  look: handDrawn
+  handDrawnSeed: 34
+---
+venn-beta
+  set A:4
+  set B:20
+  set C:20
+  set D:8
+  union A,B["AB"]:0.2
+  union A,C["AC"]:4.0
+  union A,D["AD"]:2.0
+  union B,C["BC"]:16.0
+  union B,D["BD"]:0.4
+  union C,D["CD"]:6.4
+  style A,C fill: red
+  style A,D fill: red
+  style B,C fill: orange
+  style B,D fill: #123456
+  style C,D fill: #123456

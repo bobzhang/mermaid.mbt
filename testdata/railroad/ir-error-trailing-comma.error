@@ -1,0 +1,10 @@
+Parsing failed:  Parse error on line 2, column 28: Expecting: one of these possible Token sequences:
+  1. [sequence]
+  2. [choice]
+  3. [optional]
+  4. [oneOrMore]
+  5. [zeroOrMore]
+  6. [terminal]
+  7. [nonterminal]
+  8. [special]
+but found: ')'

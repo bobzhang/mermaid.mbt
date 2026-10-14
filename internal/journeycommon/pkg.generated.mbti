@@ -14,6 +14,8 @@ pub fn acc_title(String) -> String raise SanitizeError
 
 pub fn collapse_white_space(String) -> String
 
+pub fn family_font(String, bold? : Bool) -> @font.Stack raise MeasureError
+
 pub fn js_number(String) -> Double
 
 pub fn js_trim(String) -> String

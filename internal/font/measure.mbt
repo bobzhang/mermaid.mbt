@@ -112,12 +112,13 @@ pub fn Stack::default(bold~ : Bool = false, italic~ : Bool = false) -> Stack {
     (false, true) => trebuchet_italic
     (true, true) => trebuchet_bold_italic
   }
-  // Verdana and Arial italics are not embedded; their upright faces stand in.
-  if bold {
-    { faces: [trebuchet, verdana_bold, arial_bold], }
-  } else {
-    { faces: [trebuchet, verdana_regular, arial_regular], }
+  let verdana = match (bold, italic) {
+    (false, false) => verdana_regular
+    (true, false) => verdana_bold
+    (false, true) => verdana_italic
+    (true, true) => verdana_bold_italic
   }
+  { faces: [trebuchet, verdana, arial(bold, italic)], }
 }
 
 ///|

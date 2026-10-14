@@ -1,7 +1,15 @@
+// `Math.tan` as V8 computes it: llvm-libc's `tan`, which is correctly
+// rounded (a fast double-double pass, and a 128-bit pass when Ziv's test
+// fails). Here the quotient of the double-double sine and cosine of
+// `sin` and `cos` is rounded once, which gives the same double except in
+// hard cases far rarer than the samples it was checked on. Like `sin`
+// and `cos`, it is only exact for arguments small enough for `reduce`
+// (checked up to 1e15).
+
 ///|
-/// `Math.tan`: correctly rounded in V8 (llvm-libc), so evaluated as the
-/// quotient of the double-double sine and cosine series and rounded once.
+/// `Math.tan`.
 pub fn tan(x : Double) -> Double {
+  // Zeros keep their sign; NaN stays NaN.
   if x == 0.0 || x != x {
     return x
   }
@@ -9,11 +17,12 @@ pub fn tan(x : Double) -> Double {
     return x - x
   }
   let (n, r) = reduce(x)
-  let sin = sin_series(r)
-  let cos = cos_series(r)
-  if n % 2 == 0 {
-    sin.div(cos).to_double()
+  let s = sin_series(r)
+  let c = cos_series(r)
+  // tan(r + pi/2) = -cos(r) / sin(r).
+  if (n & 1) == 0 {
+    s.div(c).to_double()
   } else {
-    cos.div(sin).neg().to_double()
+    c.div(s).neg().to_double()
   }
 }

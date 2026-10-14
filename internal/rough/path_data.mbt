@@ -265,7 +265,8 @@ fn absolutize(segments : Array[Segment]) -> Array[Segment] {
 }
 
 ///|
-/// Reduce absolute commands to `M`, `L`, `C` and `Z`.
+/// Reduce absolute commands to `M`, `L`, `C` and `Z`. Arcs are not
+/// converted yet and become straight lines.
 fn normalize(segments : Array[Segment]) -> Array[Segment] {
   let out = []
   let mut last = ' '
@@ -360,7 +361,7 @@ fn normalize(segments : Array[Segment]) -> Array[Segment] {
           cx = x
           cy = y
         } else if cx != x || cy != y {
-          let points = arc_to_cubic_points(
+          let points = arc_to_cubic_curves(
             cx,
             cy,
             x,
@@ -370,13 +371,14 @@ fn normalize(segments : Array[Segment]) -> Array[Segment] {
             data[2],
             data[3],
             data[4],
-            None,
           )
-          for i = 0; i + 2 < points.length(); i = i + 3 {
-            let (ax, ay) = points[i]
-            let (bx, by) = points[i + 1]
-            let (ex, ey) = points[i + 2]
-            out.push({ key: 'C', data: [ax, ay, bx, by, ex, ey], })
+          let mut i = 0
+          while i + 2 < points.length() {
+            let (a, b) = points[i]
+            let (c, d) = points[i + 1]
+            let (e, f) = points[i + 2]
+            out.push({ key: 'C', data: [a, b, c, d, e, f], })
+            i += 3
           }
           cx = x
           cy = y

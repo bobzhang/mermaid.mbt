@@ -1,7 +1,10 @@
 ///|
-/// The nodes and edges to lay out: mermaid's `ErDB.getData`.
+/// The nodes and edges to lay out: mermaid's `ErDB.getData`. `dagre` says
+/// whether dagre lays them out, which draws an edge without a style of its
+/// own with the style `undefined`.
 fn ErDb::layout_data(
   self : ErDb,
+  dagre~ : Bool = false,
 ) -> (Array[@rendering.Node], Array[@rendering.Edge]) {
   let look = self.config.text("look").unwrap_or("default")
   let nodes : Array[@rendering.Node] = []
@@ -87,8 +90,10 @@ fn ErDb::layout_data(
         arrow_type_start=relationship.card_b.to_lower(),
         arrow_type_end=relationship.card_a.to_lower(),
         // What the layout gives an edge that brings no style of its own.
-        style=["fill:none"],
+        style=[if dagre { "undefined" } else { "fill:none" }],
         look~,
+        labelpos="c",
+        curve="basis",
       ),
     )
   }

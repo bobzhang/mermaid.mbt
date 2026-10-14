@@ -12,7 +12,11 @@ fn cluster_paints_title(shape : String) -> Bool {
 
 ///|
 /// A composite state: a frame with a title strip above its body.
-fn rounded_with_title(parent : @dom.Element, node : Node, env : Env) -> Unit {
+fn rounded_with_title(
+  parent : @dom.Element,
+  node : Node,
+  env : Env,
+) -> ClusterFrame {
   let shape_svg = parent
     .append("g")
     .attr("class", node.css_classes)
@@ -57,15 +61,14 @@ fn rounded_with_title(parent : @dom.Element, node : Node, env : Env) -> Unit {
   let x = node.x - width / 2.0
   let y = node.y - height / 2.0
   let inner_y = node.y - node_height / 2.0 + box.height + 2.0
-  outer_group
-  .insert_first("rect")
-  .attr("class", "outer")
-  .attr_number("x", x)
-  .attr_number("y", y)
-  .attr_number("width", width)
-  .attr_number("height", height)
-  .attr("data-look", node.look)
-  |> ignore
+  let outline = outer_group
+    .insert_first("rect")
+    .attr("class", "outer")
+    .attr_number("x", x)
+    .attr_number("y", y)
+    .attr_number("width", width)
+    .attr_number("height", height)
+    .attr("data-look", node.look)
   inner
   .attr("class", "inner")
   .attr_number("x", x)
@@ -80,11 +83,17 @@ fn rounded_with_title(parent : @dom.Element, node : Node, env : Env) -> Unit {
     "translate(\{n(node.x - box.width / 2.0)}, \{n(label_y)})",
   )
   |> ignore
+  let diff = if node_width <= box.width + node.padding {
+    (width - node_width) / 2.0 - node.padding
+  } else {
+    -node.padding
+  }
+  { outline, diff: Some(diff), width: Some(width), }
 }
 
 ///|
 /// The invisible frame that keeps a note beside its state.
-fn note_group(parent : @dom.Element, node : Node) -> Unit {
+fn note_group(parent : @dom.Element, node : Node) -> ClusterFrame {
   let shape_svg = parent
     .append("g")
     .attr("class", "note-cluster")
@@ -105,11 +114,12 @@ fn note_group(parent : @dom.Element, node : Node) -> Unit {
   .attr_number("height", height)
   .attr("fill", "none")
   |> ignore
+  { outline: rect, diff: None, width: None, }
 }
 
 ///|
 /// One region of a composite state split by `--`.
-fn divider(parent : @dom.Element, node : Node, env : Env) -> Unit {
+fn divider(parent : @dom.Element, node : Node, env : Env) -> ClusterFrame {
   let shape_svg = parent
     .append("g")
     .attr("class", node.css_classes)
@@ -119,15 +129,15 @@ fn divider(parent : @dom.Element, node : Node, env : Env) -> Unit {
   let outer_group = shape_svg.insert_first("g")
   let width = node.width.unwrap_or(0.0)
   let height = node.height.unwrap_or(0.0)
-  outer_group
-  .insert_first("rect")
-  .attr("class", "divider")
-  .attr_number("x", node.x - width / 2.0)
-  .attr_number("y", node.y - height / 2.0)
-  .attr_number("width", width)
-  .attr_number("height", height)
-  .attr("data-look", node.look)
-  |> ignore
+  let outline = outer_group
+    .insert_first("rect")
+    .attr("class", "divider")
+    .attr_number("x", node.x - width / 2.0)
+    .attr_number("y", node.y - height / 2.0)
+    .attr_number("width", width)
+    .attr_number("height", height)
+    .attr("data-look", node.look)
+  { outline, diff: Some(-node.padding), width: Some(width), }
 }
 
 ///|
@@ -137,13 +147,14 @@ fn insert_cluster_shape(
   parent : @dom.Element,
   node : Node,
   env : Env,
-) -> Unit raise LayoutError {
+) -> ClusterFrame raise LayoutError {
   match node.shape {
     "rect" | "squareRect" | "" => insert_cluster(parent, node, env)
     "roundedWithTitle" => rounded_with_title(parent, node, env)
     "noteGroup" => note_group(parent, node)
     "divider" => divider(parent, node, env)
     "kanbanSection" => kanban_section(parent, node, env)
+    "flowGroup" => flow_group(parent, node, env)
     other =>
       raise LayoutError("The \{other} cluster shape is not supported yet.")
   }

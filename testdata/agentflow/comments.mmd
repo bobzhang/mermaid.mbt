@@ -1,0 +1,10 @@
+%% leading comment
+agentflow-beta TB %% after header
+  %% indented comment
+  a["Alpha %% not a comment?"] --> b["Beta"] %% trailing
+  b -- label %% x --> c
+  c --> d(round %% comment
+  )
+  flow f1["F1"] %% comment
+    x %% inside
+  end

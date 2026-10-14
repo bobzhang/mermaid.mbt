@@ -4,19 +4,52 @@ package "bobzhang/mermaid/diagrams/flowchart"
 import {
   "bobzhang/mermaid/config",
   "bobzhang/mermaid/diagram",
+  "bobzhang/mermaid/internal/jison",
   "bobzhang/mermaid/internal/rendering",
   "bobzhang/mermaid/theme",
   "moonbitlang/core/debug",
 }
 
 // Values
+pub fn arrow_types(String?) -> (String, String)
+
 pub fn draw(FlowDb, @diagram.Context, diagram_type? : String) -> Unit raise @rendering.LayoutError
 
 pub fn edge_id(String, String, counter~ : Int, id? : String) -> String
 
+pub fn fade(String, Double) -> String
+
+pub fn ids_of(Json) -> Array[String]
+
+pub fn insert_title(String, @diagram.Context, css_class? : String, section? : String) -> Unit
+
+pub fn is_color_theme(String, Json) -> Bool
+
+pub fn link_positions(Json) -> Array[Int?]
+
+pub fn metadata_string(Map[String, Json], String) -> String?
+
+pub fn palette_color(Json, Int) -> String
+
 pub fn parse(String, @config.Config) -> FlowDb raise
 
+pub fn parse_metadata(String) -> Json raise
+
+pub fn sanitize_label_type(String?) -> String
+
+pub fn statement_field(Json, String) -> Array[String]
+
+pub fn string_of(Json) -> String
+
+pub fn strings(Array[String]) -> Json
+
 pub fn styles(@theme.Theme, String, String) -> String
+
+pub fn text_object(Json) -> (String, String)?
+
+pub fn truthy(Json?) -> Bool
+
+pub fn unquote(String) -> String
 
 // Errors
 pub(all) suberror FlowError {
@@ -46,18 +79,37 @@ pub struct FlowDb {
   edges : Array[Edge]
   classes : Map[String, StyleClass]
   sub_graphs : Array[SubGraph]
+  sub_graph_lookup : Map[String, SubGraph]
   tooltips : Map[String, String]
   mut acc_title : String
   mut acc_description : String
   mut title : String
   // private fields
 }
+pub fn FlowDb::add_class(Self, String, Array[String]) -> Unit
+pub fn FlowDb::add_link(Self, Array[String], Array[String], Json) -> Unit raise
+pub fn FlowDb::annotate_edge(Self, String, Map[String, Json]?) -> Bool
+pub fn FlowDb::annotate_sub_graph(Self, String, Map[String, Json]?) -> Bool
+pub fn FlowDb::compiled_styles(Self, Array[String]) -> Array[String]
+pub fn FlowDb::count_vertex(Self) -> Unit
+pub fn FlowDb::declare_vertex(Self, String, text? : (String, String), shape? : String, style? : Array[String], dom_prefix? : String) -> Vertex
 pub fn FlowDb::default_interpolate(Self) -> String?
 pub fn FlowDb::default_style(Self) -> Array[String]?
 pub fn FlowDb::direction(Self) -> String?
 pub fn FlowDb::dump(Self) -> Json
 pub fn FlowDb::is_sub_graph(Self, String) -> Bool
+pub fn FlowDb::lexer_hook(Self, Int, @jison.Lexer) -> @jison.HookResult
+pub fn FlowDb::new(@config.Config) -> Self
+pub fn FlowDb::sanitize_text(Self, String) -> String
+pub fn FlowDb::set_class(Self, String, String) -> Unit
+pub fn FlowDb::set_click_event(Self, String) -> Unit
+pub fn FlowDb::set_direction(Self, String) -> Unit
+pub fn FlowDb::set_link(Self, String, String, String?) -> Unit
 pub fn FlowDb::set_title(Self, String) -> Unit
+pub fn FlowDb::set_tooltip(Self, String, String) -> Unit
+pub fn FlowDb::update_link(Self, Array[Int?], Array[String]) -> Unit raise
+pub fn FlowDb::update_link_interpolate(Self, Array[Int?], String) -> Unit raise FlowError
+pub fn FlowDb::vertex_counter(Self) -> Int
 
 pub struct StyleClass {
   id : String
@@ -65,17 +117,17 @@ pub struct StyleClass {
   text_styles : Array[String]
 }
 
-pub struct SubGraph {
+pub(all) struct SubGraph {
   id : String
   nodes : Array[String]
-  title : String
+  mut title : String
   classes : Array[String]
-  dir : String?
+  mut dir : String?
   label_type : String
   metadata : Map[String, Json]
 }
 
-pub struct Vertex {
+pub(all) struct Vertex {
   id : String
   dom_id : String
   mut text : String?
@@ -94,6 +146,7 @@ pub struct Vertex {
   mut asset_width : Double?
   mut asset_height : Double?
 }
+pub fn Vertex::new(String, String) -> Self
 
 // Type aliases
 

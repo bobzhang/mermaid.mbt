@@ -4,7 +4,11 @@
 ///|
 /// A column with its title at the top, which the diagram stretches over
 /// its items afterwards. The size of the title is recorded on the node.
-fn kanban_section(parent : @dom.Element, node : Node, env : Env) -> Unit {
+fn kanban_section(
+  parent : @dom.Element,
+  node : Node,
+  env : Env,
+) -> ClusterFrame {
   let styles = node_styles(node)
   let shape_svg = parent
     .append("g")
@@ -105,6 +109,9 @@ fn kanban_section(parent : @dom.Element, node : Node, env : Env) -> Unit {
       point,
     )
   })
+  // Without a padding, upstream's `diff` is not a number; no layout
+  // reads it.
+  { outline: frame, diff: None, width: Some(frame_box.width), }
 }
 
 ///|

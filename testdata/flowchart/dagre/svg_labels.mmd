@@ -1,0 +1,16 @@
+---
+config:
+  handDrawnSeed: 7
+  layout: dagre
+  htmlLabels: false
+---
+flowchart TD
+  A[Plain text] --> B[A label<br/>on two lines]
+  A -- with text --> C
+  B --> C
+  C --> C
+  subgraph G [Group]
+    C
+    D
+  end
+  D --> A

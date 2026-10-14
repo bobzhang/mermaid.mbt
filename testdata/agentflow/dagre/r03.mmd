@@ -1,0 +1,14 @@
+---
+config:
+  handDrawnSeed: 1
+  layout: dagre
+---
+agentflow-beta LR
+  n0["summarise the results"]@{ shape: refdoc }
+  n1["send"]@{ shape: decision }
+  n2["send"]@{ shape: input }
+  n0 --x n1
+  n0 --x n2
+  n2 --x n1
+  n0 -.- n0
+  n0 --x n2

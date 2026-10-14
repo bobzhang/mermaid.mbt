@@ -1,0 +1,7 @@
+Parsing failed:  Parse error on line 2, column 8: Expecting: one of these possible Token sequences:
+  1. [ABNF_STRING]
+  2. [ABNF_NUMVAL]
+  3. [ABNF_RULENAME]
+  4. [(]
+  5. [[]
+but found: '*3'

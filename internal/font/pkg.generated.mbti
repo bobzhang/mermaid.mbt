@@ -21,6 +21,12 @@ pub(all) enum Baseline {
 } derive(Eq)
 pub fn Baseline::from_css(String) -> Self
 
+pub(all) struct Chunk {
+  text : String
+  x : Double
+  y : Double
+}
+
 pub struct Face {
   // private fields
 }
@@ -41,6 +47,7 @@ pub struct Stack {
 }
 pub fn Stack::advance(Self, StringView, Double) -> Double
 pub fn Stack::bbox(Self, StringView, Double, baseline? : Baseline) -> Rect
+pub fn Stack::chunks_box(Self, Array[Chunk], Double, anchor? : String, baseline? : Baseline, scale? : Double) -> Rect
 pub fn Stack::covers(Self, StringView) -> Bool
 pub fn Stack::default(bold? : Bool, italic? : Bool) -> Self
 pub fn Stack::first_uncovered(Self, StringView) -> Char?

@@ -1,0 +1,4 @@
+Parsing failed:  Parse error on line 3, column 6: Expecting token of type 'EM_ID' but found `{
+  a: 1
+}
+`.

@@ -71,6 +71,7 @@ fn RequirementDb::layout_data(
           },
         ],
         look~,
+        labelpos="c",
       ),
     )
   }

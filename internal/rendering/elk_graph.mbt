@@ -237,7 +237,9 @@ fn subgraph_layout_options(
   )
   options["elk.layered.nodePlacement.networkSimplex.nodeFlexibility"] = "PORT_POSITION"
   options["elk.spacing.portsSurrounding"] = Json::string(PORTS_SURROUNDING)
-  if node.node.dir is Some(dir) {
+  if container_algorithm(node.node) is Some(container) {
+    apply_container_algorithm(options, node, container)
+  } else if node.node.dir is Some(dir) {
     // A subgraph with its own direction is laid out on its own.
     options["elk.algorithm"] = Json::string(algorithm)
     options["elk.direction"] = Json::string(dir_to_elk_direction(dir))
@@ -323,6 +325,7 @@ fn include_children(
   ancestor : String,
 ) -> Unit {
   guard node_db.get(id) is Some(node) else { return }
+  drop_container_algorithm(node)
   node.layout_options["elk.hierarchyHandling"] = "INCLUDE_CHILDREN"
   if node.node.id != ancestor && node.node.parent_id is Some(parent) {
     include_children(node_db, parent, ancestor)

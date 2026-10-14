@@ -1,0 +1,38 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/diagrams/agentflow"
+
+import {
+  "bobzhang/mermaid/config",
+  "bobzhang/mermaid/diagram",
+  "bobzhang/mermaid/diagrams/flowchart",
+  "bobzhang/mermaid/internal/rendering",
+  "bobzhang/mermaid/theme",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn draw(AgentDb, @diagram.Context) -> Unit raise @rendering.LayoutError
+
+pub fn parse(String, @config.Config) -> AgentDb raise
+
+pub fn styles(@theme.Theme, String, String) -> String
+
+// Errors
+pub(all) suberror AgentflowError {
+  AgentflowError(String)
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+pub struct AgentDb {
+  flow : @flowchart.FlowDb
+  mut acc_title : String
+  mut acc_description : String
+  mut title : String
+  // private fields
+}
+pub fn AgentDb::direction(Self) -> String?
+pub fn AgentDb::set_title(Self, String) -> Unit
+
+// Type aliases
+
+// Traits

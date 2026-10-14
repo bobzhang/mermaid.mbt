@@ -1,0 +1,47 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/diagrams/treeview"
+
+import {
+  "bobzhang/mermaid/diagram",
+  "bobzhang/mermaid/theme",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn draw(TreeView, @diagram.Context) -> Unit raise
+
+pub fn parse(String) -> TreeView raise
+
+pub fn styles(@theme.Theme) -> String
+
+// Errors
+pub(all) suberror TreeViewError {
+  TreeViewError(String)
+} derive(Eq, @debug.Debug)
+
+pub(all) suberror Unsupported {
+  Unsupported(String)
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+pub struct Node {
+  id : Int
+  level : Int
+  name : String
+  directory : Bool
+  icon : String?
+  css_class : String?
+  description : String?
+  children : Array[Node]
+}
+
+pub struct TreeView {
+  root : Node
+  mut acc_title : String
+  mut acc_description : String
+  // private fields
+}
+
+// Type aliases
+
+// Traits

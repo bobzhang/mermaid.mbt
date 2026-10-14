@@ -1,0 +1,17 @@
+wardley-beta
+title Pipeline Evolution
+component Database [0.40, 0.60]
+component App [0.8, 0.3]
+pipeline Database {
+  component "File System" [0.25]
+  component "SQL DB" [0.50] label [-10, 20]
+
+  component NoSQL [0.70]
+  component "Cloud DB" [0.85]
+}
+App -> Database
+App -> NoSQL
+"SQL DB" -> Database
+Database -> "Cloud DB"
+Database_NoSQL -> App; by id
+evolve Database 0.9

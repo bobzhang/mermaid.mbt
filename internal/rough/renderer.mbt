@@ -13,7 +13,7 @@ priv enum Op {
 priv enum SetKind {
   Stroke
   FillPath
-  /// The lines of a hachure fill.
+  /// The lines of a sketchy fill, stroked in the fill colour.
   FillSketch
 }
 
@@ -78,18 +78,16 @@ fn line_ops(
 }
 
 ///|
-/// A line drawn twice unless multi-stroke is off (for the lines of a
-/// fill, `disable_multi_stroke_fill`): `_doubleLine`.
+/// A line drawn twice unless multi-stroke is off: `_doubleLine`.
 fn double_line(
   x1 : Double,
   y1 : Double,
   x2 : Double,
   y2 : Double,
   o : Options,
-  fill~ : Bool = false,
 ) -> Array[Op] {
   let first = line_ops(x1, y1, x2, y2, o, true, false)
-  if (if fill { o.disable_multi_stroke_fill } else { o.disable_multi_stroke }) {
+  if o.disable_multi_stroke {
     return first
   }
   first.append(line_ops(x1, y1, x2, y2, o, true, true))

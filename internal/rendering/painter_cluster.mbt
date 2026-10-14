@@ -11,7 +11,7 @@ pub fn Painter::insert_cluster(
   parent : @dom.Element,
   node : Node,
 ) -> @dom.Element raise LayoutError {
-  insert_cluster_shape(parent, node, self.env)
+  insert_cluster_shape(parent, node, self.env) |> ignore
   guard parent.child_elements().last() is Some(element) else {
     raise LayoutError("A cluster shape that draws nothing.")
   }
