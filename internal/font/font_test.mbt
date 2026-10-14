@@ -68,3 +68,62 @@ test "bold and italic faces" {
     ),
   )
 }
+
+///|
+test "sans-serif is Helvetica, with the ascent Blink raises on macOS" {
+  let font = @font.Stack::for_family("\"Open Sans\", sans-serif")
+  debug_inspect(
+    font.bbox("x x", 14.0),
+    content="{ x: 0, y: -13, width: 17.890625, height: 16 }",
+  )
+  debug_inspect(
+    font.bbox("x x", 11.48),
+    content="{ x: 0, y: -11, width: 14.671875, height: 14 }",
+  )
+  debug_inspect(
+    font.bbox("x x", 10.5),
+    content="{ x: 0, y: -10, width: 13.421875, height: 12 }",
+  )
+}
+
+///|
+test "Helvetica joins fi into one glyph" {
+  let font = @font.Stack::for_family("Helvetica")
+  inspect(font.advance("fi", 100.0), content="50")
+  // The ligature's ink ends where the dot of a separate `i` would not.
+  debug_inspect(
+    font.ink("fi", 100.0),
+    content=(
+      #|{
+      #|  x: 1.3671875,
+      #|  y: -72.75390625,
+      #|  width: 41.9921875,
+      #|  height: 72.75390625,
+      #|}
+    ),
+  )
+  inspect(font.advance("ffi", 14.0), content="10.890625")
+}
+
+///|
+test "kerning from a kern table is shared between the two glyphs" {
+  // `A` and the space after it kern; each word takes half.
+  let helvetica = @font.Stack::for_family("sans-serif")
+  debug_inspect(
+    helvetica.item_advances(["A", " cat"], 14.0),
+    content="[8.96875, 22.1875]",
+  )
+  debug_inspect(
+    helvetica.item_advances(["xA", " Ax"], 11.48),
+    content="[13.09375, 15.65625]",
+  )
+  let trebuchet = @font.Stack::default()
+  debug_inspect(
+    trebuchet.item_advances(["A", " cat"], 14.0),
+    content="[7.875, 23.671875]",
+  )
+  debug_inspect(
+    trebuchet.item_advances(["L", " x"], 16.0),
+    content="[7.8125, 12.546875]",
+  )
+}

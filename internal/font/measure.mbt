@@ -38,8 +38,18 @@ fn ceil_layout_unit(value : Float) -> Double {
 
 ///|
 /// Font ascent and descent in pixels. Blink rounds each to a whole pixel.
+/// On macOS it then raises the ascent of Helvetica, Times and Courier by
+/// 15% of the line, to match the metrics of their Windows counterparts.
 pub fn Face::ascent(self : Face, size : Double) -> Double {
-  round_half_up(self.ascent.to_double() * size / self.units_per_em.to_double())
+  let ascent = round_half_up(
+    self.ascent.to_double() * size / self.units_per_em.to_double(),
+  )
+  if self.mac_ascent {
+    let line = Float::from_double(ascent + self.descent(size))
+    ascent + (line * 0.15 + 0.5).to_double().floor()
+  } else {
+    ascent
+  }
 }
 
 ///|
@@ -164,13 +174,9 @@ fn Stack::shape(self : Stack, text : StringView, size : Double) -> Shaped {
   let size = effective_size(size)
   let shaped = { pen: 0.0, ink: { x: 0.0, y: 0.0, width: 0.0, height: 0.0, }, }
   let mut previous : (Face, Glyph)? = None
-  for c in text {
-    let face = self.face_for(c)
-    guard face.glyphs.get(c.to_int()) is Some(glyph) else {
-      // No embedded face has this character. The reference browser would
-      // use a system fallback font; approximate with half or a full em.
-      let em = if c.to_int() >= 0x1100 { 1.0 } else { 0.5 }
-      shaped.pen = shaped.pen + Float::from_double(size * em)
+  for cluster in self.clusters(text) {
+    guard cluster is Drawn(face, glyph) else {
+      shaped.pen = shaped.pen + Float::from_double(size * cluster.missing_em())
       previous = None
       continue
     }
@@ -181,18 +187,15 @@ fn Stack::shape(self : Stack, text : StringView, size : Double) -> Shaped {
         Float::from_int(face.scale_fixed(adjust, size)) / HB_ONE
     }
     if glyph.x_min != glyph.x_max || glyph.y_min != glyph.y_max {
-      // Skia receives the box from CoreText as origin and size in
-      // doubles, converts each to a float and adds them up again.
-      let scale = size / face.units_per_em.to_double()
-      let x = Float::from_double(glyph.x_min.to_double() * scale)
-      let y = Float::from_double(-glyph.y_max.to_double() * scale)
-      let width = Float::from_double(
-        (glyph.x_max - glyph.x_min).to_double() * scale,
-      )
-      let height = Float::from_double(
-        (glyph.y_max - glyph.y_min).to_double() * scale,
-      )
-      let bounds = RectF::from_edges(x, y, x + width, y + height)
+      // Skia asks CoreText for the box at its own font size, a float, and
+      // converts the edges of the answer, which is in doubles, to floats.
+      let scale = Float::from_double(size).to_double() /
+        face.units_per_em.to_double()
+      let left = Float::from_double(glyph.x_min.to_double() * scale)
+      let top = Float::from_double(-glyph.y_max.to_double() * scale)
+      let right = Float::from_double(glyph.x_max.to_double() * scale)
+      let bottom = Float::from_double(-glyph.y_min.to_double() * scale)
+      let bounds = RectF::from_edges(left, top, right, bottom)
       shaped.ink = shaped.ink.union({ ..bounds, x: bounds.x + shaped.pen, })
     }
     shaped.pen = shaped.pen +
@@ -200,6 +203,55 @@ fn Stack::shape(self : Stack, text : StringView, size : Double) -> Shaped {
     previous = Some((face, glyph))
   }
   shaped
+}
+
+///|
+/// What draws one or two characters of a text.
+priv enum Cluster {
+  /// A glyph of an embedded face.
+  Drawn(Face, Glyph)
+  /// A character no embedded face has. The reference browser would use a
+  /// system fallback font.
+  Missing(Char)
+}
+
+///|
+/// How wide a character without a glyph is taken to be, in ems: an
+/// approximation of the fallback font, half an em or a full one.
+fn Cluster::missing_em(self : Cluster) -> Double {
+  match self {
+    Missing(c) if c.to_int() >= 0x1100 => 1.0
+    _ => 0.5
+  }
+}
+
+///|
+/// The glyphs `text` is drawn with: one per character, except where a
+/// face joins two characters into a ligature.
+fn Stack::clusters(self : Stack, text : StringView) -> Array[Cluster] {
+  let chars = text.to_array()
+  let out : Array[Cluster] = []
+  let mut index = 0
+  while index < chars.length() {
+    let c = chars[index]
+    let face = self.face_for(c)
+    index += 1
+    guard face.glyphs.get(c.to_int()) is Some(glyph) else {
+      out.push(Missing(c))
+      continue
+    }
+    if index < chars.length() &&
+      face.ligatures.get(c.to_int() * 65536 + chars[index].to_int())
+      is Some(joined) &&
+      physical_equal(self.face_for(chars[index]), face) &&
+      face.glyphs.get(joined) is Some(ligature) {
+      out.push(Drawn(face, ligature))
+      index += 1
+      continue
+    }
+    out.push(Drawn(face, glyph))
+  }
+  out
 }
 
 ///|
@@ -212,8 +264,9 @@ pub fn Stack::advance(self : Stack, text : StringView, size : Double) -> Double 
 ///|
 /// The widths of consecutive pieces of text shaped as one run, as SVG
 /// text lays out the `<tspan>`s of a line: kerning reaches across the
-/// pieces (the adjustment belongs to the earlier glyph), and every piece
-/// takes whole layout units.
+/// pieces, and every piece takes whole layout units. An adjustment from
+/// GPOS belongs to the earlier glyph; one from a `kern` table is halved
+/// between the two glyphs, the earlier one taking the half rounded down.
 pub fn Stack::item_advances(
   self : Stack,
   items : Array[String],
@@ -223,19 +276,22 @@ pub fn Stack::item_advances(
   let sums : Array[Float] = items.map(_ => 0.0)
   let mut previous : (Face, Glyph, Int32)? = None
   for index, item in items {
-    for c in item {
-      let face = self.face_for(c)
-      guard face.glyphs.get(c.to_int()) is Some(glyph) else {
-        let em = if c.to_int() >= 0x1100 { 1.0 } else { 0.5 }
-        sums[index] = sums[index] + Float::from_double(size * em)
+    for cluster in self.clusters(item) {
+      guard cluster is Drawn(face, glyph) else {
+        sums[index] = sums[index] +
+          Float::from_double(size * cluster.missing_em())
         previous = None
         continue
       }
       if previous is Some((left_face, left, left_index)) &&
         physical_equal(left_face, face) &&
         face.kerning.get(left.id * 65536 + glyph.id) is Some(adjust) {
-        sums[left_index] = sums[left_index] +
-          Float::from_int(face.scale_fixed(adjust, size)) / HB_ONE
+        let kern = face.scale_fixed(adjust, size)
+        let earlier = if face.split_kerning { kern >> 1 } else { kern }
+        sums[left_index] = sums[left_index] + Float::from_int(earlier) / HB_ONE
+        if kern != earlier {
+          sums[index] = sums[index] + Float::from_int(kern - earlier) / HB_ONE
+        }
       }
       sums[index] = sums[index] +
         Float::from_int(face.advance_fixed(glyph.advance, size)) / HB_ONE
@@ -293,9 +349,9 @@ pub fn Stack::bbox(self : Stack, text : StringView, size : Double) -> Rect {
 ///|
 /// The stack a CSS `font-family` list resolves to in the reference
 /// environment. Families that are not installed there are skipped; of the
-/// installed ones, Trebuchet MS, Verdana and Arial are embedded. A list
-/// naming none of them falls back to Arial, the closest embedded face to
-/// the system sans-serif.
+/// installed ones, Trebuchet MS, Verdana, Arial and Helvetica are
+/// embedded, and `sans-serif` is Helvetica there. A list naming none of
+/// them falls back to Arial.
 pub fn Stack::for_family(
   family : String,
   bold~ : Bool = false,
@@ -315,7 +371,8 @@ pub fn Stack::for_family(
           },
         )
       "verdana" => Some(if bold { verdana_bold } else { verdana_regular })
-      "arial" | "helvetica" | "sans-serif" => Some(arial(bold, italic))
+      "arial" => Some(arial(bold, italic))
+      "helvetica" | "sans-serif" => Some(helvetica(bold, italic))
       _ => None
     }
     if face is Some(face) && !faces.iter().any(f => physical_equal(f, face)) {
@@ -326,6 +383,16 @@ pub fn Stack::for_family(
     faces.push(arial(bold, italic))
   }
   { faces, }
+}
+
+///|
+fn helvetica(bold : Bool, italic : Bool) -> Face {
+  match (bold, italic) {
+    (false, false) => helvetica_regular
+    (true, false) => helvetica_bold
+    (false, true) => helvetica_italic
+    (true, true) => helvetica_bold_italic
+  }
 }
 
 ///|

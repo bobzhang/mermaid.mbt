@@ -4,7 +4,8 @@
 mermaid sizes boxes from the browser's text measurements, so byte-identical
 output needs the metrics of the fonts the reference browser resolves the
 default font stack to: `"trebuchet ms", verdana, arial, sans-serif` on
-macOS. This script reads those TrueType files and writes, per face, the
+macOS, and of Helvetica, which is what a bare `sans-serif` resolves to
+there. This script reads those TrueType files and writes, per face, the
 advance width, ink bounds and kerning pairs of every mapped glyph to
 `internal/font/gen_<face>.mbt`.
 
@@ -19,7 +20,14 @@ import struct
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 FONT_DIR = pathlib.Path("/System/Library/Fonts/Supplemental")
 
-# (identifier, file). The identifier names the generated value.
+SYSTEM_FONT_DIR = pathlib.Path("/System/Library/Fonts")
+
+# (identifier, file[, options]). The identifier names the generated value.
+# Options: `index` picks a face of a TrueType collection; `mac_ascent`
+# marks the families whose ascent Blink raises on macOS; `ligatures` lists
+# the pairs the font's `morx` table joins by default, with the code point
+# of the joined glyph.
+HELVETICA = {"dir": SYSTEM_FONT_DIR, "mac_ascent": True, "ligatures": [("f", "i", 0xFB01), ("f", "l", 0xFB02)]}
 FACES = [
     ("trebuchet_regular", "Trebuchet MS.ttf"),
     ("trebuchet_bold", "Trebuchet MS Bold.ttf"),
@@ -31,6 +39,10 @@ FACES = [
     ("arial_bold", "Arial Bold.ttf"),
     ("arial_italic", "Arial Italic.ttf"),
     ("arial_bold_italic", "Arial Bold Italic.ttf"),
+    ("helvetica_regular", "Helvetica.ttc", {"index": 0, **HELVETICA}),
+    ("helvetica_bold", "Helvetica.ttc", {"index": 1, **HELVETICA}),
+    ("helvetica_italic", "Helvetica.ttc", {"index": 2, **HELVETICA}),
+    ("helvetica_bold_italic", "Helvetica.ttc", {"index": 3, **HELVETICA}),
 ]
 
 # Code points kept from each face: Basic Latin through Latin Extended-A,
@@ -41,12 +53,14 @@ RANGES = [(0x20, 0x17F), (0xFB00, 0xFB06), (0x2000, 0x206F), (0x20A0, 0x20BF), (
 
 
 class Font:
-    def __init__(self, data):
+    def __init__(self, data, index=0):
         self.data = data
-        count = struct.unpack(">H", data[4:6])[0]
+        # A collection starts with the offsets of its faces.
+        start = struct.unpack(">I", data[12 + 4 * index:16 + 4 * index])[0] if data[:4] == b"ttcf" else 0
+        count = struct.unpack(">H", data[start + 4:start + 6])[0]
         self.tables = {}
         for i in range(count):
-            tag, _, offset, length = struct.unpack(">4sIII", data[12 + 16 * i:28 + 16 * i])
+            tag, _, offset, length = struct.unpack(">4sIII", data[start + 12 + 16 * i:start + 28 + 16 * i])
             self.tables[tag.decode()] = (offset, length)
 
     def table(self, tag):
@@ -61,13 +75,15 @@ class Font:
         return ascent, -descent
 
     def cmap(self):
-        """Map code points to glyph ids from the Windows Unicode BMP subtable."""
+        """Map code points to glyph ids from the Unicode BMP subtable."""
         table = self.table("cmap")
         count = struct.unpack(">H", table[2:4])[0]
         offset = None
         for i in range(count):
             platform, encoding, sub = struct.unpack(">HHI", table[4 + 8 * i:12 + 8 * i])
-            if (platform, encoding) == (3, 1):
+            # Windows Unicode BMP, or the Unicode platform's BMP table in
+            # fonts that have no Windows one.
+            if (platform, encoding) == (3, 1) or ((platform, encoding) == (0, 3) and offset is None):
                 offset = sub
         if offset is None or struct.unpack(">H", table[offset:offset + 2])[0] != 4:
             raise ValueError("no format 4 Unicode cmap")
@@ -120,6 +136,8 @@ class Font:
         if "kern" not in self.tables:
             return {}
         table = self.table("kern")
+        if table[:4] == b"\x00\x01\x00\x00":
+            return self.apple_kerning(table)
         count = struct.unpack(">H", table[2:4])[0]
         pairs, position = {}, 4
         for _ in range(count):
@@ -132,6 +150,21 @@ class Font:
             position += length
         return pairs
 
+
+    def apple_kerning(self, table):
+        """Pairs of the format 0 subtables of a version 1 (Apple) `kern` table."""
+        count = struct.unpack(">I", table[4:8])[0]
+        pairs, position = {}, 8
+        for _ in range(count):
+            length, coverage, _ = struct.unpack(">IHH", table[position:position + 8])
+            # Horizontal, not cross-stream, not a variation; format 0.
+            if coverage == 0:
+                n = struct.unpack(">H", table[position + 8:position + 10])[0]
+                for i in range(n):
+                    left, right, value = struct.unpack(">HHh", table[position + 16 + 6 * i:position + 22 + 6 * i])
+                    pairs[(left, right)] = pairs.get((left, right), 0) + value
+            position += length
+        return pairs
 
     def gpos_kerning(self):
         """Pair adjustments of the GPOS `kern` feature, or None without one.
@@ -230,8 +263,9 @@ def keep(code):
     return any(low <= code <= high for low, high in RANGES)
 
 
-def emit(ident, filename):
-    font = Font((FONT_DIR / filename).read_bytes())
+def emit(ident, filename, options=None):
+    options = options or {}
+    font = Font((options.get("dir", FONT_DIR) / filename).read_bytes(), options.get("index", 0))
     cmap = {code: glyph for code, glyph in font.cmap().items() if keep(code)}
     advances = font.advances()
     ascent, descent = font.vertical_metrics()
@@ -241,11 +275,26 @@ def emit(ident, filename):
         glyph = cmap[code]
         x_min, y_min, x_max, y_max = font.bounds(glyph)
         glyph_rows.append(f"    {code}, {glyph}, {advances[glyph]}, {x_min}, {y_min}, {x_max}, {y_max},")
+    gpos = font.gpos_kerning()
     kern_rows = [
         f"    {left}, {right}, {value},"
-        for (left, right), value in sorted((font.gpos_kerning() or font.kerning()).items())
+        for (left, right), value in sorted((gpos or font.kerning()).items())
         if left in kept and right in kept and value
     ]
+    extra = []
+    if "ligatures" in options:
+        extra += [
+            "  // first code point, second code point, code point of the ligature",
+            "  ligatures=[",
+            *[f"    {ord(first)}, {ord(second)}, {joined}," for first, second, joined in options["ligatures"] if joined in cmap],
+            "  ],",
+        ]
+    if options.get("mac_ascent"):
+        extra.append("  mac_ascent=true,")
+    if not gpos and kern_rows:
+        # HarfBuzz splits an adjustment from a `kern` table between the
+        # two glyphs; one from GPOS belongs to the first.
+        extra.append("  split_kerning=true,")
     lines = [
         f"// Generated by scripts/gen_font_metrics.py from {filename}.",
         "// Do not edit by hand.",
@@ -263,6 +312,7 @@ def emit(ident, filename):
         "  kerning=[",
         *kern_rows,
         "  ],",
+        *extra,
         ")",
         "",
     ]
@@ -272,8 +322,8 @@ def emit(ident, filename):
 
 
 def main():
-    for ident, filename in FACES:
-        emit(ident, filename)
+    for face in FACES:
+        emit(*face)
 
 
 if __name__ == "__main__":
