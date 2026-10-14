@@ -1,0 +1,7 @@
+---
+config:
+  handDrawnSeed: 7
+---
+classDiagram
+    Warehouse "exactly one warehouse" --> "zero or more items" Item : stores things
+    Item "a" <-- "b" Supplier

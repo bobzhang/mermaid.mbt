@@ -50,6 +50,63 @@ fn has_edge_label(edge : Edge) -> Bool {
 }
 
 ///|
+/// Create and measure every label of an edge: mermaid's `insertEdgeLabel`.
+/// Returns the group of the centre label.
+fn insert_edge_labels(
+  group : @dom.Element,
+  edge : Edge,
+  base_env : Env,
+  env : Env,
+  diagram_type : String,
+) -> @dom.Element {
+  let edge_label = if edge.label == "" && !env.html_labels {
+    insert_empty_text_label(group, edge)
+  } else {
+    insert_edge_label(group, edge, base_env, env)
+  }
+  insert_terminal_labels(group, edge, {
+    ..base_env,
+    font_size: terminal_label_font_size(diagram_type, base_env.font_size),
+  })
+  edge_label
+}
+
+///|
+/// The centre label of an edge that only has terminal labels, as SVG
+/// text. Upstream makes the label inside the group of all edge labels and
+/// moves what the label code returns into the label's own group: without
+/// text that is the `<text>` alone, and the group made around it stays
+/// behind with its background rectangle.
+fn insert_empty_text_label(group : @dom.Element, edge : Edge) -> @dom.Element {
+  let edge_label = group.append("g").attr("class", "edgeLabel")
+  let label = edge_label
+    .append("g")
+    .attr("class", "label")
+    .attr("data-id", edge.id)
+  group
+  .append("g")
+  .append("rect")
+  .attr("class", "background")
+  .attr("style", "stroke: none")
+  |> ignore
+  label
+  .append("text")
+  .attr("y", "-10.1")
+  .attr("text-anchor", "middle")
+  .append("tspan")
+  .attr("class", "text-outer-tspan row")
+  .attr("x", "0")
+  .attr("y", "-0.1em")
+  .attr("dy", "1.1em")
+  .attr("text-anchor", "middle")
+  |> ignore
+  label.attr("transform", "translate(0, 0)") |> ignore
+  edge.width = 0.0
+  edge.height = 0.0
+  edge_label
+}
+
+///|
 /// Create and measure the terminal labels of an edge: the second half of
 /// mermaid's `insertEdgeLabel`. Each is a group of its own, centred on
 /// its origin, to be positioned after the layout.

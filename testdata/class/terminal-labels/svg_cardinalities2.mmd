@@ -1,0 +1,15 @@
+---
+config:
+  htmlLabels: false
+  handDrawnSeed: 7
+---
+classDiagram
+    class Order {
+      +int id
+      +total() float
+    }
+    Customer "1" --> "0..*" Order : places
+    Order "1" *-- "1..*" LineItem : contains
+    LineItem "*" --> "1" Product
+    Order "0..1" o-- "1" Payment : settled by
+    Product "many" <|-- "one" Book

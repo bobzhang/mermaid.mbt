@@ -164,13 +164,13 @@ pub fn render(data : LayoutData, svg : @dom.Element) -> Unit raise LayoutError {
     // Line breaks in edge labels are plain newlines from here on.
     edge.label = normalize_breaks(edge.label)
     if has_edge_label(edge) {
-      label_elements[edge.id] = insert_edge_label(
-        edge_labels, edge, env, label_env,
+      label_elements[edge.id] = insert_edge_labels(
+        edge_labels,
+        edge,
+        env,
+        label_env,
+        data.diagram_type,
       )
-      insert_terminal_labels(edge_labels, edge, {
-        ..env,
-        font_size: terminal_label_font_size(data.diagram_type, env.font_size),
-      })
     }
   }
   // Lay out.
