@@ -1,0 +1,15 @@
+---
+config:
+  htmlLabels: false
+  handDrawnSeed: 7
+---
+classDiagram
+class Shape
+class Shape2
+class Shape3
+class Shape4
+link Shape "https://www.github.com" "This is a tooltip for a link"
+click Shape2 href "https://www.github.com" "This is a tooltip for a link" _blank
+callback Shape3 "callbackFunction" "This is a tooltip for a callback"
+click Shape4 call callbackFunction() "This is a tooltip for a callback"
+Shape --> Shape2

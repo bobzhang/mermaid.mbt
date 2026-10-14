@@ -432,6 +432,7 @@ fn apply_edge_layout(
   if !(data.config.get("elk.straightenEdges") is False) {
     straighten_edge_terminals(data.edges)
   }
+  settle_terminal_labels(data.edges, data.nodes)
   separate_opposite_edge_labels(data.edges)
 }
 

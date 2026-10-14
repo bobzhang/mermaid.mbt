@@ -1,0 +1,18 @@
+---
+config:
+  handDrawnSeed: 7
+  look: classic
+---
+classDiagram
+  class A {
+    +int x
+    +run()
+  }
+  class B
+  A <|-- B : extends
+  A *-- C
+  B ..> C : uses
+  note for A "a note"
+  namespace N {
+    class C
+  }

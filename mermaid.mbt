@@ -426,6 +426,35 @@ fn parse_diagram(
         },
       }
     }
+    "classDiagram" => {
+      let db = @classdiagram.parse(code, config) catch {
+        @jison.ParseError(message~, ..) => raise Syntax(message)
+        @classdiagram.Invalid(message) => raise Syntax(message)
+        @classdiagram.Unsupported(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      if title is Some(title) {
+        db.set_title(title)
+      }
+      // Upstream hands the classes themselves to the code that writes
+      // rules for `classDef`s: a class with styles gets rules under its
+      // own name.
+      let classes = db.styled_classes() catch {
+        @classdiagram.Invalid(message) => raise Syntax(message)
+        @classdiagram.Unsupported(message) => raise Unsupported(message)
+      }
+      {
+        styles: @classdiagram.styles(config),
+        acc_title: db.acc_title,
+        acc_description: db.acc_description,
+        classes: classes.map(c => { id: c.0, styles: c.1, text_styles: [], }),
+        draw: context => {
+          @classdiagram.draw(db, context) catch {
+            @rendering.LayoutError(message) => raise Unsupported(message)
+          }
+        },
+      }
+    }
     other => raise Unsupported(other)
   }
 }

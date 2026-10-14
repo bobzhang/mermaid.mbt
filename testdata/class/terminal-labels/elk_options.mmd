@@ -1,0 +1,14 @@
+---
+config:
+  handDrawnSeed: 7
+  elk:
+    mergeEdges: true
+    nodePlacementStrategy: SIMPLE
+---
+classDiagram
+    A --> B
+    A --> C
+    A --> D : x
+    B --> D
+    C --> D
+    A "1" --> "n" E

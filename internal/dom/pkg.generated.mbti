@@ -16,11 +16,16 @@ pub fn path_length(String) -> Double
 
 pub fn placeholders_to_references(String) -> String
 
+pub fn sanitize_fragment(String) -> String raise SanitizeError
+
 pub fn sanitized_text(String) -> String
 
 pub fn serialize_declarations(String) -> String
 
 // Errors
+pub(all) suberror SanitizeError {
+  Unmodelled(String)
+} derive(Eq, @debug.Debug)
 
 // Types and methods
 pub struct Element {

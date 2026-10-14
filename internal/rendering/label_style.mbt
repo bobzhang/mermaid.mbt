@@ -87,7 +87,7 @@ fn edge_label_font_size(diagram_type : String, font_size : Double) -> Double {
 /// Whether the diagram's stylesheet centres the SVG text of node labels
 /// on its position (`.node .label text { text-anchor: middle }`).
 fn node_text_centred(diagram_type : String) -> Bool {
-  !(diagram_type is ("er" | "requirement" | "stateDiagram"))
+  !(diagram_type is ("er" | "requirement" | "stateDiagram" | "classDiagram"))
 }
 
 ///|
@@ -138,4 +138,23 @@ fn label_font(style : String) -> LabelFont {
     }
   }
   { bold, italic, size, }
+}
+
+///|
+/// Whether an inline label style has `white-space: nowrap`.
+fn keeps_on_one_line(style : String) -> Bool {
+  for declaration in style.split(";") {
+    guard declaration.find(":") is Some(colon) else { continue }
+    let name = declaration[:colon].trim().to_owned().to_lower()
+    let value = declaration[colon + 1:]
+      .to_owned()
+      .replace(old="!important", new="")
+      .trim()
+      .to_owned()
+      .to_lower()
+    if name == "white-space" && value == "nowrap" {
+      return true
+    }
+  }
+  false
 }

@@ -1,0 +1,49 @@
+---
+config:
+  handDrawnSeed: 3
+---
+classDiagram
+  namespace Pkg {
+    class Customer
+    class Policy
+  }
+  class Customer {
+    <<enumeration>>
+    ~int name$
+    ~float name$
+    -List~int~ total
+    -stop(a, b)
+    +run(a) bool*
+    get(a, b) bool$
+  }
+  class Policy {
+    #int size
+  }
+  class Product {
+    ~int items$
+    -int items$
+    #compute(List~int~ xs)
+    #stop(List~int~ xs) bool
+    get(a, b)
+  }
+  class Route {
+    -float items
+    Map~K, V~ total
+    ~bool id
+    #stop(a, b) int
+    #run()*
+    compute(List~int~ xs) bool
+  }
+  class Group {
+    ~bool total
+    +String items$
+  }
+  Group <--> "*" Policy : contains many
+  Route --|> "n" Group : uses
+  Policy <.. Group
+  Route --> Product : is a
+  Policy "many" .. Group : contains many
+  Group <|.. Customer : x
+  Route "n" <.. Group
+  note for Group "a note\nfor it"
+  Policy --() Iface

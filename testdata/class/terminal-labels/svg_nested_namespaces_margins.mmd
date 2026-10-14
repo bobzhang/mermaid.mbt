@@ -1,0 +1,16 @@
+---
+config:
+  handDrawnSeed: 3
+  htmlLabels: false
+---
+classDiagram
+  namespace N0["A label"] {
+    class Cat {
+    }
+  }
+  namespace Stock.Items["A label"] {
+    class Car
+    class Dog
+  }
+  Car "1" --|> "1..*" Engine
+  Order "0..1" ..> Dog

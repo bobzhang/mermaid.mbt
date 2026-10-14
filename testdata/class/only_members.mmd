@@ -1,0 +1,26 @@
+---
+config:
+  handDrawnSeed: 7
+---
+classDiagram
+    class OnlyAttrs {
+      +int a
+      +int b
+    }
+    class OnlyMethods {
+      +run()
+      +stop()
+    }
+    class OnlyAnnotation {
+      <<enum>>
+    }
+    class AnnotationAndMethod {
+      <<service>>
+      +run()
+    }
+    class AnnotationAndAttr {
+      <<entity>>
+      +int id
+    }
+    class Empty {
+    }

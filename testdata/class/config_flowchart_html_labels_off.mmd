@@ -1,0 +1,18 @@
+---
+config:
+  handDrawnSeed: 7
+  flowchart:
+    htmlLabels: false
+---
+classDiagram
+    class A {
+      +int x
+      +run()
+    }
+    namespace N {
+      class B
+    }
+    A --> B : uses
+    A --() I
+    note for A "a note"
+    note "free"

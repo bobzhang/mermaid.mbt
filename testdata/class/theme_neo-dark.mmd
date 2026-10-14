@@ -1,0 +1,26 @@
+---
+title: Themed
+config:
+  handDrawnSeed: 5
+  theme: neo-dark
+  look: neo
+  htmlLabels: false
+---
+classDiagram
+    class Animal {
+      <<abstract>>
+      +String name
+      -int age$
+      +eat(food) bool
+      +sleep()*
+    }
+    class Dog
+    namespace Farm {
+      class Cow
+    }
+    Animal <|-- Dog : extends
+    Animal *-- Cow : owns
+    Dog ..> Cow
+    Dog --() Pet
+    note for Dog "barks **loudly**"
+    style Dog fill:#f9f,stroke:#333,color:#00f

@@ -1,0 +1,16 @@
+---
+config:
+  handDrawnSeed: 7
+  htmlLabels: false
+  themeVariables:
+    fontSize: 24px
+---
+classDiagram
+    class A["A very long label with many words in it"] {
+      +aVeryLongAttributeName : AVeryLongTypeName with more words after it
+      +method(first parameter, second parameter, third parameter) Return type with words
+      <<some long annotation text>>
+    }
+    class AVeryLongClassNameThatGoesOnAndOnForeverAndEver
+    A --> AVeryLongClassNameThatGoesOnAndOnForeverAndEver : a label that is long enough to wrap around at least once or twice
+    note for A "A note that is long enough to need wrapping if notes wrapped at all, which they do not"
