@@ -9,6 +9,7 @@ let usage : String =
   #|  measure <cases.json>   measure text; cases are {text, size, bold, italic}
   #|  regex <cases.json>     match prefixes; cases are {source, flags, input}
   #|  flow-db <file.mmd>...  print each flowchart's parsed database as JSON
+  #|  bbox <cases.json>      print getBBox() of an <svg> around each markup string
   #|
 
 ///|
@@ -187,6 +188,30 @@ fn flow_db(paths : ArrayView[String]) -> Unit raise CliError {
 }
 
 ///|
+/// Print the box of an `<svg>` element holding each markup string of a
+/// JSON array, as `[x, y, width, height]`, for comparing with `getBBox()`.
+fn bboxes(path : String) -> Unit raise CliError {
+  guard read_json(path) is Array(cases) else {
+    raise CliError("\{path} must hold an array of markup strings", status=2)
+  }
+  let results : Array[Json] = []
+  for item in cases {
+    if item is String(markup) {
+      let svg = @dom.Element::new("svg")
+      svg.set_inner_html(markup)
+      let box = svg.bbox()
+      results.push([
+        Json::number(box.x),
+        Json::number(box.y),
+        Json::number(box.width),
+        Json::number(box.height),
+      ])
+    }
+  }
+  println(Json::array(results).stringify())
+}
+
+///|
 fn main {
   let arguments = @env.args()
   try {
@@ -196,6 +221,7 @@ fn main {
       ["measure", path] => measure(path)
       ["regex", path] => regex(path)
       ["flow-db", .. paths] => flow_db(paths)
+      ["bbox", path] => bboxes(path)
       ["path-length", path] => path_lengths(path)
       _ => println(usage)
     }

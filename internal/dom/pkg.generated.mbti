@@ -36,6 +36,7 @@ pub fn Element::find_by_id(Self, String) -> Self?
 pub fn Element::get_attr(Self, String) -> String?
 pub fn Element::insert_before(Self, Self, Self) -> Unit
 pub fn Element::insert_first(Self, String) -> Self
+pub fn Element::length_attr(Self, String) -> Double?
 pub fn Element::new(String) -> Self
 pub fn Element::parent(Self) -> Self?
 pub fn Element::remove(Self) -> Unit
