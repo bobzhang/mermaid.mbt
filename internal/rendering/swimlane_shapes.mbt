@@ -41,12 +41,15 @@ fn swimlane_cluster(
     value => @config.evaluate(value)
   }
   let (fo, bbox) = if html_labels {
+    // `createText` without `markdown: false` reads every title as
+    // markdown.
     let (fo, box) = create_html_label(
       label_el,
       node.label,
       env,
       width=node_width,
       style=node.label_style,
+      markdown=true,
     )
     fo.attr_number("width", box.width).attr_number("height", box.height)
     |> ignore
@@ -58,6 +61,7 @@ fn swimlane_cluster(
       env,
       width=node_width,
       style=node.label_style,
+      markdown=true,
       anchor_middle=false,
     )
     let box : LabelBox = {
