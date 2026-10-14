@@ -50,10 +50,15 @@ pub fn Face::descent(self : Face, size : Double) -> Double {
 ///|
 /// The size glyphs are actually scaled to: the reference browser drops
 /// everything past the second decimal of a font size. Its font cache keys
-/// faces by the size times a hundred as an integer, a product it takes in
-/// single precision — which is what keeps 18.4 from becoming 18.39.
+/// faces by the size times a hundred as an integer and hands that back
+/// divided by a hundred, all in single precision — which keeps 18.4 from
+/// becoming 18.39, and makes 33.46 the float nearest to it rather than
+/// the double.
 fn effective_size(size : Double) -> Double {
-  (Float::from_double(size) * 100).to_double().floor() / 100.0
+  let hundredths = Float::from_double(
+    (Float::from_double(size) * 100).to_double().floor(),
+  )
+  (hundredths / 100).to_double()
 }
 
 ///|

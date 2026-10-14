@@ -61,6 +61,16 @@ test "the truncation is done in single precision" {
   inspect(font.advance(text, 19.999), content="757.453125")
   inspect(font.advance(text, 4.35), content="164.828125")
   inspect(font.advance(text, 16.4), content="621.421875")
+  // The truncated size is a float as well: 33.46 as a double would put
+  // the top of this ink one step higher.
+  let bold = @font.Stack::default(bold=true)
+  inspect(
+    bold.bbox(
+      "Sym ĀāĂăĄą Čč Ďď Ēē Ğğ Łł Ńń Őő Řř Śś Šš Ťť Űű Žž here",
+      33.46875,
+    ).y,
+    content="-31.20536994934082",
+  )
 }
 
 ///|
