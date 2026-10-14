@@ -17,25 +17,33 @@ let absent_families : Array[String] = ["open sans", "recursive variable"]
 ///|
 /// The font a diagram's text is measured in: the theme's `fontFamily`.
 ///
-/// Only a list whose first installed family is an embedded one is
-/// accepted. Any other choice is either installed in the reference
-/// environment, with metrics unknown here, or the browser's default font.
+/// Only the embedded families at the head of the list are used. The
+/// first family that is neither embedded nor known to be absent ends it:
+/// it is either installed in the reference environment, with metrics
+/// unknown here, or a generic family the browser resolves on its own. A
+/// character the families before it lack is then refused by
+/// `require_glyphs` rather than measured in the wrong face. A list
+/// without an embedded family at its head cannot be measured at all.
 pub fn theme_font(
   theme : @theme.Theme,
   bold~ : Bool = false,
 ) -> @font.Stack raise MeasureError {
   let family = theme.text("fontFamily")
+  let usable = []
   for name in family.split(",") {
     let name = name.trim(chars=" \t\n\"';").to_owned().to_lower()
     if absent_families.contains(name) {
       continue
     }
-    if embedded_families.contains(name) {
-      return @font.Stack::for_family(family, bold~)
+    if !embedded_families.contains(name) {
+      break
     }
-    break
+    usable.push(name)
   }
-  raise MeasureError("text cannot be measured in the font family \{family}")
+  if usable.is_empty() {
+    raise MeasureError("text cannot be measured in the font family \{family}")
+  }
+  @font.Stack::for_family(usable.join(", "), bold~)
 }
 
 ///|
