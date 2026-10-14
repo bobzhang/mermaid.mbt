@@ -1,0 +1,10 @@
+---
+config:
+  handDrawnSeed: 3
+---
+stateDiagram-v2
+    state Waiting56 {
+        [*] --> Draft62
+        Loading64 --> Review63 : x
+        Loading64 --> Error65
+    }
