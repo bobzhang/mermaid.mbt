@@ -63,6 +63,7 @@ Work in progress.
 | Agentflow | byte-identical with the ELK and dagre layouts, including collapsed containers |
 | Kanban | byte-identical, including the hand-drawn look |
 | Use case | byte-identical with the ELK and dagre layouts |
+| Mindmap | byte-identical with its default cose-bilkent layout (`internal/cose`) and with dagre |
 | Venn | byte-identical, including the hand-drawn look; the layout optimiser of venn.js is transcribed step by step |
 | everything else | not ported yet — `render` raises `Unsupported` |
 

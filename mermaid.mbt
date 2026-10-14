@@ -245,6 +245,24 @@ fn parse_diagram(
         },
       }
     }
+    "mindmap" => {
+      let db = @mindmap.parse(code, config) catch {
+        @mindmap.Invalid(message) => raise Syntax(message)
+        @mindmap.Unsupported(message) => raise Unsupported(message)
+      }
+      {
+        styles: @mindmap.styles(config, "#" + id),
+        acc_title: "",
+        acc_description: "",
+        classes: [],
+        draw: context => {
+          @mindmap.draw(db, context) catch {
+            @mindmap.Invalid(message) => raise Syntax(message)
+            @mindmap.Unsupported(message) => raise Unsupported(message)
+          }
+        },
+      }
+    }
     "er" => {
       let db = @er.parse(code, config) catch {
         @jison.ParseError(message~, ..) => raise Syntax(message)

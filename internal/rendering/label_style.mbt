@@ -114,7 +114,8 @@ fn node_text_centred(diagram_type : String) -> Bool {
   | "stateDiagram"
   | "classDiagram"
   | "kanban"
-  | "usecase"))
+  | "usecase"
+  | "mindmap"))
 }
 
 ///|

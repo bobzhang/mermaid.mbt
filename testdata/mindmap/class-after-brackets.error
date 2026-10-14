@@ -1,0 +1,4 @@
+Parse error on line 5:
+...:large    b[Bee]:::big small
+----------------------^
+Expecting 'SPACELINE', 'NL', 'EOF', got 'CLASS'
