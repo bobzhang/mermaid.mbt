@@ -4,6 +4,9 @@ pub struct Diagram {
   /// The text handed to the diagram's parser: no frontmatter, directives
   /// or comments.
   code : String
+  /// The same with its `%%` comments, for the parsers that report
+  /// positions in the text as its author wrote it.
+  with_comments : String
   /// The frontmatter `title`, if any.
   title : String?
   /// Frontmatter `config` merged with the `init` directive.
@@ -119,8 +122,10 @@ pub fn preprocess(code : String) -> Diagram raise {
   if has_wrap_directive(front.text) {
     directive = deep_merge(directive, { "wrap": true })
   }
+  let with_comments = remove_directives(front.text)
   {
-    code: cleanup_comments(remove_directives(front.text)),
+    code: cleanup_comments(with_comments),
+    with_comments,
     title: front.title,
     config: deep_merge(front_config, directive),
   }

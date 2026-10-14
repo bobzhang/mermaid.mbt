@@ -65,4 +65,8 @@ pub(all) enum NodeData {
     font_size~ : Double,
     bold~ : Bool
   )
+  /// A container of an agentflow, expanded or collapsed, with its
+  /// `@{ ... }` metadata: `algorithm` picks the layout of its children,
+  /// `containerType` the look of the collapsed node.
+  Container(metadata~ : Map[String, Json])
 }

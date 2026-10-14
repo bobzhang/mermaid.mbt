@@ -1,5 +1,6 @@
 ///|
-fn string_of(value : Json) -> String {
+/// The text of a token or of a value built from tokens.
+pub fn string_of(value : Json) -> String {
   match value {
     String(text) => text
     Number(n, ..) =>
@@ -14,7 +15,7 @@ fn string_of(value : Json) -> String {
 
 ///|
 /// A list of node ids built by the grammar.
-fn ids_of(value : Json) -> Array[String] {
+pub fn ids_of(value : Json) -> Array[String] {
   match value {
     Array(items) => items.map(string_of)
     // `Array.prototype.concat` also takes a single id.
@@ -24,13 +25,14 @@ fn ids_of(value : Json) -> Array[String] {
 }
 
 ///|
-fn strings(values : Array[String]) -> Json {
+/// A list of node ids as a semantic value.
+pub fn strings(values : Array[String]) -> Json {
   Json::array(values.map(Json::string))
 }
 
 ///|
 /// The fields of a statement object `{ stmt, nodes }`.
-fn statement_field(value : Json, key : String) -> Array[String] {
+pub fn statement_field(value : Json, key : String) -> Array[String] {
   match value {
     Object(fields) => ids_of(fields.get(key).unwrap_or(Json::null()))
     _ => []
@@ -39,8 +41,9 @@ fn statement_field(value : Json, key : String) -> Array[String] {
 
 ///|
 /// The grammar's custom lexer code; the numbers are those listed at the
-/// top of gen_flow_grammar.mbt.
-fn FlowDb::lexer_hook(
+/// top of gen_flow_grammar.mbt. The agentflow grammar numbers the hooks it
+/// shares the same way.
+pub fn FlowDb::lexer_hook(
   self : FlowDb,
   hook : Int32,
   lexer : @jison.Lexer,

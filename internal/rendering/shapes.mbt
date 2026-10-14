@@ -486,6 +486,7 @@ fn draw_shape(
     "anchor" => anchor(parent, node, env)
     "choice" => choice(parent, node, env)
     "rectWithTitle" => rect_with_title(parent, node, env)
+    "collapsedGroup" => collapsed_group(parent, node, env)
     "subroutine" =>
       polygon_shape(parent, node, env, box => {
         let label_padding_x = if neo { 28.0 } else { padding }

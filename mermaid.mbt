@@ -111,6 +111,35 @@ fn parse_diagram(
         },
       }
     }
+    "agentflow" => {
+      let db = @agentflow.parse(code, config) catch {
+        @jison.ParseError(message~, ..) => raise Syntax(message)
+        @agentflow.AgentflowError(message) => raise Syntax(message)
+        @flowchart.FlowError(message) => raise Syntax(message)
+        error => raise Syntax(error.to_string())
+      }
+      if title is Some(title) && db.title == "" {
+        db.set_title(title)
+      }
+      {
+        styles: @agentflow.styles(
+          config.theme(),
+          config.text("theme").unwrap_or(""),
+          config.text("look").unwrap_or(""),
+        ),
+        acc_title: db.acc_title,
+        acc_description: db.acc_description,
+        classes: db.flow.classes
+        .values()
+        .map(c => { id: c.id, styles: c.styles, text_styles: c.text_styles, })
+        .collect(),
+        draw: context => {
+          @agentflow.draw(db, context) catch {
+            @rendering.LayoutError(message) => raise Unsupported(message)
+          }
+        },
+      }
+    }
     "gitGraph" => {
       let graph = @gitgraph.parse(code, config) catch {
         @langium.ParseError(message~, ..) => raise Syntax(message)
@@ -616,10 +645,18 @@ pub fn render(
     .attr("width", "100%")
     .attr("xmlns", "http://www.w3.org/2000/svg")
   let first_child = svg.append("g")
+  // Agentflow reports positions in the text as written, so its parser
+  // sees the comments, unless that text is too long.
+  let code = if diagram_type == "agentflow" &&
+    processed.with_comments.length().to_double() <= max_length {
+    processed.with_comments
+  } else {
+    processed.code
+  }
   // Entity codes are shielded from the grammars, as in Diagram.fromText.
   let parsed = parse_diagram(
     diagram_type,
-    @preprocess.encode_entities(processed.code) + "\n",
+    @preprocess.encode_entities(code) + "\n",
     config,
     processed.title,
     id,
