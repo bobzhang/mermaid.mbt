@@ -33,6 +33,7 @@ fn insert_label(
       width~,
       style~,
       markdown=true,
+      auto_wrap=true,
     )
     fo.attr_number("width", box.width).attr_number("height", box.height)
     |> ignore

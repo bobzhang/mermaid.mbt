@@ -225,9 +225,18 @@ fn Item::position(self : Item, offset : Int32, env : Env) -> Double {
   if self.positions.get(offset) is Some(position) {
     return position
   }
+  // Kerning between the characters on either side of the offset moves it:
+  // a line broken after a space that kerns against the next letter (as
+  // `. A` does in Trebuchet MS) is that much narrower.
   let position = env
     .font(bold=self.bold, italic=self.italic)
-    .advance(String::from_array(self.chars[:offset]), env.font_size)
+    .item_advances(
+      [
+        String::from_array(self.chars[:offset]),
+        String::from_array(self.chars[offset:]),
+      ],
+      env.font_size,
+    )[0]
   self.positions[offset] = position
   position
 }

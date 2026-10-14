@@ -43,12 +43,48 @@ fn viewbox_options(config : @config.Config) -> (Double, Bool) raise KanbanError 
 }
 
 ///|
+/// Refuse text with characters the embedded fonts do not have: the
+/// browser draws them from fonts of the system, which the port cannot
+/// measure.
+fn check_coverage(
+  data : Array[LayoutNode],
+  context : @diagram.Context,
+) -> Unit raise KanbanError {
+  let stacks = [
+    context.font(),
+    context.font(bold=true),
+    context.font(italic=true),
+    context.font(bold=true, italic=true),
+  ]
+  for entry in data {
+    let item = entry.node
+    for
+      text in [
+        entry.label,
+        item.ticket.unwrap_or(""),
+        item.assigned.unwrap_or(""),
+      ] {
+      // The text as it is shown: references resolved, markup gone.
+      let holder = @dom.Element::new("div")
+      holder.set_inner_html(@dom.placeholders_to_references(text))
+      let shown = holder.text_content()
+      for stack in stacks {
+        guard stack.covers(shown) else {
+          raise Unsupported("text the embedded fonts do not cover: \{text}")
+        }
+      }
+    }
+  }
+}
+
+///|
 /// Draw the board into the context's `<svg>` element: mermaid's `draw`.
 /// Columns stand side by side, each as tall as its cards need.
 pub fn draw(db : KanbanDb, context : @diagram.Context) -> Unit raise {
   let config = context.config
   let svg = context.svg
   let data = db.data()
+  check_coverage(data, context)
   let painter = @rendering.Painter::new(
     config,
     diagram_type="kanban",
@@ -93,42 +129,58 @@ pub fn draw(db : KanbanDb, context : @diagram.Context) -> Unit raise {
   // Then the cards of each column, one below the other. A card is first
   // drawn to learn its size.
   let n = @dom.number
+  // The node of every item, kept from one column to the next: an item of
+  // sections that share an id is drawn in each, carrying over what the
+  // first drawing left on it.
+  let item_nodes : Array[@rendering.Node?] = data.map(_ => None)
   for section in sections {
     let (section_node, section_element) = section
     let top = -width * 3.0 / 2.0 + max_label_height
     let mut y = top
-    for entry in data {
+    for index, entry in data {
       guard entry.node.parent_id == Some(section_node.id) else { continue }
       if entry.is_group {
         raise Invalid("Groups within groups are not allowed in Kanban diagrams")
       }
       let item = entry.node
-      let node = @rendering.Node::new(
-        id=item.id,
-        parent_id=section_node.id,
-        label=entry.label,
-        label_type="markdown",
-        padding=0.0,
-        css_styles=["text-align: left"],
-        css_classes="undefined",
-        dom_id="\{context.id}-\{item.id}",
-        // Items have no look.
-        look="",
-        shape="kanbanItem",
-        data=KanbanItem(
-          ticket=db.sanitize_text(item.ticket.unwrap_or("")),
-          assigned=db.sanitize_text(item.assigned.unwrap_or("")),
-          priority=item.priority,
-          icon=item.icon is Some(icon) && icon != "",
-        ),
-        rx=5.0,
-        ry=5.0,
-      ).placed(
-        x=section_node.x,
-        y=0.0,
-        width=width - 1.5 * PADDING,
-        label_style="",
-      )
+      let node = match item_nodes[index] {
+        Some(node) =>
+          node.placed(
+            x=section_node.x,
+            y=node.y,
+            width=width - 1.5 * PADDING,
+            height?=node.height,
+            label_style=node.label_style,
+          )
+        None =>
+          @rendering.Node::new(
+            id=item.id,
+            parent_id=section_node.id,
+            label=entry.label,
+            label_type="markdown",
+            padding=0.0,
+            css_styles=["text-align: left"],
+            css_classes="undefined",
+            dom_id="\{context.id}-\{item.id}",
+            // Items have no look.
+            look="",
+            shape="kanbanItem",
+            data=KanbanItem(
+              ticket=db.sanitize_text(item.ticket.unwrap_or("")),
+              assigned=db.sanitize_text(item.assigned.unwrap_or("")),
+              priority=item.priority,
+              icon=item.icon is Some(icon) && icon != "",
+            ),
+            rx=5.0,
+            ry=5.0,
+          ).placed(
+            x=section_node.x,
+            y=0.0,
+            width=width - 1.5 * PADDING,
+            label_style="",
+          )
+      }
+      item_nodes[index] = Some(node)
       let element = painter.insert_node(items_element, node)
       element.remove_attr("data-look") |> ignore
       let box = element.bbox()
