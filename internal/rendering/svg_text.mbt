@@ -407,7 +407,10 @@ fn create_svg_label(
     }
   }
   let box = text_box(lines, env, anchor_middle)
-  element.set_text_box(box)
+  // A text without characters has no box in the browser.
+  if text != "" {
+    element.set_text_box(box)
+  }
   if add_background && text != "" {
     background
     .attr_number("x", box.x - 2.0)
@@ -422,8 +425,15 @@ fn create_svg_label(
     new="fill:",
   )
   if is_node {
-    element.attr("style", text_style) |> ignore
-  } else {
+    // With a background the group is the label, and takes the style.
+    if add_background && text != "" {
+      group.attr("style", text_style) |> ignore
+    } else {
+      element.attr("style", text_style) |> ignore
+    }
+  } else if add_background && text != "" {
+    // Without a background the label is the text alone, in which upstream
+    // looks for a rectangle and a text to style in vain.
     background.attr(
       "style",
       drop_declarations(style, ["stroke", "stroke-width", "fill"]).replace_all(

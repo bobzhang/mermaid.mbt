@@ -22,6 +22,7 @@ let usage : String =
   #|  elk-graph <file.mmd> [--config site.json]
   #|                         print the graph a diagram hands to ELK and the
   #|                         layout that came back, one JSON document a line
+  #|  mindmap-db <file.mmd>... print each mindmap's tree of nodes as JSON
   #|  cose <graph.json>...   lay out each graph with cose-bilkent and print the
   #|                         positions of the nodes and the points of the edges
   #|  dates <cases.json>     evaluate Date operations in the emulated time zone
@@ -443,6 +444,7 @@ fn main {
       ["state-db", .. paths] => state_db(paths)
       ["elk-graph", path, .. options] => elk_graph(path, options)
       ["cose", .. paths] => cose(paths)
+      ["mindmap-db", .. paths] => mindmap_db(paths)
       ["path-length", path] => path_lengths(path)
       ["dates", path] => dates(path)
       ["time", path] => time_cases(path)

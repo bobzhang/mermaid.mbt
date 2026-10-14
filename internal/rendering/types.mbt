@@ -35,6 +35,8 @@ pub struct Node {
   wrapping_width : Double?
   /// The lines under the title of a state with a description.
   description : Array[String]
+  /// The icon the node shows, which gives its label a background.
+  icon : String?
   // Filled in while measuring and laying out.
   mut label_style : String
   mut width : Double?
@@ -76,6 +78,7 @@ pub fn Node::new(
   center_label~ : Bool = false,
   wrapping_width? : Double,
   description~ : Array[String] = [],
+  icon? : String,
 ) -> Node {
   {
     id,
@@ -103,6 +106,7 @@ pub fn Node::new(
     center_label,
     wrapping_width,
     description,
+    icon,
     label_style: "",
     width: None,
     height: None,
@@ -190,6 +194,7 @@ pub fn Edge::new(
   start_label_right~ : String = "",
   end_label_left~ : String = "",
   end_label_right~ : String = "",
+  curve~ : String = "",
 ) -> Edge {
   {
     id,
@@ -213,7 +218,7 @@ pub fn Edge::new(
     end_label_right,
     terminals: [],
     label_style: "",
-    curve: "",
+    curve,
     points: [],
     width: 0.0,
     height: 0.0,

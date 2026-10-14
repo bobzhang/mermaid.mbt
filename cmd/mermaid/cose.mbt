@@ -97,3 +97,30 @@ fn cose(paths : ArrayView[String]) -> Unit raise CliError {
     println(Json::object(out).stringify())
   }
 }
+
+///|
+/// `mindmap-db <file.mmd>...`: print each mindmap's tree of nodes as JSON,
+/// one document a line, or the error.
+fn mindmap_db(paths : ArrayView[String]) -> Unit raise CliError {
+  for path in paths {
+    let source = read_text(path)
+    let line = try {
+      let processed = @preprocess.preprocess(source)
+      let config = @config.Config::new(
+        directive=processed.config,
+        diagram_type="mindmap",
+      )
+      @mindmap.parse(@preprocess.encode_entities(processed.code) + "\n", config)
+      .dump()
+      .stringify()
+    } catch {
+      error => {
+        let report : Json = { "error": Repr(error).to_string() }
+        report.stringify()
+      }
+    } noraise {
+      text => text
+    }
+    println(line)
+  }
+}

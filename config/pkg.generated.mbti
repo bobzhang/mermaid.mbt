@@ -32,6 +32,7 @@ pub fn Config::new(site? : Json, directive? : Json, diagram_type? : String) -> S
 pub fn Config::number(Self, String) -> Double?
 pub fn Config::text(Self, String) -> String?
 pub fn Config::theme(Self) -> @theme.Theme
+pub fn Config::user_defined(Self, String) -> Json
 pub impl ToJson for Config
 
 // Type aliases

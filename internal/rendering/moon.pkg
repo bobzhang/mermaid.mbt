@@ -1,6 +1,7 @@
 import {
   "moonbitlang/core/string",
   "bobzhang/mermaid/config",
+  "bobzhang/mermaid/internal/cose",
   "bobzhang/mermaid/internal/d3",
   "bobzhang/mermaid/internal/dom",
   "bobzhang/mermaid/internal/font",
