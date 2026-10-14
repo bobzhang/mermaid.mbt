@@ -1,0 +1,9 @@
+sequenceDiagram
+    participant A
+    participant B
+    create participant C
+    B->>C: right of B
+    create participant D
+    C->>D: chain
+    destroy A
+    B-xA: destroy to the left

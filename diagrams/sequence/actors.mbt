@@ -892,6 +892,7 @@ fn Renderer::draw_actor(
     "database" => self.draw_database(actor, is_footer)
     "collections" => self.draw_collections(actor, is_footer)
     "queue" => self.draw_queue(actor, is_footer)
-    other => raise SequenceError("Unsupported participant type: \{other}")
+    // An unknown kind draws nothing and has no height to report.
+    _ => @double.not_a_number
   }
 }

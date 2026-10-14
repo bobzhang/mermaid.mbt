@@ -324,10 +324,8 @@ fn SequenceDb::add_actor(
     match field(doc, "type") {
       Null => ()
       String(text) => kind = Some(text)
-      other =>
-        raise SequenceError(
-          "Unsupported participant type: \{other.stringify()}",
-        )
+      // Not a kind anything draws; the participant keeps its place.
+      other => kind = Some(other.stringify())
     }
     if truthy(field(doc, "alias")) &&
       (shown is None || (shown is Some((text, _)) && text == name)) {
