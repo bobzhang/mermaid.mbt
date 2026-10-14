@@ -54,26 +54,38 @@ fn label_lines(root : @dom.Element) -> Array[Array[Run]] {
 ///|
 /// Collapse white space across the runs of a line, as `white-space:
 /// nowrap` lays it out: runs of spaces become one, the ends are trimmed.
+/// A space stays in the run it was written in, which decides the face it
+/// is measured in and the item it is rounded with.
 fn collapse_runs(line : Array[Run]) -> Array[Run] {
-  let out : Array[Run] = []
-  let mut pending = false
+  let texts : Array[StringBuilder] = line.map(_ => StringBuilder())
+  // Whether the last character kept is a space, and the run holding it.
+  let mut space_in : Int32? = None
   let mut started = false
-  for run in line {
-    let text = StringBuilder()
+  for index, run in line {
     for c in run.text {
       if c is (' ' | '\t' | '\n' | '\r') {
-        pending = started
-      } else {
-        if pending {
-          text.write_char(' ')
-          pending = false
+        if started && space_in is None {
+          texts[index].write_char(' ')
+          space_in = Some(index)
         }
-        text.write_char(c)
+      } else {
+        texts[index].write_char(c)
         started = true
+        space_in = None
       }
     }
-    if !text.is_empty() {
-      out.push({ ..run, text: text.to_string(), })
+  }
+  let out : Array[Run] = []
+  for index, run in line {
+    let text = texts[index].to_string()
+    // The space the line ends in takes no room.
+    let text = if space_in == Some(index) {
+      text[:text.length() - 1].to_owned()
+    } else {
+      text
+    }
+    if text != "" {
+      out.push({ ..run, text, })
     }
   }
   out

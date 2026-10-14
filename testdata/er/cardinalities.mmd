@@ -1,0 +1,15 @@
+---
+config:
+  handDrawnSeed: 7
+
+---
+erDiagram
+    A ||--|| B : single
+    A |o--o| C : "zero or one"
+    A }o--o{ D : lots
+    A }|--|{ E : "one or more"
+    B ||..o{ F : non
+    C one or zero to many(1) G : words
+    D 1+ optionally to 0+ H : more
+    E zero or many to only one I : x
+    F u--|| J : parent

@@ -1,0 +1,12 @@
+sequenceDiagram
+    participant a as Alice
+    participant b as Bob
+    participant c@{ "type": "collections" } as Charlie
+    participant q@{ "type": "queue" } as Queue
+    participant d@{ "type": "database" } as Data
+    properties a: {"class": "internal-service-actor", "icon": "@clock"}
+    properties b: {"class": "external-service-actor", "icon": "https://example.com/icon.png"}
+    properties c: {"icon": "relative/icon.svg"}
+    properties q: {"icon": "javascript:alert(1)"}
+    properties d: {"icon": "@database"}
+    a->>b: hello

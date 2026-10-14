@@ -1,0 +1,4 @@
+Parse error on line 5:
+...ment a {    id: 1
+--------------------^
+Expecting 'NEWLINE', 'ID', 'TEXT', 'RISK', 'VERIFYMTHD', 'STRUCT_STOP', got 'EOF'

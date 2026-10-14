@@ -373,6 +373,7 @@ fn insert_edge(
 fn insert_edge_label(
   group : @dom.Element,
   edge : Edge,
+  base_env : Env,
   env : Env,
 ) -> @dom.Element {
   let split = split_styles([..edge.css_compiled_styles, ..edge.style])
@@ -385,19 +386,29 @@ fn insert_edge_label(
   let n = @dom.number
   let markdown = edge.label_type == "markdown"
   if !env.html_labels {
+    // The label is created outside its group, where it is broken into
+    // lines and its background sized, and moved into the group, whose
+    // font size the stylesheet may set, before it is measured.
     let text = create_svg_label(
       label,
       edge.label,
-      env,
+      base_env,
       width=200.0,
       style=edge.label_style,
       is_node=false,
       add_background=true,
       markdown~,
+      sanitize=false,
     )
+    let centre = if env.font_size == base_env.font_size {
+      text.text_box
+    } else {
+      let moved = text_box(text.lines, env, true)
+      text.element.set_text_box(moved)
+      moved
+    }
     // The label is as large as its background, and centred on its text.
     let box = text.group.bbox()
-    let centre = text.text_box
     label.attr(
       "transform",
       "translate(\{n(-(centre.x + centre.width / 2.0))}, \{n(-(centre.y + centre.height / 2.0))})",

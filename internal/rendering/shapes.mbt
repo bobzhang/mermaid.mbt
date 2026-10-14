@@ -25,9 +25,16 @@ fn draw_rect(
   label_padding_x~ : Double,
   label_padding_y~ : Double,
   radius? : Double,
+  html_labels? : Bool,
 ) -> @dom.Element {
   let styles = shape_styles(node)
-  let labelled = label_helper(parent, node, node_classes(node), env)
+  let labelled = label_helper(
+    parent,
+    node,
+    node_classes(node),
+    env,
+    html_labels?,
+  )
   let total_width = (labelled.bbox.width + label_padding_x * 2.0).max(
     node.width.unwrap_or(0.0),
   )
@@ -392,6 +399,12 @@ fn draw_shape(
 ) -> @dom.Element raise LayoutError {
   let neo = node.look == "neo"
   let padding = node.padding
+  // Shapes that belong to one diagram type are not in the shape table.
+  match node.shape {
+    "erBox" => return er_box(parent, node, env)
+    "requirementBox" => return requirement_box(parent, node, env)
+    _ => ()
+  }
   guard shape_handler(node.shape) is Some(handler) else {
     raise LayoutError("No such shape: \{node.shape}. Please check your syntax.")
   }
@@ -460,6 +473,7 @@ fn draw_shape(
     "crossedCircle" => crossed_circle(parent, node, env)
     "anchor" => anchor(parent, node, env)
     "choice" => choice(parent, node, env)
+    "rectWithTitle" => rect_with_title(parent, node, env)
     "subroutine" =>
       polygon_shape(parent, node, env, box => {
         let label_padding_x = if neo { 28.0 } else { padding }
@@ -562,7 +576,11 @@ fn insert_node(
   dir : String,
 ) -> @dom.Element raise LayoutError {
   if node.shape == "rect" {
-    node.shape = "squareRect"
+    // With or without rounded corners.
+    node.shape = match (node.rx, node.ry) {
+      (Some(rx), Some(ry)) if rx != 0.0 && ry != 0.0 => "roundedRect"
+      _ => "squareRect"
+    }
   }
   let (outer, inner) = match node.link {
     Some(link) => {

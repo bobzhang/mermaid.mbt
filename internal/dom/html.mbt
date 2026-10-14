@@ -86,13 +86,15 @@ pub fn Element::set_inner_html(self : Element, html : String) -> Unit {
   let mut i = 0
   while i < n {
     if html[i] != '<' {
-      // A run of text at a time, which keeps surrogate pairs whole.
-      let mut end = i
-      while end < n && html[end] != '<' {
-        end += 1
+      // Both halves of a character outside the basic plane go together.
+      let code = html[i].to_int()
+      let width = if code >= 0xD800 && code < 0xDC00 && i + 1 < n {
+        2
+      } else {
+        1
       }
-      text.write_view(html[i:end])
-      i = end
+      text.write_view(html[i:i + width])
+      i += width
       continue
     }
     // An end tag closes the innermost open element of that name.

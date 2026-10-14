@@ -57,7 +57,7 @@ fn place_text(
     x=element.length_attr("x").unwrap_or(0.0),
     y=element.length_attr("y").unwrap_or(0.0),
     anchor~,
-    baseline~,
+    baseline=@font.Baseline::from_css(baseline),
     scale~,
   )
   element.set_text_box({

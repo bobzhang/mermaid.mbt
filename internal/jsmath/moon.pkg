@@ -1,1 +1,6 @@
+import {
+  "moonbitlang/core/double",
+  "moonbitlang/core/string",
+}
+
 warnings = "-implicit_impl_as_method"

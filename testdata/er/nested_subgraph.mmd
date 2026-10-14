@@ -1,0 +1,23 @@
+---
+config:
+  handDrawnSeed: 7
+---
+erDiagram
+    subgraph outer [Outer]
+        subgraph inner [Inner group]
+            direction LR
+            A ||--o{ B : ab
+        end
+        C {
+            int id
+        }
+    end
+    subgraph other
+        D
+    end
+    B ||--|| C : bc
+    C }o--o{ D : cd
+    A ||--|| other : "to group"
+    class outer hl
+    classDef hl fill:#eef,stroke:#00f
+    style other fill:#fee

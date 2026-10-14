@@ -5,10 +5,18 @@
 ///|
 fn tops(family : String, size : Double) -> Array[Double] {
   let stack = @font.Stack::for_family(family)
-  let top = stack.bbox("Hxg", size).y
-  [
-    "auto", "middle", "central", "hanging", "text-before-edge", "mathematical", "text-after-edge",
-  ].map(baseline => top + stack.baseline_shift(baseline, size))
+  let baselines : Array[@font.Baseline] = [
+    Alphabetic,
+    Middle,
+    Central,
+    Hanging,
+    TextBeforeEdge,
+    Mathematical,
+    TextAfterEdge,
+  ]
+  baselines.map(baseline => {
+    stack.svg_text_box("Hxg", size, x=0.0, y=0.0, baseline~).y
+  })
 }
 
 ///|

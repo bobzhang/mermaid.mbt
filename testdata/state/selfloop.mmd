@@ -1,0 +1,12 @@
+---
+config:
+  handDrawnSeed: 7
+
+---
+stateDiagram-v2
+    [*] --> A
+    A --> A : again
+    A --> B
+    B --> A : back
+    B --> C
+    C --> A

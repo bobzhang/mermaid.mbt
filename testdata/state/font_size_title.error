@@ -1,0 +1,4 @@
+Parse error on line 1:
+---title: Sized---
+^
+Expecting 'SPACE', 'NL', 'SD', got 'INVALID'

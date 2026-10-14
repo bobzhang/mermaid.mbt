@@ -83,18 +83,6 @@ let relaxation_alpha : Array[Double] = [
 let nan : Double = 0.0 / 0.0
 
 ///|
-/// `Math.max` of two numbers: `NaN` when either is.
-fn js_max(a : Double, b : Double) -> Double {
-  if a.is_nan() || b.is_nan() {
-    nan
-  } else if a > b {
-    a
-  } else {
-    b
-  }
-}
-
-///|
 /// `Math.min` of two numbers: `NaN` when either is.
 fn js_min(a : Double, b : Double) -> Double {
   if a.is_nan() || b.is_nan() {

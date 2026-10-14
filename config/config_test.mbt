@@ -166,3 +166,32 @@ test "directives are sanitized" {
     ),
   )
 }
+
+///|
+test "a directive cannot set a key whose default is an array" {
+  // Upstream collects the known keys without those holding arrays, so
+  // `sectionColours` is dropped from a directive; the site configuration
+  // still extends the default list.
+  json_inspect(
+    @config.sanitize_directive({
+      "journey": { "sectionColours": ["blue"], "width": 99 },
+    }),
+    content={ "journey": { "width": 99 } },
+  )
+  let config = @config.Config::new(site={
+    "journey": { "sectionColours": ["pink"] },
+  })
+  json_inspect(config.get("journey.sectionColours"), content=["#fff", "pink"])
+}
+
+///|
+test "a site-wide fontFamily becomes the theme's" {
+  let config = @config.Config::new(site={ "fontFamily": "arial" })
+  inspect(config.theme().text("fontFamily"), content="arial")
+  // A theme variable of that name wins.
+  let config = @config.Config::new(site={
+    "fontFamily": "arial",
+    "themeVariables": { "fontFamily": "verdana" },
+  })
+  inspect(config.theme().text("fontFamily"), content="verdana")
+}

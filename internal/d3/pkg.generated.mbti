@@ -2,6 +2,8 @@
 package "bobzhang/mermaid/internal/d3"
 
 import {
+  "bobzhang/mermaid/internal/dom",
+  "bobzhang/mermaid/internal/jsdate",
   "moonbitlang/core/debug",
 }
 
@@ -9,6 +11,8 @@ import {
 pub fn arc_centroid(inner_radius~ : Double, outer_radius~ : Double, start_angle~ : Double, end_angle~ : Double) -> (Double, Double)
 
 pub fn arc_path(inner_radius~ : Double, outer_radius~ : Double, start_angle~ : Double, end_angle~ : Double) -> String
+
+pub fn axis(@dom.Element, Orient, Array[(Double, String)], (Double, Double), tick_size_inner? : Double, tick_size_outer? : Double, tick_padding? : Double, offset? : Double) -> Unit
 
 pub fn format(String) -> Format raise FormatError
 
@@ -25,6 +29,30 @@ pub fn pie(Array[Double]) -> Array[PieArc]
 pub fn sankey(Int, Array[(Int, Int, Double)], node_width? : Double, node_padding? : Double, align? : SankeyAlign, extent? : (Double, Double, Double, Double)) -> SankeyGraph raise SankeyError
 
 pub let scheme_tableau10 : Array[String]
+
+pub fn tick_increment(Double, Double, Double) -> Double
+
+pub fn tick_step(Double, Double, Double) -> Double
+
+pub fn ticks(Double, Double, Double) -> Array[Double]
+
+pub fn time_day(@jsdate.Zone) -> TimeInterval
+
+pub fn time_format(@jsdate.Zone, String) -> (Double) -> String
+
+pub fn time_hour(@jsdate.Zone) -> TimeInterval
+
+pub fn time_millisecond() -> TimeInterval
+
+pub fn time_minute(@jsdate.Zone) -> TimeInterval
+
+pub fn time_month(@jsdate.Zone) -> TimeInterval
+
+pub fn time_second(@jsdate.Zone) -> TimeInterval
+
+pub fn time_week(@jsdate.Zone, Int) -> TimeInterval
+
+pub fn time_year(@jsdate.Zone) -> TimeInterval
 
 pub fn to_exponential(Double, digits? : Int) -> String
 
@@ -72,6 +100,13 @@ pub struct Ordinal[T] {
 pub fn[T] Ordinal::get(Self[T], String) -> T
 pub fn[T] Ordinal::new(Array[T]) -> Self[T]
 pub fn[T] Ordinal::with_domain(Array[String], Array[T]) -> Self[T]
+
+pub(all) enum Orient {
+  Top
+  Right
+  Bottom
+  Left
+} derive(Eq)
 
 pub struct Path {
   // private fields
@@ -126,6 +161,32 @@ pub struct SankeyNode {
   mut y0 : Double
   mut y1 : Double
 }
+
+pub struct TimeInterval {
+  // private fields
+}
+pub fn TimeInterval::ceil(Self, Double) -> Double
+pub fn TimeInterval::count(Self, Double, Double) -> Double
+pub fn TimeInterval::every(Self, Double) -> Self?
+pub fn TimeInterval::filter(Self, (Double) -> Bool) -> Self
+pub fn TimeInterval::floor(Self, Double) -> Double
+pub fn TimeInterval::offset(Self, Double, Double) -> Double
+pub fn TimeInterval::range(Self, Double, Double, step? : Double) -> Array[Double]
+
+pub struct TimeScale {
+  // private fields
+}
+pub fn TimeScale::apply(Self, Double) -> Double
+pub fn TimeScale::domain(Self) -> (Double, Double)
+pub fn TimeScale::new(@jsdate.Zone) -> Self
+pub fn TimeScale::nice(Self, count? : Double) -> Self
+pub fn TimeScale::range(Self) -> (Double, Double)
+pub fn TimeScale::set_domain(Self, Double, Double) -> Self
+pub fn TimeScale::set_range(Self, Double, Double) -> Self
+pub fn TimeScale::set_range_round(Self, Double, Double) -> Self
+pub fn TimeScale::tick_format(Self) -> (Double) -> String
+pub fn TimeScale::ticks(Self, count? : Double) -> Array[Double]
+pub fn TimeScale::ticks_every(Self, TimeInterval) -> Array[Double]
 
 pub(all) struct TreemapLayout[T] {
   width : Double

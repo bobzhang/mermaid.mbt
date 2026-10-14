@@ -20,8 +20,8 @@ fn cleanup_text(code : String) -> String {
   let n = code.length()
   let out = StringBuilder()
   let mut i = 0
-  // Everything else is copied a run at a time, which keeps surrogate
-  // pairs whole.
+  // Text between tags is copied in whole stretches, which keeps the two
+  // halves of a character outside the basic plane together.
   let mut copied = 0
   while i < n {
     // `<(\w+)([^>]*)>`
@@ -45,7 +45,7 @@ fn cleanup_text(code : String) -> String {
     }
     i += 1
   }
-  out.write_view(code[copied:])
+  out.write_view(code[copied:n])
   out.to_string()
 }
 
@@ -55,7 +55,6 @@ fn requote(attributes : String) -> String {
   let n = attributes.length()
   let out = StringBuilder()
   let mut i = 0
-  let mut copied = 0
   while i < n {
     if starts_with_at(attributes, "=\"", i) {
       let mut close = i + 2
@@ -63,18 +62,18 @@ fn requote(attributes : String) -> String {
         close += 1
       }
       if close < n {
-        out.write_view(attributes[copied:i])
         out.write_string("='")
         out.write_view(attributes[i + 2:close])
         out.write_char('\'')
         i = close + 1
-        copied = i
         continue
       }
     }
-    i += 1
+    let code = attributes[i].to_int()
+    let width = if code >= 0xD800 && code < 0xDC00 && i + 1 < n { 2 } else { 1 }
+    out.write_view(attributes[i:i + width])
+    i += width
   }
-  out.write_view(attributes[copied:])
   out.to_string()
 }
 

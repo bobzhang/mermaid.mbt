@@ -30,7 +30,7 @@ test "the box of placed text, anchored and hung from its baseline" {
     x=500.0,
     y=15.0,
     anchor="middle",
-    baseline="middle",
+    baseline=Middle,
     scale=SCALE,
   )
   json_inspect([box.x, box.y, box.width, box.height], content=[
@@ -42,7 +42,7 @@ test "the box of placed text, anchored and hung from its baseline" {
     x=500.0,
     y=15.0,
     anchor="middle",
-    baseline="middle",
+    baseline=Middle,
   )
   json_inspect([unscaled.x, unscaled.y, unscaled.width, unscaled.height], content=[
     410.234375, 5.65625, 179.53125, 16,

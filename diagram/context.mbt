@@ -7,6 +7,42 @@ pub struct Context {
   config : @config.Config
   /// The root `<svg>` element.
   svg : @dom.Element
+  /// The moment of rendering, in milliseconds since the epoch: what
+  /// `new Date()` is to a diagram that shows the present.
+  now : Double
+  /// The page the diagram is rendered in.
+  page : Page
+}
+
+///|
+/// The page a diagram is rendered in, for the diagrams whose geometry
+/// depends on it.
+///
+/// mermaid renders into a block element appended to the body, holding an
+/// `<svg width="100%">`. A Gantt chart takes the width of that element as
+/// its own, and measures its labels while the browser has the `<svg>` laid
+/// out at whatever size the page gives it — scrollbar included.
+pub struct Page {
+  /// The viewport, in pixels.
+  viewport_width : Double
+  viewport_height : Double
+  /// The margin of the body.
+  margin : Double
+  /// The width a vertical scrollbar takes from the page.
+  scrollbar : Double
+}
+
+///|
+/// A page; the defaults describe the one the reference renderings are
+/// made in: headless Chrome's default window on macOS, with the default
+/// body margin and classic scrollbars.
+pub fn Page::new(
+  viewport_width~ : Double = 756.0,
+  viewport_height~ : Double = 469.0,
+  margin~ : Double = 8.0,
+  scrollbar~ : Double = 15.0,
+) -> Page {
+  { viewport_width, viewport_height, margin, scrollbar, }
 }
 
 ///|
@@ -14,8 +50,88 @@ pub fn Context::new(
   id : String,
   config : @config.Config,
   svg : @dom.Element,
+  now~ : Double,
+  page~ : Page,
 ) -> Context {
-  { id, config, svg, }
+  { id, config, svg, now, page, }
+}
+
+///|
+/// Blink's layout unit: lengths are kept in 64ths of a pixel, rounded
+/// down.
+fn floor_layout_unit(value : Double) -> Double {
+  (value * 64.0).floor() / 64.0
+}
+
+///|
+/// The width of the element the diagram is rendered into, before the
+/// diagram has a size (`parentElement.offsetWidth` at the start of
+/// drawing).
+pub fn Context::container_width(self : Context) -> Double {
+  self.page.viewport_width - 2.0 * self.page.margin
+}
+
+///|
+/// The factor the browser draws the diagram's user units at once the
+/// `<svg>` (still `width="100%"`, no height) has the view box
+/// `0 0 width height`, the way the view box is fitted into the element
+/// (`preserveAspectRatio` at its default).
+///
+/// The element is as wide as its container, or as `max_width` when its
+/// style limits it to less, and as tall as the view box's proportions
+/// make it; when that is taller than the viewport has room for, the page
+/// gets a scrollbar, the container narrows and the diagram shrinks with
+/// it. A diagram that measures text after setting its view box gets its
+/// measurements at this scale.
+///
+/// With `fixed`, the element has `width` and `height` attributes of the
+/// size of the view box instead, and the page does not matter.
+pub fn Context::view_box_scale(
+  self : Context,
+  width : Double,
+  height : Double,
+  max_width? : Double,
+  fixed~ : Bool = false,
+) -> Double {
+  let page = self.page
+  // The width the element takes in a container.
+  let fitted = (container : Double) => {
+    match max_width {
+      Some(limit) if floor_layout_unit(limit) < container =>
+        floor_layout_unit(limit)
+      _ => container
+    }
+  }
+  let (used_width, used_height) = if fixed {
+    (floor_layout_unit(width), floor_layout_unit(height))
+  } else {
+    let mut container = self.container_width()
+    // Below the `<svg>`, an inline element, the line it stands on keeps
+    // room for descenders in the font of the block mermaid renders into.
+    let line_descent = match self.config.text("fontFamily") {
+      Some(family) => @font.Stack::for_family(family).line_descent(16.0)
+      // No font of its own: the default serif of the page.
+      None => 4.0
+    }
+    let used_height = floor_layout_unit(fitted(container) * height / width)
+    // The page scrolls when its content, rounded to whole pixels, is
+    // taller than the viewport; the scrollbar stays even if the narrower
+    // content would fit again.
+    if (used_height + line_descent + 2.0 * page.margin + 0.5).floor() >
+      page.viewport_height {
+      container -= page.scrollbar
+    }
+    let used_width = fitted(container)
+    (used_width, floor_layout_unit(used_width * height / width))
+  }
+  // SVG lengths are single precision.
+  let width = Float::from_double(width).to_double()
+  let height = Float::from_double(height).to_double()
+  if width / height < used_width / used_height {
+    used_height / height
+  } else {
+    used_width / width
+  }
 }
 
 ///|

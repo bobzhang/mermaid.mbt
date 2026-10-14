@@ -1,0 +1,14 @@
+---
+config:
+  sequence:
+    height: 120
+    mirrorActors: false
+---
+sequenceDiagram
+    actor A
+    participant B
+    participant C@{ "type": "entity" }
+    A->>B: x
+    destroy B
+    A-xB: gone
+    A->>C: y

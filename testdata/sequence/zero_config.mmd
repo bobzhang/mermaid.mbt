@@ -1,0 +1,24 @@
+---
+config:
+  sequence:
+    boxMargin: 0
+    noteMargin: 0
+    wrapPadding: 0
+    actorMargin: 0
+    diagramMarginX: 0
+    diagramMarginY: 0
+    boxTextMargin: 0
+    labelBoxHeight: 0
+    labelBoxWidth: 0
+---
+sequenceDiagram
+    A->>B: hello there
+    Note over A,B: note<br/>two
+    loop l
+    B->>B: self
+    end
+    alt x
+    A->>B: y
+    else z
+    B->>A: w
+    end

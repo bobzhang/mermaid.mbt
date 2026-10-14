@@ -1,0 +1,14 @@
+---
+config:
+  look: classic
+  theme: default
+---
+sequenceDiagram
+    participant Styles as Styling System
+    participant DOM as DOM/SVG
+    Styles->>DOM: Apply<br/>the styles<br/>(all of them)
+    Note right of Styles: Features:<br/>- createCssStyles()<br/>- createUserStyles()<br/>- cssImportantStyles()<br/>- Theme integration<br/>- Class definitions
+    Note over Styles,DOM: one<br/>two
+    loop A title<br/>of (three)<br/>lines
+        DOM-->>Styles: done
+    end

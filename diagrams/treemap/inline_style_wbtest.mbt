@@ -63,16 +63,3 @@ test "class styles are sorted into those for text and those for shapes" {
   )
   json_inspect(split.border_styles, content=["stroke-width:3px !important"])
 }
-
-///|
-test "the scale the reference browser displays a diagram at" {
-  // 1000 wide in a 740 pixel page.
-  inspect(display_scale(1000.0, 400.0, true), content="0.7400000095367432")
-  // With a title the height is cut to a layout unit, and decides.
-  inspect(display_scale(1000.0, 430.0, true), content="0.7399709224700928")
-  // Tall enough for a scrollbar, which narrows the page.
-  inspect(display_scale(1000.0, 607.5, true), content="0.7250000238418579")
-  // Narrower than the page, or of a fixed size: as drawn.
-  inspect(display_scale(500.0, 300.0, true), content="1")
-  inspect(display_scale(1000.0, 400.0, false), content="1")
-}

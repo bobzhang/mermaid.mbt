@@ -7,32 +7,12 @@
 // no longer falls on whole layout units.
 
 ///|
-/// The distance from the top of a line to a baseline of the stack's first
-/// face at `size`, as `FontMetrics::FloatAscent(baseline)` computes it.
-fn Stack::float_ascent(
-  self : Stack,
-  dominant_baseline : String,
-  size : Double,
-) -> Float {
-  let face = self.faces[0]
-  let ascent = Float::from_double(face.ascent(size))
-  let descent = Float::from_double(face.descent(size))
-  match dominant_baseline {
-    "middle" => {
-      let x_height = Float::from_double(
-        face.x_height().to_double() *
-        effective_size(size) /
-        face.units_per_em.to_double(),
-      )
-      ascent - x_height / 2
-    }
-    "central" => (ascent + descent) / 2
-    "hanging" => ascent * 2 / 10
-    "mathematical" => ascent / 2
-    "text-before-edge" => 0
-    "ideographic" | "text-after-edge" => ascent + descent
-    _ => ascent
-  }
+/// Blink's scaling factor for the text of an `<svg>` drawn at `scale`
+/// times the size of its user units, uniformly
+/// (`CalculateScreenFontSizeScalingFactor`): the font is laid out at the
+/// size it has on screen.
+fn scaling_factor(scale : Double) -> Float {
+  Float::from_double(((scale * scale + scale * scale) / 2.0).sqrt())
 }
 
 ///|
@@ -44,7 +24,7 @@ pub fn Stack::svg_text_length(
   size : Double,
   scale~ : Double = 1.0,
 ) -> Double {
-  let s = Float::from_double(scale)
+  let s = scaling_factor(scale)
   let scaled_size = (Float::from_double(size) * s).to_double()
   let length = Float::from_double(
     ceil_layout_unit(self.shape(text, scaled_size).pen),
@@ -63,13 +43,9 @@ pub fn Stack::svg_text_length(
 /// (`SvgTextLayoutAlgorithm::WriteBackToFragmentItems`,
 /// `FragmentItem::ObjectBoundingBox`).
 ///
-/// Checked against 1400 boxes measured in the reference browser at
-/// scales from 0.25 to 1: the length, `x` and `y` always agree. Where
-/// glyphs reach below the descent of the font (see `svg_text_ink_below`)
-/// the height is a few steps of single precision off in one box of
-/// eight, and so is the width of slanted text whose last glyph leans
-/// over its advance, in one box of twenty: the ink the port computes is
-/// that much off.
+/// Checked against 4000 boxes measured in the reference browser at
+/// scales from 0.25 to 1, on three baselines and three anchors: the
+/// length and all four numbers of the box agree in every one.
 pub fn Stack::svg_text_box(
   self : Stack,
   text : StringView,
@@ -77,17 +53,19 @@ pub fn Stack::svg_text_box(
   x~ : Double,
   y~ : Double,
   anchor~ : String = "start",
-  baseline~ : String = "auto",
+  baseline~ : Baseline = Alphabetic,
   scale~ : Double = 1.0,
 ) -> Rect {
   let f = Float::from_double
-  let s = f(scale)
+  let s = scaling_factor(scale)
   let scaled_size = (f(size) * s).to_double()
   let shaped = self.shape(text, scaled_size)
   let length = f(ceil_layout_unit(shaped.pen))
   let face = self.faces[0]
   let ascent = f(face.ascent(scaled_size))
-  let descent = f(face.descent(scaled_size))
+  let (to_baseline, below_baseline) = face.baseline_extents(
+    baseline, scaled_size,
+  )
   let x = f(x) * s
   let y = f(y) * s
   let end = x + length
@@ -98,13 +76,11 @@ pub fn Stack::svg_text_box(
   }
   // The fragment hangs from its baseline by a whole number of layout
   // units.
-  let to_baseline = self.float_ascent(baseline, scaled_size)
-  let top = y - f(round_layout_unit(to_baseline))
   let cell : RectF = {
     x: start,
-    y: top,
+    y: y - to_baseline,
     width: length,
-    height: ascent + descent,
+    height: to_baseline + below_baseline,
   }
   // The ink lies around the alphabetic baseline of the fragment.
   let ink = if shaped.ink.is_empty() {
@@ -124,20 +100,4 @@ pub fn Stack::svg_text_box(
     width: (box.width * k).to_double(),
     height: (box.height * k).to_double(),
   }
-}
-
-///|
-/// Whether glyphs of `text` reach below the descent of the font, at the
-/// size `scale` makes of `size`: the bottom of the box `svg_text_box`
-/// reports is then that of the ink, and only as exact as the ink.
-pub fn Stack::svg_text_ink_below(
-  self : Stack,
-  text : StringView,
-  size : Double,
-  scale~ : Double = 1.0,
-) -> Bool {
-  let scaled_size = (Float::from_double(size) * Float::from_double(scale)).to_double()
-  let ink = self.shape(text, scaled_size).ink
-  !ink.is_empty() &&
-  ink.y + ink.height > Float::from_double(self.faces[0].descent(scaled_size))
 }

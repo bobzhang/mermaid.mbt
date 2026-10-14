@@ -1,0 +1,12 @@
+---
+config:
+  handDrawnSeed: 7
+
+---
+stateDiagram-v2
+    [*] --> A
+    A --> B
+    B : Bee
+    click A "https://example.com" "tip A"
+    click B href "https://example.org/b"
+    click Bee href "https://example.org/bee"

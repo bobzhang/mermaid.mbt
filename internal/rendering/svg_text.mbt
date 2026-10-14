@@ -243,6 +243,7 @@ fn text_box(
   lines : Array[Array[Word]],
   env : Env,
   anchor_middle : Bool,
+  restyle~ : (Int32, Run) -> Run = (_, run) => run,
 ) -> @dom.Rect {
   let mut box : BoxF = { x: 0, y: 0, width: 0, height: 0, }
   let size = env.font_size
@@ -250,7 +251,9 @@ fn text_box(
   for index, line in lines {
     let y = em_to_px(index.to_double() * 1.1 - 0.1, size)
     let baseline = y + em_to_px(1.1, size)
-    let items = line_items_text(line)
+    // `restyle` changes the face of the items of a line, as a style
+    // on its elements would.
+    let items = line_items_text(line).map(run => restyle(index, run))
     let widths = item_widths(items, env)
     let total = widths.fold(init=0.0, (a, b) => a + b)
     let mut x = if anchor_middle { -total / 2.0 } else { 0.0 }
@@ -289,6 +292,9 @@ priv struct SvgLabel {
   group : @dom.Element
   /// The box of the text element.
   text_box : @dom.Rect
+  /// The text element and its lines as they were broken.
+  element : @dom.Element
+  lines : Array[Array[Word]]
 }
 
 ///|
@@ -305,15 +311,25 @@ fn create_svg_label(
   add_background~ : Bool = false,
   markdown~ : Bool = false,
   anchor_middle~ : Bool = !is_node,
+  sanitize~ : Bool = true,
+  is_title~ : Bool = false,
 ) -> SvgLabel {
-  let structured = if markdown {
-    markdown_to_lines(
-      @dom.sanitized_text(@dom.placeholders_to_references(text)),
-    )
+  // The style is written on the text, which is laid out with it.
+  let env = env.styled(style, faces=false)
+  // Node labels are sanitized on their way here, which resolves the
+  // character references of text that has markup in it: the sanitizer
+  // hands back text without a tag as it is. Edge labels are not
+  // sanitized, and keep their references as text.
+  let source = @dom.placeholders_to_references(text)
+  let source = if sanitize && source.contains("<") {
+    @dom.sanitized_text(source)
   } else {
-    non_markdown_to_lines(
-      @dom.sanitized_text(@dom.placeholders_to_references(text)),
-    )
+    source
+  }
+  let structured = if markdown {
+    markdown_to_lines(source)
+  } else {
+    non_markdown_to_lines(source)
   }
   let center = !is_node
   let group = parent.append("g")
@@ -388,10 +404,11 @@ fn create_svg_label(
     |> ignore
     element.attr("style", text_style) |> ignore
   }
+  let row = if is_title { "title-row" } else { "row" }
   for tspan in element.child_elements() {
-    tspan.attr("class", "text-outer-tspan row") |> ignore
+    tspan.attr("class", "text-outer-tspan \{row}") |> ignore
   }
-  { group, text_box: box, }
+  { group, text_box: box, element, lines, }
 }
 
 ///|

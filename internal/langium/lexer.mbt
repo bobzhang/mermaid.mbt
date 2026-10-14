@@ -339,19 +339,13 @@ pub fn Lexer::string(self : Lexer) -> String? {
   }
   let out = StringBuilder()
   let mut cursor = self.position + 1
-  // Plain text is copied a run at a time, which keeps surrogate pairs
-  // whole.
-  let mut run = cursor
   while cursor < self.input.length() {
     let unit = self.unit(cursor)
     if unit == quote {
-      out.write_view(self.input[run:cursor])
       self.position = cursor + 1
       return Some(out.to_string())
     }
     if unit == '\\' {
-      out.write_view(self.input[run:cursor])
-      run = cursor + 2
       guard cursor + 1 < self.input.length() else { return None }
       let escaped = self.unit(cursor + 1)
       out.write_char(
@@ -368,7 +362,17 @@ pub fn Lexer::string(self : Lexer) -> String? {
       )
       cursor += 2
     } else {
-      cursor += 1
+      // Both halves of a character outside the basic plane go together.
+      let code = unit.to_int()
+      let width = if code >= 0xD800 &&
+        code < 0xDC00 &&
+        cursor + 1 < self.input.length() {
+        2
+      } else {
+        1
+      }
+      out.write_view(self.input[cursor:cursor + width])
+      cursor += width
     }
   }
   None

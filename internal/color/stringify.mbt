@@ -64,11 +64,10 @@ fn Channels::to_hex_string(self : Channels) -> String {
 
 ///|
 /// The 8-bit sRGB channels a browser resolves this color to. An HSL color
-/// is converted with the CSS Color 4 formula in double precision and its
-/// channels stored as 32-bit floats, as Blink does, which decides the
-/// rounding of channels that land on a half: of nine theme colors
-/// measured in the reference browser, no mix of precisions but this one
-/// gives them all.
+/// is converted in 32-bit floats with the CSS Color 4 formula, as Blink
+/// does (`gfx::HSLToSRGB`), and nudged up by a small epsilon before it is
+/// scaled (`SerializeLegacyColorAsCSSColor`): together they decide the
+/// rounding of channels that land on a half.
 pub fn Channels::to_css_rgb(self : Channels) -> (Int32, Int32, Int32) {
   let round = (value : Float) => {
     let scaled = value * 255.0
@@ -95,31 +94,32 @@ pub fn Channels::to_css_rgb(self : Channels) -> (Int32, Int32, Int32) {
     )
   }
   let (h, s, l) = self.hsl_data()
-  // The formula runs in double precision; a channel becomes a float
-  // only when the color is stored.
-  let s = s / 100.0
-  let l = l / 100.0
+  // The parser brings the hue into one turn and scales the percentages
+  // down, all in doubles; the color then keeps floats.
+  let turn = h % 360.0
+  let h = Float::from_double(if turn < 0.0 { turn + 360.0 } else { turn })
+  let s = Float::from_double(s / 100.0)
+  let l = Float::from_double(l / 100.0)
+  let epsilon : Float = 1.0e-7
   if s == 0.0 {
-    let gray = Float::from_double(l)
-    return (round(gray), round(gray), round(gray))
+    return (round(l + epsilon), round(l + epsilon), round(l + epsilon))
   }
-  let channel = (n : Double) => {
-    let mut k = (n + h / 30.0) % 12.0
-    if k < 0.0 {
-      k += 12.0
-    }
+  let channel = (n : Float) => {
+    let k = Float::from_double((n + h / 30.0).to_double() % 12.0)
     let a = s * (if l < 1.0 - l { l } else { 1.0 - l })
-    let mut m = k - 3.0
-    if 9.0 - k < m {
-      m = 9.0 - k
+    let nine : Float = 9.0
+    let one : Float = 1.0
+    let mut m : Float = k - 3.0
+    if nine - k < m {
+      m = nine - k
     }
-    if m > 1.0 {
-      m = 1.0
+    if m > one {
+      m = one
     }
-    if m < -1.0 {
-      m = -1.0
+    if m < -one {
+      m = -one
     }
-    Float::from_double(l - a * m)
+    l - a * m + epsilon
   }
   (round(channel(0.0)), round(channel(8.0)), round(channel(4.0)))
 }

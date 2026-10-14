@@ -49,6 +49,8 @@ fn create_html_label(
   let span = div.append("span")
   span.set_inner_html(html)
   let label_style = style.replace(old="fill:", new="color:")
+  // The style is written on the label, so its text is laid out with it.
+  let env = env.styled(label_style)
   if label_style != "" {
     span.attr("style", label_style) |> ignore
   }
@@ -73,8 +75,20 @@ fn create_html_label(
     div.attr("class", "labelBkg") |> ignore
   }
   // What the browser lays out: every line on its own unless the label
-  // has to wrap.
-  let lines = label_lines(span).map(collapse_runs)
+  // has to wrap. The label's own style can change the face and the size.
+  let font = label_font(label_style)
+  let env = match font.size {
+    Some(size) => { ..env, font_size: size, }
+    None => env
+  }
+  let styled = (line : Array[Run]) => {
+    line.map(run => {
+      ..run,
+      bold: run.bold || font.bold,
+      italic: run.italic || font.italic,
+    })
+  }
+  let lines = label_lines(span).map(collapse_runs).map(styled)
   let line_height = 1.5 * env.font_size
   let natural = lines.fold(init=0.0, (widest, line) => {
     widest.max(runs_width(line, env))
@@ -100,7 +114,7 @@ fn create_html_label(
     let mut rows = 0
     let mut box_width = width
     for line in label_lines(span) {
-      let (line_rows, widest) = wrapped_rows(line, width, env)
+      let (line_rows, widest) = wrapped_rows(styled(line), width, env)
       rows += line_rows
       box_width = box_width.max(widest)
     }
@@ -140,6 +154,7 @@ fn label_helper(
   env : Env,
   unlimited~ : Bool = false,
   ignore_min_width~ : Bool = false,
+  html_labels? : Bool,
 ) -> Labelled {
   let shape_svg = parent
     .append("g")
@@ -149,9 +164,10 @@ fn label_helper(
     .append("g")
     .attr("class", "label")
     .attr("style", node.label_style)
-  let wrapping_width = env.config
-    .number("flowchart.wrappingWidth")
-    .unwrap_or(200.0)
+  let wrapping_width = match node.wrapping_width {
+    Some(width) if width != 0.0 => width
+    _ => env.config.number("flowchart.wrappingWidth").unwrap_or(200.0)
+  }
   let min_label_width = if node.label != "" &&
     node.width is None &&
     !unlimited &&
@@ -169,7 +185,14 @@ fn label_helper(
   let n = @dom.number
   let mut offset_x = 0.0
   let mut offset_y = 0.0
-  let box = if env.html_labels {
+  // Node labels follow the root `htmlLabels` setting alone, whatever the
+  // deprecated flowchart one says, unless the shape decides for itself.
+  let html_labels = match (html_labels, env.config.get("htmlLabels")) {
+    (Some(html_labels), _) => html_labels
+    (None, Null) => true
+    (None, value) => @config.evaluate(value)
+  }
+  let box = if html_labels {
     let (fo, box) = create_html_label(
       label,
       node.label,
@@ -194,15 +217,15 @@ fn label_helper(
     |> ignore
     box
   } else {
-    // Text is centred by its anchor; only the height needs a shift.
+    // Text centred by its anchor needs only its height shifted.
     let text = create_svg_label(
       label,
       node.label,
-      env,
+      env.styled(node.label_style, faces=false),
       width?=label_width,
       style=node.label_style,
       markdown~,
-      anchor_middle=true,
+      anchor_middle=env.node_text_centred,
     )
     let box : LabelBox = {
       width: text.text_box.width.max(min_label_width),
@@ -217,6 +240,13 @@ fn label_helper(
     offset_y = text.text_box.y
     label.attr("transform", "translate(0, \{n(-box.height / 2.0)})") |> ignore
     box
+  }
+  if node.center_label {
+    label.attr(
+      "transform",
+      "translate(\{n(-box.width / 2.0)}, \{n(-box.height / 2.0)})",
+    )
+    |> ignore
   }
   label.insert_first("rect") |> ignore
   { shape_svg, label, bbox: box, offset_x, offset_y, }
