@@ -10,6 +10,10 @@ pub fn arc_centroid(inner_radius~ : Double, outer_radius~ : Double, start_angle~
 
 pub fn arc_path(inner_radius~ : Double, outer_radius~ : Double, start_angle~ : Double, end_angle~ : Double) -> String
 
+pub fn format(String) -> Format raise FormatError
+
+pub fn[T] hierarchy(T, (T) -> Array[T]) -> HierarchyNode[T]
+
 pub fn js_round(Double) -> Double
 
 pub fn[T] js_sort(Array[T], (T, T) -> Double) -> Unit
@@ -22,12 +26,46 @@ pub fn sankey(Int, Array[(Int, Int, Double)], node_width? : Double, node_padding
 
 pub let scheme_tableau10 : Array[String]
 
+pub fn to_exponential(Double, digits? : Int) -> String
+
+pub fn to_fixed(Double, Int) -> String
+
+pub fn to_precision(Double, Int) -> String
+
 // Errors
+pub(all) suberror FormatError {
+  InvalidFormat(String)
+} derive(Eq, @debug.Debug)
+
 pub(all) suberror SankeyError {
   CircularLink
 } derive(Eq, @debug.Debug)
 
 // Types and methods
+pub struct Format {
+  // private fields
+}
+pub fn Format::apply(Self, Double) -> String
+
+pub struct HierarchyNode[T] {
+  data : T
+  mut depth : Int
+  mut height : Int
+  mut parent : HierarchyNode[T]?
+  mut children : Array[HierarchyNode[T]]?
+  mut value : Double
+  mut x0 : Double
+  mut y0 : Double
+  mut x1 : Double
+  mut y1 : Double
+}
+pub fn[T] HierarchyNode::descendants(Self[T]) -> Array[Self[T]]
+pub fn[T] HierarchyNode::each_after(Self[T], (Self[T]) -> Unit) -> Unit
+pub fn[T] HierarchyNode::each_before(Self[T], (Self[T]) -> Unit) -> Unit
+pub fn[T] HierarchyNode::leaves(Self[T]) -> Array[Self[T]]
+pub fn[T] HierarchyNode::sort(Self[T], (Self[T], Self[T]) -> Double) -> Unit
+pub fn[T] HierarchyNode::sum(Self[T], (T) -> Double) -> Unit
+
 pub struct Ordinal[T] {
   // private fields
 }
@@ -88,6 +126,18 @@ pub struct SankeyNode {
   mut y0 : Double
   mut y1 : Double
 }
+
+pub(all) struct TreemapLayout[T] {
+  width : Double
+  height : Double
+  padding_inner : (HierarchyNode[T]) -> Double
+  padding_top : (HierarchyNode[T]) -> Double
+  padding_right : (HierarchyNode[T]) -> Double
+  padding_bottom : (HierarchyNode[T]) -> Double
+  padding_left : (HierarchyNode[T]) -> Double
+  round : Bool
+}
+pub fn[T] TreemapLayout::layout(Self[T], HierarchyNode[T]) -> Unit
 
 // Type aliases
 

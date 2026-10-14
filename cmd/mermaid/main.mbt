@@ -6,11 +6,13 @@ let usage : String =
   #|  render <file.mmd> [--id ID] [--config site.json]
   #|                         render a diagram to SVG on stdout
   #|  config [site.json]     print the effective configuration as JSON
-  #|  measure <cases.json>   measure text; cases are {text, size, bold, italic}
+  #|  measure <cases.json>   measure text; cases are {text, size, bold, italic},
+  #|                         with {x, y, anchor, baseline, scale} for placed SVG text
   #|  regex <cases.json>     match prefixes; cases are {source, flags, input}
   #|  flow-db <file.mmd>...  print each flowchart's parsed database as JSON
   #|  git-db <file.mmd>...   print each git graph's parsed database as JSON
   #|  bbox <cases.json>      print getBBox() of an <svg> around each markup string
+  #|  format <cases.json>    format numbers; cases are {specifier, value}
   #|
 
 ///|
@@ -95,6 +97,38 @@ fn measure(path : String) -> Unit raise CliError {
           italic=italic is True,
         )
       _ => @font.Stack::default(bold=bold is True, italic=italic is True)
+    }
+    // A case with a position is SVG text placed in a scaled diagram.
+    if item is { "x": Number(x, ..), "y": Number(y, ..), .. } {
+      let scale = match item {
+        { "scale": Number(scale, ..), .. } => scale
+        _ => 1.0
+      }
+      let anchor = match item {
+        { "anchor": String(anchor), .. } => anchor
+        _ => "start"
+      }
+      let baseline = match item {
+        { "baseline": String(baseline), .. } => baseline
+        _ => "auto"
+      }
+      let box = stack.svg_text_box(
+        text,
+        size,
+        x~,
+        y~,
+        anchor~,
+        baseline~,
+        scale~,
+      )
+      results.push({
+        "len": stack.svg_text_length(text, size, scale~),
+        "x": box.x,
+        "y": box.y,
+        "w": box.width,
+        "h": box.height,
+      })
+      continue
     }
     let box = stack.bbox(text, size)
     results.push({
@@ -256,6 +290,7 @@ fn main {
       ["git-db", .. paths] => git_db(paths)
       ["bbox", path] => bboxes(path)
       ["path-length", path] => path_lengths(path)
+      ["format", path] => formats(path)
       _ => println(usage)
     }
   } catch {
