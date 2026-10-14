@@ -1,0 +1,22 @@
+---
+config:
+  handDrawnSeed: 7
+---
+classDiagram
+    namespace BaseShapes {
+        class Triangle
+        class Rectangle {
+          double width
+          double height
+        }
+    }
+    namespace Other["Other shapes"] {
+        class Circle
+        note "inside"
+    }
+    namespace Company.Engineering {
+        class Developer
+    }
+    Triangle --> Circle : to
+    Developer ..> Rectangle
+    class Loose

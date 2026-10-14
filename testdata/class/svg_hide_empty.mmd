@@ -1,0 +1,15 @@
+---
+config:
+  htmlLabels: false
+  handDrawnSeed: 7
+  class:
+    hideEmptyMembersBox: true
+---
+classDiagram
+  class A
+  class B {
+    +int x
+  }
+  class C <<interface>>
+  A --> B
+  C --> A

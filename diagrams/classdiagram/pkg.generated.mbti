@@ -1,0 +1,102 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/diagrams/classdiagram"
+
+import {
+  "bobzhang/mermaid/config",
+  "bobzhang/mermaid/diagram",
+  "bobzhang/mermaid/internal/rendering",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn draw(ClassDb, @diagram.Context) -> Unit raise @rendering.LayoutError
+
+pub fn parse(String, @config.Config) -> ClassDb raise
+
+pub fn styles(@config.Config) -> String
+
+// Errors
+pub(all) suberror ClassError {
+  Invalid(String)
+  Unsupported(String)
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+pub struct ClassDb {
+  relations : Array[ClassRelation]
+  classes : Map[String, ClassNode]
+  notes : Map[String, ClassNote]
+  interfaces : Array[Interface]
+  namespaces : Map[String, Namespace]
+  mut acc_title : String
+  mut acc_description : String
+  mut title : String
+  // private fields
+}
+pub fn ClassDb::direction(Self) -> String
+pub fn ClassDb::set_title(Self, String) -> Unit
+
+pub struct ClassMember {
+  id : String
+  member_type : String
+  visibility : String
+  text : String
+  classifier : String
+  parameters : String
+  return_type : String
+}
+pub fn ClassMember::css_style(Self) -> String
+
+pub struct ClassNode {
+  id : String
+  type_ : String
+  mut label : String
+  mut text : String
+  mut css_classes : String
+  methods : Array[ClassMember]
+  members : Array[ClassMember]
+  annotations : Array[String]
+  styles : Array[String]
+  dom_id : String
+  mut parent : String?
+  mut link : String?
+  mut link_target : String?
+  mut have_callback : Bool
+  mut tooltip : String?
+}
+
+pub struct ClassNote {
+  id : String
+  class_ : String?
+  text : String
+  index : Int
+  mut parent : String?
+}
+
+pub struct ClassRelation {
+  id1 : String
+  id2 : String
+  title1 : String
+  title2 : String
+  title : String?
+  type1 : Int?
+  type2 : Int?
+  dotted : Bool
+}
+
+pub struct Interface {
+  id : String
+  label : String
+  class_id : String
+}
+
+pub struct Namespace {
+  id : String
+  mut label : String
+  parent : String?
+  mut explicit : Bool
+}
+
+// Type aliases
+
+// Traits

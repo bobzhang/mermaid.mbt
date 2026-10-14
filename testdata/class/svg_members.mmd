@@ -1,0 +1,20 @@
+---
+config:
+  htmlLabels: false
+  handDrawnSeed: 7
+---
+classDiagram
+    class BankAccount {
+      +String owner
+      +BigDecimal balance
+      #int secret
+      ~package pkg
+      -List~String~ history$
+      id
+      +deposit(amount) bool
+      +withdrawal(amount) int
+      -audit(List~int~ entries, Map~K, V~ m) List~Entry~*
+      #helper()$
+      ~pkgMethod(a, b) void
+      plain()
+    }
