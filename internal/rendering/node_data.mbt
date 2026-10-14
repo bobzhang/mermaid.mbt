@@ -65,4 +65,13 @@ pub(all) enum NodeData {
     font_size~ : Double,
     bold~ : Bool
   )
+  /// An item of a kanban board: its ticket and whom it is assigned to,
+  /// empty when it has none; its priority, if any; and whether it has an
+  /// icon, which only gives its title a background.
+  KanbanItem(
+    ticket~ : String,
+    assigned~ : String,
+    priority~ : String?,
+    icon~ : Bool
+  )
 }

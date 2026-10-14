@@ -1,0 +1,31 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/diagrams/kanban"
+
+import {
+  "bobzhang/mermaid/config",
+  "bobzhang/mermaid/diagram",
+  "bobzhang/mermaid/theme",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn draw(KanbanDb, @diagram.Context) -> Unit raise
+
+pub fn parse(String, @config.Config) -> KanbanDb raise
+
+pub fn styles(@theme.Theme) -> String raise KanbanError
+
+// Errors
+pub(all) suberror KanbanError {
+  Invalid(String)
+  Unsupported(String)
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+pub struct KanbanDb {
+  // private fields
+}
+
+// Type aliases
+
+// Traits
