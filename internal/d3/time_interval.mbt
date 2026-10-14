@@ -129,7 +129,9 @@ pub fn TimeInterval::filter(
           remaining -= 1.0
           while true {
             date = (self.offseti)(date, direction)
-            if keep(date) {
+            // d3 would step on for ever past the last valid date; no
+            // boundary is left to find there.
+            if date.is_nan() || keep(date) {
               break
             }
           }

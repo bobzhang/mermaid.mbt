@@ -1,0 +1,28 @@
+---
+config:
+  gantt:
+    useWidth: 1200
+    useMaxWidth: false
+    barHeight: 30
+    barGap: 6
+    fontSize: 14
+    sectionFontSize: 16
+    leftPadding: 120
+    gridLineStartPadding: 40
+    titleTopMargin: 30
+    topPadding: 60
+    rightPadding: 40
+    numberSectionStyles: 3
+---
+gantt
+    todayMarker off
+    dateFormat YYYY-MM-DD
+    title Configured
+    section One
+    Done task :done, d1, 2024-01-01, 5d
+    section Two
+    Active task :active, a1, after d1, 3d
+    section Three
+    Crit task :crit, c1, after a1, 2d
+    section Four
+    Milestone :milestone, m1, 2024-01-10, 0d

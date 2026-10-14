@@ -96,24 +96,32 @@ fn parse_int(text : String) -> Double {
 /// For the compact display mode: lay the tasks of one section out on as
 /// few rows as their overlaps allow, numbering rows from `order_offset`.
 /// Returns the index of the last row used.
-fn max_intersections(tasks : Array[Task], order_offset : Int32) -> Int32 {
+fn max_intersections(
+  tasks : Array[Task],
+  order_offset : Int32,
+) -> Int32 raise GanttError {
   let timeline = tasks.map(_ => @double.neg_infinity)
   let sorted = tasks.copy()
-  sorted.sort_by((a, b) => {
-    let by_start = a.start_time
-      .unwrap_or(0.0)
-      .compare(b.start_time.unwrap_or(0.0))
-    if by_start != 0 {
-      by_start
-    } else {
-      a.order.compare(b.order)
-    }
-  })
+  // `a.startTime - b.startTime || a.order - b.order`
+  sort_tasks(
+    sorted,
+    (a, b) => {
+      let by_start = time_or_nan(a.start_time) - time_or_nan(b.start_time)
+      if by_start.is_nan() || by_start == 0.0 {
+        (a.order - b.order).to_double()
+      } else {
+        by_start
+      }
+    },
+    consistent=tasks.iter().all(has_start),
+  )
   let mut max = 0
   for task in sorted {
     for j in 0..<timeline.length() {
-      if task.start_time.unwrap_or(0.0) >= timeline[j] {
-        timeline[j] = task.end_time.unwrap_or(@double.not_a_number)
+      // A task without a start never finds a row, and one without an
+      // end blocks its row for good.
+      if time_or_nan(task.start_time) >= timeline[j] {
+        timeline[j] = time_or_nan(task.end_time)
         task.order = j + order_offset
         if j > max {
           max = j
@@ -123,6 +131,18 @@ fn max_intersections(tasks : Array[Task], order_offset : Int32) -> Int32 {
     }
   }
   max
+}
+
+///|
+/// A time as a number: NaN for a missing or invalid one.
+fn time_or_nan(time : Double?) -> Double {
+  time.unwrap_or(@double.not_a_number)
+}
+
+///|
+/// Whether the task's start is known and valid.
+fn has_start(task : Task) -> Bool {
+  !time_or_nan(task.start_time).is_nan()
 }
 
 ///|
@@ -210,14 +230,6 @@ pub fn draw(db : GanttDb, context : @diagram.Context) -> Unit raise GanttError {
   // The chart is as wide as the element the diagram sits in.
   let w = config.number("gantt.useWidth").unwrap_or(context.container_width())
   let tasks = db.compile(context.now)
-  for task in tasks {
-    // Upstream sorts by start time next; with times missing, the order
-    // would be whatever its sorting algorithm makes of an inconsistent
-    // comparison.
-    guard task.start_time is Some(start) && !start.is_nan() else {
-      raise Unsupported("a task whose start time cannot be worked out")
-    }
-  }
   let tasks_without_vert = tasks.filter(task => !task.vert)
   let categories : Array[String] = []
   for task in tasks_without_vert {
@@ -280,13 +292,24 @@ pub fn draw(db : GanttDb, context : @diagram.Context) -> Unit raise GanttError {
   let time_scale = @d3.TimeScale::new(zone)
     .set_domain(domain_start, domain_end)
     .set_range_round(0.0, w - left_padding - right_padding)
-  let scale = (time : Double?) => {
-    time_scale.apply(time.unwrap_or(@double.not_a_number))
-  }
-  // Tasks are drawn in the order of their start.
-  tasks.sort_by((a, b) => {
-    a.start_time.unwrap_or(0.0).compare(b.start_time.unwrap_or(0.0))
-  })
+  let scale = (time : Double?) => time_scale.apply(time_or_nan(time))
+  // Tasks are drawn in the order of their start; one whose start is not
+  // known compares equal to all others.
+  sort_tasks(
+    tasks,
+    (a, b) => {
+      let a = time_or_nan(a.start_time)
+      let b = time_or_nan(b.start_time)
+      if a > b {
+        1.0
+      } else if a < b {
+        -1.0
+      } else {
+        0.0
+      }
+    },
+    consistent=tasks.iter().all(has_start),
+  )
   let gap = bar_height + bar_gap
   // The days excluded from the chart, as bands behind everything else.
   if !(db.excludes.is_empty() && db.includes.is_empty()) {
@@ -728,6 +751,8 @@ fn bbox_width(
 ) -> Double {
   let f = Float::from_double
   let size = (f(font_size) * scale).to_double()
+  // A position that is not a number is no position: the text stays at 0.
+  let x = if x.is_nan() { 0.0 } else { x }
   let left = f(x) * scale
   let advance = f(font.advance(text, size))
   let ink = font.ink(text, size)

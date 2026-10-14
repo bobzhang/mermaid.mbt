@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Check the dayjs and d3 time ports against the libraries mermaid bundles.
+"""Check the dayjs and d3 time ports, and the Gantt chart's database, against
+the code mermaid bundles.
 
 Random dates are formatted, parsed back (also after being damaged), added
-to, and turned into scales, ticks and tick labels, by `scripts/gantt_node.mjs`
-(the bundled dayjs and d3 under Node, in the reference time zone) and by
+to, and turned into scales, ticks and tick labels, and random Gantt charts
+are parsed and their tasks dated, by `scripts/gantt_node.mjs` (the bundled
+dayjs, d3 and Gantt database under Node, in the reference time zone) and by
 `cmd/mermaid time`; every difference is reported.
 
 Usage: python3 scripts/check_time.py [--count N] [--seed S]
@@ -20,6 +22,7 @@ import tempfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import compare  # noqa: E402
+import gantt_corpus  # noqa: E402
 
 ROOT = compare.ROOT
 FORMATS = [
@@ -122,6 +125,9 @@ def corpus(count, rng):
         cases.append({"op": "timeFormat", "specifier": rng.choice(SPECIFIERS), "time": time_value(rng)})
         values = [start, stop, start + span / 3, start - span, time_value(rng), None]
         cases.append({"op": "scale", "domain": [start, stop], "range": [0, rng.choice([590, 1125, 333.5])], "values": values})
+    # Whole charts: what the parser collects and the dates of the tasks.
+    for index in range(count // 4):
+        cases.append({"op": "db", "text": gantt_corpus.chart(rng, index), "now": rng.randint(1_600_000_000_000, 1_800_000_000_000)})
     return cases
 
 

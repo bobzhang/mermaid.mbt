@@ -9,15 +9,31 @@ fn substr(text : String, start : Int32) -> String {
 }
 
 ///|
-/// mermaid's `sanitizeText` for text without markup: the text goes through
-/// an HTML sanitizer and comes back as HTML source, so `&`, `<` and `>`
-/// return as references (and show as such, the text being used as text).
-/// Text with tags in it would need the sanitizer itself.
+/// mermaid's `sanitizeText`, which hands the text to an HTML sanitizer and
+/// uses what comes back — HTML source — as plain text.
+///
+/// Text without a `<` is returned untouched by the sanitizer. Any other
+/// text is parsed and written out again, so that what was text comes back
+/// escaped: `&`, `<` and `>` as references (shown as such), character
+/// references resolved. Text with actual tags in it would need the
+/// sanitizer itself.
 fn sanitize_text(text : String) -> String raise GanttError {
+  if !text.contains("<") {
+    return text
+  }
   let out = StringBuilder()
   let length = text.length()
-  for i in 0..<length {
+  // Ordinary text is copied in runs, from `copied` on.
+  let mut copied = 0
+  let mut i = 0
+  while i < length {
     let c = text.unsafe_get(i)
+    if !(c == '<' || c == '>' || c == '&' || c == '\u{a0}') {
+      i += 1
+      continue
+    }
+    out.write_string(text.unsafe_substring(start=copied, end=i))
+    copied = i + 1
     if c == '<' {
       // A tag starts with a letter, a slash, a bang or a question mark.
       let next = if i + 1 < length {
@@ -35,13 +51,47 @@ fn sanitize_text(text : String) -> String raise GanttError {
       out.write_string("&lt;")
     } else if c == '>' {
       out.write_string("&gt;")
+    } else if c == '\u{a0}' {
+      out.write_string("&nbsp;")
     } else {
-      out.write_char(c.to_int().unsafe_to_char())
+      // A character reference, or just an ampersand.
+      let rest = text.unsafe_substring(start=i, end=length)
+      match character_reference.exec(rest) {
+        Some(found) if found.text() is ("&amp;" | "&lt;" | "&gt;") ||
+          @dom.sanitized_text(found.text()) != found.text() => {
+          out.write_string(@dom.sanitized_text(found.text()))
+          i += found.text().length()
+          copied = i
+          continue
+        }
+        _ => {
+          // HTML also reads the oldest names without their semicolon.
+          if legacy_reference.exec(rest) is Some(_) {
+            raise Unsupported(
+              "a character reference without a semicolon in a title or description",
+            )
+          }
+          out.write_string("&amp;")
+        }
+      }
     }
+    i += 1
   }
-  // Character references are resolved, except the three above.
-  @dom.sanitized_text(out.to_string())
+  out.write_string(text.unsafe_substring(start=copied, end=length))
+  out.to_string()
 }
+
+///|
+/// A character reference as it should be written.
+let character_reference : @jsregex.Regex = regex(
+  "^&(?:#[0-9]+|#[xX][0-9a-fA-F]+|[A-Za-z][A-Za-z0-9]*);",
+)
+
+///|
+/// The names HTML resolves even without a semicolon.
+let legacy_reference : @jsregex.Regex = regex(
+  "^&(?:AElig|AMP|Aacute|Acirc|Agrave|Aring|Atilde|Auml|COPY|Ccedil|ETH|Eacute|Ecirc|Egrave|Euml|GT|Iacute|Icirc|Igrave|Iuml|LT|Ntilde|Oacute|Ocirc|Ograve|Oslash|Otilde|Ouml|QUOT|REG|THORN|Uacute|Ucirc|Ugrave|Uuml|Yacute|aacute|acirc|acute|aelig|agrave|amp|aring|atilde|auml|brvbar|ccedil|cedil|cent|copy|curren|deg|divide|eacute|ecirc|egrave|eth|euml|frac12|frac14|frac34|gt|iacute|icirc|iexcl|igrave|iquest|iuml|laquo|lt|macr|micro|middot|nbsp|not|ntilde|oacute|ocirc|ograve|ordf|ordm|oslash|otilde|ouml|para|plusmn|pound|quot|raquo|reg|sect|shy|sup1|sup2|sup3|szlig|thorn|times|uacute|ucirc|ugrave|uml|uuml|yacute|yen|yuml)",
+)
 
 ///|
 let indentation : @jsregex.Regex = regex("\\n\\s+")
