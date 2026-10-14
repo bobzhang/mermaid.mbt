@@ -1,0 +1,8 @@
+import {
+  "bobzhang/mermaid/config",
+  "bobzhang/mermaid/internal/jsregex",
+  "bobzhang/mermaid/internal/langium",
+  "moonbitlang/core/string",
+}
+
+warnings = "-implicit_impl_as_method"

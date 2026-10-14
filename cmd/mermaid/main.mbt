@@ -9,6 +9,7 @@ let usage : String =
   #|  measure <cases.json>   measure text; cases are {text, size, bold, italic}
   #|  regex <cases.json>     match prefixes; cases are {source, flags, input}
   #|  flow-db <file.mmd>...  print each flowchart's parsed database as JSON
+  #|  git-db <file.mmd>...   print each git graph's parsed database as JSON
   #|  bbox <cases.json>      print getBBox() of an <svg> around each markup string
   #|
 
@@ -188,6 +189,34 @@ fn flow_db(paths : ArrayView[String]) -> Unit raise CliError {
 }
 
 ///|
+fn git_db(paths : ArrayView[String]) -> Unit raise CliError {
+  for path in paths {
+    let source = read_text(path)
+    let line = try {
+      let processed = @preprocess.preprocess(source)
+      let config = @config.Config::new(
+        directive=processed.config,
+        diagram_type="gitGraph",
+      )
+      @gitgraph.parse(
+        @preprocess.encode_entities(processed.code) + "\n",
+        config,
+      )
+      .dump()
+      .stringify()
+    } catch {
+      error => {
+        let report : Json = { "error": Repr(error).to_string() }
+        report.stringify()
+      }
+    } noraise {
+      text => text
+    }
+    println(line)
+  }
+}
+
+///|
 /// Print the box of an `<svg>` element holding each markup string of a
 /// JSON array, as `[x, y, width, height]`, for comparing with `getBBox()`.
 fn bboxes(path : String) -> Unit raise CliError {
@@ -221,6 +250,7 @@ fn main {
       ["measure", path] => measure(path)
       ["regex", path] => regex(path)
       ["flow-db", .. paths] => flow_db(paths)
+      ["git-db", .. paths] => git_db(paths)
       ["bbox", path] => bboxes(path)
       ["path-length", path] => path_lengths(path)
       _ => println(usage)
