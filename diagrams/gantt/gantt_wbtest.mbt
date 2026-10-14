@@ -4,7 +4,7 @@
 
 ///|
 fn dates(db : GanttDb, now : Double) -> String raise {
-  let zone = @jsdate.Zone::system()
+  let zone = @jsdate.Zone::reference()
   let stamp = (time : Double?) => {
     match time {
       None => "-"

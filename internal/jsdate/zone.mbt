@@ -4,7 +4,7 @@
 ///
 /// `Date` has no zone of its own; local-time methods use the zone of the
 /// machine. The reference renderings come from a machine in
-/// `Asia/Shanghai`, so that is the zone the port emulates (`Zone::system`).
+/// `Asia/Shanghai`, so that is the zone the port emulates (`Zone::reference`).
 pub struct Zone {
   name : String
   /// UTC instants (milliseconds since the epoch) at which the offset
@@ -60,7 +60,7 @@ pub fn Zone::shanghai() -> Zone {
 ///|
 /// The zone local times are computed in: the one of the machine the
 /// reference renderings were made on.
-pub fn Zone::system() -> Zone {
+pub fn Zone::reference() -> Zone {
   shanghai_zone
 }
 

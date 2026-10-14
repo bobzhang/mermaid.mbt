@@ -28,7 +28,7 @@ fn dates(path : String) -> Unit raise CliError {
   guard read_json(path) is Array(cases) else {
     raise CliError("\{path} must hold an array of cases", status=2)
   }
-  let zone = @jsdate.Zone::system()
+  let zone = @jsdate.Zone::reference()
   let results : Array[Json] = []
   for item in cases {
     let result = match item {
@@ -146,7 +146,7 @@ fn field_text(item : Json, name : String) -> String {
 /// Evaluate one dayjs or d3 time operation; the cases are those of
 /// scripts/gantt_node.mjs.
 fn time_case(item : Json) -> Json raise {
-  let zone = @jsdate.Zone::system()
+  let zone = @jsdate.Zone::reference()
   let now = match field_number(item, "now") {
     n if n.is_nan() => 0.0
     n => n

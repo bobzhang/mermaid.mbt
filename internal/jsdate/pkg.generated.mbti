@@ -27,13 +27,13 @@ pub fn Zone::month(Self, Double) -> Double
 pub fn Zone::name(Self) -> String
 pub fn Zone::offset_at(Self, Double) -> Double
 pub fn Zone::parse(Self, String) -> Double
+pub fn Zone::reference() -> Self
 pub fn Zone::seconds(Self, Double) -> Double
 pub fn Zone::set_date(Self, Double, Double) -> Double
 pub fn Zone::set_full_year(Self, Double, Double, month? : Double, date? : Double) -> Double
 pub fn Zone::set_hours(Self, Double, Double, minutes? : Double, seconds? : Double, ms? : Double) -> Double
 pub fn Zone::set_month(Self, Double, Double, date? : Double) -> Double
 pub fn Zone::shanghai() -> Self
-pub fn Zone::system() -> Self
 pub fn Zone::timezone_offset(Self, Double) -> Double
 pub fn Zone::to_utc(Self, Double) -> Double
 pub fn Zone::utc() -> Self

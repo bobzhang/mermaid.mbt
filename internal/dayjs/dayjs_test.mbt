@@ -3,7 +3,7 @@
 
 ///|
 test "strict parsing gives the text back or nothing" {
-  let zone = @jsdate.Zone::system()
+  let zone = @jsdate.Zone::reference()
   let parse = (text : String, format : String) => {
     @dayjs.Dayjs::parse(zone, text, format, now=1700000000000.0).value_of()
   }
@@ -20,7 +20,7 @@ test "strict parsing gives the text back or nothing" {
 
 ///|
 test "week tokens need a plugin mermaid does not load" {
-  let zone = @jsdate.Zone::system()
+  let zone = @jsdate.Zone::reference()
   let date = @dayjs.Dayjs::new(zone, 1388851200000.0)
   inspect(
     date.format("YYYY-MM-DD Do Q W GGGG"),
@@ -40,7 +40,7 @@ test "week tokens need a plugin mermaid does not load" {
 
 ///|
 test "calendar arithmetic" {
-  let zone = @jsdate.Zone::system()
+  let zone = @jsdate.Zone::reference()
   let date = @dayjs.Dayjs::new(zone, zone.make(2014.0, 0.0, date=31.0))
   // A month after January 31st is the last day of February.
   inspect(date.add(1.0, "M").format("YYYY-MM-DD"), content="2014-02-28")

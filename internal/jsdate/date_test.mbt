@@ -3,7 +3,7 @@
 
 ///|
 test "local dates around the offset changes of Asia/Shanghai" {
-  let zone = @jsdate.Zone::system()
+  let zone = @jsdate.Zone::reference()
   // 2:30 on the night the clocks went forward in 1986 does not exist; it
   // is read with the offset before the change.
   inspect(
@@ -28,7 +28,7 @@ test "local dates around the offset changes of Asia/Shanghai" {
 
 ///|
 test "fields and setters" {
-  let zone = @jsdate.Zone::system()
+  let zone = @jsdate.Zone::reference()
   let time = zone.make(2014.0, 0.0, date=31.0, hours=13.0, minutes=5.0)
   let fields : Json = [
     zone.full_year(time),
@@ -51,7 +51,7 @@ test "fields and setters" {
 
 ///|
 test "date strings" {
-  let zone = @jsdate.Zone::system()
+  let zone = @jsdate.Zone::reference()
   // A date alone is UTC, a date with a time is local.
   inspect(zone.parse("2014-01-01"), content="1388534400000")
   inspect(zone.parse("2014-01-01T00:00"), content="1388505600000")

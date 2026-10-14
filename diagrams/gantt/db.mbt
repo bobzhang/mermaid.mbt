@@ -82,7 +82,7 @@ pub struct GanttDb {
 ///|
 fn GanttDb::new() -> GanttDb {
   {
-    zone: @jsdate.Zone::system(),
+    zone: @jsdate.Zone::reference(),
     date_format: "",
     axis_format: "",
     tick_interval: None,

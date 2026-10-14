@@ -3,13 +3,13 @@
 
 ///|
 fn stamps(times : Array[Double]) -> String {
-  let zone = @jsdate.Zone::system()
+  let zone = @jsdate.Zone::reference()
   times.map(@d3.time_format(zone, "%Y-%m-%d %H:%M:%S.%L")).join("\n")
 }
 
 ///|
 test "default ticks pick a calendar step" {
-  let zone = @jsdate.Zone::system()
+  let zone = @jsdate.Zone::reference()
   let scale = @d3.TimeScale::new(zone)
   // Two months: weeks.
   scale.set_domain(1388505600000.0, 1393603200000.0) |> ignore
@@ -40,7 +40,7 @@ test "default ticks pick a calendar step" {
 
 ///|
 test "ticks of a given interval" {
-  let zone = @jsdate.Zone::system()
+  let zone = @jsdate.Zone::reference()
   let scale = @d3.TimeScale::new(zone).set_domain(
     1388505600000.0, 1393603200000.0,
   )
@@ -69,7 +69,7 @@ test "ticks of a given interval" {
 
 ///|
 test "time format directives" {
-  let zone = @jsdate.Zone::system()
+  let zone = @jsdate.Zone::reference()
   // An unknown directive loses its percent sign; so does a trailing one.
   inspect(
     @d3.time_format(zone, "%Y-%m-%d %H:%M %a %b %e %j %U %V %p %Z %% %k %")(
@@ -81,7 +81,7 @@ test "time format directives" {
 
 ///|
 test "rounded positions" {
-  let zone = @jsdate.Zone::system()
+  let zone = @jsdate.Zone::reference()
   let scale = @d3.TimeScale::new(zone)
     .set_domain(1388505600000.0, 1393603200000.0)
     .set_range_round(0.0, 590.0)
