@@ -1,0 +1,42 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/diagrams/journey"
+
+import {
+  "bobzhang/mermaid/diagram",
+  "bobzhang/mermaid/theme",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn draw(Journey, @diagram.Context) -> Unit raise JourneyError
+
+pub fn parse(String) -> Journey raise
+
+pub fn styles(@theme.Theme) -> String
+
+// Errors
+pub(all) suberror JourneyError {
+  JourneyError(String)
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+pub struct Journey {
+  mut title : String
+  mut acc_title : String
+  mut acc_description : String
+  tasks : Array[Task]
+  // private fields
+}
+pub fn Journey::actors(Self) -> Array[String]
+pub fn Journey::set_title(Self, String) -> Unit
+
+pub struct Task {
+  section : String
+  task : String
+  score : Double
+  people : Array[String]
+}
+
+// Type aliases
+
+// Traits

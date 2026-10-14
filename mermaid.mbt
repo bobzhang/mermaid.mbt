@@ -108,6 +108,27 @@ fn parse_diagram(
         },
       }
     }
+    "journey" => {
+      let journey = @journey.parse(code) catch {
+        @jison.ParseError(message~, ..) => raise Syntax(message)
+        @journeycommon.SanitizeError(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      if title is Some(title) && journey.title == "" {
+        journey.set_title(title)
+      }
+      {
+        styles: @journey.styles(config.theme()),
+        acc_title: journey.acc_title,
+        acc_description: journey.acc_description,
+        classes: [],
+        draw: context => {
+          @journey.draw(journey, context) catch {
+            @journey.JourneyError(message) => raise Unsupported(message)
+          }
+        },
+      }
+    }
     other => raise Unsupported(other)
   }
 }

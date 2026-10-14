@@ -1,0 +1,24 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/internal/journeycommon"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn acc_description(String) -> String raise SanitizeError
+
+pub fn acc_title(String) -> String raise SanitizeError
+
+pub fn sanitize_text(String) -> String raise SanitizeError
+
+// Errors
+pub(all) suberror SanitizeError {
+  SanitizeError(String)
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+
+// Type aliases
+
+// Traits
