@@ -123,8 +123,17 @@ pub fn render(data : LayoutData, svg : @dom.Element) -> Unit raise LayoutError {
   guard svg.child_elements().filter(child => child.tag == "g") is [element, ..] else {
     raise LayoutError("the svg element has no group to draw into")
   }
-  insert_markers(element, data.markers, data.diagram_type, data.diagram_id)
-  let env = Env::new(data.config, data.diagram_id)
+  insert_markers(
+    element,
+    data.markers,
+    data.diagram_type,
+    data.diagram_id,
+    config=data.config,
+  )
+  let env = {
+    ..Env::new(data.config, data.diagram_id),
+    node_text_centred: node_text_centred(data.diagram_type),
+  }
   // Measure: every node is drawn once to learn its size.
   let root = element.append("g").attr("class", "root")
   let clusters = root.append("g").attr("class", "clusters")
@@ -147,11 +156,17 @@ pub fn render(data : LayoutData, svg : @dom.Element) -> Unit raise LayoutError {
     }
   }
   let label_elements : Map[String, @dom.Element] = Map([])
+  let label_env = {
+    ..env,
+    font_size: edge_label_font_size(data.diagram_type, env.font_size),
+  }
   for edge in data.edges {
     // Line breaks in edge labels are plain newlines from here on.
     edge.label = normalize_breaks(edge.label)
     if edge.label != "" {
-      label_elements[edge.id] = insert_edge_label(edge_labels, edge, env)
+      label_elements[edge.id] = insert_edge_label(
+        edge_labels, edge, env, label_env,
+      )
     }
   }
   // Lay out.
@@ -188,7 +203,7 @@ pub fn render(data : LayoutData, svg : @dom.Element) -> Unit raise LayoutError {
       let element = match label_elements.get(edge.id) {
         Some(element) => element
         None => {
-          let element = insert_edge_label(edge_labels, edge, env)
+          let element = insert_edge_label(edge_labels, edge, env, label_env)
           label_elements[edge.id] = element
           element
         }

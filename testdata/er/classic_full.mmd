@@ -1,0 +1,24 @@
+---
+config:
+  handDrawnSeed: 7
+  look: classic
+---
+erDiagram
+    p[Person] {
+        string firstName PK "first"
+        string lastName
+    }
+    a["Customer Account"] {
+        string email UK
+    }
+    p ||--o| a : has
+    a }|..|{ ORDERLINE : "a label"
+    subgraph g1 [The Group]
+        ORDERLINE
+        X
+    end
+    X ||--|| p : self
+    X }o--o{ a : lots
+    style X fill:#f9f,stroke:#333,color:red
+    classDef big fill:#ffc,stroke-width:3px,font-size:18px
+    class a big

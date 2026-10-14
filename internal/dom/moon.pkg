@@ -1,4 +1,5 @@
 import {
+  "moonbitlang/core/bigint",
   "moonbitlang/core/string",
   "bobzhang/mermaid/internal/color",
   "bobzhang/mermaid/internal/jsmath",

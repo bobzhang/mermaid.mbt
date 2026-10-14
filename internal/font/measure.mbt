@@ -39,7 +39,16 @@ fn ceil_layout_unit(value : Float) -> Double {
 ///|
 /// Font ascent and descent in pixels. Blink rounds each to a whole pixel.
 pub fn Face::ascent(self : Face, size : Double) -> Double {
-  round_half_up(self.ascent.to_double() * size / self.units_per_em.to_double())
+  let ascent = round_half_up(
+    self.ascent.to_double() * size / self.units_per_em.to_double(),
+  )
+  if self.mac_ascent_adjustment {
+    // `ascent += floorf((ascent + descent) * 0.15f + 0.5f)`
+    let line = Float::from_double(ascent + self.descent(size))
+    ascent + (line * 0.15 + 0.5).to_double().floor()
+  } else {
+    ascent
+  }
 }
 
 ///|
@@ -150,6 +159,63 @@ fn RectF::union(self : RectF, other : RectF) -> RectF {
 }
 
 ///|
+/// `text` with the ligatures its faces form: a pair of characters from one
+/// face that has a ligature for them becomes the ligature's character.
+fn Stack::ligated(self : Stack, text : StringView) -> Array[Char] {
+  let chars = text.to_array()
+  if self.faces.iter().all(face => face.ligatures.is_empty()) {
+    return chars
+  }
+  let out = []
+  let mut i = 0
+  while i < chars.length() {
+    let c = chars[i]
+    if i + 1 < chars.length() {
+      let face = self.face_for(c)
+      if physical_equal(face, self.face_for(chars[i + 1])) &&
+        face.ligatures.get(c.to_int() * 65536 + chars[i + 1].to_int())
+        is Some(ligature) {
+        out.push(ligature)
+        i += 2
+        continue
+      }
+    }
+    out.push(c)
+    i += 1
+  }
+  out
+}
+
+///|
+/// The stack of the font a page falls back to when a style names no
+/// family the browser accepts: Times on the reference system.
+pub fn Stack::page_default() -> Stack {
+  { faces: [times_regular], }
+}
+
+///|
+/// The stack of the generic `sans-serif` family: Helvetica on the
+/// reference system.
+pub fn Stack::sans_serif() -> Stack {
+  { faces: [helvetica_regular], }
+}
+
+///|
+/// The advance in ems of a character no embedded face has. The reference
+/// browser draws it from a system fallback font; the advances of a few
+/// symbols were read off it, the rest is approximated with half an em, or
+/// a full one for the wide scripts.
+fn fallback_em(c : Char) -> Double {
+  match c.to_int() {
+    // BLACK HEART SUIT
+    0x2665 => 0.59375
+    // HEAVY BLACK HEART
+    0x2764 => 0.91015625
+    code => if code >= 0x1100 { 1.0 } else { 0.5 }
+  }
+}
+
+///|
 /// The result of shaping: the advance width before rounding, and the ink
 /// bounds around the baseline origin, y down.
 priv struct Shaped {
@@ -164,13 +230,12 @@ fn Stack::shape(self : Stack, text : StringView, size : Double) -> Shaped {
   let size = effective_size(size)
   let shaped = { pen: 0.0, ink: { x: 0.0, y: 0.0, width: 0.0, height: 0.0, }, }
   let mut previous : (Face, Glyph)? = None
-  for c in text {
+  for c in self.ligated(text) {
     let face = self.face_for(c)
     guard face.glyphs.get(c.to_int()) is Some(glyph) else {
       // No embedded face has this character. The reference browser would
-      // use a system fallback font; approximate with half or a full em.
-      let em = if c.to_int() >= 0x1100 { 1.0 } else { 0.5 }
-      shaped.pen = shaped.pen + Float::from_double(size * em)
+      // use a system fallback font.
+      shaped.pen = shaped.pen + Float::from_double(size * fallback_em(c))
       previous = None
       continue
     }
@@ -226,8 +291,7 @@ pub fn Stack::item_advances(
     for c in item {
       let face = self.face_for(c)
       guard face.glyphs.get(c.to_int()) is Some(glyph) else {
-        let em = if c.to_int() >= 0x1100 { 1.0 } else { 0.5 }
-        sums[index] = sums[index] + Float::from_double(size * em)
+        sums[index] = sums[index] + Float::from_double(size * fallback_em(c))
         previous = None
         continue
       }

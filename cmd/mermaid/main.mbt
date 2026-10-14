@@ -88,6 +88,9 @@ fn measure(path : String) -> Unit raise CliError {
       continue
     }
     let stack = match item {
+      // The font of a page that names none.
+      { "family": String("page-default"), .. } => @font.Stack::page_default()
+      { "family": String("system-sans-serif"), .. } => @font.Stack::sans_serif()
       { "family": String(family), .. } =>
         @font.Stack::for_family(
           family,

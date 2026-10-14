@@ -1,0 +1,27 @@
+---
+config:
+  handDrawnSeed: 7
+  htmlLabels: false
+---
+requirementDiagram
+    requirement "Quoted name with spaces" {
+    id: "ID with spaces"
+    text: "A long text that goes on for a while and then some more until it is certainly rather long"
+    risk: medium
+    verifyMethod: analysis
+    }
+    requirement plain_name {
+    text: "*italic* and **bold** text with `code`"
+    }
+    element "An element" {
+    type: "a <b>bold</b> type & more"
+    docRef: "#35; hash and #9829;"
+    }
+    element empty_one {
+    }
+    requirement only_verify {
+    verifyMethod: test
+    }
+    "An element" - satisfies -> "Quoted name with spaces"
+    plain_name - derives -> "Quoted name with spaces"
+    empty_one - verifies -> only_verify

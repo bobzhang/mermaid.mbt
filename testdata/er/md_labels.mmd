@@ -1,0 +1,13 @@
+---
+config:
+  handDrawnSeed: 7
+---
+erDiagram
+    A ||--o{ B : "has **many** _things_"
+    B ||--|| C : "line one<br/>line two"
+    "**Bold** entity" {
+        string __dunder__ "a `code` comment"
+        int *star
+        string name "comment with **bold**"
+    }
+    C }|--|| "**Bold** entity" : "x"

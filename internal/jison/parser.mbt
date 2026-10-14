@@ -38,6 +38,7 @@ pub fn[V] Grammar::parse(
     yytext: "",
     yylineno: 0,
     states: ["INITIAL"],
+    unknown: "",
   }
   let states = [0]
   let values : Array[V] = [empty]
@@ -93,7 +94,11 @@ pub fn[V] Grammar::parse(
             expected.push("'\{name}'")
           }
         }
-        let got = self.terminals.get(lookahead).unwrap_or(lookahead.to_string())
+        let got = match self.terminals.get(lookahead) {
+          Some(name) => name
+          None if lookahead < 0 => lexer.unknown
+          None => lookahead.to_string()
+        }
         let line = lexer.line()
         let message = "Parse error on line \{line}:\n\{lexer.show_position()}\nExpecting \{expected.join(", ")}, got '\{got}'"
         raise ParseError(message~, line~)

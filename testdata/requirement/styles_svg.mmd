@@ -1,0 +1,24 @@
+---
+config:
+  handDrawnSeed: 7
+  htmlLabels: false
+---
+requirementDiagram
+    requirement test_req:::important {
+    id: 1
+    text: styling example
+    risk: low
+    verifymethod: test
+    }
+    element test_entity {
+    type: simulation
+    }
+    element third:::pink,important {
+    docref: x
+    }
+    classDef important fill:#f96,stroke:#333,stroke-width:4px
+    classDef pink fill:#fde,color:#909,font-weight:bold
+    class test_entity pink
+    style test_entity stroke:#00f,color:blue
+    test_entity - satisfies -> test_req
+    third - refines -> test_req

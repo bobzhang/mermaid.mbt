@@ -20,6 +20,9 @@ pub struct Lexer {
   /// Zero-based line of the end of the last match.
   priv mut yylineno : Int32
   priv states : Array[String]
+  /// The name of the last token a hook returned, for error messages when
+  /// the grammar has no such symbol.
+  priv mut unknown : String
 }
 
 ///|
@@ -150,6 +153,11 @@ fn Lexer::next(
           Continue => ()
           SkipNext => index += 1
           Stop => break
+          Token(name) => {
+            token = Some(grammar.symbol_ids.get(name).unwrap_or(-1))
+            self.unknown = name
+            break
+          }
         }
     }
     index += 1

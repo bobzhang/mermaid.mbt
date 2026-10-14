@@ -1,0 +1,19 @@
+---
+config:
+  handDrawnSeed: 7
+---
+erDiagram
+    subgraph grp [Group title]
+        accTitle: inner title
+        B
+        classDef c1 fill:#fee
+        C:::c1
+        B ||--o{ C : inner
+    end
+    subgraph "quoted id" [Another group here]
+        direction TB
+        D
+    end
+    A ||--|| grp : "after it exists"
+    D }|--|{ A : back
+    grp ||--|| "quoted id" : between

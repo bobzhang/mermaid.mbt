@@ -1,0 +1,22 @@
+---
+config:
+  handDrawnSeed: 7
+
+---
+erDiagram
+    CAR:::someclass {
+        string registrationNumber
+        string make
+        string model
+    }
+    PERSON:::someclass,anotherclass {
+        string firstName
+        string lastName
+        int age
+    }
+    HOUSE:::someclass
+    CAR ||--o{ PERSON : drives
+    classDef someclass fill:#f96
+    classDef anotherclass stroke:#00f,stroke-width:2px,color:#060,font-weight:bold
+    classDef default fill:#f9f,stroke-width:4px
+    class HOUSE anotherclass

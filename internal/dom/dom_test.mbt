@@ -176,7 +176,8 @@ test "declarations as the CSSOM serializes them" {
     @dom.serialize_declarations(
       "fill:#f96 !important; stroke-dasharray: 5 5; animation: dash 25s linear infinite",
     ),
-    content="fill: rgb(255, 153, 102) !important; stroke-dasharray: 5, 5; animation: 25s linear 0s infinite normal none running dash;",
+    // Important declarations come last, as `cssText` gives them.
+    content="stroke-dasharray: 5, 5; animation: 25s linear 0s infinite normal none running dash; fill: rgb(255, 153, 102) !important;",
   )
 }
 

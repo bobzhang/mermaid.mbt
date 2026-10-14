@@ -1,0 +1,16 @@
+---
+config:
+  handDrawnSeed: 7
+  htmlLabels: false
+---
+erDiagram
+    A {
+        string name "uses <b>bold</b> & ampersand"
+        int count "a < b > c"
+        string x "#quot;entity#quot; and #35;"
+        List~List~int~~ nested "**bold** _it_"
+    }
+    A ||--|| B : "a <i>tag</i> & #9829; **b**"
+    "B"
+    "Two words"
+    "A much longer name of an entity that should wrap around in text mode yes"

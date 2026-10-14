@@ -137,6 +137,48 @@ fn parse_diagram(
         },
       }
     }
+    "er" => {
+      let db = @er.parse(code, config) catch {
+        @jison.ParseError(message~, ..) => raise Syntax(message)
+        error => raise Syntax(error.to_string())
+      }
+      if title is Some(title) {
+        db.set_title(title)
+      }
+      {
+        styles: @er.styles(config),
+        acc_title: db.acc_title,
+        acc_description: db.acc_description,
+        // The renderer reports no classes, so none become stylesheet rules.
+        classes: [],
+        draw: context => {
+          @er.draw(db, context) catch {
+            @rendering.LayoutError(message) => raise Unsupported(message)
+          }
+        },
+      }
+    }
+    "requirement" => {
+      let db = @requirement.parse(code, config) catch {
+        @jison.ParseError(message~, ..) => raise Syntax(message)
+        error => raise Syntax(error.to_string())
+      }
+      if title is Some(title) {
+        db.set_title(title)
+      }
+      {
+        styles: @requirement.styles(config),
+        acc_title: db.acc_title,
+        acc_description: db.acc_description,
+        // The renderer reports no classes, so none become stylesheet rules.
+        classes: [],
+        draw: context => {
+          @requirement.draw(db, context) catch {
+            @rendering.LayoutError(message) => raise Unsupported(message)
+          }
+        },
+      }
+    }
     other => raise Unsupported(other)
   }
 }

@@ -1,0 +1,16 @@
+---
+config:
+  handDrawnSeed: 7
+  htmlLabels: false
+---
+erDiagram
+    A {
+        string name "a comment here"
+        int id PK
+    }
+    B
+    A ||--o{ B : rel
+    classDef big font-size:22px,font-weight:bold
+    class A,B big
+    C:::it
+    classDef it font-style:italic,font-size:10px

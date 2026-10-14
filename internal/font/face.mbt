@@ -19,18 +19,26 @@ pub struct Face {
   priv glyphs : Map[Int32, Glyph]
   /// Pair adjustments, keyed by `left_glyph * 65536 + right_glyph`.
   priv kerning : Map[Int32, Int32]
+  /// Pairs of characters drawn as one glyph, keyed by
+  /// `first * 65536 + second` and giving the character of the ligature.
+  priv ligatures : Map[Int32, Char]
+  /// Whether Blink raises the ascent by 15% of the line: its hack for
+  /// Times, Helvetica and Courier on macOS.
+  priv mac_ascent_adjustment : Bool
 }
 
 ///|
 /// Build a face from the flat tables written by
-/// `scripts/gen_font_metrics.py`: seven numbers per glyph and three per
-/// kerning pair.
+/// `scripts/gen_font_metrics.py`: seven numbers per glyph, three per
+/// kerning pair and three per ligature.
 fn Face::new(
   units_per_em~ : Int32,
   ascent~ : Int32,
   descent~ : Int32,
   glyphs~ : FixedArray[Int32],
   kerning~ : FixedArray[Int32],
+  ligatures~ : FixedArray[Int32] = [],
+  mac_ascent_adjustment~ : Bool = false,
 ) -> Face {
   let by_code : Map[Int32, Glyph] = Map([])
   for i = 0; i + 6 < glyphs.length(); i = i + 7 {
@@ -47,7 +55,21 @@ fn Face::new(
   for i = 0; i + 2 < kerning.length(); i = i + 3 {
     pairs[kerning[i] * 65536 + kerning[i + 1]] = kerning[i + 2]
   }
-  { units_per_em, ascent, descent, glyphs: by_code, kerning: pairs, }
+  let joined : Map[Int32, Char] = Map([])
+  for i = 0; i + 2 < ligatures.length(); i = i + 3 {
+    joined[ligatures[i] * 65536 + ligatures[i + 1]] = Int32::unsafe_to_char(
+      ligatures[i + 2],
+    )
+  }
+  {
+    units_per_em,
+    ascent,
+    descent,
+    glyphs: by_code,
+    kerning: pairs,
+    ligatures: joined,
+    mac_ascent_adjustment,
+  }
 }
 
 ///|

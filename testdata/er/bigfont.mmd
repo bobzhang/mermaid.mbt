@@ -1,0 +1,14 @@
+---
+config:
+  handDrawnSeed: 7
+---
+erDiagram
+    A {
+        string name "a comment that is fairly long for a big font"
+        int id PK
+    }
+    B
+    A ||--o{ B : rel
+    classDef big font-size:40px,font-weight:bold
+    class A,B big
+    style B font-style:italic,font-size:30px

@@ -25,9 +25,16 @@ fn draw_rect(
   label_padding_x~ : Double,
   label_padding_y~ : Double,
   radius? : Double,
+  html_labels? : Bool,
 ) -> @dom.Element {
   let styles = shape_styles(node)
-  let labelled = label_helper(parent, node, node_classes(node), env)
+  let labelled = label_helper(
+    parent,
+    node,
+    node_classes(node),
+    env,
+    html_labels?,
+  )
   let total_width = (labelled.bbox.width + label_padding_x * 2.0).max(
     node.width.unwrap_or(0.0),
   )
@@ -392,6 +399,12 @@ fn draw_shape(
 ) -> @dom.Element raise LayoutError {
   let neo = node.look == "neo"
   let padding = node.padding
+  // Shapes that belong to one diagram type are not in the shape table.
+  match node.shape {
+    "erBox" => return er_box(parent, node, env)
+    "requirementBox" => return requirement_box(parent, node, env)
+    _ => ()
+  }
   guard shape_handler(node.shape) is Some(handler) else {
     raise LayoutError("No such shape: \{node.shape}. Please check your syntax.")
   }

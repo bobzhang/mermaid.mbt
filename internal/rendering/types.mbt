@@ -24,6 +24,8 @@ pub struct Node {
   link_target : String?
   tooltip : String?
   have_callback : Bool
+  /// What shapes of one diagram type draw besides the label.
+  data : NodeData
   // Filled in while measuring and laying out.
   mut label_style : String
   mut width : Double?
@@ -59,6 +61,7 @@ pub fn Node::new(
   link_target? : String,
   tooltip? : String,
   have_callback~ : Bool = false,
+  data~ : NodeData = Plain,
 ) -> Node {
   {
     id,
@@ -80,6 +83,7 @@ pub fn Node::new(
     link_target,
     tooltip,
     have_callback,
+    data,
     label_style: "",
     width: None,
     height: None,
@@ -206,6 +210,9 @@ priv struct Env {
   font_size : Double
   /// Whether labels are HTML in a `foreignObject` or SVG text.
   html_labels : Bool
+  /// Whether the diagram's stylesheet anchors the SVG text of node labels
+  /// in the middle.
+  node_text_centred : Bool
 }
 
 ///|
@@ -241,6 +248,7 @@ fn Env::new(config : @config.Config, diagram_id : String) -> Env {
     font_family: theme.text("fontFamily"),
     font_size: size,
     html_labels,
+    node_text_centred: true,
   }
 }
 
