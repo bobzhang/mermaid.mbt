@@ -116,7 +116,9 @@ fn parse_diagram(
         error => raise Syntax(error.to_string())
       }
       if title is Some(title) {
-        db.set_title(title)
+        db.set_title(title) catch {
+          @state.StateError(message) => raise Syntax(message)
+        }
       }
       {
         styles: @state.styles(

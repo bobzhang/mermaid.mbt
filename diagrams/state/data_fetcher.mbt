@@ -145,7 +145,7 @@ fn DataFetcher::setup_doc(
   parent : Stmt,
   doc : Array[Stmt],
   alt : Bool,
-) -> Unit {
+) -> Unit raise StateError {
   for item in doc {
     match item.kind {
       "state" => self.fetch(Some(parent), item, alt)
@@ -188,7 +188,7 @@ fn DataFetcher::fetch(
   parent : Stmt?,
   item : Stmt,
   alt : Bool,
-) -> Unit {
+) -> Unit raise StateError {
   let id = item.id
   let state = self.db.states.get(id)
   let class_text = match state {

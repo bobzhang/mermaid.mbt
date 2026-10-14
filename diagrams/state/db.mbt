@@ -67,13 +67,24 @@ fn StateDb::new(config : @config.Config) -> StateDb {
 }
 
 ///|
+/// Markup DOMPurify removes or rewrites rather than keeps: elements it
+/// drops with their content, event handlers, script addresses.
+let unsafe_markup : @jsregex.Regex = try! @jsregex.Regex::compile(
+  "<\\/?(script|style|iframe|object|embed|noscript|template|svg|math|video|audio|link|meta|base|form|input|textarea|select|button|title|frame|frameset|applet|xmp|plaintext|noembed|noframes)\\b|<[^>]*\\son\\w+\\s*=|javascript:",
+  flags="i",
+)
+
+///|
 /// mermaid's `sanitizeText`: DOMPurify leaves text without `<` alone and
 /// otherwise parses it as HTML and writes it back, so that `<`, `>` and
-/// `&` in plain text come out as character references. The tags DOMPurify
-/// would drop are kept.
-fn sanitize_text(text : String) -> String {
+/// `&` in plain text come out as character references. Markup it would
+/// take out is refused instead.
+fn sanitize_text(text : String) -> String raise StateError {
   if !text.contains("<") {
     return text
+  }
+  if unsafe_markup.exec(text) is Some(_) {
+    raise StateError("Markup that is sanitized away is not supported: \{text}")
   }
   let holder = @dom.Element::new("div")
   holder.set_inner_html(text)
@@ -326,6 +337,9 @@ fn document_direction(doc : Array[Stmt]?) -> String {
 
 ///|
 /// The same diagram under another title: that of the frontmatter.
-pub fn StateDb::set_title(self : StateDb, title : String) -> Unit {
+pub fn StateDb::set_title(
+  self : StateDb,
+  title : String,
+) -> Unit raise StateError {
   self.title = sanitize_text(title)
 }

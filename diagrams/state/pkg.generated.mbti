@@ -30,7 +30,7 @@ pub struct StateDb {
   // private fields
 }
 pub fn StateDb::dump(Self) -> Json
-pub fn StateDb::set_title(Self, String) -> Unit
+pub fn StateDb::set_title(Self, String) -> Unit raise StateError
 
 pub struct StyleClass {
   id : String
