@@ -1,0 +1,12 @@
+sequenceDiagram
+    participant К as Клиент
+    participant С as Сервер
+    participant Β as Βάση δεδομένων
+    К->>С: Привет, сервер! Как дела? € 100
+    С->>Β: Αίτημα: SELECT * FROM πίνακας
+    Β-->>С: Απάντηση (42 γραμμές) Τέλος
+    Note over К,С: Xin chào thế giới — Việt Nam
+    loop Каждую минуту
+        С-->>К: Ответ готов ≤ 5 мс ± 1
+    end
+    Note right of Β: Ω ohm, K kelvin, ½ x²
