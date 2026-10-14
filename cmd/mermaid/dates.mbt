@@ -180,6 +180,66 @@ fn time_case(item : Json) -> Json raise {
           field_number(item, "amount"),
         ),
       )
+    "ticks" => {
+      let scale = @d3.TimeScale::new(zone).set_domain(
+        field_number(item, "start"),
+        field_number(item, "stop"),
+      )
+      let ticks = match item {
+        { "interval": [String(name), Number(every, ..)], .. } => {
+          let interval = match name {
+            "millisecond" => @d3.time_millisecond()
+            "second" => @d3.time_second(zone)
+            "minute" => @d3.time_minute(zone)
+            "hour" => @d3.time_hour(zone)
+            "day" => @d3.time_day(zone)
+            "month" => @d3.time_month(zone)
+            weekday =>
+              @d3.time_week(
+                zone,
+                [
+                  "sunday", "monday", "tuesday", "wednesday", "thursday", "friday",
+                  "saturday",
+                ]
+                .search(weekday)
+                .unwrap_or(0),
+              )
+          }
+          match interval.every(every) {
+            Some(interval) => scale.ticks_every(interval)
+            None => scale.ticks()
+          }
+        }
+        _ => scale.ticks()
+      }
+      Json::array(ticks.map(number_or_null))
+    }
+    "timeFormat" =>
+      Json::string(
+        @d3.time_format(zone, field_text(item, "specifier"))(
+          field_number(item, "time"),
+        ),
+      )
+    "scale" => {
+      guard item
+        is {
+          "domain": [d0, d1],
+          "range": [Number(r0, ..), Number(r1, ..)],
+          "values": Array(values),
+          ..
+        } else {
+        fail("malformed scale case")
+      }
+      let scale = @d3.TimeScale::new(zone)
+        .set_domain(numbers([d0])[0], numbers([d1])[0])
+        .set_range_round(r0, r1)
+      // The values stand for `Date` objects, which hold whole milliseconds.
+      Json::array(
+        numbers(values).map(v => {
+          number_or_null(scale.apply(@jsdate.time_clip(v)))
+        }),
+      )
+    }
     other => fail("unknown op \{other}")
   }
 }

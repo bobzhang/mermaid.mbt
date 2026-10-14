@@ -103,6 +103,25 @@ def corpus(count, rng):
         a = time_value(rng)
         cases.append({"op": "diffYears", "a": a, "b": a + rng.randint(-10, 10) * rng.choice([86400000, 31536000000, 2592000000])})
         cases.append({"op": "duration", "unit": rng.choice(INTERVALS[:6] + ["week"]), "amount": rng.randint(1, 50)})
+    for _ in range(count // 8):
+        start = time_value(rng)
+        span = rng.choice(SPANS) * (0.5 + rng.random())
+        stop = start + int(span) * rng.choice([1, 1, 1, 1, -1, 0])
+        cases.append({"op": "ticks", "start": start, "stop": stop})
+        # A custom interval, kept to a number of ticks the chart would accept.
+        name = rng.choice(INTERVALS)
+        length = {"millisecond": 1, "second": 1e3, "minute": 6e4, "hour": 36e5, "day": 864e5, "month": 2592e6}.get(name, 6048e5)
+        every = max(1, int(span / length / rng.choice([3, 10, 40, 300])))
+        if rng.random() < 0.5:
+            every = rng.choice([1, 2, 3, 4, 5, 7, 10, 15, 30])
+        # Steps of seconds to months restart in every minute to year, so a
+        # step beyond that still yields one tick per parent interval.
+        effective = min(every, {"second": 60, "minute": 60, "hour": 24, "day": 31, "month": 12}.get(name, every))
+        if span / (length * effective) < 3000:
+            cases.append({"op": "ticks", "start": start, "stop": stop, "interval": [name, every]})
+        cases.append({"op": "timeFormat", "specifier": rng.choice(SPECIFIERS), "time": time_value(rng)})
+        values = [start, stop, start + span / 3, start - span, time_value(rng), None]
+        cases.append({"op": "scale", "domain": [start, stop], "range": [0, rng.choice([590, 1125, 333.5])], "values": values})
     return cases
 
 
