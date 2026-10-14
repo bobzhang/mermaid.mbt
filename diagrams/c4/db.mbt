@@ -20,6 +20,14 @@ pub(all) suberror C4Error {
 priv struct Element {
   name : String
   props : Map[String, Json]
+  // Filled in by the renderer: the top left corner and the size.
+  mut x : Double
+  mut y : Double
+  mut width : Double
+  mut height : Double
+  /// Where the line from the centre towards a point leaves the outline,
+  /// once the element is drawn.
+  mut intersect : ((@rendering.Point) -> @rendering.Point)?
 }
 
 ///|
@@ -83,7 +91,37 @@ fn C4Db::new(config : @config.Config) -> C4Db {
 
 ///|
 fn Element::new(name : String, props : Map[String, Json]) -> Element {
-  { name, props, }
+  { name, props, x: 0.0, y: 0.0, width: 0.0, height: 0.0, intersect: None, }
+}
+
+///|
+/// The text of a `{ text }` property: `element[field]?.text`, `None` when
+/// there is no such property.
+fn text_of(props : Map[String, Json], field : String) -> String? {
+  match props.get(field) {
+    Some(Object({ "text": String(text), .. })) => Some(text)
+    _ => None
+  }
+}
+
+///|
+/// A property that is a string, as `$tags`, `$sprite` and the colours are.
+fn string_of_prop(props : Map[String, Json], field : String) -> String? {
+  match props.get(field) {
+    Some(String(text)) => Some(text)
+    _ => None
+  }
+}
+
+///|
+/// JavaScript truthiness of a property.
+fn truthy(props : Map[String, Json], field : String) -> Bool {
+  match props.get(field) {
+    None | Some(Null | False) => false
+    Some(String(text)) => text != ""
+    Some(Number(number, ..)) => number != 0.0 && !number.is_nan()
+    Some(_) => true
+  }
 }
 
 ///|
@@ -466,6 +504,36 @@ fn C4Db::update_layout_config(self : C4Db, args : Array[Json]) -> Unit {
   }
   if count(args.get(1)) is Some(boundaries) {
     self.boundary_in_row = boundaries
+  }
+}
+
+///|
+/// The shapes directly inside the boundary called `parent`.
+fn C4Db::shapes_in(self : C4Db, parent : String) -> Array[Element] {
+  self.shapes.filter(shape => {
+    shape.props.get("parentBoundary") is Some(String(found)) && found == parent
+  })
+}
+
+///|
+/// The boundaries directly inside the boundary called `parent`.
+fn C4Db::boundaries_in(self : C4Db, parent : String) -> Array[Element] {
+  self.boundaries.filter(boundary => {
+    boundary.props.get("parentBoundary") is Some(String(found)) &&
+    found == parent
+  })
+}
+
+///|
+/// The end of a relationship: a shape, or else a boundary.
+fn C4Db::element(self : C4Db, name : String) -> Element? {
+  match self.shapes.search_by(shape => shape.name == name) {
+    Some(index) => Some(self.shapes[index])
+    None =>
+      match self.boundaries.search_by(boundary => boundary.name == name) {
+        Some(index) => Some(self.boundaries[index])
+        None => None
+      }
   }
 }
 

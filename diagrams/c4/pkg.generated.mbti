@@ -3,11 +3,16 @@ package "bobzhang/mermaid/diagrams/c4"
 
 import {
   "bobzhang/mermaid/config",
+  "bobzhang/mermaid/diagram",
   "moonbitlang/core/debug",
 }
 
 // Values
+pub fn draw(C4Db, @diagram.Context) -> Unit raise
+
 pub fn parse(String, @config.Config) -> C4Db raise
+
+pub fn styles(@config.Config) -> String raise Unsupported
 
 // Errors
 pub(all) suberror C4Error {

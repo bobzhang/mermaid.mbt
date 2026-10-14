@@ -137,6 +137,32 @@ fn parse_diagram(
         },
       }
     }
+    "c4" => {
+      let convert = (error : Error) => {
+        match error {
+          @jison.ParseError(message~, ..) => Syntax(message)
+          @c4.C4Error(message) => Syntax(message)
+          @c4.Unsupported(message) => Unsupported(message)
+          error => Syntax(error.to_string())
+        }
+      }
+      let db = @c4.parse(code, config) catch { error => raise convert(error) }
+      // A frontmatter title is not shown: the database has no
+      // `setDiagramTitle`.
+      {
+        styles: @c4.styles(config) catch {
+          error => raise convert(error)
+        },
+        acc_title: "",
+        acc_description: db.acc_description,
+        classes: [],
+        draw: context => {
+          @c4.draw(db, context) catch {
+            error => raise convert(error)
+          }
+        },
+      }
+    }
     other => raise Unsupported(other)
   }
 }
