@@ -20,6 +20,8 @@ Usage: python3 scripts/gen_font_metrics.py && moon fmt
 
 import pathlib
 import struct
+import unicodedata
+from fractions import Fraction
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 FONT_DIR = pathlib.Path("/System/Library/Fonts/Supplemental")
@@ -44,12 +46,17 @@ FACES = [
     ("helvetica_bold", SYSTEM_DIR / "Helvetica.ttc", 1),
 ]
 
-# Code points kept from each face: Basic Latin through Latin Extended-A,
-# general punctuation, currency, arrows and common symbols. Scripts outside
-# these ranges are not measured from these faces by the reference browser
-# either; it falls back to other system fonts.
-RANGES = [(0x20, 0x17F), (0xFB00, 0xFB06), (0x2000, 0x206F), (0x20A0, 0x20BF), (0x2100, 0x214F), (0x2190, 0x21FF), (0x2200, 0x22FF), (0x25A0, 0x25FF)]
-
+# Code points kept from each face: Latin with its extensions, IPA, Greek and
+# Cyrillic, general punctuation, super- and subscripts, currency, letterlike
+# symbols, number forms, arrows, mathematical and technical symbols, box
+# drawing and geometric shapes. Combining marks are left out, as are scripts
+# that need shaping (Hebrew, Arabic): a face is only asked for what it can
+# measure glyph by glyph. For anything else the reference browser falls back
+# to other system fonts, which are not embedded.
+RANGES = [
+    (0x20, 0x2FF), (0x370, 0x52F), (0x1E00, 0x1FFF), (0xFB00, 0xFB06), (0x2000, 0x206F), (0x2070, 0x209F),
+    (0x20A0, 0x20CF), (0x2100, 0x218F), (0x2190, 0x21FF), (0x2200, 0x23FF), (0x2500, 0x25FF),
+]
 
 class Font:
     def __init__(self, data, index=0):
@@ -117,17 +124,133 @@ class Font:
         glyphs = struct.unpack(">H", self.table("maxp")[4:6])[0]
         return widths + [widths[-1]] * (glyphs - count)
 
-    def bounds(self, glyph):
-        """The glyph's ink box (xMin, yMin, xMax, yMax), zero when empty."""
+    def glyph_data(self, glyph):
         long_format = struct.unpack(">h", self.table("head")[50:52])[0]
         loca = self.table("loca")
         if long_format:
             start, end = struct.unpack(">II", loca[4 * glyph:4 * glyph + 8])
         else:
             start, end = (2 * v for v in struct.unpack(">HH", loca[2 * glyph:2 * glyph + 4]))
-        if start == end:
+        return self.table("glyf")[start:end]
+
+    def left_side_bearing(self, glyph):
+        count = struct.unpack(">H", self.table("hhea")[34:36])[0]
+        table = self.table("hmtx")
+        if glyph < count:
+            return struct.unpack(">h", table[4 * glyph + 2:4 * glyph + 4])[0]
+        at = 4 * count + 2 * (glyph - count)
+        return struct.unpack(">h", table[at:at + 2])[0]
+
+    def contours(self, glyph):
+        """The glyph's contours as lists of points, where the scaler puts them.
+
+        A simple glyph is moved sideways so that the xMin of its header sits
+        at the left side bearing `hmtx` gives it (they differ for the Euro
+        sign of Times, for one). A composite is made of components placed
+        that way; its own side bearing moves nothing.
+        """
+        data = self.glyph_data(glyph)
+        if not data:
+            return []
+        count = struct.unpack(">h", data[:2])[0]
+        if count >= 0:
+            ends = struct.unpack(f">{count}H", data[10:10 + 2 * count])
+            total = ends[-1] + 1 if count else 0
+            at = 12 + 2 * count + struct.unpack(">H", data[10 + 2 * count:12 + 2 * count])[0]
+            flags = []
+            while len(flags) < total:
+                flag = data[at]
+                at += 1
+                flags.append(flag)
+                if flag & 8:
+                    flags += [flag] * data[at]
+                    at += 1
+            coordinates = []
+            for short, same in ((2, 16), (4, 32)):
+                values, value = [], 0
+                for flag in flags:
+                    if flag & short:
+                        value += data[at] if flag & same else -data[at]
+                        at += 1
+                    elif not flag & same:
+                        value += struct.unpack(">h", data[at:at + 2])[0]
+                        at += 2
+                    values.append(value)
+                coordinates.append(values)
+            shift = self.left_side_bearing(glyph) - struct.unpack(">h", data[2:4])[0]
+            contours, start = [], 0
+            for end in ends:
+                contours.append([(Fraction(coordinates[0][i] + shift), Fraction(coordinates[1][i]))
+                                 for i in range(start, end + 1)])
+                start = end + 1
+            return contours
+        contours, at = [], 10
+        while True:
+            flags, component = struct.unpack(">HH", data[at:at + 4])
+            at += 4
+            if flags & 1:
+                dx, dy = struct.unpack(">hh", data[at:at + 4])
+                at += 4
+            else:
+                dx, dy = struct.unpack(">bb", data[at:at + 2])
+                at += 2
+            if not flags & 2:
+                raise ValueError("composite glyph placed by matching points")
+            xx, xy, yx, yy = Fraction(1), Fraction(0), Fraction(0), Fraction(1)
+            if flags & 0x08:
+                xx = yy = Fraction(struct.unpack(">h", data[at:at + 2])[0], 16384)
+                at += 2
+            elif flags & 0x40:
+                xx, yy = (Fraction(v, 16384) for v in struct.unpack(">hh", data[at:at + 4]))
+                at += 4
+            elif flags & 0x80:
+                xx, xy, yx, yy = (Fraction(v, 16384) for v in struct.unpack(">hhhh", data[at:at + 8]))
+                at += 8
+            for contour in self.contours(component):
+                contours.append([(xx * x + yx * y + dx, xy * x + yy * y + dy) for x, y in contour])
+            if not flags & 0x20:
+                break
+        return contours
+
+    def bounds(self, glyph):
+        """The glyph's ink box (xMin, yMin, xMax, yMax), zero when empty.
+
+        This is what CoreText reports and Skia passes on: the box around all
+        outline points, control points included. A contour of a single point
+        is an anchor for accents, not ink; the box in the glyph header counts
+        those in, so it cannot be used. `None` when the box does not fall on
+        whole units (a scaled component), which the tables cannot hold.
+        """
+        points = [point for contour in self.contours(glyph) if len(contour) >= 2 for point in contour]
+        if not points:
             return (0, 0, 0, 0)
-        return struct.unpack(">hhhh", self.table("glyf")[start + 2:start + 10])
+        box = (min(x for x, _ in points), min(y for _, y in points),
+               max(x for x, _ in points), max(y for _, y in points))
+        if any(value.denominator != 1 for value in box):
+            return None
+        return tuple(int(value) for value in box)
+
+    def mark_glyphs(self):
+        """Glyphs that GDEF classes as marks. HarfBuzz gives them no advance."""
+        if "GDEF" not in self.tables:
+            return set()
+        table = self.table("GDEF")
+        at = struct.unpack(">H", table[4:6])[0]
+        if not at:
+            return set()
+        u16 = lambda where: struct.unpack(">H", table[where:where + 2])[0]
+        marks = set()
+        if u16(at) == 1:
+            start = u16(at + 2)
+            for i in range(u16(at + 4)):
+                if u16(at + 6 + 2 * i) == 3:
+                    marks.add(start + i)
+        else:
+            for i in range(u16(at + 2)):
+                first, last, value = (u16(at + 4 + 6 * i + 2 * k) for k in range(3))
+                if value == 3:
+                    marks.update(range(first, last + 1))
+        return marks
 
     def kerning(self):
         """Horizontal pair adjustments from format 0 `kern` subtables."""
@@ -370,6 +493,21 @@ def ligature_pairs(subtable, glyph_count):
     return pairs
 
 
+def decomposable(parts, cmap):
+    """Whether a font shapes a base and a mark it has in place of a composed
+    character it lacks (`decompose` in hb-ot-shape-normalize.cc)."""
+    base, mark = parts
+    if mark not in cmap:
+        return False
+    if base in cmap:
+        return True
+    inner = unicodedata.decomposition(chr(base)).split()
+    if not inner or inner[0].startswith("<"):
+        return False
+    inner = [int(part, 16) for part in inner]
+    return decomposable(inner, cmap) if len(inner) == 2 else inner[0] in cmap
+
+
 def keep(code):
     return any(low <= code <= high for low, high in RANGES)
 
@@ -377,7 +515,32 @@ def keep(code):
 def emit(ident, filename, index=0):
     font = Font((FONT_DIR / filename).read_bytes(), index)
     filename = pathlib.Path(filename).name
-    cmap = {code: glyph for code, glyph in font.cmap().items() if keep(code)}
+    # Marks and glyphs whose box the tables cannot hold are left to the
+    # "not covered" path rather than measured wrongly.
+    marks = font.mark_glyphs()
+    full = font.cmap()
+    cmap = {code: glyph for code, glyph in full.items()
+            if keep(code) and glyph not in marks and font.bounds(glyph) is not None}
+    # HarfBuzz decomposes a character the font lacks when the font has the
+    # pieces. A character that is canonically one other character simply
+    # takes that one's glyph (the ohm sign is drawn as an omega). One that
+    # splits into a base and a combining mark is drawn as the two, which
+    # the tables here cannot place: such characters are listed, so that the
+    # search for a glyph stops at this face instead of moving on to the
+    # next one as if the browser did.
+    composed = []
+    for code in (code for low, high in RANGES for code in range(low, high + 1)):
+        if code in full:
+            continue
+        parts = unicodedata.decomposition(chr(code)).split()
+        if not parts or parts[0].startswith("<"):
+            continue
+        parts = [int(part, 16) for part in parts]
+        if len(parts) == 1:
+            if parts[0] in cmap:
+                cmap[code] = cmap[parts[0]]
+        elif decomposable(parts, full):
+            composed.append(code)
     advances = font.advances()
     ascent, descent = font.vertical_metrics()
     kept = set(cmap.values())
@@ -398,6 +561,16 @@ def emit(ident, filename, index=0):
         if left in kept and right in kept and ligature in by_glyph
     ]
     extras = []
+    if composed:
+        rows, row = [], "   "
+        for code in composed:
+            piece = f" {code},"
+            if len(row) + len(piece) > 92:
+                rows.append(row)
+                row = "   "
+            row += piece
+        rows.append(row)
+        extras += ["  // code points drawn as a base and a combining mark", "  composed=[", *rows, "  ],"]
     if ligature_rows:
         extras += ["  // left glyph id, right glyph id, code point of the ligature", "  ligatures=[", *ligature_rows, "  ],"]
     if family_name(font) in ("Times", "Helvetica", "Courier"):

@@ -95,9 +95,11 @@ pub fn Stack::default(bold~ : Bool = false, italic~ : Bool = false) -> Stack {
 
 ///|
 /// The face that draws `code`: the first one covering it, else the primary.
+/// A face that would draw the character from pieces ends the search: it is
+/// returned although it has no glyph for the character.
 fn Stack::face_for(self : Stack, code : Char) -> Face {
   for face in self.faces {
-    if face.covers(code) {
+    if face.covers(code) || face.composed.contains(code.to_int()) {
       return face
     }
   }
@@ -176,11 +178,55 @@ priv enum Drawn {
   /// A default-ignorable character such as a zero-width space: shaped to
   /// an invisible glyph without advance.
   Ignorable
+  /// The script changes here. Blink shapes each script's run on its own,
+  /// so neither kerning nor ligatures reach across.
+  ScriptChange
 }
 
 ///|
 fn is_default_ignorable(c : Char) -> Bool {
-  c is ('\u{200B}'..<='\u{200F}' | '\u{2060}' | '\u{FEFF}')
+  c is ('\u{AD}' | '\u{200B}'..<='\u{200F}' | '\u{2060}' | '\u{FEFF}')
+}
+
+///|
+/// The scripts that have letters in the embedded faces. Everything else
+/// (digits, punctuation, spaces, symbols) is common to all of them and
+/// stays in the run it follows.
+priv enum Script {
+  Latin
+  Greek
+  Cyrillic
+} derive(Eq)
+
+///|
+/// The Unicode script of `c`, for the ranges the embedded faces cover.
+fn script_of(c : Char) -> Script? {
+  match c {
+    'A'..<='Z'
+    | 'a'..<='z'
+    | '\u{AA}'
+    | '\u{BA}'
+    | '\u{C0}'..<='\u{D6}'
+    | '\u{D8}'..<='\u{F6}'
+    | '\u{F8}'..<='\u{2B8}'
+    | '\u{2E0}'..<='\u{2E4}'
+    | '\u{1E00}'..<='\u{1EFF}'
+    | '\u{2071}'
+    | '\u{207F}'
+    | '\u{2090}'..<='\u{209C}'
+    | '\u{212A}'..<='\u{212B}'
+    | '\u{2132}'
+    | '\u{214E}'
+    | '\u{2160}'..<='\u{2188}'
+    | '\u{FB00}'..<='\u{FB06}' => Some(Latin)
+    '\u{37E}' | '\u{385}' | '\u{387}' => None
+    '\u{370}'..<='\u{3E1}'
+    | '\u{3F0}'..<='\u{3FF}'
+    | '\u{1F00}'..<='\u{1FFF}'
+    | '\u{2126}' => Some(Greek)
+    '\u{400}'..<='\u{52F}' => Some(Cyrillic)
+    _ => None
+  }
 }
 
 ///|
@@ -189,10 +235,17 @@ fn is_default_ignorable(c : Char) -> Bool {
 /// glyph.
 fn Stack::glyphs(self : Stack, text : StringView) -> Array[Drawn] {
   let drawn : Array[Drawn] = []
+  let mut run : Script? = None
   for c in text {
     if is_default_ignorable(c) {
       drawn.push(Ignorable)
       continue
+    }
+    if script_of(c) is Some(script) {
+      if run is Some(current) && current != script {
+        drawn.push(ScriptChange)
+      }
+      run = Some(script)
     }
     let face = self.face_for(c)
     guard face.glyphs.get(c.to_int()) is Some(glyph) else {
@@ -242,7 +295,7 @@ fn Stack::shape(self : Stack, text : StringView, size : Double) -> Shaped {
         previous = None
         continue
       }
-      Ignorable => {
+      Ignorable | ScriptChange => {
         previous = None
         continue
       }

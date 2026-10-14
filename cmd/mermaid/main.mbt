@@ -98,6 +98,9 @@ fn measure(path : String) -> Unit raise CliError {
     }
     let box = stack.bbox(text, size)
     results.push({
+      // Whether every character has a glyph in an embedded face; the
+      // measures of other text are approximations.
+      "covered": stack.first_uncovered(text) is None,
       "len": stack.advance(text, size),
       "x": box.x,
       "y": box.y,

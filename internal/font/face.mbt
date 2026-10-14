@@ -22,6 +22,10 @@ pub struct Face {
   /// Code points of the ligatures two glyphs join into, keyed like
   /// `kerning`.
   priv ligatures : Map[Int32, Int32]
+  /// Characters the face has no glyph for but draws all the same, as a
+  /// base letter and a combining mark it does have. No other face gets to
+  /// draw them, and where the mark lands is not known here.
+  priv composed : Map[Int32, Unit]
   /// Whether Blink raises the ascent by 15% of the line, as it does on
   /// macOS for Times, Helvetica and Courier to match their Windows
   /// counterparts.
@@ -31,7 +35,7 @@ pub struct Face {
 ///|
 /// Build a face from the flat tables written by
 /// `scripts/gen_font_metrics.py`: seven numbers per glyph and three per
-/// kerning pair or ligature.
+/// kerning pair or ligature, and one per composed character.
 fn Face::new(
   units_per_em~ : Int32,
   ascent~ : Int32,
@@ -39,6 +43,7 @@ fn Face::new(
   glyphs~ : FixedArray[Int32],
   kerning~ : FixedArray[Int32],
   ligatures~ : FixedArray[Int32] = [],
+  composed~ : FixedArray[Int32] = [],
   legacy_mac_ascent~ : Bool = false,
 ) -> Face {
   let by_code : Map[Int32, Glyph] = Map([])
@@ -67,6 +72,13 @@ fn Face::new(
     glyphs: by_code,
     kerning: pairs,
     ligatures: joined,
+    composed: {
+      let set : Map[Int32, Unit] = Map([])
+      for code in composed {
+        set[code] = ()
+      }
+      set
+    },
     legacy_mac_ascent,
   }
 }
