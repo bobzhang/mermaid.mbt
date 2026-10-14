@@ -115,6 +115,9 @@ fn node_dir(node : Node, by_id : Map[String, Node], diagram : String) -> String 
 ///|
 /// Lay out and draw `data` into the first group of `svg`.
 pub fn render(data : LayoutData, svg : @dom.Element) -> Unit raise LayoutError {
+  if data.config.text("layout") == Some("swimlane") {
+    return render_swimlane(data, svg)
+  }
   // Ids are unique across the diagrams of a page.
   for node in data.nodes {
     node.dom_id = "\{data.diagram_id}-\{node.dom_id}"

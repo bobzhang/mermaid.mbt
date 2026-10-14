@@ -261,6 +261,17 @@ fn FlowDb::layout_data(
         look~,
         animate=raw.animate == Some(true),
         animation?=raw.animation,
+        // `rawEdge.interpolate || this.edges.defaultInterpolate ||
+        // flowchart.curve`: the layouts that draw in the diagram's curves
+        // read it; ELK picks its own.
+        curve=match raw.interpolate {
+          Some(curve) if curve != "" => curve
+          _ =>
+            match self.default_interpolate {
+              Some(curve) if curve != "" => curve
+              _ => config.text("flowchart.curve").unwrap_or("")
+            }
+        },
       ),
     )
   }

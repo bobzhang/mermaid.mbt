@@ -190,6 +190,7 @@ pub fn Edge::new(
   start_label_right~ : String = "",
   end_label_left~ : String = "",
   end_label_right~ : String = "",
+  curve~ : String = "",
 ) -> Edge {
   {
     id,
@@ -213,7 +214,7 @@ pub fn Edge::new(
     end_label_right,
     terminals: [],
     label_style: "",
-    curve: "",
+    curve,
     points: [],
     width: 0.0,
     height: 0.0,

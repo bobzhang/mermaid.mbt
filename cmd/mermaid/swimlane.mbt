@@ -63,7 +63,10 @@ fn swimlane(options : ArrayView[String]) -> Unit raise CliError {
   let layout = @swimlane.layout_capture(read_json(path), after_step=(
     name,
     layout,
-  ) => if stages { snapshots.push(layout.snapshot(name)) })
+  ) => if stages { snapshots.push(layout.snapshot(name)) }) catch {
+    @layering.LayeringError(message) => raise CliError(message, status=1)
+    error => raise CliError(error.to_string(), status=1)
+  }
   if stages {
     println(Json::object(Map([("stages", Json::array(snapshots))])).stringify())
   } else {

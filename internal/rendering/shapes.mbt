@@ -414,6 +414,7 @@ fn draw_shape(
     "requirementBox" => return requirement_box(parent, node, env)
     "classBox" => return class_box(parent, node, env)
     "block_arrow" => return block_arrow(parent, node, env)
+    "labelRect" => return label_rect(parent, node, env)
     _ => ()
   }
   guard shape_handler(node.shape) is Some(handler) else {

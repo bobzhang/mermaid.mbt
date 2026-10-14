@@ -8,14 +8,14 @@
 pub fn layout_capture(
   capture : Json,
   after_step? : (String, @model.Layout) -> Unit,
-) -> @model.Layout {
+) -> @model.Layout raise @layering.LayeringError {
   let data = match capture {
     Object(fields) => fields.get("data").unwrap_or(Json::null())
     _ => Json::null()
   }
   let layout = @model.Layout::from_capture(data)
   let after = (name : String) => if after_step is Some(f) { f(name, layout) }
-  prepare(layout)
+  @layering.prepare(layout)
   let sizes = @model.capture_sizes(capture)
   for node in layout.nodes {
     if !node.is_group && sizes.get(node.id) is Some((width, height)) {

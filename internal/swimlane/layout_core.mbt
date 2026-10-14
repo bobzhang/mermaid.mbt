@@ -7,10 +7,10 @@
 pub fn run_core(
   layout : @model.Layout,
   after_step? : (String) -> Unit,
-) -> String {
+) -> String raise @layering.LayeringError {
   let after = (name : String) => if after_step is Some(f) { f(name) }
   let direction = layout_direction(layout)
-  rank_and_place(layout, direction)
+  @layering.rank_and_place(layout, direction)
   for edge in layout.edges {
     edge.points = None
   }

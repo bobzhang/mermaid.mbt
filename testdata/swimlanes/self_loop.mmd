@@ -1,0 +1,42 @@
+swimlane-beta BT
+  subgraph Ops0
+    step1[Create account]
+    n2[Wait]
+  end
+  subgraph L1
+    a3_x{{Plan}}
+  end
+  subgraph lane2 [Customer]
+    n4[Collect data]
+    a5_x[Send]
+    n6[Send]
+  end
+  subgraph L3 [Ops]
+    N7[Send]
+    a8_x{{Build}}
+    n9[Send]
+    a10_x[Start]
+    step11[Approve]
+  end
+  subgraph lane4
+    n12{Review}
+    N13[Order]
+    a14_x[Create account]
+    a15_x[Build]
+    step16[Ask]
+  end
+  a14_x -->|Invoice ready| a5_x
+  step11 --> a14_x
+  step11 --> n2
+  a14_x ---|retry| a3_x
+  n4 -->|Invoice ready| a10_x
+  N13 --> a14_x
+  n9 ==> a10_x
+  a8_x --> a8_x
+  N13 --> n9
+  step11 --- a10_x
+  a15_x ==> step1
+  step11 ---|Invoice ready| a8_x
+  a3_x --> a8_x
+  n4 --> n6
+  n9 --> n6

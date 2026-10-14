@@ -1,4 +1,5 @@
 import {
+  "bobzhang/mermaid/internal/swimlane/layering",
   "bobzhang/mermaid/internal/swimlane/model",
   "bobzhang/mermaid/internal/swimlane/post",
   "bobzhang/mermaid/internal/swimlane/rendered",

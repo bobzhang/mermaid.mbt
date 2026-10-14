@@ -21,6 +21,7 @@ import {
   "bobzhang/mermaid/diagrams/treemap",
   "bobzhang/mermaid/diagrams/requirement",
   "bobzhang/mermaid/diagrams/state",
+  "bobzhang/mermaid/diagrams/swimlanes",
   "bobzhang/mermaid/diagrams/timeline",
   "bobzhang/mermaid/diagrams/treeview",
   "bobzhang/mermaid/diagrams/sequence",

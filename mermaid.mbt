@@ -111,6 +111,36 @@ fn parse_diagram(
         },
       }
     }
+    "swimlane" => {
+      // A flowchart laid out in lanes: the flowchart's parser, database and
+      // renderer, with the lane rules added to its stylesheet.
+      let db = @flowchart.parse(code, config) catch {
+        @jison.ParseError(message~, ..) => raise Syntax(message)
+        @flowchart.FlowError(message) => raise Syntax(message)
+        error => raise Syntax(error.to_string())
+      }
+      if title is Some(title) && db.title == "" {
+        db.set_title(title)
+      }
+      {
+        styles: @swimlanes.styles(
+          config.theme(),
+          config.text("theme").unwrap_or(""),
+          config.text("look").unwrap_or(""),
+        ),
+        acc_title: db.acc_title,
+        acc_description: db.acc_description,
+        classes: db.classes
+        .values()
+        .map(c => { id: c.id, styles: c.styles, text_styles: c.text_styles, })
+        .collect(),
+        draw: context => {
+          @flowchart.draw(db, context, diagram_type="swimlane") catch {
+            @rendering.LayoutError(message) => raise Unsupported(message)
+          }
+        },
+      }
+    }
     "gitGraph" => {
       let graph = @gitgraph.parse(code, config) catch {
         @langium.ParseError(message~, ..) => raise Syntax(message)

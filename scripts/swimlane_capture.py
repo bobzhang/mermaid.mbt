@@ -9,6 +9,9 @@ drawn them. Together they are the input of the layout core:
 
     {"data": <data4Layout as logged>, "sizes": {"<node id>": [width, height]}}
 
+A diagram upstream fails to render is written as `<name>.error.json`, with
+the error, when the layout data was logged before the failure.
+
 Usage:
     scripts/swimlane_capture.py -o DIR a.mmd b.mmd ...   # DIR/a.json, ...
 """
@@ -37,9 +40,6 @@ def capture(paths, config=None):
     results = oracle.run(jobs, site, PRELUDE)[1:]
     captures = []
     for result in results:
-        if "error" in result:
-            captures.append(result["error"])
-            continue
         data, sizes = None, {}
         for line in result.get("console", []):
             if "REF1:" in line and isinstance(line[-1], str):
@@ -50,7 +50,10 @@ def capture(paths, config=None):
             if line and line[0] == "SWIMLANE-SIZES":
                 for node in json.loads(line[1])["sizes"]["nodes"]:
                     sizes[node["id"]] = [node["width"], node["height"]]
-        if data is None:
+        if "error" in result:
+            # Upstream failed; what it was given is kept for reproducing it.
+            captures.append({"data": data, "sizes": sizes, "error": result["error"]} if data else result["error"])
+        elif data is None:
             captures.append("no layout data was logged")
         else:
             captures.append({"data": data, "sizes": sizes, "svg": result["svg"]})
@@ -70,6 +73,11 @@ def main():
         if isinstance(result, str):
             failed = True
             print(f"{path}: {result}", file=sys.stderr)
+            continue
+        if "error" in result:
+            failed = True
+            print(f"{path}: {result['error']}", file=sys.stderr)
+            (args.out / (path.stem + ".error.json")).write_text(json.dumps(result))
             continue
         svg = result.pop("svg")
         (args.out / (path.stem + ".json")).write_text(json.dumps(result))
