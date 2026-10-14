@@ -86,9 +86,6 @@ pub fn draw(
     raise @rendering.LayoutError("The \{layout} layout is not supported yet.")
   }
   let look = config.text("look").unwrap_or("classic")
-  if look == "handDrawn" {
-    raise @rendering.LayoutError("The hand-drawn look is not supported yet.")
-  }
   // Relative font sizes compound over the elements of a label.
   for node in db.nodes {
     for style in [..node.css_compiled_styles, ..node.css_styles] {

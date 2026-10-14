@@ -1,0 +1,18 @@
+---
+config:
+  look: handDrawn
+  handDrawnSeed: 3
+---
+stateDiagram-v2
+  [*] --> Still
+  Still --> [*]
+  Still --> Moving : push
+  Moving --> Still
+  Moving --> Crash
+  Crash --> [*]
+  state Moving {
+    [*] --> Slow
+    Slow --> Fast : speed up
+    Fast --> [*]
+  }
+  note right of Crash : Bad things happen
