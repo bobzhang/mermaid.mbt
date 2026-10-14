@@ -1,0 +1,28 @@
+---
+config:
+  handDrawnSeed: 1
+---
+usecase-beta
+direction TB
+systemBoundary B0["Back end"]
+  U0("Ünïcode café")
+  actor A0("Customer")@{ type: awesome }
+end
+systemBoundary B1["Payment service"]@{ type: package }
+end
+actor A1("Admin")@{ type: awesome }
+actor A2@{ type: awesome }
+U1("Export report")
+U2("Export report")
+A1 --> U0
+U2 -- "calls the service" --> U0
+A1 o-- "back" -- U2
+U0 --x U0
+A1 -- "calls the service" --> U0
+U0 -- lbl -- U2
+U0 --|> U2
+style U0 fill:#eef,color:#333
+
+A2 E1@-- "styled" --> U1
+style E1 stroke:#06c,stroke-width:3px,color:#c00
+E1@{ animate: true }

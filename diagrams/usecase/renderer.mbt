@@ -262,6 +262,7 @@ pub fn draw(
   let fonts = Fonts::from_config(config)
   check_font_family(fonts.actor_family)
   check_font_family(fonts.usecase_family)
+  check_font_family(config.theme().text("fontFamily"))
   let actor_font : @rendering.UsecaseFont = {
     family: fonts.actor_family,
     size: fonts.actor_size,

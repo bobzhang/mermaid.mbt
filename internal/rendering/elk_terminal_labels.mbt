@@ -70,6 +70,7 @@ fn insert_edge_labels(
       base_env,
       env,
       padding_x=label_background_padding(diagram_type),
+      own_styles=edge_label_uses_own_styles(diagram_type),
     )
   }
   insert_terminal_labels(group, edge, {

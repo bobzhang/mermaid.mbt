@@ -217,6 +217,7 @@ pub fn render(data : LayoutData, svg : @dom.Element) -> Unit raise LayoutError {
             env,
             label_env,
             padding_x=label_background_padding(data.diagram_type),
+            own_styles=edge_label_uses_own_styles(data.diagram_type),
           )
           label_elements[edge.id] = element
           element

@@ -97,6 +97,14 @@ fn label_background_padding(diagram_type : String) -> Double {
 }
 
 ///|
+/// Whether the label of an edge takes the edge's own styles besides
+/// those of its classes. Use case edges keep their own in `style`, which
+/// upstream's label code does not read.
+fn edge_label_uses_own_styles(diagram_type : String) -> Bool {
+  diagram_type != "usecase"
+}
+
+///|
 /// Whether the diagram's stylesheet centres the SVG text of node labels
 /// on its position (`.node .label text { text-anchor: middle }`).
 fn node_text_centred(diagram_type : String) -> Bool {
