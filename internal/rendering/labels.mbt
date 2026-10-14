@@ -214,7 +214,7 @@ fn label_helper(
       width?=label_width,
       style=node.label_style,
       markdown~,
-      anchor_middle=true,
+      anchor_middle=env.node_text_centred,
     )
     let box : LabelBox = {
       width: text.text_box.width.max(min_label_width),

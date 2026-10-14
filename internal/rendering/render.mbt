@@ -130,7 +130,10 @@ pub fn render(data : LayoutData, svg : @dom.Element) -> Unit raise LayoutError {
     data.diagram_id,
     config=data.config,
   )
-  let env = Env::new(data.config, data.diagram_id)
+  let env = {
+    ..Env::new(data.config, data.diagram_id),
+    node_text_centred: node_text_centred(data.diagram_type),
+  }
   // Measure: every node is drawn once to learn its size.
   let root = element.append("g").attr("class", "root")
   let clusters = root.append("g").attr("class", "clusters")
@@ -161,7 +164,9 @@ pub fn render(data : LayoutData, svg : @dom.Element) -> Unit raise LayoutError {
     // Line breaks in edge labels are plain newlines from here on.
     edge.label = normalize_breaks(edge.label)
     if edge.label != "" {
-      label_elements[edge.id] = insert_edge_label(edge_labels, edge, label_env)
+      label_elements[edge.id] = insert_edge_label(
+        edge_labels, edge, env, label_env,
+      )
     }
   }
   // Lay out.
@@ -198,7 +203,7 @@ pub fn render(data : LayoutData, svg : @dom.Element) -> Unit raise LayoutError {
       let element = match label_elements.get(edge.id) {
         Some(element) => element
         None => {
-          let element = insert_edge_label(edge_labels, edge, label_env)
+          let element = insert_edge_label(edge_labels, edge, env, label_env)
           label_elements[edge.id] = element
           element
         }

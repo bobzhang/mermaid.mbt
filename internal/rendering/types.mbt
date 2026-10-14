@@ -210,6 +210,9 @@ priv struct Env {
   font_size : Double
   /// Whether labels are HTML in a `foreignObject` or SVG text.
   html_labels : Bool
+  /// Whether the diagram's stylesheet anchors the SVG text of node labels
+  /// in the middle.
+  node_text_centred : Bool
 }
 
 ///|
@@ -245,6 +248,7 @@ fn Env::new(config : @config.Config, diagram_id : String) -> Env {
     font_family: theme.text("fontFamily"),
     font_size: size,
     html_labels,
+    node_text_centred: true,
   }
 }
 

@@ -12,6 +12,13 @@ fn edge_label_font_size(diagram_type : String, font_size : Double) -> Double {
 }
 
 ///|
+/// Whether the diagram's stylesheet centres the SVG text of node labels
+/// on its position (`.node .label text { text-anchor: middle }`).
+fn node_text_centred(diagram_type : String) -> Bool {
+  !(diagram_type is "er")
+}
+
+///|
 /// The face and size an inline label style asks for.
 priv struct LabelFont {
   bold : Bool
