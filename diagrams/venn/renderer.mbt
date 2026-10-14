@@ -237,6 +237,10 @@ pub fn draw(venn : Venn, context : @diagram.Context) -> Unit raise VennError {
   let theme = context.theme()
   let svg = context.svg
   let settings = Settings::new(config)
+  // What `sanitizeText` would do to markup is not ported.
+  if venn.title.contains("<") {
+    raise Unsupported("markup in the title of a Venn diagram: \{venn.title}")
+  }
   if config.text("look") == Some("handDrawn") {
     raise Unsupported("the hand-drawn look of a Venn diagram")
   }

@@ -433,7 +433,8 @@ fn parse_diagram(
         @venn.Unsupported(message) => raise Unsupported(message)
         error => raise Syntax(error.to_string())
       }
-      if title is Some(title) {
+      // A frontmatter title applies unless the diagram body has its own.
+      if title is Some(title) && venn.title == "" {
         venn.set_title(title)
       }
       {

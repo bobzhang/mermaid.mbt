@@ -150,10 +150,9 @@ fn serialize_color(value : String) -> String {
   }
   let channels = @color.Channels::parse(trimmed) catch { _ => return trimmed }
   let (r, g, b) = channels.to_css_rgb()
-  if channels.a() < 1.0 {
-    "rgba(\{r}, \{g}, \{b}, \{number(channels.a())})"
-  } else {
-    "rgb(\{r}, \{g}, \{b})"
+  match css_alpha(channels.a()) {
+    Some(alpha) => "rgba(\{r}, \{g}, \{b}, \{alpha})"
+    None => "rgb(\{r}, \{g}, \{b})"
   }
 }
 

@@ -152,6 +152,10 @@ pub fn draw(
   context : @diagram.Context,
 ) -> Unit raise WardleyError {
   let n = @dom.number
+  // A title from the frontmatter is sanitized like one of the diagram.
+  if map.title.contains("<") {
+    raise Unsupported("markup in the title of a Wardley map: \{map.title}")
+  }
   let settings = Settings::new(context)
   let colors = Colors::new(context)
   let id = context.id
