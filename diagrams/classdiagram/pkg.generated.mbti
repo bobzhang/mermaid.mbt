@@ -35,6 +35,7 @@ pub struct ClassDb {
 }
 pub fn ClassDb::direction(Self) -> String
 pub fn ClassDb::set_title(Self, String) -> Unit
+pub fn ClassDb::styled_classes(Self) -> Array[(String, Array[String])] raise ClassError
 
 pub struct ClassMember {
   id : String

@@ -325,19 +325,16 @@ fn markdown_blocks(markdown : String) -> Array[MdBlock] {
       if k > start {
         text.push('\n')
       }
-      // Leading spaces of a paragraph's lines do not count.
+      // The indentation of a line after the first does not count; the
+      // spaces the paragraph starts and ends with are part of its text.
       let line = lines[k]
       let mut skip = 0
-      while skip < line.length() && line[skip] is (' ' | '\t') {
+      while k > start && skip < line.length() && line[skip] is (' ' | '\t') {
         skip += 1
       }
       for position in skip..<line.length() {
         text.push(line[position])
       }
-    }
-    // Trailing spaces of the paragraph go too.
-    while text.last() is Some(' ' | '\t') {
-      text.pop() |> ignore
     }
     blocks.push(Paragraph(inline_tokens(text)))
   }
