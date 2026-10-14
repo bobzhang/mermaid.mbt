@@ -88,8 +88,9 @@ fn create_html_label(
     line.map(run => {
       ..run,
       bold: run.bold || font.bold,
-      // A bold element in a label that is bold as a whole.
-      heavy: run.heavy || (run.bold && font.bold),
+      // A bold element in a label that is bold as a whole, by its own
+      // style or by that of what it is in.
+      heavy: run.heavy || (run.bold && (font.bold || env.bold)),
       italic: run.italic || font.italic,
     })
   }
