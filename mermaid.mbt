@@ -176,6 +176,32 @@ fn parse_diagram(
         draw: context => @radar.draw(radar, context),
       }
     }
+    "treemap" => {
+      let treemap = @treemap.parse(code) catch {
+        @langium.ParseError(message~, ..) => raise Syntax(message)
+        @treemap.Invalid(message) => raise Syntax(message)
+        @treemap.Unsupported(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      if title is Some(title) && treemap.title == "" {
+        treemap.set_title(title)
+      }
+      {
+        styles: @treemap.styles(config.theme()),
+        acc_title: treemap.acc_title,
+        acc_description: treemap.acc_description,
+        classes: treemap.classes
+        .values()
+        .map(c => { id: c.id, styles: c.styles, text_styles: c.text_styles, })
+        .collect(),
+        draw: context => {
+          @treemap.draw(treemap, context) catch {
+            @treemap.Invalid(message) => raise Syntax(message)
+            @treemap.Unsupported(message) => raise Unsupported(message)
+          }
+        },
+      }
+    }
     other => raise Unsupported(other)
   }
 }
