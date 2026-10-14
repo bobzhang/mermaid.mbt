@@ -1,0 +1,18 @@
+---
+config:
+  wrap: true
+---
+C4Context
+title Wrapping on
+Enterprise_Boundary(b0, "A boundary with a long name that could wrap when it is too long for the width it is given by its parent") {
+  Person(a, "A person", "With a description")
+  System(b, "A system")
+  Boundary(b1, "Inner boundary one two three four five six seven eight nine ten") {
+    System(c, "C")
+  }
+  Boundary(b2, "Inner boundary two") {
+    System(d, "D")
+  }
+}
+Rel(a, b, "A long label on a relationship that would be wrapped if it were too long for itself", "Technology with words")
+Rel(b, c, "Short")

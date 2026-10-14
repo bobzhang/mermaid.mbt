@@ -174,21 +174,44 @@ priv struct Shaped {
 /// Shape `text` at `size` pixels. Consecutive characters of the same face
 /// kern against each other; a change of face starts a new run.
 fn Stack::shape(self : Stack, text : StringView, size : Double) -> Shaped {
-  let size = effective_size(size)
+  self.shape_after(text, effective_size(size), None).0
+}
+
+///|
+/// Shape `text` at the effective size `size` as the continuation of a run
+/// that ended in the glyph `before`. Returns the last glyph as well.
+fn Stack::shape_after(
+  self : Stack,
+  text : StringView,
+  size : Double,
+  before : (Face, Glyph)?,
+) -> (Shaped, (Face, Glyph)?) {
   let shaped = { pen: 0.0, ink: { x: 0.0, y: 0.0, width: 0.0, height: 0.0, }, }
-  let mut previous : (Face, Glyph)? = None
+  let mut previous = before
+  let mut first = true
   for cluster in self.clusters(text) {
     guard cluster is Drawn(face, glyph) else {
       shaped.pen = shaped.pen + Float::from_double(size * cluster.missing_em())
       previous = None
+      first = false
       continue
     }
     if previous is Some((left_face, left)) &&
       physical_equal(left_face, face) &&
       face.kerning.get(left.id * 65536 + glyph.id) is Some(adjust) {
-      shaped.pen = shaped.pen +
-        Float::from_int(face.scale_fixed(adjust, size)) / HB_ONE
+      let kern = face.scale_fixed(adjust, size)
+      // Against the glyph that ended the piece before, only the share of
+      // this glyph moves it.
+      let share = if !first {
+        kern
+      } else if face.split_kerning {
+        kern - (kern >> 1)
+      } else {
+        0
+      }
+      shaped.pen = shaped.pen + Float::from_int(share) / HB_ONE
     }
+    first = false
     if glyph.x_min != glyph.x_max || glyph.y_min != glyph.y_max {
       // Skia asks CoreText for the box at its own font size, a float, and
       // converts the edges of the answer, which is in doubles, to floats.
@@ -205,7 +228,7 @@ fn Stack::shape(self : Stack, text : StringView, size : Double) -> Shaped {
       Float::from_int(face.advance_fixed(glyph.advance, size)) / HB_ONE
     previous = Some((face, glyph))
   }
-  shaped
+  (shaped, previous)
 }
 
 ///|
@@ -302,6 +325,33 @@ pub fn Stack::item_advances(
     }
   }
   sums.map(sum => ceil_layout_unit(sum))
+}
+
+///|
+/// The ink of consecutive pieces of text shaped as one run, each around
+/// the start of its piece on the baseline, y down. Where the first glyph
+/// of a piece kerns against the last of the piece before it and the face
+/// shares adjustments between the two glyphs, the piece's glyphs sit that
+/// share closer to its start.
+pub fn Stack::item_inks(
+  self : Stack,
+  items : Array[String],
+  size : Double,
+) -> Array[Rect] {
+  let size = effective_size(size)
+  let inks : Array[Rect] = []
+  let mut previous : (Face, Glyph)? = None
+  for item in items {
+    let (shaped, last) = self.shape_after(item, size, previous)
+    previous = last
+    inks.push({
+      x: shaped.ink.x.to_double(),
+      y: shaped.ink.y.to_double(),
+      width: shaped.ink.width.to_double(),
+      height: shaped.ink.height.to_double(),
+    })
+  }
+  inks
 }
 
 ///|

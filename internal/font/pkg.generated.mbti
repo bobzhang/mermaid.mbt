@@ -33,6 +33,7 @@ pub fn Stack::default(bold? : Bool, italic? : Bool) -> Self
 pub fn Stack::for_family(String, bold? : Bool, italic? : Bool) -> Self
 pub fn Stack::ink(Self, StringView, Double) -> Rect
 pub fn Stack::item_advances(Self, Array[String], Double) -> Array[Double]
+pub fn Stack::item_inks(Self, Array[String], Double) -> Array[Rect]
 pub fn Stack::line_metrics(Self, Double) -> (Double, Double)
 
 // Type aliases

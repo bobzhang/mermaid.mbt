@@ -1,0 +1,21 @@
+C4Context
+UpdateLayoutConfig($c4ShapeInRow="2", $c4BoundaryInRow="3")
+Person(a, "A")
+Person(b, "B")
+Person(c, "C")
+Boundary(b1, "One") {
+  System(s1, "S1")
+}
+Boundary(b2, "Two") {
+  System(s2, "S2")
+  System(s3, "S3")
+  System(s4, "S4")
+}
+Boundary(b3, "Three") {
+  System(s5, "S5")
+}
+Boundary(b4, "Four", "kind") {
+  System(s6, "S6")
+}
+Rel(a, s1, "x")
+Rel(s2, s6, "y")

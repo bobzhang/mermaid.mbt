@@ -112,6 +112,30 @@ fn item_widths(items : Array[Run], env : Env) -> Array[Double] {
 }
 
 ///|
+/// The ink of the items of a line, each around the start of its item on
+/// the baseline: like their widths, shaped as one run per face.
+fn item_inks(items : Array[Run], env : Env) -> Array[@font.Rect] {
+  let inks = []
+  let mut index = 0
+  while index < items.length() {
+    let first = items[index]
+    let group = []
+    while index < items.length() &&
+          items[index].bold == first.bold &&
+          items[index].italic == first.italic {
+      group.push(items[index].text)
+      index += 1
+    }
+    inks.append(
+      env
+      .font(bold=first.bold, italic=first.italic)
+      .item_inks(group, env.font_size),
+    )
+  }
+  inks
+}
+
+///|
 /// What `getComputedTextLength()` reports for a line.
 fn text_line_width(line : Array[Word], env : Env) -> Double {
   item_widths(line_items_text(line), env).fold(init=0.0, (a, b) => a + b)
@@ -252,6 +276,7 @@ fn text_box(
     let baseline = y + em_to_px(1.1, size)
     let items = line_items_text(line)
     let widths = item_widths(items, env)
+    let inks = item_inks(items, env)
     let total = widths.fold(init=0.0, (a, b) => a + b)
     let mut x = if anchor_middle { -total / 2.0 } else { 0.0 }
     for k, item in items {
@@ -263,7 +288,7 @@ fn text_box(
         f(x + widths[k]),
         baseline + f(descent),
       )
-      let ink = font.ink(item.text, size)
+      let ink = inks[k]
       let ink_box : BoxF = {
         x: f(x) + f(ink.x),
         y: baseline + f(ink.y),
@@ -310,14 +335,19 @@ fn create_svg_label(
   markdown~ : Bool = false,
   anchor_middle~ : Bool = !is_node,
 ) -> SvgLabel {
-  let structured = if markdown {
-    markdown_to_lines(
-      @dom.sanitized_text(@dom.placeholders_to_references(text)),
-    )
+  // The sanitizer hands text without markup back untouched, character
+  // references included: only `&amp;`, `&lt;` and `&gt;` are resolved
+  // later, when the words are written.
+  let decoded = @dom.placeholders_to_references(text)
+  let sanitized = if decoded.contains("<") {
+    @dom.sanitized_text(decoded)
   } else {
-    non_markdown_to_lines(
-      @dom.sanitized_text(@dom.placeholders_to_references(text)),
-    )
+    decoded
+  }
+  let structured = if markdown {
+    markdown_to_lines(sanitized)
+  } else {
+    non_markdown_to_lines(sanitized)
   }
   let center = !is_node
   let group = parent.append("g")

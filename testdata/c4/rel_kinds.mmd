@@ -1,0 +1,18 @@
+C4Container
+Person(a, "A")
+Container_Boundary(b, "B") {
+  Container(c, "C", "t")
+  Container(d, "D", "t")
+}
+System_Boundary(e, "E") {
+  Container(f, "F")
+}
+Rel(a, b, "to boundary")
+Rel(b, e, "boundary to boundary", "tech")
+Rel(c, c, "self")
+Rel_U(c, d, "up")
+Rel_D(d, c, "down")
+Rel_L(a, f, "left")
+Rel_R(f, a, "right")
+Rel_Back(a, c, "back")
+BiRel(a, d, "both")
