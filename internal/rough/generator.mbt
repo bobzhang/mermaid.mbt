@@ -58,6 +58,18 @@ fn draw(sets : Array[OpSet], o : Options, even_odd : Bool) -> @dom.Element {
           path.attr("fill-rule", "evenodd") |> ignore
         }
       }
+      FillSketch => {
+        let weight = if o.fill_weight < 0.0 {
+          o.stroke_width_number() / 2.0
+        } else {
+          o.fill_weight
+        }
+        path
+        .attr("stroke", o.fill)
+        .attr("stroke-width", @dom.number(weight))
+        .attr("fill", "none")
+        |> ignore
+      }
     }
   }
   group
@@ -74,10 +86,15 @@ fn has_stroke(o : Options) -> Bool {
 }
 
 ///|
-/// Only plain fills are ported; the sketchy fill styles belong to the
-/// hand-drawn look.
+/// Of the sketchy fill styles only the default one, `hachure`, is ported,
+/// and only for paths and rectangles.
 fn solid(o : Options) -> Bool {
   o.fill_style == "solid"
+}
+
+///|
+fn hachure(o : Options) -> Bool {
+  o.fill_style == "hachure"
 }
 
 ///|
@@ -110,6 +127,8 @@ pub fn path(d : String, options : Options) -> @dom.Element {
     } else {
       sets.push({ kind: FillPath, ops: solid_fill_polygon(polygons, o), })
     }
+  } else if filled && hachure(o) {
+    sets.push({ kind: FillSketch, ops: hachure_fill(polygons, o), })
   }
   if has_stroke(o) {
     sets.push({ kind: Stroke, ops: shape, })
@@ -137,6 +156,8 @@ pub fn rectangle(
   let outline = linear_path(points, true, o)
   if has_fill(o) && solid(o) {
     sets.push({ kind: FillPath, ops: solid_fill_polygon([points], o), })
+  } else if has_fill(o) && hachure(o) {
+    sets.push({ kind: FillSketch, ops: hachure_fill([points], o), })
   }
   if has_stroke(o) {
     sets.push({ kind: Stroke, ops: outline, })

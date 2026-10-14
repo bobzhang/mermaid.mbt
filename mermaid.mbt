@@ -496,6 +496,72 @@ fn parse_diagram(
         },
       }
     }
+    "treeView" => {
+      let tree = @treeview.parse(code) catch {
+        @langium.ParseError(message~, ..) => raise Syntax(message)
+        @treeview.TreeViewError(message) => raise Syntax(message)
+        @treeview.Unsupported(message) => raise Unsupported(message)
+        @journeycommon.SanitizeError(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      {
+        styles: @treeview.styles(config.theme()),
+        acc_title: tree.acc_title,
+        acc_description: tree.acc_description,
+        classes: [],
+        draw: context => {
+          @treeview.draw(tree, context) catch {
+            @treeview.TreeViewError(message) => raise Syntax(message)
+            @treeview.Unsupported(message) => raise Unsupported(message)
+            error => raise Unsupported(error.to_string())
+          }
+        },
+      }
+    }
+    "ishikawa" => {
+      let diagram = @ishikawa.parse(code) catch {
+        @jison.ParseError(message~, ..) => raise Syntax(message)
+        @ishikawa.Unsupported(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      // The grammar has no accessibility statements, and the title — the
+      // effect — is drawn as the head, not as a title.
+      {
+        styles: @ishikawa.styles(config.theme()),
+        acc_title: "",
+        acc_description: "",
+        classes: [],
+        draw: context => {
+          @ishikawa.draw(diagram, context) catch {
+            @ishikawa.Unsupported(message) => raise Unsupported(message)
+          }
+        },
+      }
+    }
+    "cynefin" => {
+      let diagram = @cynefin.parse(code) catch {
+        @langium.ParseError(message~, ..) => raise Syntax(message)
+        @cynefin.Unsupported(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      // A frontmatter title applies unless the diagram body has its own.
+      if title is Some(title) && diagram.title == "" {
+        diagram.set_title(title) catch {
+          @cynefin.Unsupported(message) => raise Unsupported(message)
+        }
+      }
+      {
+        styles: @cynefin.styles(config.theme()),
+        acc_title: diagram.acc_title,
+        acc_description: diagram.acc_description,
+        classes: [],
+        draw: context => {
+          @cynefin.draw(diagram, context) catch {
+            @cynefin.Unsupported(message) => raise Unsupported(message)
+          }
+        },
+      }
+    }
     other => raise Unsupported(other)
   }
 }
