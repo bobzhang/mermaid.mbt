@@ -44,6 +44,7 @@ Work in progress.
 | State | byte-identical with the default ELK layout, `stateDiagram` and `stateDiagram-v2` |
 | User journey | byte-identical, all `journey:` options |
 | Timeline | byte-identical, horizontal and vertical, both looks |
+| Gantt | byte-identical; see the note on time below |
 | everything else | not ported yet — `render` raises `Unsupported` |
 
 Git graphs name commits at random upstream (`Math.random`), so a graph
@@ -60,6 +61,19 @@ stylesheet compiler, text measurement, and a runtime for the nineteen
 grammars mermaid writes in jison (`internal/jison`, with the tables taken
 from mermaid's own build by `scripts/extract_jison.js` and
 `scripts/gen_jison.py`).
+
+### Gantt charts and time
+
+A Gantt chart depends on three things outside its text, and `render` takes
+each as an argument that defaults to the reference page's value:
+
+- the time zone, which is that of the reference machine (Asia/Shanghai,
+  with its historical offsets) — `@jsdate.Zone::reference()` is the one
+  place that chooses it;
+- the present, for the today marker and for dates that leave parts out:
+  `now`, in milliseconds, defaulting to the system clock;
+- the page the diagram sits in, whose width the chart takes and whose
+  scrollbar changes how labels measure: `page`.
 
 ### Flowcharts
 
