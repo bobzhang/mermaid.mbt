@@ -157,6 +157,25 @@ fn parse_diagram(
         },
       }
     }
+    "radar" => {
+      let radar = @radar.parse(code) catch {
+        @langium.ParseError(message~, ..) => raise Syntax(message)
+        @radar.Invalid(message) => raise Syntax(message)
+        @radar.Unsupported(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      let radar = match title {
+        Some(title) if radar.title == "" => radar.with_title(title)
+        _ => radar
+      }
+      {
+        styles: @radar.styles(config.theme()),
+        acc_title: radar.acc_title,
+        acc_description: radar.acc_description,
+        classes: [],
+        draw: context => @radar.draw(radar, context),
+      }
+    }
     other => raise Unsupported(other)
   }
 }
