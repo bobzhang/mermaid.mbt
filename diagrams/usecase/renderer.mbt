@@ -292,9 +292,6 @@ pub fn draw(
     raise Unsupported("The \{layout} layout is not supported yet.")
   }
   let look = config.text("look").unwrap_or("neo")
-  if look == "handDrawn" {
-    raise Unsupported("The hand-drawn look is not supported yet.")
-  }
   let fonts = Fonts::from_config(config)
   check_font_family(fonts.actor_family)
   check_font_family(fonts.usecase_family)

@@ -6,27 +6,21 @@
 
 ///|
 /// Put the entities of the hand-drawn look in the order upstream's
-/// concurrent drawing leaves them in: the background copies in node order,
-/// then the entities by their number of attributes, ties in node order.
+/// concurrent drawing leaves them in: everything drawn at once (the
+/// background copies, the label nodes of self-loops, the nested drawing of
+/// a subgraph under dagre) in node order, then the entities by their
+/// number of attributes, ties in node order.
 fn order_hand_drawn_entities(svg : @dom.Element) -> Unit {
   for group in groups_of_class(svg, "nodes") {
-    // Other children (the nested drawing of a subgraph under dagre)
-    // keep their places.
     let children = group.child_elements()
-    let slots = []
-    let copies = []
+    let first = []
     let entities = []
-    for index, child in children {
+    for child in children {
       let class_name = child.get_attr("class").unwrap_or("")
-      guard class_name.has_prefix("node ") ||
-        class_name.has_prefix("rough-node ") else {
-        continue
-      }
-      slots.push(index)
-      if child.get_attr("id").unwrap_or("").contains("-background") {
-        copies.push(child)
-      } else {
+      if class_name.has_prefix("rough-node ") {
         entities.push((attribute_count(child), entities.length(), child))
+      } else {
+        first.push(child)
       }
     }
     entities.sort_by((a, b) => {
@@ -37,18 +31,14 @@ fn order_hand_drawn_entities(svg : @dom.Element) -> Unit {
         a.1.compare(b.1)
       }
     })
-    let ordered = [..copies, ..entities.map(entity => entity.2)]
     for child in children {
       child.remove()
     }
-    let mut next = 0
-    for index, child in children {
-      if next < slots.length() && slots[next] == index {
-        group.append_child(ordered[next])
-        next += 1
-      } else {
-        group.append_child(child)
-      }
+    for child in first {
+      group.append_child(child)
+    }
+    for entity in entities {
+      group.append_child(entity.2)
     }
   }
 }

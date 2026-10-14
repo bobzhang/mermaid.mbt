@@ -364,3 +364,30 @@ fn er_background_node(node : Node, env : Env) -> Node {
     css_styles: ["stroke: none", "fill: \{background}"],
   }
 }
+
+///|
+/// A state with a description in the hand-drawn look: a sketched frame
+/// (rounded by the node's radius) and a sketched line under the title,
+/// both put first, the frame before the line.
+fn sketched_rect_with_title(
+  shape_svg : @dom.Element,
+  node : Node,
+  env : Env,
+  x : Double,
+  y : Double,
+  width : Double,
+  height : Double,
+  line_x1 : Double,
+  line_x2 : Double,
+  line_y : Double,
+) -> @dom.Element {
+  let options = rough_options(node, env)
+  let frame = @rough.path(
+    rounded_rect_path(x, y, width, height, node.rx.unwrap_or(0.0)),
+    options,
+  )
+  let line = @rough.line(line_x1, line_y, line_x2, line_y, options)
+  prepend(shape_svg, line)
+  prepend(shape_svg, frame)
+  frame
+}

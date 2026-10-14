@@ -129,6 +129,27 @@ fn rect_with_title(
   |> ignore
   let x = -box.width / 2.0 - half_padding
   let y = -box.height / 2.0 - half_padding
+  if hand_drawn(node) {
+    let line_y = -box.height / 2.0 -
+      half_padding +
+      title_box.height +
+      half_padding
+    let rect = sketched_rect_with_title(
+      shape_svg,
+      node,
+      env,
+      x,
+      y,
+      box.width + node.padding,
+      box.height + node.padding,
+      -box.width / 2.0 - half_padding,
+      box.width / 2.0 + half_padding,
+      line_y,
+    )
+    update_node_bounds(node, rect)
+    node.intersect = Some(node_intersect_rect(node))
+    return shape_svg
+  }
   let rect = frame
     .insert_first("rect")
     .attr("class", "outer title-state")

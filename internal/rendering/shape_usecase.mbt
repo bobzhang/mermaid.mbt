@@ -327,7 +327,11 @@ fn usecase_actor(
   if styles.node_styles != "" {
     actor_group.attr("style", styles.node_styles) |> ignore
   }
-  draw_actor_glyph(actor_group, variant)
+  if hand_drawn(node) {
+    draw_sketched_actor_glyph(actor_group, variant, node, env)
+  } else {
+    draw_actor_glyph(actor_group, variant)
+  }
   if business {
     actor_group
     .append("path")
@@ -419,7 +423,17 @@ fn usecase_ellipse(
   let padding = node.padding / 2.0
   let radius_x = labelled.bbox.width / 2.0 + padding * 2.0
   let radius_y = labelled.bbox.height / 2.0 + padding * 2.0
-  let ellipse = labelled.shape_svg
+  let ellipse = if hand_drawn(node) {
+    sketched_ellipse(
+      labelled.shape_svg,
+      node,
+      env,
+      radius_x,
+      radius_y,
+      "basic label-container",
+    ).attr("style", css_styles_text(node))
+  } else {
+    labelled.shape_svg
     .insert_first("ellipse")
     .attr("class", "basic label-container")
     .attr("style", styles.node_styles)
@@ -427,6 +441,7 @@ fn usecase_ellipse(
     .attr_number("ry", radius_y)
     .attr("cx", "0")
     .attr("cy", "0")
+  }
   update_node_bounds(node, ellipse)
   node.intersect = Some(point => {
     intersect_ellipse(node, radius_x, radius_y, point)
@@ -510,7 +525,12 @@ fn usecase_business(
     0.0,
     label_height / 2.0 - label_box.height / 2.0,
   )
-  let ellipse = shape_svg
+  let ellipse = if hand_drawn(node) {
+    sketched_ellipse(
+      shape_svg, node, env, radius_x, radius_y, "basic label-container usecase-business-ellipse",
+    )
+  } else {
+    shape_svg
     .insert_first("ellipse")
     .attr("class", "basic label-container usecase-business-ellipse")
     .attr("style", styles.node_styles)
@@ -518,6 +538,7 @@ fn usecase_business(
     .attr_number("ry", radius_y)
     .attr("cx", "0")
     .attr("cy", "0")
+  }
   let n = @dom.number
   let marker = shape_svg
     .append("path")
@@ -622,6 +643,11 @@ fn usecase_json_table(
     width : Double,
     height : Double,
   ) => {
+    if hand_drawn(node) {
+      return sketched_cell(
+        container, node, env, class_name, x, y, width, height,
+      )
+    }
     container
     .insert_first("rect")
     .attr("class", class_name)
