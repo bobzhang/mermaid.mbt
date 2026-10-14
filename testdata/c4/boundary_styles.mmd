@@ -1,0 +1,17 @@
+C4Container
+title Styles of boundaries & odd values
+Container_Boundary(b, "Styled") {
+  Container(c, "C", "", "no technology")
+  Container(d, "D", "T")
+}
+Deployment_Node(n, "Node", "kind", "described") {
+  Container(e, "E")
+}
+UpdateElementStyle(b, $bgColor="#eee", $borderColor="red", $fontColor="blue")
+UpdateElementStyle(n, "lightyellow", "green", "navy")
+UpdateElementStyle(d, $techn="Replaced", $shape="queue")
+UpdateElementStyle(c, "", "")
+Rel(c, d, "")
+Rel(d, e, "x", "")
+UpdateRelStyle(c, d, $offsetX="abc")
+UpdateRelStyle(d, e, "", "", "-7", "+9")

@@ -42,8 +42,18 @@ Work in progress.
 | Entity relationship | byte-identical with the default ELK layout |
 | Requirement | byte-identical with the default ELK layout |
 | State | byte-identical with the default ELK layout, `stateDiagram` and `stateDiagram-v2` |
+| Class | byte-identical with the default ELK layout, including cardinalities, namespaces and notes |
 | User journey | byte-identical, all `journey:` options |
 | Timeline | byte-identical, horizontal and vertical, both looks |
+| Gantt | byte-identical; see the note on time below |
+| Sequence | byte-identical: all participant kinds and arrow types, both looks; KaTeX is not ported |
+| Sankey | byte-identical, all `sankey:` options |
+| Radar | byte-identical |
+| Treemap | byte-identical; depends on the page like Gantt charts |
+| Block | byte-identical: grid layout, block arrows, all edge curves |
+| C4 | byte-identical: all five kinds, boundaries, relationships, style updates |
+| Quadrant chart | byte-identical |
+| XY chart | byte-identical, both orientations; depends on the page like Gantt charts |
 | everything else | not ported yet — `render` raises `Unsupported` |
 
 Git graphs name commits at random upstream (`Math.random`), so a graph
@@ -53,6 +63,9 @@ the port draws the same sequence. State diagrams have one such name too:
 the last region of a composite state split by `--` is called
 `id-<random>-<count>` upstream. The port writes `id-i-<count>`, and
 `scripts/oracle.py` renames the reference's regions the same way.
+Block diagrams name `space` blocks and anonymous composites likewise;
+their fixtures give the reference the port's generator
+(`testdata/block/oracle-prelude.js`).
 
 Shared infrastructure that is in place: all eleven themes, configuration
 resolution, frontmatter and directives, diagram type detection, the
@@ -61,9 +74,22 @@ grammars mermaid writes in jison (`internal/jison`, with the tables taken
 from mermaid's own build by `scripts/extract_jison.js` and
 `scripts/gen_jison.py`).
 
+### Gantt charts and time
+
+A Gantt chart depends on three things outside its text, and `render` takes
+each as an argument that defaults to the reference page's value:
+
+- the time zone, which is that of the reference machine (Asia/Shanghai,
+  with its historical offsets) — `@jsdate.Zone::reference()` is the one
+  place that chooses it;
+- the present, for the today marker and for dates that leave parts out:
+  `now`, in milliseconds, defaulting to the system clock;
+- the page the diagram sits in, whose width the chart takes and whose
+  scrollbar changes how labels measure: `page`.
+
 ### Flowcharts
 
-Flowcharts, entity relationship, requirement and state diagrams go through a port
+Flowcharts, entity relationship, requirement, state and class diagrams go through a port
 of mermaid's unified renderer (`internal/rendering`): HTML labels, node
 shapes, subgraph frames, edge routing with rounded corners and line hops,
 class and link styling. The layout is ELK's, as upstream, computed by
@@ -119,10 +145,12 @@ single-precision arithmetic (`internal/dom`), the stylis CSS compiler
 `atan2f` of macOS on arm64 (`internal/libm`), which Skia shapes arcs with
 and which are not correctly rounded.
 
-Known limits: text outside the embedded faces (Trebuchet MS, Verdana, Arial;
-Latin and common symbols) is measured approximately, and fractional font
-sizes that are not multiples of 1/64 px can differ in the last float bit of
-an ink overhang.
+Known limits: the embedded faces are Trebuchet MS, Verdana, Arial, Times
+and Helvetica, with Latin, Greek, Cyrillic and common symbols. Text outside
+them (CJK, emoji, Hebrew, Arabic, ...) falls to other system fonts in the
+browser, which are not embedded: the newer diagram ports refuse such text
+with `Unsupported`, the older ones (flowchart, pie) measure it
+approximately.
 
 ## Layout
 

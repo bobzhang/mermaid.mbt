@@ -150,10 +150,28 @@ fn serialize_color(value : String) -> String {
   }
   let channels = @color.Channels::parse(trimmed) catch { _ => return trimmed }
   let (r, g, b) = channels.to_css_rgb()
-  if channels.a() < 1.0 {
-    "rgba(\{r}, \{g}, \{b}, \{number(channels.a())})"
+  match serialize_alpha(channels.a()) {
+    Some(alpha) => "rgba(\{r}, \{g}, \{b}, \{alpha})"
+    None => "rgb(\{r}, \{g}, \{b})"
+  }
+}
+
+///|
+/// The alpha of a color as the CSSOM writes it, or `None` for a color
+/// that is opaque once its alpha is an 8-bit value. Two decimals are
+/// written when they give that 8-bit value back, three otherwise.
+fn serialize_alpha(alpha : Double) -> String? {
+  // Blink keeps alpha as a float and scales it as one.
+  let scaled : Float = Float::from_double(alpha) * 255.0
+  let byte = (scaled.to_double() + 0.5).floor().max(0.0).min(255.0)
+  if byte == 255.0 {
+    return None
+  }
+  let two_decimals = (byte * 100.0 / 255.0 + 0.5).floor() / 100.0
+  if (two_decimals * 255.0 + 0.5).floor() == byte {
+    Some(number(two_decimals))
   } else {
-    "rgb(\{r}, \{g}, \{b})"
+    Some(number((byte * 1000.0 / 255.0 + 0.5).floor() / 1000.0))
   }
 }
 

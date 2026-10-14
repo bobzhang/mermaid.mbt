@@ -1,6 +1,6 @@
 ///|
 /// `look`, if it is safe to put in a selector: mermaid's `safeLook`.
-fn safe_look(look : String) -> String {
+pub fn safe_look(look : String) -> String {
   if look != "" &&
     look
     .iter()

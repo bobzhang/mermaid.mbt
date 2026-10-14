@@ -151,7 +151,14 @@ pub struct Edge {
   look : String
   animate : Bool
   animation : String?
+  /// The labels at the two ends of the edge, on the left and on the
+  /// right of its direction.
+  start_label_left : String
+  start_label_right : String
+  end_label_left : String
+  end_label_right : String
   // Filled in while measuring and laying out.
+  priv terminals : Array[TerminalLabel]
   mut label_style : String
   mut curve : String
   mut points : Array[Point]
@@ -179,6 +186,10 @@ pub fn Edge::new(
   look~ : String,
   animate~ : Bool = false,
   animation? : String,
+  start_label_left~ : String = "",
+  start_label_right~ : String = "",
+  end_label_left~ : String = "",
+  end_label_right~ : String = "",
 ) -> Edge {
   {
     id,
@@ -196,6 +207,11 @@ pub fn Edge::new(
     look,
     animate,
     animation,
+    start_label_left,
+    start_label_right,
+    end_label_left,
+    end_label_right,
+    terminals: [],
     label_style: "",
     curve: "",
     points: [],
@@ -241,7 +257,9 @@ priv struct Env {
 fn Env::new(config : @config.Config, diagram_id : String) -> Env {
   let theme = config.theme()
   let size = match theme.get("fontSize") {
-    Number(n, ..) => n
+    // A number without a unit is no CSS length: the stylesheet's
+    // `font-size` is dropped and text keeps the browser's size.
+    Number(_, ..) => 16.0
     String(text) => {
       let mut value = 0.0
       for c in text {

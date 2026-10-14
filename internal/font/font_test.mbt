@@ -109,12 +109,66 @@ test "bold and italic faces" {
 }
 
 ///|
+test "Times and Helvetica join fi and fl, and stand taller on macOS" {
+  let times = @font.Stack::page_default()
+  inspect(times.advance("f", 16.0), content="5.328125")
+  inspect(times.advance("i", 16.0), content="4.453125")
+  inspect(times.advance("fi", 16.0), content="8.90625")
+  // The pair `ff` is kerned; before a ligature it is not.
+  inspect(times.advance("ff", 16.0), content="10.375")
+  inspect(times.advance("ffi", 16.0), content="14.234375")
+  debug_inspect(
+    times.bbox("Hello John, how are you?", 16.0),
+    content="{ x: 0, y: -14, width: 163.96875, height: 18 }",
+  )
+  let helvetica = @font.Stack::for_family("sans-serif")
+  inspect(helvetica.advance("fl", 16.0), content="8")
+  debug_inspect(
+    helvetica.bbox("Hello John, how are you?", 16.0),
+    content="{ x: 0, y: -14, width: 180.5625, height: 18 }",
+  )
+  // A zero-width space takes no room but still makes a line.
+  debug_inspect(
+    times.bbox("\u{200B}", 16.0),
+    content="{ x: 0, y: -14, width: 0, height: 18 }",
+  )
+}
+
+///|
 test "a kerning pair the shaper cannot find does not kern" {
   // Trebuchet MS Bold lists `v.` out of order; HarfBuzz looks pairs up by
   // binary search and misses it. Chrome: 12.203125.
   inspect(
     @font.Stack::default(bold=true).advance("v.", 16.0),
     content="12.203125",
+  )
+}
+
+///|
+test "the middle baseline shifts glyphs and can stretch the cell" {
+  let arial = @font.Stack::for_family("arial")
+  // At 16px half of Arial's x-height is 265.5 layout units: the ascent
+  // above the middle line rounds up, and so does the descent below it.
+  debug_inspect(
+    arial.bbox("Features:", 16.0, baseline=Middle),
+    content="{ x: 0, y: -9.859375, width: 67.59375, height: 17.015625 }",
+  )
+  // Ink below the descent moves down with the glyphs.
+  debug_inspect(
+    arial.bbox("- createCssStyles()", 16.0, baseline=Middle),
+    content="{ x: 0, y: -9.859375, width: 136.03125, height: 17.3671875 }",
+  )
+  // No tie at other sizes: the cell keeps its height.
+  debug_inspect(
+    arial.bbox("H", 10.0, baseline=Middle),
+    content="{ x: 0, y: -6.40625, width: 7.234375, height: 11 }",
+  )
+  let times = @font.Stack::page_default()
+  debug_inspect(
+    times.bbox("H", 32.0, baseline=Middle),
+    content=(
+      #|{ x: 0, y: -21.828125, width: 23.109375, height: 37.015625 }
+    ),
   )
 }
 
@@ -139,4 +193,51 @@ test "ink at sizes that do not scale to whole floats" {
   json_inspect(box("verdana", "Ĝi a\\b ¥7 (x)", 13.067), content=[
     0, -13.066377639770508, 85.59375, 16.066377639770508,
   ])
+}
+
+///|
+test "kerning from a kern table is shared between the two glyphs" {
+  // What `getComputedTextLength()` reports for `<tspan>A</tspan>` and the
+  // `<tspan>` after it: `A` and the space kern, and each word takes half.
+  let helvetica = @font.Stack::for_family("sans-serif")
+  debug_inspect(
+    helvetica.item_advances(["A", " cat"], 14.0),
+    content="[8.96875, 22.1875]",
+  )
+  debug_inspect(
+    helvetica.item_advances(["xA", " Ax"], 11.48),
+    content="[13.09375, 15.65625]",
+  )
+  let trebuchet = @font.Stack::default()
+  debug_inspect(
+    trebuchet.item_advances(["A", " cat"], 14.0),
+    content="[7.875, 23.671875]",
+  )
+  debug_inspect(
+    trebuchet.item_advances(["L", " x"], 16.0),
+    content="[7.8125, 12.546875]",
+  )
+}
+
+///|
+test "the ink of a piece follows the kerning it shares with the piece before" {
+  // The space of ` A` gives up its half of the adjustment, so the `A`
+  // after it starts that much earlier than in a piece shaped alone.
+  let helvetica = @font.Stack::for_family("sans-serif")
+  let alone = helvetica.ink(" A", 14.0)
+  let after = helvetica.item_inks(["A", " A"], 14.0)[1]
+  debug_inspect(alone.x - after.x, content="0.3828125")
+  debug_inspect(alone.width == after.width, content="true")
+}
+
+///|
+test "Helvetica has oblique faces" {
+  let oblique = @font.Stack::for_family("Helvetica", italic=true)
+  let upright = @font.Stack::for_family("Helvetica")
+  // The advances are the same; the slanted `J` leans out of its cell.
+  debug_inspect(
+    (oblique.advance("J", 11.48), upright.advance("J", 11.48)),
+    content="(5.75, 5.75)",
+  )
+  debug_inspect(oblique.bbox("J", 11.48).width, content="6.664902210235596")
 }

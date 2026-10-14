@@ -86,8 +86,8 @@ priv struct ItemText {
   font : @font.Stack
   size : Double
   /// The scale the diagram is shown at when the badges are measured: the
-  /// `viewBox` is set by then. Nothing when the port cannot tell it.
-  scale : Double?
+  /// `viewBox` is set by then.
+  scale : Double
 }
 
 ///|
@@ -102,17 +102,12 @@ fn ItemText::width(self : ItemText, label : String) -> Double raise Unsupported 
   if !self.font.covers(text) {
     raise Unsupported("text outside the fonts the port can measure: \{text}")
   }
-  guard self.scale is Some(scale) else {
-    raise Unsupported(
-      "measuring text in a Cynefin diagram whose size is not a whole number of layout units",
-    )
-  }
   self.font.chunks_box(
     [{ text, x: 0.0, y: ITEM_HEIGHT / 2.0, }],
     self.size,
-    anchor=Middle,
+    anchor="middle",
     baseline=Central,
-    scale~,
+    scale=self.scale,
   ).width
 }
 
@@ -340,7 +335,12 @@ pub fn draw(
   let item_text : ItemText = {
     font: context.font(),
     size: item_font_size(block.get("itemFontSize")),
-    scale: @diagram.text_scale(total_width, total_height, use_max_width),
+    scale: context.view_box_scale(
+      total_width,
+      total_height,
+      max_width=total_width,
+      fixed=!use_max_width,
+    ),
   }
   for name in [..quadrant_domains, "confusion"] {
     guard diagram.domains.get(name) is Some(domain_items) &&

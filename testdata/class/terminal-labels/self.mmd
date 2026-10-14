@@ -1,0 +1,10 @@
+---
+config:
+  handDrawnSeed: 7
+---
+classDiagram
+    class Node {
+      +Node next
+    }
+    Node "1" --> "0..1" Node : next
+    Node "1" --> "*" Leaf

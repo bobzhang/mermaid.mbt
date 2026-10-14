@@ -652,6 +652,7 @@ fn ElkState::to_json(self : ElkState) -> Json {
             "edgeLabels.placement": "CENTER",
           },
         },
+        ..terminal_elk_labels(edge.edge),
       ],
     }
     json

@@ -1,0 +1,21 @@
+---
+config:
+  handDrawnSeed: 7
+---
+classDiagram
+    class A {
+      +int x
+      +run()
+    }
+    class B:::warm
+    class C
+    classDef warm fill:#f96,stroke:#933,color:#fff,stroke-width:3px
+    classDef cool fill:#69f,font-style:italic
+    class D:::cool {
+      +y
+    }
+    style A color:#f00,fill:#eee,stroke-dasharray: 5 5
+    style C fill:#bbf
+    A --> B
+    B --> C
+    C --> D

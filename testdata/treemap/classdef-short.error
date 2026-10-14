@@ -1,0 +1,9 @@
+Parsing failed:  Parse error on line 4, column 1: Expecting token of type 'EOF' but found `classDef`.
+Parse error on line 4, column 10: Expecting: one of these possible Token sequences:
+  1. [STRING2]
+  2. [CLASS_DEF]
+but found: 'c'
+Parse error on line 4, column 12: Expecting: one of these possible Token sequences:
+  1. [STRING2]
+  2. [CLASS_DEF]
+but found: 'fill'

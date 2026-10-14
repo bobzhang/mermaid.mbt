@@ -1,0 +1,4 @@
+Parse error on line 2:
+sankey-betaa & b,c ﬂ°amp¶ß d,1c ﬂ°amp¶
+-------------------^
+Expecting 'NEWLINE', 'EOF', 'COMMA', got 'NON_ESCAPED_TEXT'

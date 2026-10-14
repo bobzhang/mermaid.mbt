@@ -1,0 +1,23 @@
+---
+config:
+  htmlLabels: false
+  handDrawnSeed: 7
+---
+classDiagram
+    class Shape
+    <<interface>> Shape
+    Shape : noOfVertices
+    Shape : draw()
+    class Color {
+      <<enumeration>>
+      RED
+      BLUE
+      GREEN
+    }
+    class Service <<service>>
+    class Empty <<abstract>> {
+    }
+    class WithBody <<entity>> {
+      +int id
+    }
+    Shape <|.. Color

@@ -86,8 +86,15 @@ pub fn Element::set_inner_html(self : Element, html : String) -> Unit {
   let mut i = 0
   while i < n {
     if html[i] != '<' {
-      text.write_view(html[i:i + 1])
-      i += 1
+      // Both halves of a character outside the basic plane go together.
+      let code = html[i].to_int()
+      let width = if code >= 0xD800 && code < 0xDC00 && i + 1 < n {
+        2
+      } else {
+        1
+      }
+      text.write_view(html[i:i + width])
+      i += width
       continue
     }
     // An end tag closes the innermost open element of that name.
@@ -111,8 +118,11 @@ pub fn Element::set_inner_html(self : Element, html : String) -> Unit {
       continue
     }
     let mut j = i + 1
-    while j < n && is_name(html[j]) {
-      j += 1
+    // A tag name starts with a letter; any other `<` is text.
+    if j < n && html[j] is ('a'..<='z' | 'A'..<='Z') {
+      while j < n && is_name(html[j]) {
+        j += 1
+      }
     }
     if j == i + 1 {
       text.write_char('<')
@@ -185,36 +195,23 @@ pub fn placeholders_to_references(text : String) -> String {
 }
 
 ///|
-/// The text an HTML fragment's character data sanitizes to: every
-/// character reference becomes its character, except that `&`, `<` and
-/// `>` stay written as references, as HTML serialization writes them.
+/// Text as the sanitizer hands it back when it has to parse it, which it
+/// does whenever the text has a `<` in it: the HTML is parsed and
+/// serialized again. Every character reference becomes its character,
+/// except that `&`, `<` and `>` are written as references, also where the
+/// source had the bare character (a `<` that starts no tag, any `>`);
+/// tags come back in their serialized form (`<br/>` as `<br>`).
+///
+/// Elements and attributes the sanitizer would remove are kept.
 pub fn sanitized_text(text : String) -> String {
+  let scratch = Element::new("div")
+  scratch.set_inner_html(text)
   let out = StringBuilder()
-  let mut rest = text[:]
-  while rest.find("&") is Some(start) {
-    out.write_view(rest[:start])
-    let after = rest[start + 1:]
-    // A reference ends at its semicolon, a few characters on.
-    match after.find(";") {
-      Some(end) if end > 0 && end <= 32 => {
-        let reference = "&" + after[:end].to_owned() + ";"
-        let resolved = resolve_references(reference)
-        out.write_string(
-          match resolved {
-            "&" => "&amp;"
-            "<" => "&lt;"
-            ">" => "&gt;"
-            _ => resolved
-          },
-        )
-        rest = after[end + 1:]
-      }
-      _ => {
-        out.write_string("&")
-        rest = after
-      }
+  for node in scratch.children {
+    match node {
+      Text(content) => escape_text(content, out)
+      Element(child) => child.write(out)
     }
   }
-  out.write_view(rest)
   out.to_string()
 }

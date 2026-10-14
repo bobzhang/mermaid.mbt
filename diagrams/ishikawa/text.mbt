@@ -4,7 +4,8 @@
 priv struct TextStyle {
   font : @font.Stack
   size : Double
-  anchor : @font.Anchor
+  /// `text-anchor`: `start`, `middle` or `end`.
+  anchor : String
   baseline : @font.Baseline
 }
 

@@ -1,0 +1,15 @@
+sequenceDiagram
+    participant A
+    participant B
+    loop nothing drawn inside
+        autonumber
+    end
+    rect rgb(0, 255, 0)
+        autonumber off
+    end
+    alt first
+        activate A
+    else second
+        deactivate A
+    end
+    A->>B: after

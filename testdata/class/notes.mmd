@@ -1,0 +1,14 @@
+---
+config:
+  handDrawnSeed: 7
+---
+classDiagram
+    note "This is a general note"
+    note for MyClass "This is a note for a class"
+    class MyClass{
+    }
+    note for Other "line one<br>line two\nline three"
+    class Other {
+      +int x
+    }
+    MyClass --> Other

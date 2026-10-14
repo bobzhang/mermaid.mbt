@@ -221,3 +221,43 @@ test "luminance and darkness" {
     ),
   )
 }
+
+///|
+test "hsl channels that land on a half round as the browser's floats do" {
+  // Values from Chrome: `element.style.stroke = hsl` read back.
+  let resolved = (color : String) => @color.Channels::parse(color).to_css_rgb()
+  debug_inspect(
+    resolved("hsl(210, 25.3846153846%, 10.3921568627%)"),
+    content="(20, 27, 33)",
+  )
+  debug_inspect(
+    resolved("hsl(150, 92.4197619428%, 27.6470588235%)"),
+    content="(5, 136, 71)",
+  )
+  debug_inspect(
+    resolved("hsl(30, 82.2055004451%, 37.8431372549%)"),
+    content="(176, 97, 17)",
+  )
+  debug_inspect(
+    resolved("hsl(90, 55.5511058183%, 4.5098039216%)"),
+    content="(12, 18, 5)",
+  )
+}
+
+///|
+/// What `element.style.stroke = color` reads back as in Chrome, for
+/// colors whose channels land on or next to a half.
+test "hsl colors as the browser resolves them" {
+  let rgb = (color : String) => {
+    let (r, g, b) = @color.Channels::parse(color).to_css_rgb()
+    "\{r} \{g} \{b}"
+  }
+  inspect(rgb("hsl(247.5, 0%, 9.2156862745%)"), content="24 24 24")
+  inspect(rgb("hsl(0, 0%, 9.0196078431%)"), content="23 23 23")
+  inspect(rgb("hsl(235.3404, 100%, 65.0%)"), content="77 90 255")
+  inspect(rgb("hsl(176.0, 100%, 65.0%)"), content="77 255 243")
+  inspect(rgb("hsl(216.2, 28.25%, 34.7055%)"), content="63 83 114")
+  inspect(rgb("hsl(120, 40%, 2.9411764706%)"), content="5 11 5")
+  inspect(rgb("hsl(120, 40%, 10.7843137255%)"), content="17 39 17")
+  inspect(rgb("hsl(247.5, 0%, 3.3333333333%)"), content="9 9 9")
+}

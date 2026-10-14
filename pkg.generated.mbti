@@ -2,11 +2,12 @@
 package "bobzhang/mermaid"
 
 import {
+  "bobzhang/mermaid/diagram",
   "moonbitlang/core/debug",
 }
 
 // Values
-pub fn render(String, id? : String, config? : Json) -> String raise MermaidError
+pub fn render(String, id? : String, config? : Json, now? : Double, page? : @diagram.Page) -> String raise MermaidError
 
 // Errors
 pub(all) suberror MermaidError {

@@ -3,18 +3,29 @@ let usage : String =
   #|usage: mermaid <command> [arguments]
   #|
   #|commands:
-  #|  render <file.mmd> [--id ID] [--config site.json]
-  #|                         render a diagram to SVG on stdout
+  #|  render <file.mmd> [--id ID] [--config site.json] [--now MS]
+  #|         [--viewport WIDTHxHEIGHT]
+  #|                         render a diagram to SVG on stdout; --now sets
+  #|                         the clock (milliseconds since the epoch) and
+  #|                         --viewport the size of the page's viewport
   #|  config [site.json]     print the effective configuration as JSON
-  #|  measure <cases.json>   measure text; cases are {text, size, bold, italic}
+  #|  measure <cases.json>   measure text; cases are {text, size, bold, italic},
+  #|                         with {x, y, anchor, baseline, scale} for placed SVG text
   #|  regex <cases.json>     match prefixes; cases are {source, flags, input}
   #|  flow-db <file.mmd>...  print each flowchart's parsed database as JSON
+  #|  sequence-db <file.mmd>...
+  #|                         the same for sequence diagrams
   #|  git-db <file.mmd>...   print each git graph's parsed database as JSON
+  #|  c4-db <file.mmd>...    print each C4 diagram's parsed database as JSON
   #|  bbox <cases.json>      print getBBox() of an <svg> around each markup string
   #|  state-db <file.mmd>... print each state diagram's layout data as JSON
   #|  elk-graph <file.mmd> [--config site.json]
   #|                         print the graph a diagram hands to ELK and the
   #|                         layout that came back, one JSON document a line
+  #|  dates <cases.json>     evaluate Date operations in the emulated time zone
+  #|  time <cases.json>      evaluate dayjs and d3 time operations
+  #|  format <cases.json>    format numbers; cases are {specifier, value}
+  #|  colors <colors.json>   serialize CSS colors as the CSSOM does
   #|
 
 ///|
@@ -41,11 +52,33 @@ fn read_json(path : String) -> Json raise CliError {
 fn render(path : String, options : ArrayView[String]) -> Unit raise CliError {
   let mut id = "mermaid-svg"
   let mut site : Json = Json::object(Map([]))
+  let mut now : Double? = None
+  let mut page = @diagram.Page::new()
+  let number = (value : String) => {
+    @string.parse_double(value) catch {
+      _ => raise CliError("\{value} is not a number", status=2)
+    }
+  }
   let mut rest = options
   while true {
     match rest {
       ["--id", value, .. tail] => {
         id = value
+        rest = tail
+      }
+      ["--now", value, .. tail] => {
+        now = Some(number(value))
+        rest = tail
+      }
+      ["--viewport", value, .. tail] => {
+        guard value.split("x").map(part => part.to_owned()).collect()
+          is [width, height] else {
+          raise CliError("\{value} is not WIDTHxHEIGHT", status=2)
+        }
+        page = @diagram.Page::new(
+          viewport_width=number(width),
+          viewport_height=number(height),
+        )
         rest = tail
       }
       ["--config", value, .. tail] => {
@@ -56,7 +89,7 @@ fn render(path : String, options : ArrayView[String]) -> Unit raise CliError {
       [other, ..] => raise CliError("unknown option \{other}", status=2)
     }
   }
-  let svg = @lib.render(read_text(path), id~, config=site) catch {
+  let svg = @lib.render(read_text(path), id~, config=site, now?, page~) catch {
     error => raise CliError(Repr(error).to_string(), status=1)
   }
   println(svg)
@@ -103,8 +136,43 @@ fn measure(path : String) -> Unit raise CliError {
         )
       _ => @font.Stack::default(bold=bold is True, italic=italic is True)
     }
+    // A case with a position is SVG text placed in a scaled diagram.
+    if item is { "x": Number(x, ..), "y": Number(y, ..), .. } {
+      let scale = match item {
+        { "scale": Number(scale, ..), .. } => scale
+        _ => 1.0
+      }
+      let anchor = match item {
+        { "anchor": String(anchor), .. } => anchor
+        _ => "start"
+      }
+      let baseline = match item {
+        { "baseline": String(baseline), .. } => baseline
+        _ => "auto"
+      }
+      let box = stack.svg_text_box(
+        text,
+        size,
+        x~,
+        y~,
+        anchor~,
+        baseline=@font.Baseline::from_css(baseline),
+        scale~,
+      )
+      results.push({
+        "len": stack.svg_text_length(text, size, scale~),
+        "x": box.x,
+        "y": box.y,
+        "w": box.width,
+        "h": box.height,
+      })
+      continue
+    }
     let box = stack.bbox(text, size)
     results.push({
+      // Whether every character has a glyph in an embedded face; the
+      // measures of other text are approximations.
+      "covered": stack.covers(text),
       "len": stack.advance(text, size),
       "x": box.x,
       "y": box.y,
@@ -227,6 +295,35 @@ fn git_db(paths : ArrayView[String]) -> Unit raise CliError {
 }
 
 ///|
+fn c4_db(paths : ArrayView[String]) -> Unit raise CliError {
+  for path in paths {
+    let source = read_text(path)
+    let line = try {
+      let processed = @preprocess.preprocess(source)
+      let config = @config.Config::new(
+        directive=processed.config,
+        diagram_type="c4",
+      )
+      @c4.parse(@preprocess.encode_entities(processed.code) + "\n", config)
+      .dump()
+      .stringify()
+    } catch {
+      @jison.ParseError(message~, ..) => {
+        let report : Json = { "error": message }
+        report.stringify()
+      }
+      error => {
+        let report : Json = { "error": Repr(error).to_string() }
+        report.stringify()
+      }
+    } noraise {
+      text => text
+    }
+    println(line)
+  }
+}
+
+///|
 /// Print the box of an `<svg>` element holding each markup string of a
 /// JSON array, as `[x, y, width, height]`, for comparing with `getBBox()`.
 fn bboxes(path : String) -> Unit raise CliError {
@@ -296,6 +393,38 @@ fn state_db(paths : ArrayView[String]) -> Unit raise CliError {
 }
 
 ///|
+fn sequence_db(paths : ArrayView[String]) -> Unit raise CliError {
+  for path in paths {
+    let source = read_text(path)
+    let line = try {
+      let processed = @preprocess.preprocess(source)
+      let config = @config.Config::new(
+        directive=processed.config,
+        diagram_type="sequence",
+      )
+      @sequence.parse(
+        @preprocess.encode_entities(processed.code) + "\n",
+        config,
+      )
+      .dump()
+      .stringify()
+    } catch {
+      @jison.ParseError(message~, ..) => {
+        let report : Json = { "error": message }
+        report.stringify()
+      }
+      error => {
+        let report : Json = { "error": Repr(error).to_string() }
+        report.stringify()
+      }
+    } noraise {
+      text => text
+    }
+    println(line)
+  }
+}
+
+///|
 fn main {
   let arguments = @env.args()
   try {
@@ -305,11 +434,17 @@ fn main {
       ["measure", path] => measure(path)
       ["regex", path] => regex(path)
       ["flow-db", .. paths] => flow_db(paths)
+      ["sequence-db", .. paths] => sequence_db(paths)
       ["git-db", .. paths] => git_db(paths)
+      ["c4-db", .. paths] => c4_db(paths)
       ["bbox", path] => bboxes(path)
       ["state-db", .. paths] => state_db(paths)
       ["elk-graph", path, .. options] => elk_graph(path, options)
       ["path-length", path] => path_lengths(path)
+      ["dates", path] => dates(path)
+      ["time", path] => time_cases(path)
+      ["format", path] => formats(path)
+      ["colors", path] => colors(path)
       _ => println(usage)
     }
   } catch {

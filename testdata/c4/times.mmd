@@ -1,0 +1,20 @@
+---
+config:
+  c4:
+    personFontFamily: Times
+    systemFontFamily: serif
+    systemFontWeight: bold
+    system_dbFontFamily: "\"Open Sans\", serif"
+    system_dbFontSize: 12.5
+    messageFontFamily: serif
+    boundaryFontFamily: "Times, serif"
+---
+C4Context
+title Times
+Boundary(b, "A boundary gypsy (jq)", "typed [p]") {
+  Person(p, "A person in Times fi fl", "Described at length, AVATAR To Ty We. gypsy (jq) {braces}")
+  System(s, "A system in bold Times", "Jumping quickly, j/ Çà Åse [py] accounts, payments.")
+  SystemDb(d, "A database gypsy", "fi fl ffi To Ty AVATAR")
+}
+Rel(p, s, "Uses gypsy fi", "HTTPS To")
+BiRel(s, d, "Reads (jq)")

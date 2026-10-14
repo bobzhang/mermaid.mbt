@@ -1,0 +1,14 @@
+---
+config:
+  handDrawnSeed: 7
+---
+classDiagram
+    class `Animal Class!`
+    class `Car Class`
+    `Animal Class!` --> `Car Class`
+    class Labelled["A label with spaces"]
+    class Gen~T~
+    class Car~Wheel~ {
+      +List~Wheel~ wheels
+    }
+    Labelled --> Gen~T~

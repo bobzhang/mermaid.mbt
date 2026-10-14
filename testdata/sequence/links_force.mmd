@@ -1,0 +1,18 @@
+---
+config:
+  sequence:
+    forceMenus: true
+---
+sequenceDiagram
+    participant Alice
+    participant John@{ "type": "database" }
+    link Alice: Dashboard @ https://dashboard.contoso.com/alice
+    link John: One @ https://x.example
+    link John: Two @ https://y.example
+    link John: Three @ https://z.example
+    link John: Four @ https://z.example/4
+    link John: Five @ https://z.example/5
+    link John: Six @ https://z.example/6
+    link John: Seven @ https://z.example/7
+    link John: Eight @ https://z.example/8
+    Alice->>John: Hello John, how are you?

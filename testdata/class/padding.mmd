@@ -1,0 +1,17 @@
+---
+config:
+  handDrawnSeed: 7
+  class:
+    padding: 20
+---
+classDiagram
+    class A {
+      +int x
+      +run()
+    }
+    class B
+    A --> B
+    note for B "padded"
+    namespace N {
+      class C
+    }

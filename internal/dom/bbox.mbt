@@ -167,6 +167,11 @@ fn number_attr(element : Element, name : String) -> Float? {
     whole + fraction / scale
   } else {
     let magnitude = if negative { text[1:].to_owned() } else { text }
+    // `NaN` and `Infinity`, as JavaScript prints them, are not numbers
+    // here: the attribute is invalid.
+    if magnitude.contains("N") || magnitude.contains("n") {
+      return None
+    }
     @string.parse_double(magnitude) catch {
       _ => return None
     }
@@ -402,15 +407,41 @@ fn Transform::map(self : Transform, bounds : Bounds) -> Bounds {
 }
 
 ///|
+/// The length in pixels an inline style declares for a property; nothing
+/// when there is no such declaration or it is not in pixels.
+fn pixel_declaration(element : Element, name : String) -> Float? {
+  for declaration in element.declarations {
+    if declaration.0 == name && declaration.1.strip_suffix("px") is Some(number) {
+      let value = @string.parse_double(number.trim().to_owned()) catch {
+        _ => return None
+      }
+      return Some(Float::from_double(value))
+    }
+  }
+  None
+}
+
+///|
+/// `gfx::SizeF::kTrivial`: `8 * std::numeric_limits<float>::epsilon()`.
+const TRIVIAL_SIZE : Float = 9.5367431640625e-7
+
+///|
 /// The element's box in its own coordinate system, before its transform.
 /// Nothing for an element that renders no geometry.
 fn Element::local_bounds(self : Element) -> Bounds? {
   let attr = (name : String) => number_attr(self, name).unwrap_or(0)
   match self.tag {
     "rect" | "foreignObject" | "image" => {
-      let width = attr("width")
-      let height = attr("height")
+      // The size is a CSS property too, and a declaration wins over the
+      // attribute.
+      let width = pixel_declaration(self, "width").unwrap_or(attr("width"))
+      let height = pixel_declaration(self, "height").unwrap_or(attr("height"))
       if width <= 0 || height <= 0 {
+        return None
+      }
+      // The box of a `<rect>` is a `gfx::RectF`, whose `SizeF` takes
+      // anything up to eight float epsilons for nothing.
+      if self.tag == "rect" && (width <= TRIVIAL_SIZE || height <= TRIVIAL_SIZE) {
         return None
       }
       Some({ x: attr("x"), y: attr("y"), width, height, })
@@ -492,9 +523,37 @@ fn Element::local_bounds(self : Element) -> Bounds? {
 }
 
 ///|
+/// Whether the element's inline style hides it: with `display: none` it
+/// has no box at all, and its parent's box ignores it.
+fn Element::is_display_none(self : Element) -> Bool {
+  for declaration in self.declarations {
+    if declaration.0 == "display" {
+      return declaration.1 == "none"
+    }
+  }
+  guard self.get_attr("style") is Some(text) else { return false }
+  let mut hidden = false
+  for part in text.split(";") {
+    guard part.find(":") is Some(colon) else { continue }
+    if part[:colon].trim().to_owned().to_lower() == "display" {
+      let value = part[colon + 1:].trim().to_owned().to_lower()
+      let value = match value.strip_suffix("!important") {
+        Some(base) => base.trim().to_owned()
+        None => value
+      }
+      hidden = value == "none"
+    }
+  }
+  hidden
+}
+
+///|
 /// The element's box in its parent's coordinate system: its own box
 /// mapped through its `transform`.
 fn Element::bounds(self : Element) -> Bounds? {
+  if self.is_display_none() {
+    return None
+  }
   guard self.local_bounds() is Some(bounds) else { return None }
   Some(element_transform(self).map(bounds))
 }

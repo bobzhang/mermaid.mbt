@@ -1,0 +1,14 @@
+---
+config:
+  htmlLabels: false
+  handDrawnSeed: 3
+---
+classDiagram
+    class Animal~T~ {
+      <<interface>>
+      +String name
+      -List~int~ ages$
+      +eat(food) bool
+      +sleep()*
+    }
+    Animal "1" --> "*" Leg : has

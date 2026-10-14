@@ -1,0 +1,16 @@
+Parsing failed:  Parse error on line 2, column 6: Expecting token of type 'ID' but found `max`.
+Parse error on line 2, column 9: Expecting token of type 'NUMBER' but found `,`.
+Parse error on line 2, column 11: Expecting: one of these possible Token sequences:
+  1. [showLegend]
+  2. [ticks]
+  3. [max]
+  4. [min]
+  5. [graticule]
+but found: 'b'
+Parse error on line 2, column 14: Expecting: one of these possible Token sequences:
+  1. [showLegend]
+  2. [ticks]
+  3. [max]
+  4. [min]
+  5. [graticule]
+but found: 'c'

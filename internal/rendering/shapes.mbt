@@ -45,8 +45,17 @@ fn draw_rect(
     .insert_first("rect")
     .attr("class", "basic label-container")
     .attr("style", styles.node_styles)
-  if radius is Some(radius) && radius != 0.0 {
-    rect.attr_number("rx", radius).attr_number("ry", radius) |> ignore
+  // The radii the shape rounds its corners by, else those the node came
+  // with, if any.
+  let (rx, ry) = match radius {
+    Some(radius) if radius != 0.0 => (Some(radius), Some(radius))
+    _ => (node.rx, node.ry)
+  }
+  if rx is Some(rx) {
+    rect.attr_number("rx", rx) |> ignore
+  }
+  if ry is Some(ry) {
+    rect.attr_number("ry", ry) |> ignore
   }
   rect
   .attr_number("x", -total_width / 2.0)
@@ -403,6 +412,8 @@ fn draw_shape(
   match node.shape {
     "erBox" => return er_box(parent, node, env)
     "requirementBox" => return requirement_box(parent, node, env)
+    "classBox" => return class_box(parent, node, env)
+    "block_arrow" => return block_arrow(parent, node, env)
     _ => ()
   }
   guard shape_handler(node.shape) is Some(handler) else {
@@ -428,6 +439,7 @@ fn draw_shape(
       )
     "question" => question(parent, node, env)
     "cylinder" => cylinder(parent, node, env)
+    "person" => person(parent, node, env)
     "stadium" => stadium(parent, node, env)
     "rect_left_inv_arrow" => rect_left_inv_arrow(parent, node, env)
     "circle" => circle(parent, node, env)
@@ -500,14 +512,22 @@ fn draw_shape(
           ],
         )
       })
-    "hexagon" =>
+    "hexagon" => {
+      let f = if neo { 3.5 } else { 4.0 }
+      let label_padding_x = if neo { 70.0 } else { padding }
+      let label_padding_y = if neo { 32.0 } else { padding }
+      // A node that comes with a size keeps it: the label gets what the
+      // slanted sides and the padding leave.
+      if has_size(node) {
+        let original_height = node.height.unwrap_or(0.0)
+        let m = original_height / f
+        node.width = Some(node.width.unwrap_or(0.0) - 2.0 * m - label_padding_y)
+        node.height = Some(original_height - label_padding_x)
+      }
       polygon_shape(parent, node, env, box => {
-        let f = if neo { 3.5 } else { 4.0 }
-        let label_padding_x = if neo { 70.0 } else { padding }
-        let label_padding_y = if neo { 32.0 } else { padding }
-        let h = box.height + label_padding_x
+        let h = size_or(node.height, box.height) + label_padding_x
         let m = h / f
-        let w = box.width + 2.0 * m + label_padding_y
+        let w = size_or(node.width, box.width) + 2.0 * m + label_padding_y
         (
           w,
           h,
@@ -521,6 +541,7 @@ fn draw_shape(
           ],
         )
       })
+    }
     "lean_right" | "lean_left" | "trapezoid" | "inv_trapezoid" =>
       polygon_shape(parent, node, env, box => {
         let label_padding_x = if neo { padding * 2.0 } else { padding }
@@ -585,8 +606,11 @@ fn insert_node(
   let (outer, inner) = match node.link {
     Some(link) => {
       // Upstream also sets `target`, which the final sanitizing pass strips
-      // from SVG anchors again.
-      let anchor = parent.append("a").attr("xlink:href", link)
+      // from SVG anchors again, as it does an address it does not allow.
+      let anchor = parent.append("a")
+      if allowed_uri(link) {
+        anchor.attr("xlink:href", link) |> ignore
+      }
       (anchor, draw_shape(anchor, node, env, dir))
     }
     None => {

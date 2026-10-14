@@ -588,7 +588,7 @@ pub fn draw(
   let root_size = css_font_size(theme.get("fontSize"), 16.0)
   let text_size = css_font_size(theme.get("fontSize"), root_size)
   let regular = context.font()
-  let style = (anchor : @font.Anchor, baseline : @font.Baseline) => {
+  let style = (anchor : String, baseline : @font.Baseline) => {
     let style : TextStyle = {
       font: regular,
       size: text_size,
@@ -603,14 +603,14 @@ pub fn draw(
     head: {
       font: context.font(bold=true),
       size: 14.0,
-      anchor: Middle,
+      anchor: "middle",
       baseline: Middle,
     },
-    cause: style(Middle, Middle),
-    aligned: style(End, Middle),
+    cause: style("middle", Middle),
+    aligned: style("end", Middle),
     // `dominant-baseline: baseline` is not a value: the default stays.
-    up: style(End, Alphabetic),
-    down: style(End, Hanging),
+    up: style("end", Alphabetic),
+    down: style("end", Hanging),
     labels: [],
     rough,
   }

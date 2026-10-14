@@ -57,7 +57,7 @@ fn text_size(
   if !font.covers(text) {
     raise Unsupported("text outside the fonts the port can measure: \{text}")
   }
-  let box = font.bbox_middle(text, size, x~, y~)
+  let box = font.svg_text_box(text, size, x~, y~, baseline=Middle)
   (box.width, box.height)
 }
 

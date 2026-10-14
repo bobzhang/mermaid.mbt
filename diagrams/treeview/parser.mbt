@@ -59,68 +59,57 @@ fn metadata_value(pattern : @jsregex.Regex, token : String) -> String {
 ///           (CLASS_ANNOTATION | ICON_ANNOTATION | DESC_ANNOTATION)*
 /// ```
 pub fn parse(source : String) -> TreeView raise {
-  let tokens = tokenize(preprocess_box_drawing(source))
+  let text = preprocess_box_drawing(source)
+  let tokens = @langium.TokenStream::new(
+    @langium.tokenize(text, token_types),
+    text.length(),
+  )
   let tree = TreeView::new()
-  let mut cursor = 0
-  let peek = () => {
-    if cursor < tokens.length() {
-      Some(tokens[cursor].kind)
-    } else {
-      None
-    }
-  }
-  guard peek() is Some(Keyword) else {
-    raise TreeViewError("Expecting token of type 'treeView-beta'")
-  }
-  cursor += 1
-  while cursor < tokens.length() {
-    let token = tokens[cursor]
-    match token.kind {
-      AccDescr =>
-        tree.acc_description = @journeycommon.acc_description(
-          metadata_value(acc_descr_pattern, token.text),
-        )
-      AccTitle =>
-        tree.acc_title = @journeycommon.acc_title(
-          metadata_value(acc_title_pattern, token.text),
-        )
+  tokens.expect("treeView-beta") |> ignore
+  while true {
+    if tokens.accept("ACC_DESCR") is Some(token) {
+      tree.acc_description = @journeycommon.acc_description(
+        metadata_value(acc_descr_pattern, token.text),
+      )
+    } else if tokens.accept("ACC_TITLE") is Some(token) {
+      tree.acc_title = @journeycommon.acc_title(
+        metadata_value(acc_title_pattern, token.text),
+      )
+    } else if tokens.accept("TITLE") is None {
       // The renderer draws no title.
-      Title => ()
-      _ => break
+      break
     }
-    cursor += 1
   }
-  while cursor < tokens.length() {
-    let mut level = 0
-    if tokens[cursor].kind == Indentation {
-      level = tokens[cursor].text.length()
-      cursor += 1
+  while !tokens.at("EOF") {
+    let level = match tokens.accept("INDENTATION") {
+      Some(indentation) => indentation.text.length()
+      None => 0
     }
-    let name = match peek() {
-      Some(QuotedName) => {
-        let text = tokens[cursor].text
-        text[1:text.length() - 1].to_owned()
-      }
+    let name = if tokens.accept("QUOTED_NAME") is Some(token) {
+      token.text[1:token.text.length() - 1].to_owned()
+    } else if tokens.accept("BARE_NAME") is Some(token) {
       // Blanks at the end are not part of the name; those inside are.
-      Some(BareName) => regex("[\\t ]+$").replace(tokens[cursor].text, _ => "")
-      _ => raise TreeViewError("Expecting a QUOTED_NAME or a BARE_NAME")
+      regex("[\\t ]+$").replace(token.text, _ => "")
+    } else {
+      tokens.fail("Expecting a QUOTED_NAME or a BARE_NAME")
     }
-    cursor += 1
     let mut css_class : String? = None
     let mut icon : String? = None
     let mut description : String? = None
     // Each annotation may be repeated; the last one counts.
-    while peek() is Some(kind) {
-      let text = @journeycommon.js_trim(tokens[cursor].text)
-      match kind {
-        ClassAnnotation =>
-          css_class = Some(@journeycommon.js_trim(text[3:].to_owned()))
-        IconAnnotation => icon = Some(text[5:text.length() - 1].to_owned())
-        DescAnnotation =>
-          description = Some(@journeycommon.js_trim(text[2:].to_owned()))
-        _ => break
+    while true {
+      if tokens.accept("CLASS_ANNOTATION") is Some(token) {
+        let text = @journeycommon.js_trim(token.text)
+        css_class = Some(@journeycommon.js_trim(text[3:].to_owned()))
+      } else if tokens.accept("ICON_ANNOTATION") is Some(token) {
+        let text = @journeycommon.js_trim(token.text)
+        icon = Some(text[5:text.length() - 1].to_owned())
+      } else if tokens.accept("DESC_ANNOTATION") is Some(token) {
+        let text = @journeycommon.js_trim(token.text)
+        description = Some(@journeycommon.js_trim(text[2:].to_owned()))
+      } else {
+        break
       }
-      cursor += 1
     }
     // A trailing slash makes a directory.
     let (name, directory) = match name.strip_suffix("/") {

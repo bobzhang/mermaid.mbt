@@ -1,0 +1,35 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/diagrams/xychart"
+
+import {
+  "bobzhang/mermaid/diagram",
+  "bobzhang/mermaid/internal/journeycommon",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn draw(XYChart, @diagram.Context) -> Unit raise
+
+pub fn parse(String, title? : String) -> XYChart raise
+
+// Errors
+pub(all) suberror Unsupported {
+  Unsupported(String)
+} derive(Eq, @debug.Debug)
+
+pub(all) suberror XYChartError {
+  XYChartError(String)
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+pub struct XYChart {
+  mut title : String
+  mut acc_title : String
+  mut acc_description : String
+  // private fields
+}
+pub fn XYChart::set_title(Self, String) -> Unit raise @journeycommon.SanitizeError
+
+// Type aliases
+
+// Traits

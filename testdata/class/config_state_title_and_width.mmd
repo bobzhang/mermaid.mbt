@@ -1,0 +1,23 @@
+---
+config:
+  handDrawnSeed: 7
+  state:
+    titleTopMargin: 60
+    useMaxWidth: false
+  class:
+    useMaxWidth: true
+    titleTopMargin: 5
+title: Margins
+---
+classDiagram
+    class A {
+      +int x
+      +run()
+    }
+    namespace N {
+      class B
+    }
+    A --> B : uses
+    A --() I
+    note for A "a note"
+    note "free"

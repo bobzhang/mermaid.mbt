@@ -1,0 +1,17 @@
+---
+config:
+  look: classic
+  theme: neutral
+  sequence:
+    mirrorActors: false
+---
+sequenceDiagram
+    Alice->>Bob: Hello Bob, how are you ?
+    create participant Carl
+    Alice->>Carl: Hi Carl!
+    create actor D as Donald
+    Carl->>D: Hi!
+    destroy Carl
+    Alice-xCarl: We are too many
+    destroy Bob
+    Bob->>Alice: I agree

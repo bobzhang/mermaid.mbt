@@ -15,10 +15,6 @@ pub fn parse(String) -> Cynefin raise
 pub fn styles(@theme.Theme) -> String
 
 // Errors
-pub(all) suberror CynefinError {
-  CynefinError(String)
-} derive(Eq, @debug.Debug)
-
 pub(all) suberror Unsupported {
   Unsupported(String)
 } derive(Eq, @debug.Debug)

@@ -1,0 +1,11 @@
+sequenceDiagram
+    participant Alice
+    participant John
+    participant Bob
+    link Alice: Dashboard @ https://dashboard.contoso.com/alice
+    link Alice: Wiki @ https://wiki.contoso.com/alice
+    link John: Dashboard @ https://dashboard.contoso.com/john
+    links Bob: {"Repo": "https://repo.contoso.com/", "A much longer label for the menu item": "https://example.com/?a=1&b=2"}
+    Alice->>John: Hello John, how are you?
+    John-->>Alice: Great!
+    Alice-)John: See you later!

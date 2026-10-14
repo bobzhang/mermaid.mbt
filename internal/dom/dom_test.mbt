@@ -315,6 +315,26 @@ test "lengths of elliptical arcs" {
 }
 
 ///|
+test "what the output sanitizer removes" {
+  // Names that shadow a property of the document or of a form.
+  inspect(@dom.is_clobbering_name("title"), content="true")
+  inspect(@dom.is_clobbering_name("links"), content="true")
+  inspect(@dom.is_clobbering_name("URL"), content="true")
+  inspect(@dom.is_clobbering_name("Title"), content="false")
+  inspect(@dom.is_clobbering_name("Alice"), content="false")
+  // Addresses with a scheme other than the well-known ones.
+  inspect(@dom.is_allowed_uri("https://x.example/"), content="true")
+  inspect(@dom.is_allowed_uri("mailto:a@b.example"), content="true")
+  inspect(@dom.is_allowed_uri("relative/path"), content="true")
+  inspect(@dom.is_allowed_uri("rgb(0, 0, 0)"), content="true")
+  inspect(@dom.is_allowed_uri("#fragment"), content="true")
+  inspect(@dom.is_allowed_uri(""), content="true")
+  inspect(@dom.is_allowed_uri("about:blank"), content="false")
+  inspect(@dom.is_allowed_uri("java script:alert(1)"), content="false")
+  inspect(@dom.is_allowed_uri("my:color"), content="false")
+}
+
+///|
 /// The box of an `<svg>` holding `markup`, as `x y width height`.
 fn box_of(markup : String) -> String {
   let svg = @dom.Element::new("svg")
@@ -354,5 +374,44 @@ test "boxes of transformed elements" {
       "<rect x=\"195\" y=\"176.2\" width=\"30\" height=\"4.3701\" transform=\"translate(12,12) rotate(30, -70.109375,251.3041)\"></rect>",
     ),
     content="206.8490753173828 330.81671142578125 28.165817260742188 18.78460693359375",
+  )
+}
+
+///|
+/// Alpha is written with two decimals when they give the same 8-bit
+/// value, with three otherwise; measured in Chrome.
+test "alpha of a color in an inline style" {
+  let stroke = (color : String) => {
+    @dom.Element::new("line").style("stroke", color).to_html()
+  }
+  inspect(
+    stroke("#ff000080"),
+    content=(
+      #|<line style="stroke: rgba(255, 0, 0, 0.5);"></line>
+    ),
+  )
+  inspect(
+    stroke("#10203001"),
+    content=(
+      #|<line style="stroke: rgba(16, 32, 48, 0.004);"></line>
+    ),
+  )
+  inspect(
+    stroke("rgba(10, 20, 30, 0.7)"),
+    content=(
+      #|<line style="stroke: rgba(10, 20, 30, 0.7);"></line>
+    ),
+  )
+  inspect(
+    stroke("rgba(10, 20, 30, 0.123)"),
+    content=(
+      #|<line style="stroke: rgba(10, 20, 30, 0.12);"></line>
+    ),
+  )
+  inspect(
+    stroke("rgba(10, 20, 30, 0.999)"),
+    content=(
+      #|<line style="stroke: rgb(10, 20, 30);"></line>
+    ),
   )
 }

@@ -1,0 +1,35 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/internal/dayjs"
+
+import {
+  "bobzhang/mermaid/internal/jsdate",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn duration_milliseconds(String, Double) -> Double
+
+// Errors
+pub(all) suberror DayjsError {
+  DayjsError(String)
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+pub struct Dayjs {
+  zone : @jsdate.Zone
+  time : Double
+}
+pub fn Dayjs::add(Self, Double, String) -> Self
+pub fn Dayjs::diff_years(Self, Self) -> Double
+pub fn Dayjs::end_of_day(Self) -> Self
+pub fn Dayjs::format(Self, String) -> String raise DayjsError
+pub fn Dayjs::is_valid(Self) -> Bool
+pub fn Dayjs::iso_weekday(Self) -> Double
+pub fn Dayjs::new(@jsdate.Zone, Double) -> Self
+pub fn Dayjs::parse(@jsdate.Zone, String, String, now~ : Double) -> Self raise DayjsError
+pub fn Dayjs::start_of_day(Self) -> Self
+pub fn Dayjs::value_of(Self) -> Double
+
+// Type aliases
+
+// Traits

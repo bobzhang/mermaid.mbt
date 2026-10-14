@@ -1,0 +1,37 @@
+---
+config:
+  handDrawnSeed: 3
+  look: classic
+  theme: neutral
+---
+classDiagram
+  direction RL
+  namespace Pkg {
+    class Ticket
+    class Driver
+  }
+  namespace Other.Sub {
+    class Group
+  }
+  class Item {
+    +get() bool$
+  }
+  class Driver {
+    ~List~int~ total
+    -bool id
+    -List~int~ name
+    #set(List~int~ xs) bool$
+    -get() bool
+    #compute() int*
+  }
+  class Ticket {
+    <<enumeration>>
+    +set(a)*
+    set()
+  }
+  Ticket --|> Item
+  Group "many" <|-- Item
+  Driver "0..n" --* "n" Item : owns
+  Role <|.. Driver
+  Ticket <|.. Item
+  Driver "0..1" --|> "1..*" Item

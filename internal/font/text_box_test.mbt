@@ -8,7 +8,7 @@ test "text aligned on its middle baseline" {
     size : Double,
     x : Double,
     y : Double,
-  ) => stack.bbox_middle(text, size, x~, y~)
+  ) => stack.svg_text_box(text, size, x~, y~, baseline=Middle)
   let arial = @font.Stack::for_family("arial")
   // Half of Arial's x-height is not a whole layout unit at this size: the
   // line comes out 1/64 px taller than ascent plus descent.
@@ -87,7 +87,7 @@ test "chunks anchored and aligned" {
         16.8,
       ),
       16.0,
-      anchor=End,
+      anchor="end",
       baseline=Middle,
     ),
     content=(
@@ -103,7 +103,7 @@ test "chunks anchored and aligned" {
     @font.Stack::default(bold=true).chunks_box(
       chunks(["Blurry", "Photo"], 0.0, -8.4, 16.8),
       14.0,
-      anchor=Middle,
+      anchor="middle",
       baseline=Middle,
     ),
     content=(
@@ -120,7 +120,7 @@ test "chunks anchored and aligned" {
     @font.Stack::for_family("verdana").chunks_box(
       chunks(["Wave To", "AV, Ty."], -243.140380859375, 98.80789518492597, 21.0),
       20.0,
-      anchor=End,
+      anchor="end",
       baseline=Hanging,
     ),
     content=(
@@ -136,7 +136,7 @@ test "chunks anchored and aligned" {
     @font.Stack::for_family("arial").chunks_box(
       chunks(["if x < y"], 163.03125, -6.945028642320949, 0.0),
       12.5,
-      anchor=Middle,
+      anchor="middle",
       baseline=Central,
     ),
     content="{ x: 144.796875, y: -13.945028305053711, width: 36.46875, height: 14 }",
@@ -151,7 +151,7 @@ test "chunks under a scale" {
     @font.Stack::default().chunks_box(
       [{ text, x: 0.0, y: 13.0, }],
       12.0,
-      anchor=Middle,
+      anchor="middle",
       baseline=Central,
       scale~,
     )

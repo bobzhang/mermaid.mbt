@@ -1,10 +1,4 @@
 ///|
-/// Why a Cynefin diagram could not be parsed.
-pub(all) suberror CynefinError {
-  CynefinError(String)
-} derive(Eq, Debug)
-
-///|
 /// A feature the port does not reproduce exactly.
 pub(all) suberror Unsupported {
   Unsupported(String)
@@ -65,86 +59,75 @@ fn sanitized(text : String) -> String raise Unsupported {
 /// Transition: DOMAIN_NAME "-->" DOMAIN_NAME (":" STRING)? EOL
 /// ```
 pub fn parse(source : String) -> Cynefin raise {
-  let tokens = tokenize(source)
+  let tokens = @langium.TokenStream::new(
+    @langium.tokenize(source, token_types),
+    source.length(),
+  )
   let diagram = Cynefin::new()
-  let mut cursor = 0
-  let peek = (ahead : Int32) => tokens.get(cursor + ahead)
   let skip_newlines = () => {
-    while tokens.get(cursor) is Some(Newline) {
-      cursor += 1
+    while tokens.accept("NEWLINE") is Some(_) {
+
     }
   }
   // EOL: one or more line breaks, or the end of the text.
   let end_of_line = () => {
-    match tokens.get(cursor) {
-      None => ()
-      Some(Newline) => skip_newlines()
-      _ => raise CynefinError("Expecting a line break")
+    if tokens.at("EOF") {
+      return
     }
+    tokens.expect("NEWLINE") |> ignore
+    skip_newlines()
   }
   skip_newlines()
-  guard peek(0) is Some(Keyword) else {
-    raise CynefinError("Expecting token of type 'cynefin-beta'")
+  if tokens.accept("cynefin-beta:") is None {
+    tokens.expect("cynefin-beta") |> ignore
   }
-  cursor += 1
-  while peek(0) is Some(token) {
-    cursor += 1
-    match token {
-      Newline => ()
-      AccDescr(text) => {
-        let value = metadata_value(acc_descr_pattern, text)
-        if value != "" {
-          diagram.acc_description = @journeycommon.acc_description(value) catch {
-            @journeycommon.SanitizeError(message) => raise Unsupported(message)
-          }
+  while !tokens.at("EOF") {
+    if tokens.accept("NEWLINE") is Some(_) {
+      continue
+    }
+    if tokens.accept("ACC_DESCR") is Some(token) {
+      let value = metadata_value(acc_descr_pattern, token.text)
+      if value != "" {
+        diagram.acc_description = @journeycommon.acc_description(value) catch {
+          @journeycommon.SanitizeError(message) => raise Unsupported(message)
         }
-        end_of_line()
       }
-      AccTitle(text) => {
-        let value = metadata_value(acc_title_pattern, text)
-        if value != "" {
-          diagram.acc_title = @journeycommon.acc_title(value) catch {
-            @journeycommon.SanitizeError(message) => raise Unsupported(message)
-          }
+      end_of_line()
+    } else if tokens.accept("ACC_TITLE") is Some(token) {
+      let value = metadata_value(acc_title_pattern, token.text)
+      if value != "" {
+        diagram.acc_title = @journeycommon.acc_title(value) catch {
+          @journeycommon.SanitizeError(message) => raise Unsupported(message)
         }
-        end_of_line()
       }
-      Title(text) => {
-        let value = metadata_value(title_pattern, text)
-        if value != "" {
-          diagram.title = sanitized(value)
-        }
-        end_of_line()
+      end_of_line()
+    } else if tokens.accept("TITLE") is Some(token) {
+      let value = metadata_value(title_pattern, token.text)
+      if value != "" {
+        diagram.title = sanitized(value)
       }
-      DomainName(from) =>
-        if peek(0) is Some(Arrow) {
-          cursor += 1
-          guard peek(0) is Some(DomainName(to)) else {
-            raise CynefinError("Expecting a domain name after '-->'")
-          }
-          cursor += 1
-          let mut label = None
-          if peek(0) is Some(Colon) {
-            cursor += 1
-            guard peek(0) is Some(Str(text)) else {
-              raise CynefinError("Expecting a quoted label after ':'")
-            }
-            cursor += 1
-            label = Some(text)
-          }
-          end_of_line()
-          diagram.add_transition(from, to, label)
+      end_of_line()
+    } else if tokens.accept("DOMAIN_NAME") is Some(from) {
+      if tokens.accept("-->") is Some(_) {
+        let to = tokens.expect("DOMAIN_NAME")
+        let label = if tokens.accept(":") is Some(_) {
+          Some(unquote(tokens.expect("STRING").text))
         } else {
-          skip_newlines()
-          let items = []
-          while peek(0) is Some(Str(label)) {
-            cursor += 1
-            items.push(label)
-            skip_newlines()
-          }
-          diagram.set_domain(from, items)
+          None
         }
-      _ => raise CynefinError("Expecting a domain, a transition or a title")
+        end_of_line()
+        diagram.add_transition(from.text, to.text, label)
+      } else {
+        skip_newlines()
+        let items = []
+        while tokens.accept("STRING") is Some(item) {
+          items.push(unquote(item.text))
+          skip_newlines()
+        }
+        diagram.set_domain(from.text, items)
+      }
+    } else {
+      tokens.fail("Expecting a domain, a transition or a title")
     }
   }
   diagram

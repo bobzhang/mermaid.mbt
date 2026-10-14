@@ -1,0 +1,11 @@
+---
+config:
+  wrap: true
+---
+C4Dynamic
+title Dynamic and wrapped
+Person(a, "A person whose name is long enough to be wrapped in a box of the usual size")
+Container(b, "B", "t")
+Rel(a, b, "A label of several words that are long", "tech nology words")
+Rel(b, a, "Supercalifragilisticexpialidocious")
+RelIndex(9, a, a, "self")

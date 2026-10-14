@@ -1,0 +1,12 @@
+---
+config:
+  sequence:
+    hideUnusedParticipants: true
+---
+sequenceDiagram
+    participant A
+    participant Unused
+    participant B
+    actor Idle
+    A->>B: hello
+    Note over A: note

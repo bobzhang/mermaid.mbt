@@ -1,0 +1,19 @@
+---
+config:
+  wrap: false
+  fontSize: "20"
+  sequence:
+    wrap: true
+    forceMenus: true
+---
+sequenceDiagram
+    participant A as A participant with a description long enough to wrap
+    participant B
+    link A: Docs @ https://example.com/docs
+    link B: A longer label<br/>in two lines @ https://example.com/b
+    A->>B: The top-level wrap setting is false, yet this long message wraps
+    B-->>A: nowrap:This one says nowrap and so it does not wrap at all
+    box Aqua A box title<br/>in two lines
+    participant C
+    end
+    B->>C: over
