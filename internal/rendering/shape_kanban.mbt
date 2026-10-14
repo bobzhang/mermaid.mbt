@@ -177,8 +177,19 @@ fn kanban_item(
   }
   let padding = if node.padding != 0.0 { node.padding } else { 10.0 }
   // A ticket links to where the configuration says tickets are.
-  let link = match env.config.text("kanban.ticketBaseUrl") {
-    Some(base) if base != "" && ticket != "" => {
+  let base = match env.config.get("kanban.ticketBaseUrl") {
+    String(base) => base
+    Null | False | Number(0.0, ..) => ""
+    // Anything else is no text to replace the ticket in.
+    _ =>
+      if ticket != "" {
+        raise LayoutError("ticketBaseUrl.replace is not a function")
+      } else {
+        ""
+      }
+  }
+  let link = match base {
+    base if base != "" && ticket != "" => {
       let url = js_replace_first(base, "#TICKET#", ticket)
       let link = shape_svg.insert_first("a").attr("class", "kanban-ticket-link")
       // Upstream also sets `target`, which the final sanitizing pass

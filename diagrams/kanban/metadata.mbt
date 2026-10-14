@@ -203,6 +203,44 @@ fn resolve_scalar(data : String) -> Meta raise KanbanError {
 }
 
 ///|
+/// What a scalar with an explicit tag of the JSON schema (`!!str 12`)
+/// stands for: its text read as that type, which it has to be.
+fn tagged_scalar(data : String, suffix : String) -> Meta raise KanbanError {
+  let unresolved = () => {
+    Invalid(
+      "cannot resolve a node with !<tag:yaml.org,2002:\{suffix}> explicit tag",
+    )
+  }
+  match suffix {
+    "str" => Text(data)
+    "null" =>
+      match data {
+        "" | "~" | "null" | "Null" | "NULL" => Null
+        _ => raise unresolved()
+      }
+    "bool" =>
+      match resolve_scalar(data) {
+        Bool(_) as value => value
+        _ => raise unresolved()
+      }
+    "int" =>
+      match yaml_integer(data) {
+        Ok(Some(value)) => Number(value)
+        Ok(None) => raise unresolved()
+        Err(_) =>
+          raise Unsupported("an integer this large in metadata: \{data}")
+      }
+    // The float pattern takes integers too.
+    "float" =>
+      match yaml_float(data) {
+        Some(value) => Number(value)
+        None => raise unresolved()
+      }
+    _ => raise Invalid("unknown tag !<tag:yaml.org,2002:\{suffix}>")
+  }
+}
+
+///|
 /// Builds the documents of a YAML stream from the parser's events.
 priv struct Loader {
   /// What was loaded: one entry per document, `None` for an empty one.
@@ -229,9 +267,12 @@ fn Loader::receive(
   event : @yaml.Event,
 ) -> Unit raise KanbanError {
   // What the port does not resolve the way js-yaml does is refused.
-  let untagged = (tag : @yaml.Tag?) => {
-    if tag is Some(_) {
-      raise Unsupported("tags in metadata")
+  // A collection may only be tagged with its own kind.
+  let untagged = (tag : @yaml.Tag?, kind : String) => {
+    match tag {
+      None => ()
+      Some({ handle: "tag:yaml.org,2002:", suffix, }) if suffix == kind => ()
+      Some(_) => raise Unsupported("tags in metadata")
     }
   }
   match event {
@@ -243,11 +284,11 @@ fn Loader::receive(
         None => self.docs.push(None)
       }
     SequenceStart(id~, tag~) => {
-      untagged(tag)
+      untagged(tag, "seq")
       self.stack.push((List([]), id))
     }
     MappingStart(id~, tag~) => {
-      untagged(tag)
+      untagged(tag, "map")
       self.stack.push((Record(Map([])), id))
       self.keys.push(None)
     }
@@ -259,10 +300,12 @@ fn Loader::receive(
       }
     }
     Scalar(value~, style~, id~, tag~) => {
-      untagged(tag)
-      let node = match style {
-        Plain => resolve_scalar(value)
-        _ => Text(value)
+      let node = match (tag, style) {
+        (None, Plain) => resolve_scalar(value)
+        (None, _) => Text(value)
+        (Some({ handle: "tag:yaml.org,2002:", suffix, }), _) =>
+          tagged_scalar(value, suffix)
+        (Some(_), _) => raise Unsupported("tags in metadata")
       }
       self.insert((node, id))
     }
