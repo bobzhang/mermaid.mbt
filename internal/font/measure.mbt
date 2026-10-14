@@ -39,19 +39,23 @@ fn ceil_layout_unit(value : Float) -> Double {
 ///|
 /// Font ascent and descent in pixels. Blink rounds each to a whole pixel.
 pub fn Face::ascent(self : Face, size : Double) -> Double {
+  let size = effective_size(size)
   round_half_up(self.ascent.to_double() * size / self.units_per_em.to_double())
 }
 
 ///|
 pub fn Face::descent(self : Face, size : Double) -> Double {
+  let size = effective_size(size)
   round_half_up(self.descent.to_double() * size / self.units_per_em.to_double())
 }
 
 ///|
 /// The size glyphs are actually scaled to: the reference browser drops
-/// everything past the second decimal of a font size.
+/// everything past the second decimal of a font size. It does so in
+/// single precision, where a size a hair below a hundredth (17px scaled
+/// by 0.74 is 12.5799999) times 100 is that hundredth.
 fn effective_size(size : Double) -> Double {
-  (size * 100.0).floor() / 100.0
+  (Float::from_double(size) * 100).to_double().floor() / 100.0
 }
 
 ///|
