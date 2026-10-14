@@ -39,7 +39,16 @@ fn ceil_layout_unit(value : Float) -> Double {
 ///|
 /// Font ascent and descent in pixels. Blink rounds each to a whole pixel.
 pub fn Face::ascent(self : Face, size : Double) -> Double {
-  round_half_up(self.ascent.to_double() * size / self.units_per_em.to_double())
+  let ascent = round_half_up(
+    self.ascent.to_double() * size / self.units_per_em.to_double(),
+  )
+  if self.legacy_mac_ascent {
+    // SimpleFontData::PlatformInit, in single precision.
+    let line = Float::from_double(ascent + self.descent(size))
+    ascent + (line * 0.15 + 0.5).floor().to_double()
+  } else {
+    ascent
+  }
 }
 
 ///|
@@ -158,21 +167,72 @@ priv struct Shaped {
 }
 
 ///|
+/// What draws one character, or one ligature of two.
+priv enum Drawn {
+  /// A glyph of an embedded face.
+  Glyph(Face, Glyph)
+  /// A character no embedded face has.
+  Missing(Char)
+  /// A default-ignorable character such as a zero-width space: shaped to
+  /// an invisible glyph without advance.
+  Ignorable
+}
+
+///|
+fn is_default_ignorable(c : Char) -> Bool {
+  c is ('\u{200B}'..<='\u{200F}' | '\u{2060}' | '\u{FEFF}')
+}
+
+///|
+/// The glyphs `text` is drawn with. Two characters of one face that it
+/// has a ligature for (`fi` and `fl` in Times and Helvetica) become one
+/// glyph.
+fn Stack::glyphs(self : Stack, text : StringView) -> Array[Drawn] {
+  let drawn : Array[Drawn] = []
+  for c in text {
+    if is_default_ignorable(c) {
+      drawn.push(Ignorable)
+      continue
+    }
+    let face = self.face_for(c)
+    guard face.glyphs.get(c.to_int()) is Some(glyph) else {
+      drawn.push(Missing(c))
+      continue
+    }
+    if drawn.last() is Some(Glyph(left_face, left)) &&
+      physical_equal(left_face, face) &&
+      face.ligatures.get(left.id * 65536 + glyph.id) is Some(code) &&
+      face.glyphs.get(code) is Some(ligature) {
+      drawn[drawn.length() - 1] = Glyph(face, ligature)
+      continue
+    }
+    drawn.push(Glyph(face, glyph))
+  }
+  drawn
+}
+
+///|
 /// Shape `text` at `size` pixels. Consecutive characters of the same face
 /// kern against each other; a change of face starts a new run.
 fn Stack::shape(self : Stack, text : StringView, size : Double) -> Shaped {
   let size = effective_size(size)
   let shaped = { pen: 0.0, ink: { x: 0.0, y: 0.0, width: 0.0, height: 0.0, }, }
   let mut previous : (Face, Glyph)? = None
-  for c in text {
-    let face = self.face_for(c)
-    guard face.glyphs.get(c.to_int()) is Some(glyph) else {
-      // No embedded face has this character. The reference browser would
-      // use a system fallback font; approximate with half or a full em.
-      let em = if c.to_int() >= 0x1100 { 1.0 } else { 0.5 }
-      shaped.pen = shaped.pen + Float::from_double(size * em)
-      previous = None
-      continue
+  for drawn in self.glyphs(text) {
+    let (face, glyph) = match drawn {
+      Glyph(face, glyph) => (face, glyph)
+      Missing(c) => {
+        // No embedded face has this character. The reference browser would
+        // use a system fallback font; approximate with half or a full em.
+        let em = if c.to_int() >= 0x1100 { 1.0 } else { 0.5 }
+        shaped.pen = shaped.pen + Float::from_double(size * em)
+        previous = None
+        continue
+      }
+      Ignorable => {
+        previous = None
+        continue
+      }
     }
     if previous is Some((left_face, left)) &&
       physical_equal(left_face, face) &&
@@ -293,9 +353,10 @@ pub fn Stack::bbox(self : Stack, text : StringView, size : Double) -> Rect {
 ///|
 /// The stack a CSS `font-family` list resolves to in the reference
 /// environment. Families that are not installed there are skipped; of the
-/// installed ones, Trebuchet MS, Verdana and Arial are embedded. A list
-/// naming none of them falls back to Arial, the closest embedded face to
-/// the system sans-serif.
+/// installed ones, Trebuchet MS, Verdana, Arial, Helvetica and Times are
+/// embedded. The generic `sans-serif` is Helvetica there and `serif` is
+/// Times. A list naming none of them falls back to Arial, the closest
+/// embedded face to the system sans-serif.
 pub fn Stack::for_family(
   family : String,
   bold~ : Bool = false,
@@ -315,7 +376,11 @@ pub fn Stack::for_family(
           },
         )
       "verdana" => Some(if bold { verdana_bold } else { verdana_regular })
-      "arial" | "helvetica" | "sans-serif" => Some(arial(bold, italic))
+      "arial" => Some(arial(bold, italic))
+      // The obliques are not embedded; the upright faces stand in.
+      "helvetica" | "sans-serif" =>
+        Some(if bold { helvetica_bold } else { helvetica_regular })
+      "times" | "serif" => Some(if bold { times_bold } else { times_regular })
       _ => None
     }
     if face is Some(face) && !faces.iter().any(f => physical_equal(f, face)) {
@@ -326,6 +391,13 @@ pub fn Stack::for_family(
     faces.push(arial(bold, italic))
   }
   { faces, }
+}
+
+///|
+/// The browser's standard font, which text falls back to when no
+/// `font-family` applies: Times in the reference environment.
+pub fn Stack::standard(bold~ : Bool = false) -> Stack {
+  { faces: [if bold { times_bold } else { times_regular }], }
 }
 
 ///|

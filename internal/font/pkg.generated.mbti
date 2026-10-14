@@ -34,6 +34,7 @@ pub fn Stack::for_family(String, bold? : Bool, italic? : Bool) -> Self
 pub fn Stack::ink(Self, StringView, Double) -> Rect
 pub fn Stack::item_advances(Self, Array[String], Double) -> Array[Double]
 pub fn Stack::line_metrics(Self, Double) -> (Double, Double)
+pub fn Stack::standard(bold? : Bool) -> Self
 
 // Type aliases
 
