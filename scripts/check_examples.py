@@ -12,8 +12,12 @@ so both sides get `handDrawnSeed` from `--seed`.
 `--prelude` names JavaScript to evaluate in the oracle page first, for
 diagrams whose output upstream leaves to `Math.random()`.
 
+`--fresh-page` renders every example in a page of its own, for diagrams
+whose output depends on what the page rendered before (see compare.py).
+
 Usage: scripts/check_examples.py [docs.md ...] [--keywords flowchart graph]
-                                 [--seed 1] [--cache DIR] [--prelude FILE] [-v]
+                                 [--seed 1] [--cache DIR] [--prelude FILE]
+                                 [--fresh-page] [-v]
 """
 
 import argparse
@@ -53,6 +57,8 @@ def main():
     parser.add_argument("--cache", type=pathlib.Path, default=ROOT / ".repos" / "oracle" / "examples")
     parser.add_argument("--prelude", type=pathlib.Path,
                         help="JavaScript evaluated in the oracle page before rendering (see compare.py)")
+    parser.add_argument("--fresh-page", action="store_true",
+                        help="render every example in a page of its own")
     parser.add_argument("-v", "--verbose", action="store_true", help="show the first difference of each example")
     args = parser.parse_args()
 
@@ -62,13 +68,14 @@ def main():
     args.cache.mkdir(parents=True, exist_ok=True)
     inputs = []
     for source in sources:
-        digest = hashlib.sha256((config + prelude + source).encode()).hexdigest()[:16]
+        digest = hashlib.sha256((config + prelude + ("fresh" if args.fresh_page else "") + source).encode()).hexdigest()[:16]
         path = args.cache / f"{digest}.mmd"
         path.write_text(source)
         inputs.append(path)
     missing = [path for path in inputs if not path.with_suffix(".svg").exists()]
-    for start in range(0, len(missing), compare.BATCH):
-        batch = missing[start:start + compare.BATCH]
+    size = 1 if args.fresh_page else compare.BATCH
+    for start in range(0, len(missing), size):
+        batch = missing[start:start + size]
         subprocess.run([sys.executable, str(ROOT / "scripts" / "oracle.py"), "--config", config,
                         "-o", str(args.cache)] + (["--eval", prelude] if prelude else [])
                        + [str(path) for path in batch], check=True, stdout=subprocess.DEVNULL)
