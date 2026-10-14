@@ -14,10 +14,11 @@ fn check_font_family(family : String) -> Unit raise UsecaseError {
       | "helvetica"
       | "sans-serif"
       | "times"
-      | "serif" => return
+      | "serif"
+      | "georgia" => return
       _ =>
         raise Unsupported(
-          "The font family \{name} cannot be measured: only Trebuchet MS, Verdana, Arial, Helvetica and Times are known.",
+          "The font family \{name} cannot be measured: only Trebuchet MS, Verdana, Arial, Helvetica, Times and Georgia are known.",
         )
     }
   }
