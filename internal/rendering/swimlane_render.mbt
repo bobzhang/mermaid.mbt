@@ -4,9 +4,10 @@
 // this file hands it the measured nodes and draws what it returns.
 
 ///|
-/// The edge of the layout the label node of an edge stands for, and the
-/// rendering node for every node the layout adds.
-fn swimlane_node(model : @swimlane_model.Node, data : LayoutData) -> Node {
+/// The node to draw for a node the layout adds: the lane of the nodes
+/// outside every lane, or the label of an edge. Such nodes keep their ids
+/// unprefixed, as upstream adds them after prefixing the others.
+fn swimlane_node(model : @swimlane_model.Node) -> Node {
   let look = model.look.unwrap_or("")
   let node = Node::new(
     id=model.id,
@@ -19,7 +20,6 @@ fn swimlane_node(model : @swimlane_model.Node, data : LayoutData) -> Node {
     shape=model.shape,
     color_index?=model.color_index,
   )
-  ignore(data)
   node.label_style = model.label_style
   node
 }
@@ -187,7 +187,7 @@ fn render_swimlane(
         node
       }
       None => {
-        let node = swimlane_node(model, data)
+        let node = swimlane_node(model)
         nodes_by_id[model.id] = node
         node
       }
