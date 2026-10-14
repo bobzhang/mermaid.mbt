@@ -1,6 +1,39 @@
 // The entity of an ER diagram: mermaid's `shapes/erBox.ts`.
 
 ///|
+/// The size in pixels of the text `calculateTextWidth` measures, from the
+/// `fontSize` setting: mermaid's `parseFontSize` followed by what the
+/// browser makes of the style. A number, or a string of digits, counts
+/// pixels; other strings are CSS lengths, relative to the page's 16px; a
+/// string that does not start with a number sets nothing.
+fn text_measure_size(setting : Json) -> Double {
+  let page = 16.0
+  match setting {
+    Number(size, ..) => size
+    String(text) => {
+      let digits = StringBuilder()
+      for c in text.trim() {
+        guard c is ('0'..<='9' | '.') else { break }
+        digits.write_char(c)
+      }
+      let unit = text.trim()[digits.to_string().length():].trim().to_owned()
+      let value = @string.parse_double(digits.to_string()) catch {
+        _ => return page
+      }
+      match unit {
+        "" | "px" => value
+        "em" | "rem" => value * page
+        "%" => value * page / 100.0
+        "pt" => value * 4.0 / 3.0
+        // An unknown unit leaves the page's size in place.
+        _ => page
+      }
+    }
+    _ => 12.0
+  }
+}
+
+///|
 /// mermaid's `calculateTextWidth` with the diagram's configuration: the
 /// text is drawn as SVG text in `sans-serif` and in the configured font,
 /// line by line, and the rounded width of its widest line in the
@@ -13,18 +46,7 @@ fn calculate_text_width(text : String, config : @config.Config) -> Double {
   if text == "" {
     return 0.0
   }
-  let size = match config.get("fontSize") {
-    Number(size, ..) => size
-    String(size) => {
-      let mut value = 0.0
-      for c in size.trim() {
-        guard c is ('0'..<='9') else { break }
-        value = value * 10.0 + (c.to_int() - '0').to_double()
-      }
-      value
-    }
-    _ => 12.0
-  }
+  let size = text_measure_size(config.get("fontSize"))
   let configured = match config.text("fontFamily") {
     Some(family) if !family.contains(";") => @font.Stack::for_family(family)
     _ => @font.Stack::page_default()
