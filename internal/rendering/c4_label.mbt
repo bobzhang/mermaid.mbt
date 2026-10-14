@@ -13,10 +13,13 @@ const MIN_WRAP_WIDTH : Double = 32.0
 /// stylesheet makes the name bold and sets the type and description lines
 /// in smaller text.
 fn section_env(env : Env, css_class : String) -> Env {
+  // An `em` is a multiple of the inherited size, which the browser holds
+  // in single precision.
+  let inherited = Float::from_double(env.font_size).to_double()
   match css_class {
     "c4-name" => { ..env, bold: true, }
-    "c4-type" => { ..env, font_size: env.font_size * 0.75, }
-    _ => { ..env, font_size: env.font_size * 0.82, }
+    "c4-type" => { ..env, font_size: inherited * 0.75, }
+    _ => { ..env, font_size: inherited * 0.82, }
   }
 }
 
@@ -107,13 +110,14 @@ fn c4_label_helper(
   )
   |> ignore
   let box = label.bbox()
-  // The box comes with `left` and `top`, so shapes shift the label by
-  // nothing more than its size.
+  // The box is an `SVGRect`, without `left` and `top`: shapes that place
+  // the label subtract where it starts, which is the origin give or take
+  // what the transforms lose in single precision.
   {
     shape_svg,
     label,
     bbox: { width: box.width, height: box.height, },
-    offset_x: 0.0,
-    offset_y: 0.0,
+    offset_x: box.x,
+    offset_y: box.y,
   }
 }

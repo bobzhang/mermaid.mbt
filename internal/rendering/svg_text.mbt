@@ -262,7 +262,7 @@ fn em_to_px(value : Double, size : Double) -> Float {
 /// `create_svg_label`: line `i` has its baseline at
 /// `(1.1 i - 0.1)em + 1.1em`, starts at x = 0 and is centred there when
 /// anchored in the middle. Every item contributes its cell, from the
-/// ascent above the baseline to the descent below, and its ink.
+/// ascent above the baseline to the descent below, united with its ink.
 fn text_box(
   lines : Array[Array[Word]],
   env : Env,
@@ -282,16 +282,20 @@ fn text_box(
     for k, item in items {
       let font = env.font(bold=item.bold, italic=item.italic)
       let (ascent, descent) = font.line_metrics(size)
-      let cell = BoxF::from_edges(
-        f(x),
-        baseline - f(ascent),
-        f(x + widths[k]),
-        baseline + f(descent),
-      )
+      // The box of the fragment, and its ink moved from the baseline to
+      // the top of that box and then to where the box is: Blink's
+      // `FragmentItem::ObjectBoundingBox`, step by step in single
+      // precision.
+      let cell : BoxF = {
+        x: f(x),
+        y: baseline - f(ascent),
+        width: f(widths[k]),
+        height: f(ascent + descent),
+      }
       let ink = inks[k]
       let ink_box : BoxF = {
-        x: f(x) + f(ink.x),
-        y: baseline + f(ink.y),
+        x: f(ink.x) + cell.x,
+        y: f(ink.y) + f(ascent) + cell.y,
         width: f(ink.width),
         height: f(ink.height),
       }

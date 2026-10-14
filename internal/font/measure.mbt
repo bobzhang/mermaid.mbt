@@ -16,8 +16,11 @@ const HB_ONE : Float = 65536.0
 /// The advance Blink gets for a glyph: Skia's 32-bit float width, truncated
 /// to 16.16 fixed point.
 fn Face::advance_fixed(self : Face, units : Int32, size : Double) -> Int32 {
+  // Skia's font size is a float.
   let width = Float::from_double(
-    units.to_double() * size / self.units_per_em.to_double(),
+    units.to_double() *
+    Float::from_double(size).to_double() /
+    self.units_per_em.to_double(),
   )
   (width * HB_ONE).to_int()
 }
@@ -153,6 +156,28 @@ fn RectF::from_edges(
 }
 
 ///|
+/// `gfx::BoundingRect` of two corners, which is how the box of a glyph's
+/// outline becomes a rectangle: where origin plus the rounded size is not
+/// the far edge exactly, short of it or past it, the size grows by one
+/// step.
+fn RectF::bounding(
+  left : Float,
+  top : Float,
+  right : Float,
+  bottom : Float,
+) -> RectF {
+  let mut width = right - left
+  let mut height = bottom - top
+  if left + width != right {
+    width = Float::reinterpret_from_uint(width.reinterpret_as_uint() + 1)
+  }
+  if top + height != bottom {
+    height = Float::reinterpret_from_uint(height.reinterpret_as_uint() + 1)
+  }
+  { x: left, y: top, width, height, }
+}
+
+///|
 fn RectF::is_empty(self : RectF) -> Bool {
   self.width <= 0.0 || self.height <= 0.0
 }
@@ -180,7 +205,20 @@ fn RectF::union(self : RectF, other : RectF) -> RectF {
 /// bounds around the baseline origin, y down.
 priv struct Shaped {
   mut pen : Float
-  mut ink : RectF
+  /// The edges of the ink: left, top, right, bottom. Blink accumulates
+  /// them as edges and only takes their differences at the end.
+  mut edges : (Float, Float, Float, Float)?
+}
+
+///|
+/// The ink as a rectangle: `GlyphBoundsAccumulator::Bounds`, plain
+/// differences of the edges.
+fn Shaped::ink(self : Shaped) -> RectF {
+  match self.edges {
+    Some((left, top, right, bottom)) =>
+      { x: left, y: top, width: right - left, height: bottom - top, }
+    None => { x: 0.0, y: 0.0, width: 0.0, height: 0.0, }
+  }
 }
 
 ///|
@@ -199,47 +237,96 @@ fn Stack::shape_after(
   size : Double,
   before : (Face, Glyph)?,
 ) -> (Shaped, (Face, Glyph)?) {
-  let shaped = { pen: 0.0, ink: { x: 0.0, y: 0.0, width: 0.0, height: 0.0, }, }
+  let shaped : Shaped = { pen: 0.0, edges: None, }
+  let clusters = self.clusters(text)
+  // HarfBuzz's positions: the advance of every glyph with its share of
+  // the kerning, and the offset a glyph is drawn at.
+  let advances : Array[Int32] = []
+  let offsets : Array[Int32] = []
   let mut previous = before
-  let mut first = true
-  for cluster in self.clusters(text) {
+  let mut previous_index = -1
+  for index, cluster in clusters {
     guard cluster is Drawn(face, glyph) else {
-      shaped.pen = shaped.pen + Float::from_double(size * cluster.missing_em())
+      advances.push(0)
+      offsets.push(0)
       previous = None
-      first = false
       continue
     }
+    advances.push(face.advance_fixed(glyph.advance, size))
+    offsets.push(0)
     if previous is Some((left_face, left)) &&
       physical_equal(left_face, face) &&
       face.kerning.get(left.id * 65536 + glyph.id) is Some(adjust) {
       let kern = face.scale_fixed(adjust, size)
-      // Against the glyph that ended the piece before, only the share of
-      // this glyph moves it.
-      let share = if !first {
-        kern
-      } else if face.split_kerning {
-        kern - (kern >> 1)
-      } else {
-        0
+      // From GPOS the adjustment belongs to the earlier glyph; from a
+      // `kern` table the earlier glyph takes the half rounded down and
+      // this one the rest, by which it is also drawn earlier.
+      let earlier = if face.split_kerning { kern >> 1 } else { kern }
+      if previous_index >= 0 {
+        advances[previous_index] += earlier
       }
-      shaped.pen = shaped.pen + Float::from_int(share) / HB_ONE
+      advances[index] += kern - earlier
+      offsets[index] = kern - earlier
     }
-    first = false
+    previous = Some((face, glyph))
+    previous_index = index
+  }
+  for index, cluster in clusters {
+    guard cluster is Drawn(face, glyph) else {
+      // No embedded face has this character.
+      shaped.pen = shaped.pen + Float::from_double(size * cluster.missing_em())
+      continue
+    }
     if glyph.x_min != glyph.x_max || glyph.y_min != glyph.y_max {
-      // Skia asks CoreText for the box at its own font size, a float, and
-      // converts the edges of the answer, which is in doubles, to floats.
+      // Blink takes the box of the glyph's outline, whose points Skia
+      // scales to the font size in single precision.
       let scale = Float::from_double(size).to_double() /
         face.units_per_em.to_double()
-      let left = Float::from_double(glyph.x_min.to_double() * scale)
-      let top = Float::from_double(-glyph.y_max.to_double() * scale)
-      let right = Float::from_double(glyph.x_max.to_double() * scale)
-      let bottom = Float::from_double(-glyph.y_min.to_double() * scale)
-      let bounds = RectF::from_edges(left, top, right, bottom)
-      shaped.ink = shaped.ink.union({ ..bounds, x: bounds.x + shaped.pen, })
+      let bounds = RectF::bounding(
+        Float::from_double(glyph.x_min.to_double() * scale),
+        Float::from_double(-glyph.y_max.to_double() * scale),
+        Float::from_double(glyph.x_max.to_double() * scale),
+        Float::from_double(-glyph.y_min.to_double() * scale),
+      )
+      if !bounds.is_empty() {
+        // The glyph is drawn at the pen plus its offset.
+        let left = bounds.x +
+          shaped.pen +
+          Float::from_int(offsets[index]) / HB_ONE
+        let right = left + bounds.width
+        let top = bounds.y
+        let bottom = top + bounds.height
+        shaped.edges = match shaped.edges {
+          None => Some((left, top, right, bottom))
+          Some((l, t, r, b)) =>
+            Some(
+              (
+                if left < l {
+                  left
+                } else {
+                  l
+                },
+                if top < t {
+                  top
+                } else {
+                  t
+                },
+                if right > r {
+                  right
+                } else {
+                  r
+                },
+                if bottom > b {
+                  bottom
+                } else {
+                  b
+                },
+              ),
+            )
+        }
+      }
     }
-    shaped.pen = shaped.pen +
-      Float::from_int(face.advance_fixed(glyph.advance, size)) / HB_ONE
-    previous = Some((face, glyph))
+    shaped.pen = shaped.pen + Float::from_int(advances[index]) / HB_ONE
   }
   (shaped, previous)
 }
@@ -357,11 +444,12 @@ pub fn Stack::item_inks(
   for item in items {
     let (shaped, last) = self.shape_after(item, size, previous)
     previous = last
+    let ink = shaped.ink()
     inks.push({
-      x: shaped.ink.x.to_double(),
-      y: shaped.ink.y.to_double(),
-      width: shaped.ink.width.to_double(),
-      height: shaped.ink.height.to_double(),
+      x: ink.x.to_double(),
+      y: ink.y.to_double(),
+      width: ink.width.to_double(),
+      height: ink.height.to_double(),
     })
   }
   inks
@@ -371,7 +459,7 @@ pub fn Stack::item_inks(
 /// The ink of `text` at `size` pixels around its origin on the baseline,
 /// y down; an empty box when nothing is drawn.
 pub fn Stack::ink(self : Stack, text : StringView, size : Double) -> Rect {
-  let ink = self.shape(text, size).ink
+  let ink = self.shape(text, size).ink()
   {
     x: ink.x.to_double(),
     y: ink.y.to_double(),
@@ -391,7 +479,7 @@ pub fn Stack::line_metrics(self : Stack, size : Double) -> (Double, Double) {
 /// The bounding box of `text` at `size` pixels: what `getBBox()` reports
 /// for an SVG text element positioned at the origin. It is the cell
 /// (advance by ascent plus descent) united with the ink of the glyphs,
-/// which can overhang the cell.
+/// which can overhang the cell: Blink's `FragmentItem::ObjectBoundingBox`.
 pub fn Stack::bbox(self : Stack, text : StringView, size : Double) -> Rect {
   let shaped = self.shape(text, size)
   let primary = self.faces[0]
@@ -403,7 +491,11 @@ pub fn Stack::bbox(self : Stack, text : StringView, size : Double) -> Rect {
     width: Float::from_double(ceil_layout_unit(shaped.pen)),
     height: ascent + descent,
   }
-  let box = shaped.ink.union(cell)
+  // The ink is moved from the baseline to the top of the cell and then
+  // to where the cell is, each a step in single precision.
+  let ink = shaped.ink()
+  let ink = { ..ink, y: ink.y + ascent + cell.y, x: ink.x + cell.x, }
+  let box = ink.union(cell)
   {
     x: box.x.to_double(),
     y: box.y.to_double(),

@@ -152,9 +152,6 @@ fn element_font(
       }
     _ => theme.text("fontFamily")
   }
-  guard measurable_family(family) else {
-    raise Unsupported("C4: text in the font family \{family}")
-  }
   let inherited_size = match theme.get("fontSize") {
     Number(size, ..) => Some(size)
     other => font_size_px(other)
@@ -169,17 +166,23 @@ fn element_font(
   guard size is Some(size) else {
     raise Unsupported("C4: the font size of \{kind}")
   }
-  let bold = match config.get("c4.\{kind}FontWeight") {
-    Null | False | String("") => false
-    Number(weight, ..) if weight == 0.0 => false
+  let weight = match config.get("c4.\{kind}FontWeight") {
+    Null | False | String("") => "normal"
+    Number(weight, ..) if weight == 0.0 => "normal"
     value if configured =>
       match serialize_font_weight(value) {
-        Some(weight) => is_bold(weight)
+        Some(weight) => weight
         None =>
           raise Unsupported("C4: c4.\{kind}FontWeight \{value.stringify()}")
       }
-    _ => false
+    _ => "normal"
   }
+  guard measurable_family(family, weight) else {
+    raise Unsupported(
+      "C4: text in the font family \{family} at weight \{weight}",
+    )
+  }
+  let bold = is_bold(weight)
   { family, size, bold, }
 }
 

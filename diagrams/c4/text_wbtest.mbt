@@ -40,7 +40,10 @@ test "a font the port does not embed is refused" {
   let font : Font = { family: "serif", size: 14.0, weight: "normal", }
   try text_dimensions("cat", font) catch {
     Unsupported(message) =>
-      inspect(message, content="C4: text in the font family serif")
+      inspect(
+        message,
+        content="C4: text in the font family serif at weight normal",
+      )
     _ => fail("expected Unsupported")
   } noraise {
     _ => fail("expected the font to be refused")

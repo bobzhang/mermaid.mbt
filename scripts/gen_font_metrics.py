@@ -119,17 +119,93 @@ class Font:
         glyphs = struct.unpack(">H", self.table("maxp")[4:6])[0]
         return widths + [widths[-1]] * (glyphs - count)
 
-    def bounds(self, glyph):
-        """The glyph's ink box (xMin, yMin, xMax, yMax), zero when empty."""
+    def glyph_data(self, glyph):
         long_format = struct.unpack(">h", self.table("head")[50:52])[0]
         loca = self.table("loca")
         if long_format:
             start, end = struct.unpack(">II", loca[4 * glyph:4 * glyph + 8])
         else:
             start, end = (2 * v for v in struct.unpack(">HH", loca[2 * glyph:2 * glyph + 4]))
-        if start == end:
+        return self.table("glyf")[start:end]
+
+    def contours(self, glyph):
+        """The points of the glyph's outline, a list per contour."""
+        data = self.glyph_data(glyph)
+        if not data:
+            return []
+        count = struct.unpack(">h", data[:2])[0]
+        if count < 0:
+            return self.composite(data)
+        ends = struct.unpack(f">{count}H", data[10:10 + 2 * count])
+        position = 12 + 2 * count + struct.unpack(">H", data[10 + 2 * count:12 + 2 * count])[0]
+        points = ends[-1] + 1 if count else 0
+        flags = []
+        while len(flags) < points:
+            flag = data[position]
+            position += 1
+            flags.append(flag)
+            if flag & 8:
+                flags += [flag] * data[position]
+                position += 1
+        coordinates = []
+        for short, same in ((2, 16), (4, 32)):
+            values, value = [], 0
+            for flag in flags:
+                if flag & short:
+                    value += data[position] if flag & same else -data[position]
+                    position += 1
+                elif not flag & same:
+                    value += struct.unpack(">h", data[position:position + 2])[0]
+                    position += 2
+                values.append(value)
+            coordinates.append(values)
+        contours, start = [], 0
+        for end in ends:
+            contours.append(list(zip(coordinates[0][start:end + 1], coordinates[1][start:end + 1])))
+            start = end + 1
+        return contours
+
+    def composite(self, data):
+        """The contours of a glyph made of other glyphs, each moved into place."""
+        position, contours = 10, []
+        while True:
+            flags, component = struct.unpack(">HH", data[position:position + 4])
+            position += 4
+            if flags & 1:
+                dx, dy = struct.unpack(">hh", data[position:position + 4])
+                position += 4
+            else:
+                dx, dy = struct.unpack(">bb", data[position:position + 2])
+                position += 2
+            if not flags & 2 or flags & 0xC8:
+                # Placed by matching points, or scaled: not needed so far.
+                return None
+            parts = self.contours(component)
+            if parts is None:
+                return None
+            contours += [[(x + dx, y + dy) for x, y in contour] for contour in parts]
+            if not flags & 0x20:
+                return contours
+
+    def bounds(self, glyph):
+        """The glyph's ink box (xMin, yMin, xMax, yMax), zero when empty.
+
+        This is the box of the points of the outline the browser draws,
+        which leaves out contours of a single point (anchors, which Apple's
+        fonts keep in the glyph and count in its header box). The header
+        box stands in for composites this does not resolve.
+        """
+        data = self.glyph_data(glyph)
+        if not data:
             return (0, 0, 0, 0)
-        return struct.unpack(">hhhh", self.table("glyf")[start + 2:start + 10])
+        contours = self.contours(glyph)
+        if contours is None:
+            return struct.unpack(">hhhh", data[2:10])
+        points = [point for contour in contours if len(contour) > 1 for point in contour]
+        if not points:
+            return (0, 0, 0, 0)
+        xs, ys = [x for x, _ in points], [y for _, y in points]
+        return (min(xs), min(ys), max(xs), max(ys))
 
     def kerning(self):
         """Horizontal pair adjustments from format 0 `kern` subtables."""

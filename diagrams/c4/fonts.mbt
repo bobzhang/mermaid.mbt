@@ -24,6 +24,18 @@ fn is_bold(weight : String) -> Bool {
 }
 
 ///|
+/// Whether a weight is below regular. Helvetica has a light face for
+/// those, which the port does not embed; the other embedded families go
+/// no lighter than regular.
+fn is_light(weight : String) -> Bool {
+  match weight {
+    "lighter" => true
+    "normal" | "bold" | "bolder" => false
+    _ => (@string.parse_double(weight) catch { _ => 400.0 }) < 400.0
+  }
+}
+
+///|
 /// A `font-family` value as the CSSOM serializes it: quoted names in
 /// double quotes, the words of unquoted names a space apart, a comma and a
 /// space between names. `None` for anything else, which the port does not

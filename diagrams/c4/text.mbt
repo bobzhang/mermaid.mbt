@@ -61,8 +61,12 @@ fn text_dimensions(text : String, font : Font) -> (Double, Double) raise {
   if text == "" {
     return (0.0, 0.0)
   }
-  guard measurable_family(font.family) else {
-    raise Unsupported("C4: text in the font family \{font.family}")
+  // The generic family is measured as well, in the same weight.
+  guard measurable_family(font.family, font.weight) &&
+    measurable_family("sans-serif", font.weight) else {
+    raise Unsupported(
+      "C4: text in the font family \{font.family} at weight \{font.weight}",
+    )
   }
   let bold = is_bold(font.weight)
   // Width, height and the height of the tallest line.
@@ -100,15 +104,17 @@ fn text_dimensions(text : String, font : Font) -> (Double, Double) raise {
 }
 
 ///|
-/// Whether the port embeds what the reference browser draws `family` with:
-/// the first family that is installed there has to be one of the embedded
-/// ones.
-fn measurable_family(family : String) -> Bool {
+/// Whether the port embeds what the reference browser draws `family` with
+/// at `weight`: the first family that is installed there has to be one of
+/// the embedded ones, in a face the port has.
+fn measurable_family(family : String, weight : String) -> Bool {
   for name in family.split(",") {
     let name = name.trim(chars=" \t\n\"'").to_owned().to_lower()
     match name {
-      "trebuchet ms" | "verdana" | "arial" | "helvetica" | "sans-serif" =>
-        return true
+      "trebuchet ms" | "verdana" | "arial" => return true
+      // Helvetica, which is also the generic sans-serif there, has a
+      // light face.
+      "helvetica" | "sans-serif" => return !is_light(weight)
       // Not installed in the reference environment: skipped there too.
       "open sans" => continue
       _ => return false
