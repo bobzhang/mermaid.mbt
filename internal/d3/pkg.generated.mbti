@@ -12,6 +12,10 @@ pub fn arc_path(inner_radius~ : Double, outer_radius~ : Double, start_angle~ : D
 
 pub fn js_round(Double) -> Double
 
+pub fn line_basis(Array[(Double, Double)]) -> String?
+
+pub fn line_linear(Array[(Double, Double)]) -> String?
+
 pub fn number(Double) -> String
 
 pub fn pie(Array[Double]) -> Array[PieArc]
@@ -23,6 +27,7 @@ pub struct Path {
   // private fields
 }
 pub fn Path::arc(Self, Double, Double, Double, Double, Double, counterclockwise? : Bool) -> Unit
+pub fn Path::bezier_curve_to(Self, Double, Double, Double, Double, Double, Double) -> Unit
 pub fn Path::close(Self) -> Unit
 pub fn Path::line_to(Self, Double, Double) -> Unit
 pub fn Path::move_to(Self, Double, Double) -> Unit

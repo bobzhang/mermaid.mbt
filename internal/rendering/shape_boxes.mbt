@@ -473,16 +473,51 @@ fn composite(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
   } else {
     "node \{node.css_classes}"
   }
+  // A block diagram also names its classes in the node's `class`, draws
+  // the composite at the size its grid gave it, and sets the style and
+  // the corner radii of the frame.
+  let block = match node.data {
+    Block(positioned~, style~, ..) => Some((positioned, style))
+    _ => None
+  }
+  let classes = if block is Some(_) && node.css_classes != "" {
+    "\{classes} \{node.css_classes}"
+  } else {
+    classes
+  }
   let labelled = label_helper(parent, node, classes, env)
   let box = labelled.bbox
   let half_padding = node.padding / 2.0
   let rect = labelled.shape_svg
     .insert_first("rect")
     .attr("class", "basic cluster composite label-container")
-    .attr_number("x", -box.width / 2.0 - half_padding)
-    .attr_number("y", -box.height / 2.0 - half_padding)
-    .attr_number("width", box.width + node.padding)
-    .attr_number("height", box.height + node.padding)
+  let (x, y, width, height) = if block is Some((true, _)) {
+    let width = node.width.unwrap_or(0.0)
+    let height = node.height.unwrap_or(0.0)
+    (-width / 2.0, -height / 2.0, width, height)
+  } else {
+    (
+      -box.width / 2.0 - half_padding,
+      -box.height / 2.0 - half_padding,
+      box.width + node.padding,
+      box.height + node.padding,
+    )
+  }
+  if block is Some((_, style)) {
+    rect.attr("style", style) |> ignore
+    if node.rx is Some(rx) {
+      rect.attr_number("rx", rx) |> ignore
+    }
+    if node.ry is Some(ry) {
+      rect.attr_number("ry", ry) |> ignore
+    }
+  }
+  rect
+  .attr_number("x", x)
+  .attr_number("y", y)
+  .attr_number("width", width)
+  .attr_number("height", height)
+  |> ignore
   update_node_bounds(node, rect)
   node.intersect = Some(node_intersect_rect(node))
   labelled.shape_svg

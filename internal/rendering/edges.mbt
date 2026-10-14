@@ -271,12 +271,16 @@ fn insert_edge(
   group : @dom.Element,
   edge : Edge,
   data : LayoutData,
+  path? : String,
 ) -> @dom.Element {
   let points = edge.points
   let points_attr = base64(points_json(points))
   let line_data = points.filter(p => !p.y.is_nan())
   let n = @dom.number
-  let line_path = if edge.curve == "rounded" {
+  let line_path = if path is Some(path) {
+    // Drawn by the caller, in a curve of its own.
+    path
+  } else if edge.curve == "rounded" {
     rounded_path(apply_marker_offsets(line_data, edge), 5.0)
   } else {
     // A straight line, where ELK returned no route.
@@ -344,8 +348,11 @@ fn insert_edge(
   .attr("data-et", "edge")
   .attr("data-id", edge.id)
   .attr("data-points", points_attr)
-  .attr("data-look", edge.look)
   |> ignore
+  // An edge without a look has no such attribute.
+  if edge.look != "" {
+    path.attr("data-look", edge.look) |> ignore
+  }
   let use_margin = !animated && edge.look == "neo"
   let stroke_color = stroke_color_of(path_style)
   add_edge_marker(

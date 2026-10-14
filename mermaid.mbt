@@ -261,6 +261,34 @@ fn parse_diagram(
         },
       }
     }
+    "block" => {
+      let db = @block.parse(code, config) catch {
+        @jison.ParseError(message~, ..) => raise Syntax(message)
+        @block.BlockError(message) => raise Syntax(message)
+        error => raise Syntax(error.to_string())
+      }
+      {
+        styles: @block.styles(
+          config.theme(),
+          config.text("theme").unwrap_or(""),
+          config.text("look").unwrap_or(""),
+        ),
+        // The block database keeps no accessibility text.
+        acc_title: "",
+        acc_description: "",
+        classes: db.classes
+        .values()
+        .map(c => { id: c.id, styles: c.styles, text_styles: c.text_styles, })
+        .collect(),
+        draw: context => {
+          @block.draw(db, context) catch {
+            @rendering.LayoutError(message) => raise Unsupported(message)
+            @block.BlockError(message) => raise Syntax(message)
+            error => raise Unsupported(error.to_string())
+          }
+        },
+      }
+    }
     other => raise Unsupported(other)
   }
 }

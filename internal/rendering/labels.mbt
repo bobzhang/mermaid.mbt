@@ -94,9 +94,15 @@ fn create_html_label(
     widest.max(runs_width(line, env))
   })
   let empty = lines.all(line => line.is_empty())
+  // A label wider than its limit is as wide as the limit, which the
+  // browser holds in layout units: a single precision number of pixels
+  // cut to a 64th.
   let mut box : LabelBox = {
     width: match width {
-      Some(width) => natural.min(width)
+      Some(width) =>
+        natural.min(
+          (Float::from_double(width) * 64.0).to_double().floor() / 64.0,
+        )
       None => natural
     },
     height: if empty {
@@ -176,10 +182,12 @@ fn label_helper(
   } else {
     0.0
   }
-  let label_width = if unlimited {
-    None
-  } else {
-    Some(node.width.unwrap_or(wrapping_width))
+  // `node.width || node.wrappingWidth || ...`: a width of zero is none,
+  // and a label told to wrap at infinity never does.
+  let label_width = match node.width {
+    _ if unlimited => None
+    Some(width) if width != 0.0 && !width.is_nan() => Some(width)
+    _ => if wrapping_width.is_inf() { None } else { Some(wrapping_width) }
   }
   let markdown = node.label_type == "markdown"
   let n = @dom.number

@@ -26,4 +26,14 @@ pub(all) enum NodeData {
   )
   /// An element of a requirement diagram.
   RequirementElement(name~ : String, type_~ : String, doc_ref~ : String)
+  /// A block of a block diagram, which draws every block twice: once to
+  /// measure it and once `positioned`, at the size its grid gives it.
+  /// `directions` are those a block arrow points in, `style` the inline
+  /// style of the outline of a composite or an arrow.
+  Block(
+    positioned~ : Bool,
+    directions~ : Array[String],
+    width_in_columns~ : Double,
+    style~ : String
+  )
 }
