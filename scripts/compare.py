@@ -9,6 +9,10 @@ any difference is reported with its first diverging position.
 A fixture the oracle itself rejects stores `<name>.error` instead, and the
 port is expected to fail on it too.
 
+A directory may hold `oracle-prelude.js`: JavaScript evaluated in the oracle
+page before its fixtures are rendered. That is how output upstream leaves to
+`Math.random()` (the ids of git graph commits) is made reproducible.
+
 Usage:
     scripts/compare.py                 # all fixtures
     scripts/compare.py testdata/pie    # one directory or file
@@ -27,6 +31,7 @@ import oracle  # noqa: E402
 ROOT = oracle.ROOT
 SVG_ID = "mermaid-svg"
 BATCH = 40
+PRELUDE = "oracle-prelude.js"
 
 
 def collect(paths):
@@ -53,17 +58,28 @@ def refresh(inputs, force):
         newest = max((r.stat().st_mtime for r in references if r.exists()), default=0)
         if force or newest < path.stat().st_mtime:
             stale.append(path)
-    for start in range(0, len(stale), BATCH):
-        batch = stale[start:start + BATCH]
-        jobs = [{"id": SVG_ID, "text": path.read_text()} for path in batch]
-        for path, result in zip(batch, oracle.run(jobs, {})):
-            svg, error = path.with_suffix(".svg"), path.with_suffix(".error")
-            svg.unlink(missing_ok=True)
-            error.unlink(missing_ok=True)
-            if "svg" in result:
-                svg.write_text(result["svg"])
-            else:
-                error.write_text(result["error"] + "\n")
+    # Fixtures of a directory holding PRELUDE are rendered after that
+    # JavaScript has run in the page.
+    groups = {}
+    for path in stale:
+        prelude = path.parent / PRELUDE
+        groups.setdefault(prelude if prelude.exists() else None, []).append(path)
+    for prelude, paths in groups.items():
+        expression = prelude.read_text() if prelude else None
+        for start in range(0, len(paths), BATCH):
+            batch = paths[start:start + BATCH]
+            jobs = [{"id": SVG_ID, "text": path.read_text()} for path in batch]
+            results = oracle.run(jobs, {}, expression)
+            if expression is not None:
+                results = results[1:]
+            for path, result in zip(batch, results):
+                svg, error = path.with_suffix(".svg"), path.with_suffix(".error")
+                svg.unlink(missing_ok=True)
+                error.unlink(missing_ok=True)
+                if "svg" in result:
+                    svg.write_text(result["svg"])
+                else:
+                    error.write_text(result["error"] + "\n")
     return len(stale)
 
 

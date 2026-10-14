@@ -1,0 +1,9 @@
+gitGraph BT:
+   commit
+   branch develop
+   commit id:"A" tag:"v1"
+   checkout main
+   commit
+   cherry-pick id:"A"
+   merge develop tag:"merged" type: HIGHLIGHT
+   commit type: REVERSE

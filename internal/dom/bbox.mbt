@@ -175,6 +175,14 @@ fn number_attr(element : Element, name : String) -> Float? {
 }
 
 ///|
+/// The value of a length attribute such as `x` or `width` as the browser
+/// holds it, in single precision; nothing when the attribute is missing
+/// or is not a number.
+pub fn Element::length_attr(self : Element, name : String) -> Double? {
+  number_attr(self, name).map(value => value.to_double())
+}
+
+///|
 /// Numbers separated by spaces or commas, read with the SVG number parser.
 fn svg_numbers(text : StringView) -> Array[Float] {
   let numbers = []
@@ -187,18 +195,209 @@ fn svg_numbers(text : StringView) -> Array[Float] {
   numbers
 }
 
+// An SVG `transform` attribute reaches layout as a CSS transform: Blink
+// turns the list into transform operations and applies them one by one to
+// a `gfx::Transform`. That class keeps a scale and a translation in
+// single precision for as long as nothing else is asked of it, and only a
+// rotation makes it a matrix of doubles. So `translate(a, b) rotate(...)`
+// adds its translations as floats before the rotation, and the float
+// rounding shows in the boxes of rotated labels.
+
 ///|
-/// The translation of a `transform` attribute. Only `translate(x, y)` is
-/// understood; that is the one transform the renderers position with.
-fn translation(element : Element) -> (Float, Float) {
-  guard element.get_attr("transform") is Some(transform) else { return (0, 0) }
-  guard transform.find("translate(") is Some(start) else { return (0, 0) }
-  let rest = transform[start + 10:]
-  guard rest.find(")") is Some(end) else { return (0, 0) }
-  match svg_numbers(rest[:end]) {
-    [x, y, ..] => (x, y)
-    [x] => (x, 0)
-    [] => (0, 0)
+/// A transform as `gfx::Transform` holds it.
+priv enum Transform {
+  /// `AxisTransform2d`: a scale, then a translation, in floats.
+  Axis(sx~ : Float, sy~ : Float, tx~ : Float, ty~ : Float)
+  /// The matrix `[a c e; b d f]` in doubles.
+  Full(
+    a~ : Double,
+    b~ : Double,
+    c~ : Double,
+    d~ : Double,
+    e~ : Double,
+    f~ : Double
+  )
+}
+
+///|
+/// `Transform::Translate`
+fn Transform::translate(self : Transform, x : Float, y : Float) -> Transform {
+  match self {
+    Axis(sx~, sy~, tx~, ty~) => Axis(sx~, sy~, tx=tx + x * sx, ty=ty + y * sy)
+    Full(a~, b~, c~, d~, e~, f~) => {
+      let x = x.to_double()
+      let y = y.to_double()
+      Full(a~, b~, c~, d~, e=a * x + c * y + e, f=b * x + d * y + f)
+    }
+  }
+}
+
+///|
+/// `Transform::Scale`
+fn Transform::scale(self : Transform, x : Float, y : Float) -> Transform {
+  match self {
+    Axis(sx~, sy~, tx~, ty~) => Axis(sx=sx * x, sy=sy * y, tx~, ty~)
+    Full(a~, b~, c~, d~, e~, f~) => {
+      let x = x.to_double()
+      let y = y.to_double()
+      Full(a=a * x, b=b * x, c=c * y, d=d * y, e~, f~)
+    }
+  }
+}
+
+///|
+/// `gfx::SinCosDegrees`: quarter turns are exact, everything else goes
+/// through the system's `sin` and `cos`.
+fn sin_cos_degrees(degrees : Double) -> (Double, Double) {
+  let quarters = degrees / 90.0
+  if quarters == quarters.trunc() && quarters.abs() < 2147483648.0 {
+    return match (quarters.to_int() % 4 + 4) % 4 {
+      0 => (0.0, 1.0)
+      1 => (1.0, 0.0)
+      2 => (0.0, -1.0)
+      _ => (-1.0, 0.0)
+    }
+  }
+  let radians = degrees * 3.141592653589793 / 180.0
+  (@jsmath.sin(radians), @jsmath.cos(radians))
+}
+
+///|
+/// `Transform::RotateAboutZAxis`: the first operation that needs the full
+/// matrix.
+fn Transform::rotate(self : Transform, degrees : Double) -> Transform {
+  let (sin, cos) = sin_cos_degrees(degrees)
+  if sin == 0.0 && cos == 1.0 {
+    return self
+  }
+  let (a, b, c, d, e, f) = self.matrix()
+  Full(
+    a=a * cos + c * sin,
+    b=b * cos + d * sin,
+    c=c * cos - a * sin,
+    d=d * cos - b * sin,
+    e~,
+    f~,
+  )
+}
+
+///|
+/// The matrix in doubles: `AffineTransform::FromTransform`.
+fn Transform::matrix(
+  self : Transform,
+) -> (Double, Double, Double, Double, Double, Double) {
+  match self {
+    Axis(sx~, sy~, tx~, ty~) =>
+      (sx.to_double(), 0.0, 0.0, sy.to_double(), tx.to_double(), ty.to_double())
+    Full(a~, b~, c~, d~, e~, f~) => (a, b, c, d, e, f)
+  }
+}
+
+///|
+/// Apply one function of a transform list. Nothing for a function or an
+/// argument count SVG does not define, and for `matrix`, `skewX` and
+/// `skewY`, which are not ported.
+fn Transform::apply(
+  self : Transform,
+  name : String,
+  arguments : Array[Float],
+) -> Transform? {
+  match (name, arguments) {
+    ("translate", [tx]) => Some(self.translate(tx, 0))
+    ("translate", [tx, ty]) => Some(self.translate(tx, ty))
+    ("scale", [s]) => Some(self.scale(s, s))
+    ("scale", [sx, sy]) => Some(self.scale(sx, sy))
+    ("rotate", [angle]) => Some(self.rotate(angle.to_double()))
+    // A rotation about a point is three operations.
+    ("rotate", [angle, cx, cy]) =>
+      Some(self.translate(cx, cy).rotate(angle.to_double()).translate(-cx, -cy))
+    ("matrix", [ma, mb, mc, md, me, mf]) => {
+      let (a, b, c, d, e, f) = self.matrix()
+      let v = Float::to_double
+      Some(
+        Full(
+          a=a * v(ma) + c * v(mb),
+          b=b * v(ma) + d * v(mb),
+          c=a * v(mc) + c * v(md),
+          d=b * v(mc) + d * v(md),
+          e=a * v(me) + c * v(mf) + e,
+          f=b * v(me) + d * v(mf) + f,
+        ),
+      )
+    }
+    _ => None
+  }
+}
+
+///|
+/// The transform of a `transform` attribute: its functions applied in
+/// order. A list that does not parse, or that uses a function that is
+/// not ported, transforms nothing.
+fn element_transform(element : Element) -> Transform {
+  let identity = Transform::Axis(sx=1, sy=1, tx=0, ty=0)
+  guard element.get_attr("transform") is Some(text) else { return identity }
+  let mut transform = identity
+  let mut rest = text[:]
+  while true {
+    rest = rest.trim_start(chars=" \t\n\r,")
+    if rest.is_empty() {
+      break
+    }
+    guard rest.find("(") is Some(open) else { return identity }
+    guard rest[open:].find(")") is Some(length) else { return identity }
+    let name = rest[:open].trim(chars=" \t\n\r").to_owned()
+    let arguments = []
+    for
+      part in rest[open + 1:open + length]
+      .to_owned()
+      .replace_all(old=",", new=" ")
+      .split(" ") {
+      let part = part.trim(chars=" \t\n\r")
+      if !part.is_empty() {
+        arguments.push(parse_svg_number(part))
+      }
+    }
+    guard transform.apply(name, arguments) is Some(next) else {
+      return identity
+    }
+    transform = next
+    rest = rest[open + length + 1:]
+  }
+  transform
+}
+
+///|
+/// `AffineTransform::MapRect`: a translation moves the box; anything else
+/// maps its four corners in doubles, rounds each to a float, and bounds
+/// them.
+fn Transform::map(self : Transform, bounds : Bounds) -> Bounds {
+  let to_float = Float::from_double
+  let (a, b, c, d, e, f) = self.matrix()
+  if a == 1.0 && b == 0.0 && c == 0.0 && d == 1.0 {
+    if e == 0.0 && f == 0.0 {
+      return bounds
+    }
+    return {
+      ..bounds,
+      x: to_float(bounds.x.to_double() + e),
+      y: to_float(bounds.y.to_double() + f),
+    }
+  }
+  let left = bounds.x.to_double()
+  let top = bounds.y.to_double()
+  let right = (bounds.x + bounds.width).to_double()
+  let bottom = (bounds.y + bounds.height).to_double()
+  let corners = PointBounds::new()
+  for corner in [(left, top), (right, top), (right, bottom), (left, bottom)] {
+    let (x, y) = corner
+    corners.add(to_float(a * x + c * y + e), to_float(b * x + d * y + f))
+  }
+  // `QuadF::BoundingBox`: the size is the plain difference of the edges.
+  {
+    x: corners.left,
+    y: corners.top,
+    width: corners.right - corners.left,
+    height: corners.bottom - corners.top,
   }
 }
 
@@ -289,15 +488,11 @@ fn Element::local_bounds(self : Element) -> Bounds? {
 }
 
 ///|
-/// The element's box in its parent's coordinate system: moved by its
-/// translation, size unchanged.
+/// The element's box in its parent's coordinate system: its own box
+/// mapped through its `transform`.
 fn Element::bounds(self : Element) -> Bounds? {
   guard self.local_bounds() is Some(bounds) else { return None }
-  let (dx, dy) = translation(self)
-  if dx == 0 && dy == 0 {
-    return Some(bounds)
-  }
-  Some({ ..bounds, x: bounds.x + dx, y: bounds.y + dy, })
+  Some(element_transform(self).map(bounds))
 }
 
 ///|

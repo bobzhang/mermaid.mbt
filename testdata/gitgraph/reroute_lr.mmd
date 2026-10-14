@@ -1,0 +1,23 @@
+gitGraph LR:
+   commit id: "1"
+   branch develop
+   commit id: "2"
+   branch feature
+   commit id: "3"
+   checkout main
+   commit id: "4"
+   checkout develop
+   commit id: "5"
+   checkout main
+   merge feature id: "6"
+   checkout develop
+   commit id: "7"
+   branch late
+   commit id: "8"
+   checkout feature
+   commit id: "9"
+   merge late id: "10"
+   checkout main
+   merge develop id: "11"
+   checkout late
+   merge main id: "12"

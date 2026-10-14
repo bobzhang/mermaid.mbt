@@ -9,8 +9,11 @@ keyword is one of `--keywords`, renders each with the oracle and with
 Shapes drawn through rough.js are random per render unless a seed is set,
 so both sides get `handDrawnSeed` from `--seed`.
 
+`--prelude` names JavaScript to evaluate in the oracle page first, for
+diagrams whose output upstream leaves to `Math.random()`.
+
 Usage: scripts/check_examples.py [docs.md ...] [--keywords flowchart graph]
-                                 [--seed 1] [--cache DIR] [-v]
+                                 [--seed 1] [--cache DIR] [--prelude FILE] [-v]
 """
 
 import argparse
@@ -48,15 +51,18 @@ def main():
     parser.add_argument("--keywords", nargs="+", default=["flowchart", "graph"])
     parser.add_argument("--seed", type=int, default=1)
     parser.add_argument("--cache", type=pathlib.Path, default=ROOT / ".repos" / "oracle" / "examples")
+    parser.add_argument("--prelude", type=pathlib.Path,
+                        help="JavaScript evaluated in the oracle page before rendering (see compare.py)")
     parser.add_argument("-v", "--verbose", action="store_true", help="show the first difference of each example")
     args = parser.parse_args()
 
     config = json.dumps({"handDrawnSeed": args.seed})
+    prelude = args.prelude.read_text() if args.prelude else ""
     sources = examples(args.docs, args.keywords)
     args.cache.mkdir(parents=True, exist_ok=True)
     inputs = []
     for source in sources:
-        digest = hashlib.sha256((config + source).encode()).hexdigest()[:16]
+        digest = hashlib.sha256((config + prelude + source).encode()).hexdigest()[:16]
         path = args.cache / f"{digest}.mmd"
         path.write_text(source)
         inputs.append(path)
@@ -64,7 +70,8 @@ def main():
     for start in range(0, len(missing), compare.BATCH):
         batch = missing[start:start + compare.BATCH]
         subprocess.run([sys.executable, str(ROOT / "scripts" / "oracle.py"), "--config", config,
-                        "-o", str(args.cache)] + [str(path) for path in batch], check=True)
+                        "-o", str(args.cache)] + (["--eval", prelude] if prelude else [])
+                       + [str(path) for path in batch], check=True, stdout=subprocess.DEVNULL)
 
     binary = compare.build()
     with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as handle:

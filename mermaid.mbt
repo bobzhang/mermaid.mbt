@@ -28,11 +28,14 @@ priv struct Parsed {
 }
 
 ///|
+/// `id` is the id of the `<svg>` element, for the stylesheets that address
+/// definitions inside it.
 fn parse_diagram(
   diagram_type : String,
   code : String,
   config : @config.Config,
   title : String?,
+  id : String,
 ) -> Parsed raise MermaidError {
   match diagram_type {
     "pie" => {
@@ -108,6 +111,32 @@ fn parse_diagram(
         },
       }
     }
+    "gitGraph" => {
+      let graph = @gitgraph.parse(code, config) catch {
+        @langium.ParseError(message~, ..) => raise Syntax(message)
+        @gitgraph.GitError(message) => raise Syntax(message)
+        @gitgraph.Unsupported(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      if title is Some(title) && graph.title == "" {
+        graph.set_title(title) catch {
+          @gitgraph.Unsupported(message) => raise Unsupported(message)
+        }
+      }
+      {
+        styles: @gitgraph.styles(config, "#" + id),
+        acc_title: graph.acc_title,
+        acc_description: graph.acc_description,
+        classes: [],
+        draw: context => {
+          @gitgraph.draw(graph, context) catch {
+            @gitgraph.GitError(message) => raise Syntax(message)
+            @gitgraph.Unsupported(message) => raise Unsupported(message)
+            error => raise Syntax(error.to_string())
+          }
+        },
+      }
+    }
     other => raise Unsupported(other)
   }
 }
@@ -158,6 +187,7 @@ pub fn render(
     @preprocess.encode_entities(processed.code) + "\n",
     config,
     processed.title,
+    id,
   )
   let style = @dom.Element::new("style").text(
     compiled_styles(id, parsed.styles, config, parsed.classes),

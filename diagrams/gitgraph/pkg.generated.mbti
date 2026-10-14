@@ -1,0 +1,61 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/diagrams/gitgraph"
+
+import {
+  "bobzhang/mermaid/config",
+  "bobzhang/mermaid/diagram",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn draw(GitGraph, @diagram.Context) -> Unit raise
+
+pub fn parse(String, @config.Config) -> GitGraph raise
+
+pub fn styles(@config.Config, String) -> String
+
+// Errors
+pub(all) suberror GitError {
+  GitError(String)
+} derive(Eq, @debug.Debug)
+
+pub(all) suberror Unsupported {
+  Unsupported(String)
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+pub struct Commit {
+  id : String
+  message : String
+  seq : Int
+  kind : CommitType
+  tags : Array[String]
+  parents : Array[String]
+  branch : String
+  custom_type : CommitType?
+  custom_id : Bool
+}
+
+pub(all) enum CommitType {
+  Normal
+  Reverse
+  Highlight
+  Merge
+  CherryPick
+} derive(Eq, @debug.Debug)
+
+pub struct GitGraph {
+  commits : Map[String, Commit]
+  mut direction : String
+  mut title : String
+  mut acc_title : String
+  mut acc_description : String
+  // private fields
+}
+pub fn GitGraph::branch_names(Self) -> Array[String]
+pub fn GitGraph::dump(Self) -> Json
+pub fn GitGraph::set_title(Self, String) -> Unit raise Unsupported
+
+// Type aliases
+
+// Traits
