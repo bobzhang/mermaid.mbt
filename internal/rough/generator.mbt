@@ -58,6 +58,25 @@ fn draw(sets : Array[OpSet], o : Options, even_odd : Bool) -> @dom.Element {
           path.attr("fill-rule", "evenodd") |> ignore
         }
       }
+      FillSketch => {
+        let weight = if o.fill_weight < 0.0 {
+          stroke_width(o) / 2.0
+        } else {
+          o.fill_weight
+        }
+        path
+        .attr("stroke", o.fill)
+        .attr("stroke-width", @dom.number(weight))
+        .attr("fill", "none")
+        |> ignore
+        if o.fill_line_dash is Some(dash) {
+          path.attr(
+            "stroke-dasharray",
+            dash.map(@dom.number).join(" ").trim().to_owned(),
+          )
+          |> ignore
+        }
+      }
     }
   }
   group
@@ -110,6 +129,9 @@ pub fn path(d : String, options : Options) -> @dom.Element {
     } else {
       sets.push({ kind: FillPath, ops: solid_fill_polygon(polygons, o), })
     }
+  } else if filled {
+    // Every other style is drawn as hachure.
+    sets.push({ kind: FillSketch, ops: hachure_fill(polygons, o), })
   }
   if has_stroke(o) {
     sets.push({ kind: Stroke, ops: shape, })

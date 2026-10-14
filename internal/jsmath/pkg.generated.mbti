@@ -20,6 +20,8 @@ pub fn pow10(Int) -> Double
 
 pub fn sin(Double) -> Double
 
+pub fn tan(Double) -> Double
+
 // Errors
 
 // Types and methods

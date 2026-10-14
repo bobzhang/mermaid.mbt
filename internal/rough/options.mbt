@@ -24,6 +24,14 @@ pub(all) struct Options {
   mut preserve_vertices : Bool
   mut fill_shape_roughness_gain : Double
   mut stroke_line_dash : Array[Double]?
+  /// The hachure fill: the width of its lines (negative: half the stroke
+  /// width), their angle in degrees, the gap between them (negative: four
+  /// stroke widths), whether they are drawn once, and their dashes.
+  mut fill_weight : Double
+  mut hachure_angle : Double
+  mut hachure_gap : Double
+  mut disable_multi_stroke_fill : Bool
+  mut fill_line_dash : Array[Double]?
   priv mut randomizer : Randomizer?
 }
 
@@ -46,6 +54,11 @@ pub fn Options::new() -> Options {
     preserve_vertices: false,
     fill_shape_roughness_gain: 0.8,
     stroke_line_dash: None,
+    fill_weight: -1.0,
+    hachure_angle: -41.0,
+    hachure_gap: -1.0,
+    disable_multi_stroke_fill: false,
+    fill_line_dash: None,
     randomizer: None,
   }
 }
