@@ -26,6 +26,8 @@ pub fn draw(
   context : @diagram.Context,
 ) -> Unit raise MindmapError {
   let config = context.config
+  // Without a node upstream returns before anything is laid out.
+  guard db.root() is Some(_) else { return }
   let layout = layout_algorithm(config)
   if layout.has_prefix("elk") {
     // Upstream's ELK layout fails on what the mindmap hands it.
@@ -37,7 +39,6 @@ pub fn draw(
   if config.text("look") == Some("handDrawn") {
     raise Unsupported("The hand-drawn look is not supported yet.")
   }
-  guard db.root() is Some(_) else { return }
   let (nodes, edges) = db.layout_data()
   let data : @rendering.LayoutData = {
     nodes,
