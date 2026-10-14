@@ -1,0 +1,4 @@
+Parse error on line 2:
+venn-beta  accTitle: x  set A
+-----------^
+Expecting 'EOF', 'NEWLINE', 'TITLE', 'SET', 'UNION', 'TEXT', 'INDENT_TEXT', 'STYLE', got 'IDENTIFIER'

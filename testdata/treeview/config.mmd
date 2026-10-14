@@ -1,0 +1,23 @@
+---
+config:
+    treeView:
+        rowIndent: 80
+        lineThickness: 3
+        paddingX: 7.5
+        paddingY: 2.25
+        useMaxWidth: false
+    themeVariables:
+        treeView:
+            labelFontSize: '20px'
+            labelColor: '#FF0000'
+            lineColor: '#00FF00'
+            iconColor: blue
+            descriptionColor: '#123456'
+            highlightBg: 'rgb(1, 2, 3)'
+            highlightStroke: red
+---
+treeView-beta
+    "packages"
+        "mermaid" icon(folder) ## the library
+            "src" :::highlight
+        "parser"

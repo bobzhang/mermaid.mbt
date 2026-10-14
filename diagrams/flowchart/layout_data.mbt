@@ -1,6 +1,6 @@
 ///|
 /// The styles of several classes, in order: mermaid's `getCompiledStyles`.
-fn FlowDb::compiled_styles(
+pub fn FlowDb::compiled_styles(
   self : FlowDb,
   class_names : Array[String],
 ) -> Array[String] {
@@ -41,7 +41,7 @@ fn vertex_shape(vertex : Vertex) -> String {
 
 ///|
 /// The markers at the two ends of an edge type.
-fn arrow_types(kind : String?) -> (String, String) {
+pub fn arrow_types(kind : String?) -> (String, String) {
   match kind {
     Some("arrow_point" | "arrow_circle" | "arrow_cross" as kind) =>
       ("none", kind)
@@ -168,6 +168,9 @@ fn FlowDb::layout_data(
         is_group=!collapsed,
         look~,
         color_index?=declaration_index.get(sg.id),
+        // An expanded subgraph hands its metadata to the layout, which may
+        // read an `algorithm` of its own from it.
+        data=if collapsed { Plain } else { Container(metadata=sg.metadata) },
       ),
     )
   }
@@ -235,34 +238,50 @@ fn FlowDb::layout_data(
     }
     let invisible = raw.stroke == Some("invisible")
     let open = invisible || raw.kind == Some("arrow_open")
-    edges.push(
-      @rendering.Edge::new(
-        id=edge_id(
-          start,
-          end,
-          counter=index,
-          id?=if raw.id == "" { None } else { Some(raw.id) },
-        ),
-        start~,
-        end~,
-        label=raw.text,
-        label_type=raw.label_type,
-        thickness=raw.stroke.unwrap_or("normal"),
-        pattern=raw.stroke.unwrap_or("normal"),
-        classes=if invisible {
-          ""
-        } else {
-          "edge-thickness-normal edge-pattern-solid flowchart-link"
-        },
-        arrow_type_start=if open { "none" } else { arrow_start },
-        arrow_type_end=if open { "none" } else { arrow_end },
-        css_compiled_styles=self.compiled_styles(raw.classes),
-        style=styles,
-        look~,
-        animate=raw.animate == Some(true),
-        animation?=raw.animation,
+    let edge = @rendering.Edge::new(
+      id=edge_id(
+        start,
+        end,
+        counter=index,
+        id?=if raw.id == "" { None } else { Some(raw.id) },
       ),
+      start~,
+      end~,
+      label=raw.text,
+      label_type=raw.label_type,
+      thickness=raw.stroke.unwrap_or("normal"),
+      pattern=raw.stroke.unwrap_or("normal"),
+      classes=if invisible {
+        ""
+      } else {
+        "edge-thickness-normal edge-pattern-solid flowchart-link"
+      },
+      arrow_type_start=if open { "none" } else { arrow_start },
+      arrow_type_end=if open { "none" } else { arrow_end },
+      css_compiled_styles=self.compiled_styles(raw.classes),
+      style=styles,
+      look~,
+      animate=raw.animate == Some(true),
+      animation?=raw.animation,
+      // `minlen: rawEdge.length`, which is set even when undefined.
+      minlen=match raw.length {
+        Some(length) => length.to_double()
+        None => 0.0 / 0.0
+      },
+      labelpos="c",
+      // `rawEdge.interpolate || defaultInterpolate || flowchart.curve`, the
+      // curve the dagre layout draws the edge in.
+      curve=[
+          raw.interpolate,
+          self.default_interpolate,
+          config.text("flowchart.curve"),
+        ]
+        .iter()
+        .filter_map(curve => curve)
+        .find_first(curve => curve != "")
+        .unwrap_or(""),
     )
+    edges.push(edge)
   }
   (nodes, edges)
 }

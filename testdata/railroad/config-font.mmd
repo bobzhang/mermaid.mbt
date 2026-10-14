@@ -1,0 +1,5 @@
+---
+config: {"railroad": {"fontSize": 13.7, "fontFamily": "Verdana, arial"}}
+---
+railroad-beta
+rule = sequence(terminal("lit"), choice(nonterminal("name"), special("any")), optional(terminal("x")), zeroOrMore(nonterminal("y"))) ;

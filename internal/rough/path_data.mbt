@@ -352,15 +352,37 @@ fn normalize(segments : Array[Segment]) -> Array[Segment] {
         cy = y
       }
       'A' => {
+        let r1 = data[0].abs()
+        let r2 = data[1].abs()
         let x = data[5]
         let y = data[6]
-        if data[0].abs() == 0.0 || data[1].abs() == 0.0 {
+        if r1 == 0.0 || r2 == 0.0 {
           out.push({ key: 'C', data: [cx, cy, x, y, x, y], })
+          cx = x
+          cy = y
         } else if cx != x || cy != y {
-          out.push({ key: 'L', data: [x, y], })
+          let points = arc_to_cubic_curves(
+            cx,
+            cy,
+            x,
+            y,
+            r1,
+            r2,
+            data[2],
+            data[3],
+            data[4],
+          )
+          let mut i = 0
+          while i + 2 < points.length() {
+            let (a, b) = points[i]
+            let (c, d) = points[i + 1]
+            let (e, f) = points[i + 2]
+            out.push({ key: 'C', data: [a, b, c, d, e, f], })
+            i += 3
+          }
+          cx = x
+          cy = y
         }
-        cx = x
-        cy = y
       }
       _ => {
         out.push({ key: 'Z', data: [], })

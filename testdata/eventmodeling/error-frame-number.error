@@ -1,0 +1,11 @@
+Parsing failed:  Parse error on line 2, column 7: Expecting: one of these possible Token sequences:
+  1. [rmo]
+  2. [readmodel]
+  3. [ui]
+  4. [cmd]
+  5. [command]
+  6. [evt]
+  7. [event]
+  8. [pcr]
+  9. [processor]
+but found: '4'

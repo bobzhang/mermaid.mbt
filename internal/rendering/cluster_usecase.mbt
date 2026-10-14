@@ -8,7 +8,7 @@ fn usecase_system_boundary(
   parent : @dom.Element,
   node : Node,
   env : Env,
-) -> Unit {
+) -> ClusterFrame {
   let boundary_type = match node.data {
     Usecase(boundary_type~, ..) if boundary_type != "" => boundary_type
     _ => "rect"
@@ -127,7 +127,15 @@ fn usecase_system_boundary(
       }
     }
   }
+  // How much the title widened the frame, for dagre.
+  let diff = if node_width <= box.width + node.padding {
+    (width - node_width) / 2.0 - node.padding
+  } else {
+    -node.padding
+  }
   node.width = Some(width)
   node.height = Some(height)
   node.label_box = Some((box.width, box.height))
+  // The tab and the body together are the frame.
+  { outline: shape_svg, diff: Some(diff), width: Some(width), }
 }

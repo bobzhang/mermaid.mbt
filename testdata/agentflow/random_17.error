@@ -1,0 +1,4 @@
+Parse error on line 7:
+...}  end  flow f6[""]    n3["A"]    n4
+---------------------^
+Expecting 'TAGEND', 'STR', 'MD_STR', 'UNICODE_TEXT', 'TEXT', 'TAGSTART', got 'SQE'

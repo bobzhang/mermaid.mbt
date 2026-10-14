@@ -1,0 +1,14 @@
+---
+config:
+  layout: dagre
+  theme: redux-color
+  handDrawnSeed: 7
+---
+flowchart TB
+  subgraph empty [Nothing inside]
+  end
+  subgraph one [One node]
+    a
+  end
+  b --> empty
+  a --> b

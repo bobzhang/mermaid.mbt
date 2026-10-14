@@ -1,0 +1,3 @@
+Parsing failed:  Parse error on line 2, column 10: Expecting token of type 'EM_ID' but found `data`.
+Parse error on line 2, column 14: Expecting token of type 'EM_ID' but found `.`.
+Parse error on line ?, column ?: Expecting token of type 'EM_DATA_BLOCK' but found ``.

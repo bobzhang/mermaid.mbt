@@ -24,6 +24,8 @@ let usage : String =
   #|  elk-graph <file.mmd> [--config site.json]
   #|                         print the graph a diagram hands to ELK and the
   #|                         layout that came back, one JSON document a line
+  #|  dagre <graphs.json>... lay out graphs with the port of dagre, one JSON
+  #|                         document a line (see scripts/dagre_oracle.js)
   #|  dates <cases.json>     evaluate Date operations in the emulated time zone
   #|  time <cases.json>      evaluate dayjs and d3 time operations
   #|  format <cases.json>    format numbers; cases are {specifier, value}
@@ -470,6 +472,7 @@ fn main {
       ["usecase-db", .. paths] => usecase_db(paths)
       ["elk-graph", path, .. options] => elk_graph(path, options)
       ["path-length", path] => path_lengths(path)
+      ["dagre", .. paths] => dagre(paths)
       ["dates", path] => dates(path)
       ["time", path] => time_cases(path)
       ["format", path] => formats(path)

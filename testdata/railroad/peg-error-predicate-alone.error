@@ -1,0 +1,6 @@
+Parsing failed:  Parse error on line 2, column 8: Expecting: one of these possible Token sequences:
+  1. [PEG_STRING]
+  2. [PEG_ID]
+  3. [(]
+  4. [.]
+but found: ';'

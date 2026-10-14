@@ -292,14 +292,10 @@ fn insert_edge(
   } else if edge.curve == "rounded" {
     rounded_path(apply_marker_offsets(line_data, edge), 5.0)
   } else {
-    // A straight line, where ELK returned no route.
-    let shortened = apply_marker_offsets(line_data, edge)
-    let path = StringBuilder()
-    for i, p in shortened {
-      path.write_string(if i == 0 { "M" } else { "L" })
-      path.write_string("\{n(p.x)},\{n(p.y)}")
-    }
-    path.to_string()
+    // A straight line, where ELK returned no route: `d3.line`, whose
+    // path keeps three decimals.
+    let points = offset_line_points(fix_corners(line_data), edge)
+    @d3.line("linear", points).unwrap_or("")
   }
   let thickness = match edge.thickness {
     "thick" => "edge-thickness-thick"

@@ -161,6 +161,12 @@ pub struct Edge {
   start_label_right : String
   end_label_left : String
   end_label_right : String
+  /// How many ranks the edge spans at least, and where its label goes
+  /// along it (`l`, `c` or `r`), for the dagre layout; `None` when the
+  /// diagram leaves them unset. A length that is not a number is one set
+  /// to `undefined`.
+  minlen : Double?
+  labelpos : String?
   // Filled in while measuring and laying out.
   priv terminals : Array[TerminalLabel]
   mut label_style : String
@@ -194,6 +200,9 @@ pub fn Edge::new(
   start_label_right~ : String = "",
   end_label_left~ : String = "",
   end_label_right~ : String = "",
+  minlen? : Double,
+  labelpos? : String,
+  curve~ : String = "",
 ) -> Edge {
   {
     id,
@@ -215,9 +224,11 @@ pub fn Edge::new(
     start_label_right,
     end_label_left,
     end_label_right,
+    minlen,
+    labelpos,
     terminals: [],
     label_style: "",
-    curve: "",
+    curve,
     points: [],
     width: 0.0,
     height: 0.0,

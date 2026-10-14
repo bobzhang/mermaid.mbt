@@ -1,0 +1,7 @@
+Parsing failed:  Parse error on line 2, column 11: Expecting: one of these possible Token sequences:
+  1. [STRING]
+  2. [ID]
+  3. [NAME_WITH_SPACES]
+but found: 'size'
+Parse error on line 2, column 15: Expecting token of type '[' but found `able`.
+Parse error on line 2, column 21: Expecting token of type 'INT' but found `0.5`.

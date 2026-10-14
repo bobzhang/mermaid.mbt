@@ -1,0 +1,11 @@
+agentflow-beta TB
+  flow outer["Outer"]
+    flow inner["Inner"]
+      a --> b
+    end
+    c
+  end
+  x --> inner
+  inner --> c
+  b --> outer
+  outer --> y

@@ -1,6 +1,6 @@
 ///|
 /// The themes whose palettes color subgraphs by slot.
-fn is_color_theme(theme_name : String, palette : Json) -> Bool {
+pub fn is_color_theme(theme_name : String, palette : Json) -> Bool {
   theme_name is ("redux-color" | "redux-dark-color") &&
   palette is Array([_, ..])
 }
@@ -19,7 +19,8 @@ fn safe_look(look : String) -> String {
 }
 
 ///|
-fn palette_color(palette : Json, index : Int32) -> String {
+/// The colour of a palette slot, cycling.
+pub fn palette_color(palette : Json, index : Int32) -> String {
   match palette {
     Array(colors) if colors.length() > 0 =>
       match colors[index % colors.length()] {
@@ -104,7 +105,7 @@ fn color_sections(
 
 ///|
 /// `color` at the given opacity, as khroma prints it.
-fn fade(color : String, opacity : Double) -> String {
+pub fn fade(color : String, opacity : Double) -> String {
   let channels = @color.Channels::parse(color) catch { _ => return color }
   let round = (v : Double) => (v * 10000000000.0 + 0.5).floor() / 10000000000.0
   @color.rgba(

@@ -68,7 +68,7 @@ def refresh(inputs, force):
         expression = prelude.read_text() if prelude else None
         for start in range(0, len(paths), BATCH):
             batch = paths[start:start + BATCH]
-            jobs = [{"id": SVG_ID, "text": path.read_text()} for path in batch]
+            jobs = [{"id": SVG_ID, "text": path.read_text(newline="")} for path in batch]
             results = oracle.run(jobs, {}, expression)
             if expression is not None:
                 results = results[1:]
@@ -77,7 +77,7 @@ def refresh(inputs, force):
                 svg.unlink(missing_ok=True)
                 error.unlink(missing_ok=True)
                 if "svg" in result:
-                    svg.write_text(result["svg"])
+                    svg.write_text(result["svg"], newline="")
                 else:
                     error.write_text(result["error"] + "\n")
     return len(stale)
@@ -97,10 +97,13 @@ def build():
 
 
 def render(binary, path):
-    done = subprocess.run([str(binary), "render", str(path), "--id", SVG_ID], capture_output=True, text=True)
+    # Bytes, not text mode: universal newlines would hide a CR the port
+    # writes differently.
+    done = subprocess.run([str(binary), "render", str(path), "--id", SVG_ID], capture_output=True)
+    stdout = done.stdout.decode()
     if done.returncode != 0:
-        return None, done.stdout.strip()
-    return done.stdout.removesuffix("\n"), None
+        return None, stdout.strip()
+    return stdout.removesuffix("\n"), None
 
 
 def first_difference(a, b):
@@ -124,7 +127,8 @@ def main():
     binary = build()
     failures = 0
     for path in inputs:
-        name = path.relative_to(ROOT) if path.is_absolute() else path
+        # Inputs outside the checkout (scratch files) keep their full path.
+        name = path.relative_to(ROOT) if path.is_absolute() and path.is_relative_to(ROOT) else path
         actual, error = render(binary, path)
         expected_path = path.with_suffix(".svg")
         if not expected_path.exists():
@@ -133,7 +137,7 @@ def main():
             failures += 1
             print(f"FAIL {name}: the oracle rejects this diagram, the port renders it")
             continue
-        expected = expected_path.read_text()
+        expected = expected_path.read_text(newline="")
         if actual == expected:
             continue
         failures += 1

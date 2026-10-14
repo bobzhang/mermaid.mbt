@@ -10,7 +10,7 @@ pub fn draw(
   // Only `elk` names the layered ELK layout; every other name, known or
   // not, ends in another engine upstream.
   let layout = config.text("layout").unwrap_or("elk")
-  if layout != "elk" {
+  if layout != "elk" && !@rendering.is_dagre_layout(layout) {
     raise @rendering.LayoutError("The \{layout} layout is not supported yet.")
   }
   if config.text("look") == Some("handDrawn") {

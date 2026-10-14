@@ -1,0 +1,3 @@
+Parsing failed:  Parse error on line 2, column 6: Expecting: expecting at least one iteration which starts with one of these possible Token sequences::
+  <[&] ,[!] ,[PEG_STRING] ,[PEG_ID] ,[(] ,[.]>
+but found: ';'

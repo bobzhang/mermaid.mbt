@@ -1,0 +1,2 @@
+Parsing failed: Lexer error on line 2, column 6: unexpected character: ->[<- at offset: 23, skipped 1 characters.
+Lexer error on line 2, column 10: unexpected character: ->]<- at offset: 27, skipped 1 characters. 

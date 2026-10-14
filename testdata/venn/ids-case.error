@@ -1,0 +1,4 @@
+Parse error on line 7:
+...ILL: red    TEXT t1
+----------------------^
+Expecting 'NUMERIC', 'IDENTIFIER', 'STRING', 'COMMA', got 'NEWLINE'

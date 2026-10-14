@@ -1,0 +1,19 @@
+---
+config:
+  look: handDrawn
+  handDrawnSeed: 6
+---
+venn-beta
+  set A
+  set B
+  set C
+  union A,B["AB"]
+  union A,C
+  union A,B,C
+  style A fill:#ff6b6b, stroke: red, stroke-width: 3, fill-opacity: 0.50, color: navy
+  style B fill: rgb(10, 200, 30), stroke: rgba(0,0,0,0.5)
+  style C stroke-width: "2.5px", color: #abc
+  style A,B color:#333, fill: yellow
+  style A,C fill: #12345678
+  style C,B,A color: "red"
+  style B fill-opacity: .25

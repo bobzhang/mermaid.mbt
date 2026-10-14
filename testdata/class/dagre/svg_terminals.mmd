@@ -1,0 +1,12 @@
+---
+config:
+  layout: dagre
+  htmlLabels: false
+  handDrawnSeed: 7
+---
+classDiagram
+  direction LR
+  Library "1" o-- "0..*" Book : holds
+  Book "1..*" --> "1" Author : written by
+  Member "0..1" --> "*" Book : borrows
+  Library --> Member

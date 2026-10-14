@@ -65,6 +65,10 @@ pub(all) enum NodeData {
     font_size~ : Double,
     bold~ : Bool
   )
+  /// A container of an agentflow, expanded or collapsed, with its
+  /// `@{ ... }` metadata: `algorithm` picks the layout of its children,
+  /// `containerType` the look of the collapsed node.
+  Container(metadata~ : Map[String, Json])
   /// An element of a use case diagram: the type the stylesheet sets its
   /// label in, if it sets one, and what its shape draws besides the
   /// label: the slash of a business element, a stereotype, an icon, the

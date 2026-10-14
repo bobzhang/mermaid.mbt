@@ -1,5 +1,6 @@
 import {
   "moonbitlang/core/string",
+  "bobzhang/mermaid/internal/d3",
   "bobzhang/mermaid/internal/dom",
   "bobzhang/mermaid/internal/jsmath",
 }

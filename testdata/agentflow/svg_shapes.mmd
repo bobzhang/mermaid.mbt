@@ -1,0 +1,15 @@
+---
+config:
+  handDrawnSeed: 1
+  htmlLabels: false
+---
+agentflow-beta LR
+  a["Task with a long label that wraps"]@{ shape: task }
+  b["Tool"]@{ shape: tool }
+  c["Is it?"]@{ shape: decision }
+  d["Input"]@{ shape: input }
+  e["Ref"]@{ shape: refdoc }
+  f["Act"]@{ shape: action }
+  connector g["Conn"]
+  a --> b --> c --> d --> e --> f --> g
+  c -- yes --> a
