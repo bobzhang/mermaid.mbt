@@ -1,0 +1,20 @@
+---
+config:
+  handDrawnSeed: 7
+  htmlLabels: false
+---
+stateDiagram-v2
+    classDef big font-size:20px,font-style:italic
+    classDef fam font-family:verdana,font-weight:600
+    A : a label that is long enough to pass the minimum width
+    B : another label that is long enough to pass the minimum
+    C : plain label that is long enough to pass the minimum
+    class A big
+    class B fam
+    A --> B
+    B --> C
+    style C font-weight:500,font-size:17px
+    D : title
+    D : description line
+    class D big
+    C --> D

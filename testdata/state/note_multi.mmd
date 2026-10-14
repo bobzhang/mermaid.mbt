@@ -1,0 +1,16 @@
+---
+config:
+  handDrawnSeed: 7
+
+---
+stateDiagram-v2
+    [*] --> A
+    note right of A
+        first
+    end note
+    note left of A : second
+    A --> B
+    note right of B : on b
+    note left of B
+       a longer note with many words that should wrap after a while really
+    end note

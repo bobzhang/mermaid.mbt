@@ -228,6 +228,9 @@ priv struct Env {
   /// Whether the diagram's stylesheet anchors the SVG text of node labels
   /// in the middle, as the flowchart's does.
   node_text_middle : Bool
+  /// Whether the label being measured is bold or italic as a whole.
+  bold : Bool
+  italic : Bool
 }
 
 ///|
@@ -268,6 +271,8 @@ fn Env::new(
     font_size: size,
     html_labels,
     node_text_middle,
+    bold: false,
+    italic: false,
   }
 }
 
@@ -278,5 +283,9 @@ fn Env::font(
   bold~ : Bool = false,
   italic~ : Bool = false,
 ) -> @font.Stack {
-  @font.Stack::for_family(self.font_family, bold~, italic~)
+  @font.Stack::for_family(
+    self.font_family,
+    bold=bold || self.bold,
+    italic=italic || self.italic,
+  )
 }

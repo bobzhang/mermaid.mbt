@@ -1,0 +1,19 @@
+---
+config:
+  handDrawnSeed: 7
+  htmlLabels: false
+  look: classic
+---
+stateDiagram-v2
+    [*] --> Active
+    state Active {
+        [*] --> NumLockOff
+        NumLockOff --> NumLockOn : EvNumLockPressed
+        --
+        [*] --> CapsLockOff
+        CapsLockOff --> CapsLockOn : EvCapsLockPressed
+    }
+    note right of Active
+      A note
+      over lines
+    end note

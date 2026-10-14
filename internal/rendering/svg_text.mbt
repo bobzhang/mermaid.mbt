@@ -305,7 +305,10 @@ fn create_svg_label(
   add_background~ : Bool = false,
   markdown~ : Bool = false,
   anchor_middle~ : Bool = !is_node,
+  is_title~ : Bool = false,
 ) -> SvgLabel {
+  // The style is written on the text, which is laid out with it.
+  let env = env.styled(style, faces=false)
   let structured = if markdown {
     markdown_to_lines(
       @dom.sanitized_text(@dom.placeholders_to_references(text)),
@@ -388,8 +391,9 @@ fn create_svg_label(
     |> ignore
     element.attr("style", text_style) |> ignore
   }
+  let row = if is_title { "title-row" } else { "row" }
   for tspan in element.child_elements() {
-    tspan.attr("class", "text-outer-tspan row") |> ignore
+    tspan.attr("class", "text-outer-tspan \{row}") |> ignore
   }
   { group, text_box: box, }
 }

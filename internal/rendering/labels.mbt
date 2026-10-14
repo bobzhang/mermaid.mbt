@@ -49,6 +49,8 @@ fn create_html_label(
   let span = div.append("span")
   span.set_inner_html(html)
   let label_style = style.replace(old="fill:", new="color:")
+  // The style is written on the label, so its text is laid out with it.
+  let env = env.styled(label_style)
   if label_style != "" {
     span.attr("style", label_style) |> ignore
   }

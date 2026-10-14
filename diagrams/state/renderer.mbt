@@ -71,6 +71,18 @@ pub fn draw(
   if look == "handDrawn" {
     raise @rendering.LayoutError("The hand-drawn look is not supported yet.")
   }
+  // Relative font sizes compound over the elements of a label.
+  for node in db.nodes {
+    for style in [..node.css_compiled_styles, ..node.css_styles] {
+      let style = style.replace_all(old=" ", new="")
+      if style.has_prefix("font-size:") &&
+        !style.replace_all(old="!important", new="").has_suffix("px") {
+        raise @rendering.LayoutError(
+          "Font sizes in units other than px are not supported yet.",
+        )
+      }
+    }
+  }
   let (nodes, edges) = db.layout_data()
   let data : @rendering.LayoutData = {
     nodes,
