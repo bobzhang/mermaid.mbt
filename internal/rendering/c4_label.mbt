@@ -62,12 +62,12 @@ fn c4_label_helper(
     let element = label.append("g").attr("class", section.1)
     let section_env = section_env(env, section.1)
     // Lines are broken while every word still carries the weight
-    // attribute `createText` writes, which overrides the bold of a name:
-    // the breaks are those of regular text.
+    // attribute `createText` writes, which overrides whatever weight the
+    // stylesheet gives the label: the breaks are those of regular text.
     let text = create_svg_label(
       element,
       section.0,
-      { ..section_env, bold: env.bold, },
+      { ..section_env, bold: false, },
       width?,
       style=node.label_style,
       anchor_middle=true,

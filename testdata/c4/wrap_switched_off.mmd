@@ -1,0 +1,11 @@
+---
+config:
+  wrap: true
+  c4:
+    wrap: false
+---
+C4Context
+Boundary(b, "A boundary with a long name that could wrap when it is too long for the width it is given") {
+  Person(a, "A person with a very long name that does not wrap", "Described at length, more than fits in a line of the usual width")
+}
+Rel(a, a, "A long label on a relationship that would be wrapped")
