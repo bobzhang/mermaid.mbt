@@ -39,7 +39,16 @@ fn ceil_layout_unit(value : Float) -> Double {
 ///|
 /// Font ascent and descent in pixels. Blink rounds each to a whole pixel.
 pub fn Face::ascent(self : Face, size : Double) -> Double {
-  round_half_up(self.ascent.to_double() * size / self.units_per_em.to_double())
+  let ascent = round_half_up(
+    self.ascent.to_double() * size / self.units_per_em.to_double(),
+  )
+  if self.mac_ascent_adjustment {
+    // `ascent += floorf((ascent + descent) * 0.15f + 0.5f)`
+    let line = Float::from_double(ascent + self.descent(size))
+    ascent + (line * 0.15 + 0.5).to_double().floor()
+  } else {
+    ascent
+  }
 }
 
 ///|
@@ -179,11 +188,16 @@ fn Stack::ligated(self : Stack, text : StringView) -> Array[Char] {
 
 ///|
 /// The stack of the font a page falls back to when a style names no
-/// family the browser accepts: Times on the reference system. Its line
-/// metrics are those of the font file; the reference browser raises the
-/// ascent of this family by 15% of the line, which nothing here reads.
+/// family the browser accepts: Times on the reference system.
 pub fn Stack::page_default() -> Stack {
   { faces: [times_regular], }
+}
+
+///|
+/// The stack of the generic `sans-serif` family: Helvetica on the
+/// reference system.
+pub fn Stack::sans_serif() -> Stack {
+  { faces: [helvetica_regular], }
 }
 
 ///|

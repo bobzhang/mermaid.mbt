@@ -2,13 +2,13 @@
 
 ///|
 /// mermaid's `calculateTextWidth` with the diagram's configuration: the
-/// rounded width of each line as SVG text in the configured font, the
-/// widest line counting. Upstream also measures in `sans-serif` and takes
-/// that when it is larger in every dimension, which the equal line heights
-/// of the fonts involved rule out.
+/// text is drawn as SVG text in `sans-serif` and in the configured font,
+/// line by line, and the rounded width of its widest line in the
+/// configured font is the answer, unless the text comes out larger in
+/// every dimension in `sans-serif`.
 ///
 /// The default `fontFamily` ends in a semicolon, which the browser rejects
-/// as a style value, so the text is measured in the page's own font.
+/// as a style value, so that measurement is in the page's own font.
 fn calculate_text_width(text : String, config : @config.Config) -> Double {
   if text == "" {
     return 0.0
@@ -25,24 +25,42 @@ fn calculate_text_width(text : String, config : @config.Config) -> Double {
     }
     _ => 12.0
   }
-  let stack = match config.text("fontFamily") {
+  let configured = match config.text("fontFamily") {
     Some(family) if !family.contains(";") => @font.Stack::for_family(family)
     _ => @font.Stack::page_default()
   }
-  let mut width = 0.0
-  for line in normalize_breaks(text).split("\n") {
-    // White space collapses as in any SVG text.
-    let words = []
-    for word in line.split(" ") {
-      if !word.is_empty() {
-        words.push(word.to_owned())
+  // `Math.round`
+  let round = (value : Double) => (value + 0.5).floor()
+  // Width, height and line height of the text in one font.
+  let dimensions = (stack : @font.Stack) => {
+    let mut width = 0.0
+    let mut height = 0.0
+    let mut line_height = 0.0
+    for line in normalize_breaks(text).split("\n") {
+      // White space collapses as in any SVG text, and soft hyphens do not
+      // show.
+      let words = []
+      for word in line.split(" ") {
+        let word = word.to_owned().replace_all(old="\u{ad}", new="")
+        if word != "" {
+          words.push(word)
+        }
       }
+      let box = stack.bbox(words.join(" "), size)
+      width = round(width.max(box.width))
+      let rounded = round(box.height)
+      height += rounded
+      line_height = round(line_height.max(rounded))
     }
-    let box = stack.bbox(words.join(" "), size)
-    // `Math.round`
-    width = (width.max(box.width) + 0.5).floor()
+    (width, height, line_height)
   }
-  width
+  let sans = dimensions(@font.Stack::sans_serif())
+  let own = dimensions(configured)
+  if sans.1 > own.1 && sans.0 > own.0 && sans.2 > own.2 {
+    sans.0
+  } else {
+    own.0
+  }
 }
 
 ///|

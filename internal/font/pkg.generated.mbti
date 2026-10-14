@@ -35,6 +35,7 @@ pub fn Stack::ink(Self, StringView, Double) -> Rect
 pub fn Stack::item_advances(Self, Array[String], Double) -> Array[Double]
 pub fn Stack::line_metrics(Self, Double) -> (Double, Double)
 pub fn Stack::page_default() -> Self
+pub fn Stack::sans_serif() -> Self
 
 // Type aliases
 

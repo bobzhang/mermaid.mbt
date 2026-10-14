@@ -22,6 +22,9 @@ pub struct Face {
   /// Pairs of characters drawn as one glyph, keyed by
   /// `first * 65536 + second` and giving the character of the ligature.
   priv ligatures : Map[Int32, Char]
+  /// Whether Blink raises the ascent by 15% of the line: its hack for
+  /// Times, Helvetica and Courier on macOS.
+  priv mac_ascent_adjustment : Bool
 }
 
 ///|
@@ -35,6 +38,7 @@ fn Face::new(
   glyphs~ : FixedArray[Int32],
   kerning~ : FixedArray[Int32],
   ligatures~ : FixedArray[Int32] = [],
+  mac_ascent_adjustment~ : Bool = false,
 ) -> Face {
   let by_code : Map[Int32, Glyph] = Map([])
   for i = 0; i + 6 < glyphs.length(); i = i + 7 {
@@ -64,6 +68,7 @@ fn Face::new(
     glyphs: by_code,
     kerning: pairs,
     ligatures: joined,
+    mac_ascent_adjustment,
   }
 }
 

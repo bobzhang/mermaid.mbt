@@ -195,4 +195,5 @@ let times_regular : Face = Face::new(
   ],
   // first code point, second code point, code point of the ligature
   ligatures=[102, 105, 64257, 102, 108, 64258],
+  mac_ascent_adjustment=true,
 )

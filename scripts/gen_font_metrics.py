@@ -34,12 +34,19 @@ FACES = [
     # The page's default font, which text is measured in when a style names
     # no usable family. First face of the collection: Times Roman.
     ("times_regular", "../Times.ttc"),
+    # The system sans-serif, which mermaid measures text in for comparison.
+    ("helvetica_regular", "../Helvetica.ttc"),
 ]
+
+# Faces whose ascent the reference browser raises by 15% of the line, as
+# Safari does, to bring them closer to their Windows counterparts.
+ASCENT_ADJUSTED = {"times_regular", "helvetica_regular"}
 
 # Ligatures the reference browser forms by default (from the face's `morx`
 # table, read off the browser): first and second code point, ligature.
 LIGATURES = {
     "times_regular": [(0x66, 0x69, 0xFB01), (0x66, 0x6C, 0xFB02)],
+    "helvetica_regular": [(0x66, 0x69, 0xFB01), (0x66, 0x6C, 0xFB02)],
 }
 
 # Code points kept from each face: Basic Latin through Latin Extended-A,
@@ -297,6 +304,7 @@ def emit(ident, filename):
         *kern_rows,
         "  ],",
         *ligature_rows,
+        *(["  mac_ascent_adjustment=true,"] if ident in ASCENT_ADJUSTED else []),
         ")",
         "",
     ]
