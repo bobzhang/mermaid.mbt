@@ -214,6 +214,10 @@ pub fn draw(db : GanttDb, context : @diagram.Context) -> Unit raise GanttError {
   let svg = context.svg
   let id = context.id
   let zone = db.zone
+  if config.text("securityLevel") == Some("sandbox") {
+    // Upstream renders into an <iframe> and wraps linked tasks in <a>.
+    raise Unsupported("the sandbox security level")
+  }
   let conf = (name : String, default : Double) => {
     config.number("gantt." + name).unwrap_or(default)
   }
