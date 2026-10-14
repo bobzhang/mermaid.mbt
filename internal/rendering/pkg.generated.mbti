@@ -10,7 +10,11 @@ import {
 // Values
 pub fn insert_markers(@dom.Element, Array[String], String, String, config? : @config.Config) -> Unit
 
+pub fn insert_title(@dom.Element, String, String, Double, @config.Config) -> Unit
+
 pub fn is_valid_shape(String) -> Bool
+
+pub fn node_palette_rules(@config.Config) -> String
 
 pub fn render(LayoutData, @dom.Element) -> Unit raise LayoutError
 

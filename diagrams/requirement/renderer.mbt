@@ -41,8 +41,14 @@ pub fn draw(
     markers,
   }
   @rendering.render(data, context.svg)
-  insert_title(db.title, context)
-  // Upstream reads the state diagram's settings here.
+  // Upstream reads the state diagram's settings for the title and the size.
+  @rendering.insert_title(
+    context.svg,
+    db.title,
+    "requirementDiagramTitleText",
+    config.number("state.titleTopMargin").unwrap_or(25.0),
+    config,
+  )
   @rendering.setup_viewport(
     context.svg,
     8.0,
@@ -52,36 +58,4 @@ pub fn draw(
       value => @config.evaluate(value)
     },
   )
-}
-
-///|
-/// The diagram title, centred above the chart: mermaid's `insertTitle`.
-fn insert_title(title : String, context : @diagram.Context) -> Unit {
-  if title == "" {
-    return
-  }
-  let config = context.config
-  let svg = context.svg
-  let bounds = svg.bbox()
-  let margin = config.number("state.titleTopMargin").unwrap_or(25.0)
-  let x = bounds.x + bounds.width / 2.0
-  let y = -margin
-  let text = svg
-    .append("text")
-    .text(title)
-    .attr("text-anchor", "middle")
-    .attr_number("x", x)
-    .attr_number("y", y)
-    .attr("class", "requirementDiagramTitleText")
-  // No rule sizes this class: the title is set in the diagram's font.
-  let theme = config.theme()
-  let font = @font.Stack::for_family(theme.text("fontFamily"))
-  let size = @diagram.parse_font_size(theme.text("fontSize")).unwrap_or(16.0)
-  let box = font.bbox(title, size)
-  text.set_text_box({
-    x: x - font.advance(title, size) / 2.0 + box.x,
-    y: y + box.y,
-    width: box.width,
-    height: box.height,
-  })
 }

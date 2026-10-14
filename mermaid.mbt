@@ -117,11 +117,7 @@ fn parse_diagram(
         db.set_title(title)
       }
       {
-        styles: @er.styles(
-          config.theme(),
-          config.text("theme").unwrap_or(""),
-          config.text("look").unwrap_or(""),
-        ),
+        styles: @er.styles(config),
         acc_title: db.acc_title,
         acc_description: db.acc_description,
         // The renderer reports no classes, so none become stylesheet rules.
@@ -142,11 +138,7 @@ fn parse_diagram(
         db.set_title(title)
       }
       {
-        styles: @requirement.styles(
-          config.theme(),
-          config.text("theme").unwrap_or(""),
-          config.text("look").unwrap_or(""),
-        ),
+        styles: @requirement.styles(config),
         acc_title: db.acc_title,
         acc_description: db.acc_description,
         // The renderer reports no classes, so none become stylesheet rules.

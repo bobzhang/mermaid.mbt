@@ -1,77 +1,9 @@
 ///|
-/// `look`, if it is safe to put in a selector.
-fn safe_look(look : String) -> String {
-  if look != "" &&
-    look
-    .iter()
-    .all(c => c is ('a'..<='z' | 'A'..<='Z' | '0'..<='9' | '_' | '-')) {
-    look
-  } else {
-    "classic"
-  }
-}
-
-///|
-fn palette_color(palette : Array[Json], index : Int32) -> String {
-  match palette[index % palette.length()] {
-    String(color) => color
-    other => other.stringify()
-  }
-}
-
-///|
-/// Cycling per-node colors: one pair of rules per palette slot.
-fn color_sections(
-  theme : @theme.Theme,
-  theme_name : String,
-  look : String,
-) -> String {
-  guard theme_name is ("redux-color" | "redux-dark-color") &&
-    theme.get("borderColorArray") is Array(borders) &&
-    !borders.is_empty() else {
-    return ""
-  }
-  let look = safe_look(look)
-  let fills = match theme.get("bkgColorArray") {
-    Array(fills) if !fills.is_empty() => Some(fills)
-    _ => None
-  }
-  let out = StringBuilder()
-  for i in 0..<borders.length() {
-    let border = palette_color(borders, i)
-    let fill = match fills {
-      Some(fills) => "fill: \{palette_color(fills, i)};"
-      None => ""
-    }
-    let slot = "[data-look=\"\{look}\"][data-color-id=\"color-\{i}\"]"
-    out.write_string(
-      (
-        $|
-        $|
-        $|    \{slot}.node path {
-        $|    stroke: \{border};
-        $|    \{fill}
-        $|    }
-        $|
-        $|    \{slot}.node  rect {
-        $|    stroke: \{border};
-        $|    \{fill}
-        $|     }
-        $|    
-      ),
-    )
-  }
-  out.to_string()
-}
-
-///|
 /// The requirement diagram's stylesheet, before it is scoped to the
 /// diagram.
-pub fn styles(
-  theme : @theme.Theme,
-  theme_name : String,
-  look : String,
-) -> String {
+pub fn styles(config : @config.Config) -> String {
+  let theme = config.theme()
+  let look = config.text("look").unwrap_or("")
   let v = (name : String) => theme.text(name)
   let text_color = if theme.flag("nodeTextColor") {
     v("nodeTextColor")
@@ -85,7 +17,7 @@ pub fn styles(
   }
   (
     $|
-    $|  \{color_sections(theme, theme_name, look)}
+    $|  \{@rendering.node_palette_rules(config)}
     $|  marker {
     $|    fill: \{v("relationColor")};
     $|    stroke: \{v("relationColor")};

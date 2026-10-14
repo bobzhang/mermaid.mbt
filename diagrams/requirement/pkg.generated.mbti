@@ -5,7 +5,6 @@ import {
   "bobzhang/mermaid/config",
   "bobzhang/mermaid/diagram",
   "bobzhang/mermaid/internal/rendering",
-  "bobzhang/mermaid/theme",
 }
 
 // Values
@@ -13,7 +12,7 @@ pub fn draw(RequirementDb, @diagram.Context) -> Unit raise @rendering.LayoutErro
 
 pub fn parse(String, @config.Config) -> RequirementDb raise
 
-pub fn styles(@theme.Theme, String, String) -> String
+pub fn styles(@config.Config) -> String
 
 // Errors
 
