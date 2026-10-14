@@ -176,18 +176,22 @@ fn text_box(spans : Array[String], style : TextStyle) -> @dom.Rect {
     baseline = baseline + f(dy) * f(style.size)
     let width = style.font.advance(text, style.size)
     let x = -width / 2.0
+    // The line's own box is kept as origin and size; its far edges are
+    // sums that round again when boxes are united.
     let top = baseline - style.ascent_middle
-    let cell = BoxF::from_edges(
-      f(x),
-      top,
-      f(x + width),
-      baseline + style.descent_middle,
-    )
-    // Glyphs are drawn from the alphabetic baseline.
+    let cell : BoxF = {
+      x: f(x),
+      y: top,
+      width: f(width),
+      height: style.ascent_middle + style.descent_middle,
+    }
+    // Glyphs are drawn from the alphabetic baseline, the font's ascent
+    // below the top of the line. The ink is placed relative to that top
+    // first; summing in another order rounds differently.
     let ink = style.font.ink(text, style.size)
     let ink_box : BoxF = {
       x: f(x) + f(ink.x),
-      y: top + style.ascent + f(ink.y),
+      y: top + (style.ascent + f(ink.y)),
       width: f(ink.width),
       height: f(ink.height),
     }

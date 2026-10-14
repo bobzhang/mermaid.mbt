@@ -107,3 +107,36 @@ test "bold and italic faces" {
     ),
   )
 }
+
+///|
+test "a kerning pair the shaper cannot find does not kern" {
+  // Trebuchet MS Bold lists `v.` out of order; HarfBuzz looks pairs up by
+  // binary search and misses it. Chrome: 12.203125.
+  inspect(
+    @font.Stack::default(bold=true).advance("v.", 16.0),
+    content="12.203125",
+  )
+}
+
+///|
+test "ink at sizes that do not scale to whole floats" {
+  // Values are `getBBox()` of plain SVG text in Chrome. The ink of each
+  // glyph is the box of its outline; a run keeps the extreme edges and
+  // subtracts them once.
+  let box = (family : String, text : String, size : Double) => {
+    let b = @font.Stack::for_family(family).bbox(text, size)
+    [b.x, b.y, b.width, b.height]
+  }
+  json_inspect(box("arial", "[object Object]", 10.46), content=[
+    0, -9, 66.875, 11.201299667358398,
+  ])
+  json_inspect(box("arial", "j", 10.46), content=[
+    -0.4800976514816284, -9, 2.808222770690918, 11.201300621032715,
+  ])
+  json_inspect(box("arial", "[object Object]", 9.6), content=[
+    0, -9, 61.375, 11.02031421661377,
+  ])
+  json_inspect(box("verdana", "Ĝi a\\b ¥7 (x)", 13.067), content=[
+    0, -13.066377639770508, 85.59375, 16.066377639770508,
+  ])
+}

@@ -331,16 +331,18 @@ fn Env::append_title(
   let font = self.title_font
   let (ascent, descent) = font.line_metrics(size)
   let left = length_attribute(x)
+  let top = f(20.0) - f(ascent)
   let cell : BoxF = {
     x: left,
-    y: f(20.0) - f(ascent),
+    y: top,
     width: f(font.advance(content, size)),
     height: f(ascent) + f(descent),
   }
+  // As in `text_box`, the ink is placed relative to the top of the line.
   let ink = font.ink(content, size)
   let ink_box : BoxF = {
     x: left + f(ink.x),
-    y: f(20.0) + f(ink.y),
+    y: top + (f(ascent) + f(ink.y)),
     width: f(ink.width),
     height: f(ink.height),
   }
