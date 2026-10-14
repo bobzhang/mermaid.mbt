@@ -19,12 +19,12 @@ fn Journey::reduce(
       Some(title)
     }
     9 => {
-      let title = js_trim(v(0))
+      let title = @journeycommon.js_trim(v(0))
       self.acc_title = @journeycommon.acc_title(title)
       Some(title)
     }
     10 | 11 => {
-      let description = js_trim(v(0))
+      let description = @journeycommon.js_trim(v(0))
       self.acc_description = @journeycommon.acc_description(description)
       Some(description)
     }

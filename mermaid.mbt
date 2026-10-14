@@ -33,6 +33,7 @@ fn parse_diagram(
   code : String,
   config : @config.Config,
   title : String?,
+  id : String,
 ) -> Parsed raise MermaidError {
   match diagram_type {
     "pie" => {
@@ -131,6 +132,34 @@ fn parse_diagram(
         },
       }
     }
+    "timeline" => {
+      let timeline = @timeline.parse(code) catch {
+        @jison.ParseError(message~, ..) => raise Syntax(message)
+        @journeycommon.SanitizeError(message) => raise Unsupported(message)
+        @timeline.TimelineError(message) => raise Syntax(message)
+        error => raise Syntax(error.to_string())
+      }
+      if title is Some(title) && timeline.title == "" {
+        timeline.set_title(title)
+      }
+      {
+        styles: @timeline.styles(
+          config.theme(),
+          config.text("theme").unwrap_or(""),
+          id,
+        ),
+        acc_title: timeline.acc_title,
+        acc_description: timeline.acc_description,
+        classes: [],
+        draw: context => {
+          @timeline.draw(timeline, context) catch {
+            @timeline.TimelineError(message) => raise Unsupported(message)
+            @journeycommon.MeasureError(message) => raise Unsupported(message)
+            error => raise Unsupported(error.to_string())
+          }
+        },
+      }
+    }
     other => raise Unsupported(other)
   }
 }
@@ -181,6 +210,7 @@ pub fn render(
     @preprocess.encode_entities(processed.code) + "\n",
     config,
     processed.title,
+    id,
   )
   let style = @dom.Element::new("style").text(
     compiled_styles(id, parsed.styles, config, parsed.classes),

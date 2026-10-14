@@ -12,6 +12,12 @@ pub fn acc_description(String) -> String raise SanitizeError
 
 pub fn acc_title(String) -> String raise SanitizeError
 
+pub fn is_js_space(Char) -> Bool
+
+pub fn js_number(String) -> Double
+
+pub fn js_trim(String) -> String
+
 pub fn require_glyphs(@font.Stack, String) -> Unit raise MeasureError
 
 pub fn sanitize_text(String) -> String raise SanitizeError

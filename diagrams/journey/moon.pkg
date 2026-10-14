@@ -10,7 +10,6 @@ import {
   "bobzhang/mermaid/theme",
   "moonbitlang/core/double",
   "moonbitlang/core/math",
-  "moonbitlang/core/string",
 }
 
 warnings = "-implicit_impl_as_method"

@@ -55,7 +55,7 @@ fn Conf::new(config : @config.Config) -> Conf raise JourneyError {
     config.get("journey.taskFontSize") {
     Number(n, ..) =>
       (n, if n >= 0.0 { Some(@dom.number(n) + "px") } else { None })
-    String(text) => (js_number(text), css_font_size(text))
+    String(text) => (@journeycommon.js_number(text), css_font_size(text))
     _ => raise JourneyError("journey.taskFontSize must be a number")
   }
   let task_font_family = match config.get("journey.taskFontFamily") {
@@ -115,7 +115,7 @@ fn css_font_size(text : String) -> String? raise JourneyError {
   if !plain {
     raise JourneyError("journey.taskFontSize \{text} is not a plain length")
   }
-  Some(@dom.number(js_number(value)) + unit)
+  Some(@dom.number(@journeycommon.js_number(value)) + unit)
 }
 
 ///|

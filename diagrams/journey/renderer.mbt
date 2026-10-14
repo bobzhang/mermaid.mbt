@@ -46,7 +46,7 @@ fn array_index(name : String) -> Double? {
   if name.length() > 1 && name.has_prefix("0") {
     return None
   }
-  let value = js_number(name)
+  let value = @journeycommon.js_number(name)
   if value < 4294967295.0 {
     Some(value)
   } else {

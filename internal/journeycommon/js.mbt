@@ -1,7 +1,7 @@
 ///|
 /// Whether JavaScript's `trim` and `Number` treat `c` as blank: white
 /// space and line terminators.
-fn is_js_space(c : Char) -> Bool {
+pub fn is_js_space(c : Char) -> Bool {
   c
   is ('\t'
   | '\n'
@@ -22,7 +22,7 @@ fn is_js_space(c : Char) -> Bool {
 
 ///|
 /// `String.prototype.trim`.
-fn js_trim(text : String) -> String {
+pub fn js_trim(text : String) -> String {
   let chars = text.to_array()
   let mut start = 0
   let mut end = chars.length()
@@ -39,7 +39,7 @@ fn js_trim(text : String) -> String {
 /// `Number(text)`: the numeric value of a string. Blank is zero, a
 /// decimal, hexadecimal, octal or binary literal is its value, anything
 /// else is `NaN`.
-fn js_number(text : String) -> Double {
+pub fn js_number(text : String) -> Double {
   let text = js_trim(text)
   if text == "" {
     return 0.0

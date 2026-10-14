@@ -351,3 +351,19 @@ pub fn Stack::covers(self : Stack, text : StringView) -> Bool {
   }
   true
 }
+
+///|
+/// The x-height of the stack's first face at `size` pixels: what `1ex`
+/// measures, and twice the distance from the alphabetic baseline to the
+/// one `dominant-baseline: middle` aligns. The reference platform reports
+/// the face's OS/2 x-height or, for a face without one, the height of its
+/// `x`; in the embedded faces the two are the same number.
+pub fn Stack::x_height(self : Stack, size : Double) -> Double {
+  let face = self.faces[0]
+  guard face.glyphs.get('x'.to_int()) is Some(glyph) else { return 0.0 }
+  Float::from_double(
+    effective_size(size) *
+    glyph.y_max.to_double() /
+    face.units_per_em.to_double(),
+  ).to_double()
+}
