@@ -52,8 +52,17 @@ fn draw_swimlane(
   // diagram where it reaches out of its row.
   let label = @journeycommon.collapse_white_space(swimlane.label)
   if label != "" {
-    let font = @journeycommon.theme_font(theme, bold=true) catch {
-      @journeycommon.MeasureError(message) => raise Unsupported(message)
+    if theme_css_restyles_text(context.config) {
+      raise Unsupported("themeCSS that restyles the swimlane labels")
+    }
+    let family = theme.text("fontFamily")
+    let font = if @journeycommon.js_trim(family) == "" {
+      // `font-family:;` is no declaration: the page's font is inherited.
+      @font.Stack::page_default(bold=true)
+    } else {
+      @journeycommon.family_font(family, bold=true) catch {
+        @journeycommon.MeasureError(message) => raise Unsupported(message)
+      }
     }
     let size = @journeycommon.theme_font_size(theme) catch {
       @journeycommon.MeasureError(message) => raise Unsupported(message)
@@ -200,4 +209,15 @@ pub fn draw(model : EventModel, context : @diagram.Context) -> Unit raise {
     "\{n(bounds.x - padding)} \{n(bounds.y - padding)} \{n(bounds.width + 2.0 * padding)} \{n(bounds.height + 2.0 * padding)}",
   )
   |> ignore
+}
+
+///|
+/// Whether the user's `themeCSS` could change how text the renderer
+/// measures is laid out: a rule of it beats what the renderer sets.
+fn theme_css_restyles_text(config : @config.Config) -> Bool {
+  guard config.text("themeCSS") is Some(css) else { return false }
+  let css = css.to_lower()
+  ["font", "spacing", "text-transform", "white-space", "writing-mode"]
+  .iter()
+  .any(property => css.contains(property))
 }

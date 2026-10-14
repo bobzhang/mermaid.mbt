@@ -1,4 +1,5 @@
 import {
+  "bobzhang/mermaid/config",
   "bobzhang/mermaid/diagram",
   "bobzhang/mermaid/internal/dom",
   "bobzhang/mermaid/internal/font",
