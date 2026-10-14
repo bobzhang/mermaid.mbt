@@ -31,6 +31,12 @@ pub struct Face {
   /// Whether Blink raises the ascent by 15% of the line: its hack for
   /// Times, Helvetica and Courier on macOS.
   priv mac_ascent_adjustment : Bool
+  /// Whether a pair adjustment is shared between the two glyphs, as
+  /// HarfBuzz does for a `kern` table: the earlier glyph's advance takes
+  /// the half rounded down, the later glyph's advance takes the rest and
+  /// the glyph is drawn that much earlier. An adjustment from GPOS belongs
+  /// to the earlier glyph alone.
+  priv split_kerning : Bool
 }
 
 ///|
@@ -47,6 +53,7 @@ fn Face::new(
   ligatures~ : FixedArray[Int32] = [],
   composed~ : FixedArray[Int32] = [],
   mac_ascent_adjustment~ : Bool = false,
+  split_kerning~ : Bool = false,
 ) -> Face {
   let by_code : Map[Int32, Glyph] = Map([])
   for i = 0; i + 6 < glyphs.length(); i = i + 7 {
@@ -81,6 +88,7 @@ fn Face::new(
     ligatures: joined,
     composed: pieces,
     mac_ascent_adjustment,
+    split_kerning,
   }
 }
 

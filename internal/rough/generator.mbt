@@ -58,12 +58,18 @@ fn draw(sets : Array[OpSet], o : Options, even_odd : Bool) -> @dom.Element {
           path.attr("fill-rule", "evenodd") |> ignore
         }
       }
-      FillSketch =>
+      FillSketch => {
+        let weight = if o.fill_weight < 0.0 {
+          o.stroke_width_number() / 2.0
+        } else {
+          o.fill_weight
+        }
         path
         .attr("stroke", o.fill)
-        .attr("stroke-width", fill_weight(o))
+        .attr("stroke-width", @dom.number(weight))
         .attr("fill", "none")
         |> ignore
+      }
     }
   }
   group
@@ -81,8 +87,8 @@ fn has_stroke(o : Options) -> Bool {
 
 ///|
 /// Whether the fill is a plain one. Of the sketchy fill styles of the
-/// hand-drawn look, ellipses and paths have `hachure` and `cross-hatch`
-/// (see `hachure.mbt`).
+/// hand-drawn look, ellipses, paths and rectangles have `hachure` and
+/// `cross-hatch` (see `hachure.mbt`).
 fn solid(o : Options) -> Bool {
   o.fill_style == "solid"
 }
@@ -146,6 +152,8 @@ pub fn rectangle(
   let outline = linear_path(points, true, o)
   if has_fill(o) && solid(o) {
     sets.push({ kind: FillPath, ops: solid_fill_polygon([points], o), })
+  } else if has_fill(o) && pattern_fill_polygons([points], o) is Some(ops) {
+    sets.push({ kind: FillSketch, ops, })
   }
   if has_stroke(o) {
     sets.push({ kind: Stroke, ops: outline, })

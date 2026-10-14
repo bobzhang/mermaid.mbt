@@ -1,0 +1,19 @@
+---
+config:
+  handDrawnSeed: 7
+  class:
+    hierarchicalNamespaces: false
+---
+classDiagram
+    namespace Outer {
+        namespace Inner {
+            class Deep
+        }
+        class Shallow
+    }
+    namespace A.B.C {
+        class Leaf
+        note "in leaf"
+    }
+    Deep --> Shallow
+    Leaf --> Deep

@@ -1,0 +1,9 @@
+---
+config:
+  handDrawnSeed: 7
+  look: classic
+---
+classDiagram
+    Customer "1" --> "0..*" Order : places
+    Order "1" *-- "1..*" LineItem
+    LineItem "*" ..> "1" Product : refers

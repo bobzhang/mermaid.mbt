@@ -1,0 +1,25 @@
+---
+config:
+  treeView:
+    showIcons: true
+    defaultIconPack: material-icon-theme
+    filenameIcons:
+      Dockerfile: docker
+      Makefile: folder
+    extensionIcons:
+      .ts: typescript
+      tsx: file
+      .txt: none
+      md: mermaid-treeview:folder
+---
+treeView-beta
+    src/
+        App.tsx
+        utils.TS
+        index.js icon(none)
+        types.d.ts icon(file)
+    Dockerfile ## built in CI
+    Makefile
+    notes.txt
+    README.MD :::highlight
+    .md

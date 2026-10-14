@@ -2,8 +2,8 @@
 // (`hachure`), or two such sets at right angles (`cross-hatch`). The
 // lines come from the `hachure-fill` library's scan-line algorithm.
 //
-// Ported for ellipses and paths, which is what mermaid's Venn diagrams
-// fill this way; the other fill styles (`zigzag`, `dots`, `dashed`,
+// Ported for ellipses, paths and rectangles (Venn circles and overlaps,
+// Ishikawa heads); the other fill styles (`zigzag`, `dots`, `dashed`,
 // `zigzag-line`) are not ported.
 
 ///|
@@ -29,17 +29,6 @@ fn[T] stable_sort(items : Array[T], compare : (T, T) -> Int32) -> Unit {
       j -= 1
     }
     items[j] = item
-  }
-}
-
-///|
-/// The width of the lines of a sketched fill, as rough.js writes it.
-fn fill_weight(o : Options) -> String {
-  if o.fill_weight < 0.0 {
-    let stroke_width = @string.parse_double(o.stroke_width) catch { _ => 1.0 }
-    @dom.number(stroke_width / 2.0)
-  } else {
-    @dom.number(o.fill_weight)
   }
 }
 
@@ -206,12 +195,7 @@ fn straight_hachure_lines(
       }
     })
     // Every line when the scan steps by the gap; every `gap`th otherwise.
-    let on_gap = if gap == gap.floor() {
-      iteration.to_int() % gap.to_int() == 0
-    } else {
-      iteration == 0.0
-    }
-    if (step != 1.0 || on_gap) && active.length() > 1 {
+    if (step != 1.0 || iteration % gap == 0.0) && active.length() > 1 {
       let mut i = 0
       while i + 1 < active.length() {
         lines.push([(js_round(active[i].x), y), (js_round(active[i + 1].x), y)])
@@ -267,8 +251,7 @@ fn hachure_fill(
   let angle = o.hachure_angle + 90.0
   let mut gap = o.hachure_gap
   if gap < 0.0 {
-    let stroke_width = @string.parse_double(o.stroke_width) catch { _ => 1.0 }
-    gap = stroke_width * 4.0
+    gap = 4.0 * o.stroke_width_number()
   }
   gap = js_round(if gap > 0.1 { gap } else { 0.1 })
   // A rough enough fill sometimes scans gap by gap instead of line by
@@ -282,11 +265,13 @@ fn hachure_fill(
   }
   let ops = []
   for line in hachure_lines(polygons, gap, angle, skip_offset) {
-    // `doubleLineOps`: always two strokes, whatever `disableMultiStroke`.
+    // `doubleLineOps`: two strokes unless multi-stroke is off for fills.
     let (x1, y1) = line[0]
     let (x2, y2) = line[1]
     ops.append(line_ops(x1, y1, x2, y2, o, true, false))
-    ops.append(line_ops(x1, y1, x2, y2, o, true, true))
+    if !o.disable_multi_stroke_fill {
+      ops.append(line_ops(x1, y1, x2, y2, o, true, true))
+    }
   }
   ops
 }

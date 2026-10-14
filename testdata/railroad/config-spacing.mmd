@@ -1,0 +1,12 @@
+---
+config: {"railroad": {"padding": 7.3, "verticalSeparation": 20, "horizontalSeparation": 3.5, "arcRadius": 6, "markerRadius": 8, "strokeWidth": 3.5}}
+---
+railroad-beta
+title Kitchen sink
+accTitle: All the shapes
+accDescr: Every kind of node
+
+start = sequence(terminal("begin"), nonterminal("body"), special("magic"), terminal("end")) ;
+body = choice(terminal("a"), nonterminal("Longer Name"), optional(terminal("x")), zeroOrMore(nonterminal("item")), oneOrMore(sequence(terminal(","), nonterminal("item")))) ;
+single = terminal("only") ;
+deep = optional(zeroOrMore(oneOrMore(choice(terminal("p"), sequence(nonterminal("q"), special("r")))))) ;

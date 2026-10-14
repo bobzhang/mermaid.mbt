@@ -42,6 +42,7 @@ Work in progress.
 | Entity relationship | byte-identical with the default ELK layout |
 | Requirement | byte-identical with the default ELK layout |
 | State | byte-identical with the default ELK layout, `stateDiagram` and `stateDiagram-v2` |
+| Class | byte-identical with the default ELK layout, including cardinalities, namespaces and notes |
 | User journey | byte-identical, all `journey:` options |
 | Timeline | byte-identical, horizontal and vertical, both looks |
 | Gantt | byte-identical; see the note on time below |
@@ -50,6 +51,12 @@ Work in progress.
 | Radar | byte-identical |
 | Treemap | byte-identical; depends on the page like Gantt charts |
 | Block | byte-identical: grid layout, block arrows, all edge curves |
+| C4 | byte-identical: all five kinds, boundaries, relationships, style updates |
+| Quadrant chart | byte-identical |
+| XY chart | byte-identical, both orientations; depends on the page like Gantt charts |
+| Tree view | byte-identical; emoji labels are refused |
+| Ishikawa | byte-identical, including the hand-drawn look with a seed |
+| Cynefin | byte-identical |
 | everything else | not ported yet — `render` raises `Unsupported` |
 
 Git graphs name commits at random upstream (`Math.random`), so a graph
@@ -85,7 +92,7 @@ each as an argument that defaults to the reference page's value:
 
 ### Flowcharts
 
-Flowcharts, entity relationship, requirement and state diagrams go through a port
+Flowcharts, entity relationship, requirement, state and class diagrams go through a port
 of mermaid's unified renderer (`internal/rendering`): HTML labels, node
 shapes, subgraph frames, edge routing with rounded corners and line hops,
 class and link styling. The layout is ELK's, as upstream, computed by

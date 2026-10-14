@@ -1,0 +1,3 @@
+Lexical error on line 4. Unrecognized text.
+..."    C --> D : a, b; c    D --> E : 10
+----------------------^

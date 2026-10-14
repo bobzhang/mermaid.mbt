@@ -1,0 +1,4 @@
+Parse error on line 2:
+...hart-beta    line [a, b]
+----------------------^
+Expecting 'NUMBER_WITH_DECIMAL', got 'ALPHA'

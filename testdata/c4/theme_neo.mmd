@@ -1,0 +1,13 @@
+---
+config:
+  theme: neo
+---
+C4Container
+title Theme neo
+Person(a, "A user", "Uses the system")
+Container_Boundary(b, "Boundary") {
+  Container(c, "Web app", "React", "Shows things")
+  ContainerDb(d, "Database", "PostgreSQL", "Keeps things")
+}
+Rel(a, c, "Uses", "HTTPS")
+BiRel(c, d, "Reads and writes", "SQL")

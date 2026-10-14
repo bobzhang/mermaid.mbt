@@ -20,6 +20,7 @@ pub(all) suberror UnknownDiagramError {
 // Types and methods
 pub struct Diagram {
   code : String
+  with_comments : String
   title : String?
   config : Json
 }

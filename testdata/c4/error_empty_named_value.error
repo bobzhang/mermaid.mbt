@@ -1,0 +1,4 @@
+Parse error on line 3:
+...le(a, $bgColor="", $fontColor="")
+-----------------------^
+Expecting 'STR_VALUE', got 'STR_KEY'

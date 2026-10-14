@@ -1,0 +1,20 @@
+eventmodeling
+tf 1 ui F1 [[D1]]
+tf 2 cmd F2 [[D2]]
+tf 3 evt F3 [[D3]]
+
+data D1 {
+  a: 1
+  %% inside
+  b: 2
+}
+
+data D2 {
+%% inside first
+  b: 2
+}
+
+data D3 {
+  a: 1 // not a comment
+  /* nor this */
+}

@@ -1,0 +1,18 @@
+---
+config:
+  htmlLabels: false
+  handDrawnSeed: 7
+---
+classDiagram
+    namespace Sales {
+        class Customer
+        class Order
+    }
+    namespace Stock {
+        class Product
+        class Shelf
+    }
+    Customer "1" --> "0..*" Order : places
+    Order "*" --> "1..*" Product : lists
+    Shelf "1" o-- "many" Product
+    Outside "x" --> "y" Shelf

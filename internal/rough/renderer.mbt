@@ -13,7 +13,7 @@ priv enum Op {
 priv enum SetKind {
   Stroke
   FillPath
-  /// Lines drawn across the shape: the hachure and cross-hatch fills.
+  /// The lines of a sketchy fill, stroked in the fill colour.
   FillSketch
 }
 

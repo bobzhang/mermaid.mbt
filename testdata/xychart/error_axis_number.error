@@ -1,0 +1,4 @@
+Parse error on line 2:
+...    x-axis sales2024    line [1]
+-----------------------^
+Expecting 'ARROW_DELIMITER', got 'NEWLINE'

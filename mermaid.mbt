@@ -137,6 +137,32 @@ fn parse_diagram(
         },
       }
     }
+    "c4" => {
+      let convert = (error : Error) => {
+        match error {
+          @jison.ParseError(message~, ..) => Syntax(message)
+          @c4.C4Error(message) => Syntax(message)
+          @c4.Unsupported(message) => Unsupported(message)
+          error => Syntax(error.to_string())
+        }
+      }
+      let db = @c4.parse(code, config) catch { error => raise convert(error) }
+      // A frontmatter title is not shown: the database has no
+      // `setDiagramTitle`.
+      {
+        styles: @c4.styles(config) catch {
+          error => raise convert(error)
+        },
+        acc_title: "",
+        acc_description: db.acc_description,
+        classes: [],
+        draw: context => {
+          @c4.draw(db, context) catch {
+            error => raise convert(error)
+          }
+        },
+      }
+    }
     "journey" => {
       let journey = @journey.parse(code) catch {
         @jison.ParseError(message~, ..) => raise Syntax(message)
@@ -400,6 +426,184 @@ fn parse_diagram(
         },
       }
     }
+    "classDiagram" => {
+      let db = @classdiagram.parse(code, config) catch {
+        @jison.ParseError(message~, ..) => raise Syntax(message)
+        @classdiagram.Invalid(message) => raise Syntax(message)
+        @classdiagram.Unsupported(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      if title is Some(title) {
+        db.set_title(title)
+      }
+      // Upstream hands the classes themselves to the code that writes
+      // rules for `classDef`s: a class with styles gets rules under its
+      // own name.
+      let classes = db.styled_classes() catch {
+        @classdiagram.Invalid(message) => raise Syntax(message)
+        @classdiagram.Unsupported(message) => raise Unsupported(message)
+      }
+      {
+        styles: @classdiagram.styles(config),
+        acc_title: db.acc_title,
+        acc_description: db.acc_description,
+        classes: classes.map(c => { id: c.0, styles: c.1, text_styles: [], }),
+        draw: context => {
+          @classdiagram.draw(db, context) catch {
+            @rendering.LayoutError(message) => raise Unsupported(message)
+          }
+        },
+      }
+    }
+    "quadrantChart" => {
+      let chart = @quadrant.parse(code, title?) catch {
+        @jison.ParseError(message~, ..) => raise Syntax(message)
+        @quadrant.QuadrantError(message) => raise Syntax(message)
+        @journeycommon.SanitizeError(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      {
+        // The chart has no styles of its own.
+        styles: "",
+        acc_title: chart.acc_title,
+        acc_description: chart.acc_description,
+        classes: [],
+        draw: context => {
+          @quadrant.draw(chart, context) catch {
+            @quadrant.Unsupported(message) => raise Unsupported(message)
+          }
+        },
+      }
+    }
+    "xychart" => {
+      let chart = @xychart.parse(code, title?) catch {
+        @jison.ParseError(message~, ..) => raise Syntax(message)
+        @journeycommon.SanitizeError(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      {
+        // The chart has no styles of its own.
+        styles: "",
+        acc_title: chart.acc_title,
+        acc_description: chart.acc_description,
+        classes: [],
+        draw: context => {
+          @xychart.draw(chart, context) catch {
+            @xychart.XYChartError(message) => raise Syntax(message)
+            @xychart.Unsupported(message) => raise Unsupported(message)
+            error => raise Unsupported(error.to_string())
+          }
+        },
+      }
+    }
+    "treeView" => {
+      let tree = @treeview.parse(code) catch {
+        @langium.ParseError(message~, ..) => raise Syntax(message)
+        @treeview.TreeViewError(message) => raise Syntax(message)
+        @treeview.Unsupported(message) => raise Unsupported(message)
+        @journeycommon.SanitizeError(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      {
+        styles: @treeview.styles(config.theme()),
+        acc_title: tree.acc_title,
+        acc_description: tree.acc_description,
+        classes: [],
+        draw: context => {
+          @treeview.draw(tree, context) catch {
+            @treeview.TreeViewError(message) => raise Syntax(message)
+            @treeview.Unsupported(message) => raise Unsupported(message)
+            error => raise Unsupported(error.to_string())
+          }
+        },
+      }
+    }
+    "ishikawa" => {
+      let diagram = @ishikawa.parse(code) catch {
+        @jison.ParseError(message~, ..) => raise Syntax(message)
+        @ishikawa.Unsupported(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      // The grammar has no accessibility statements, and the title — the
+      // effect — is drawn as the head, not as a title.
+      {
+        styles: @ishikawa.styles(config.theme()),
+        acc_title: "",
+        acc_description: "",
+        classes: [],
+        draw: context => {
+          @ishikawa.draw(diagram, context) catch {
+            @ishikawa.Unsupported(message) => raise Unsupported(message)
+          }
+        },
+      }
+    }
+    "cynefin" => {
+      let diagram = @cynefin.parse(code) catch {
+        @langium.ParseError(message~, ..) => raise Syntax(message)
+        @cynefin.Unsupported(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      // A frontmatter title applies unless the diagram body has its own.
+      if title is Some(title) && diagram.title == "" {
+        diagram.set_title(title) catch {
+          @cynefin.Unsupported(message) => raise Unsupported(message)
+        }
+      }
+      {
+        styles: @cynefin.styles(config.theme()),
+        acc_title: diagram.acc_title,
+        acc_description: diagram.acc_description,
+        classes: [],
+        draw: context => {
+          @cynefin.draw(diagram, context) catch {
+            @cynefin.Unsupported(message) => raise Unsupported(message)
+          }
+        },
+      }
+    }
+    "railroad" | "railroadEbnf" | "railroadAbnf" | "railroadPeg" => {
+      let railroad = @railroad.parse(diagram_type, code) catch {
+        @langium.ParseError(message~, ..) => raise Syntax(message)
+        @railroad.Unsupported(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      // Nothing draws a title, the frontmatter's no more than the
+      // diagram's own.
+      {
+        styles: @railroad.styles(config),
+        acc_title: railroad.acc_title,
+        acc_description: railroad.acc_description,
+        classes: [],
+        draw: context => {
+          @railroad.draw(railroad, context) catch {
+            @railroad.Unsupported(message) => raise Unsupported(message)
+          }
+        },
+      }
+    }
+    "eventmodeling" => {
+      let model = @eventmodeling.parse(code) catch {
+        @langium.ParseError(message~, ..) => raise Syntax(message)
+        @eventmodeling.Invalid(message) => raise Syntax(message)
+        @eventmodeling.Unsupported(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      // The diagram has no styles of its own, and nothing draws a title.
+      {
+        styles: "",
+        acc_title: model.acc_title,
+        acc_description: model.acc_description,
+        classes: [],
+        draw: context => {
+          @eventmodeling.draw(model, context) catch {
+            @eventmodeling.Invalid(message) => raise Syntax(message)
+            @eventmodeling.Unsupported(message) => raise Unsupported(message)
+            error => raise Unsupported(error.to_string())
+          }
+        },
+      }
+    }
     "wardley" => {
       let map = @wardley.parse(code) catch {
         @langium.ParseError(message~, ..) => raise Syntax(message)
@@ -504,10 +708,18 @@ pub fn render(
     .attr("width", "100%")
     .attr("xmlns", "http://www.w3.org/2000/svg")
   let first_child = svg.append("g")
+  // The event modeling database asks for the text with its comments
+  // (`preserveCommentsWhenParsing`), as long as that is not too long.
+  let source = if diagram_type == "eventmodeling" &&
+    processed.with_comments.length().to_double() <= max_length {
+    processed.with_comments
+  } else {
+    processed.code
+  }
   // Entity codes are shielded from the grammars, as in Diagram.fromText.
   let parsed = parse_diagram(
     diagram_type,
-    @preprocess.encode_entities(processed.code) + "\n",
+    @preprocess.encode_entities(source) + "\n",
     config,
     processed.title,
     id,

@@ -1,6 +1,7 @@
 import {
   "bobzhang/mermaid" @lib,
   "bobzhang/mermaid/config",
+  "bobzhang/mermaid/diagrams/c4",
   "bobzhang/mermaid/diagram",
   "bobzhang/mermaid/diagrams/flowchart",
   "bobzhang/mermaid/diagrams/gitgraph",

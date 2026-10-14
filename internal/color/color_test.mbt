@@ -243,3 +243,21 @@ test "hsl channels that land on a half round as the browser's floats do" {
     content="(12, 18, 5)",
   )
 }
+
+///|
+/// What `element.style.stroke = color` reads back as in Chrome, for
+/// colors whose channels land on or next to a half.
+test "hsl colors as the browser resolves them" {
+  let rgb = (color : String) => {
+    let (r, g, b) = @color.Channels::parse(color).to_css_rgb()
+    "\{r} \{g} \{b}"
+  }
+  inspect(rgb("hsl(247.5, 0%, 9.2156862745%)"), content="24 24 24")
+  inspect(rgb("hsl(0, 0%, 9.0196078431%)"), content="23 23 23")
+  inspect(rgb("hsl(235.3404, 100%, 65.0%)"), content="77 90 255")
+  inspect(rgb("hsl(176.0, 100%, 65.0%)"), content="77 255 243")
+  inspect(rgb("hsl(216.2, 28.25%, 34.7055%)"), content="63 83 114")
+  inspect(rgb("hsl(120, 40%, 2.9411764706%)"), content="5 11 5")
+  inspect(rgb("hsl(120, 40%, 10.7843137255%)"), content="17 39 17")
+  inspect(rgb("hsl(247.5, 0%, 3.3333333333%)"), content="9 9 9")
+}

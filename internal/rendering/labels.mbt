@@ -127,12 +127,19 @@ fn create_html_label(
     // the lines are then broken in the width it has.
     let lines = label_lines(span).map(styled)
     let mut box_width = width
-    for line in lines {
-      box_width = box_width.max(wrapped_rows(line, width, env).1)
-    }
     let mut rows = 0
-    for line in lines {
-      rows += wrapped_rows(line, box_width, env).0
+    if keeps_on_one_line(label_style) {
+      // The label's own style reaches the text through the `span` and
+      // keeps it from wrapping; the table grows to hold it.
+      box_width = box_width.max(natural)
+      rows = lines.length()
+    } else {
+      for line in lines {
+        box_width = box_width.max(wrapped_rows(line, width, env).1)
+      }
+      for line in lines {
+        rows += wrapped_rows(line, box_width, env).0
+      }
     }
     box = { width: box_width, height: line_height * rows.to_double(), }
   } else if box.width < min_width {
@@ -172,6 +179,10 @@ fn label_helper(
   ignore_min_width~ : Bool = false,
   html_labels? : Bool,
 ) -> Labelled {
+  // Nodes carrying a stereotype have a label of stacked sections.
+  if node.data is C4(..) {
+    return c4_label_helper(parent, node, classes, env)
+  }
   let shape_svg = parent
     .append("g")
     .attr("class", classes)

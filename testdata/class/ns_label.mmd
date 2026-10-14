@@ -1,0 +1,16 @@
+---
+config:
+  handDrawnSeed: 7
+---
+classDiagram
+    namespace N1["A long namespace label that is wider than its content"] {
+        class X
+    }
+    namespace N2 {
+        class Y {
+          +int a
+        }
+        class Z
+    }
+    X --> Y
+    Y --> Z

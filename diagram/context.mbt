@@ -30,6 +30,9 @@ pub struct Page {
   margin : Double
   /// The width a vertical scrollbar takes from the page.
   scrollbar : Double
+  /// The width of the screen that is free for windows
+  /// (`screen.availWidth`), which a C4 diagram wraps its rows at.
+  screen_width : Double
 }
 
 ///|
@@ -41,8 +44,9 @@ pub fn Page::new(
   viewport_height~ : Double = 469.0,
   margin~ : Double = 8.0,
   scrollbar~ : Double = 15.0,
+  screen_width~ : Double = 800.0,
 ) -> Page {
-  { viewport_width, viewport_height, margin, scrollbar, }
+  { viewport_width, viewport_height, margin, scrollbar, screen_width, }
 }
 
 ///|
@@ -147,7 +151,15 @@ pub fn Context::font(
   bold~ : Bool = false,
   italic~ : Bool = false,
 ) -> @font.Stack {
-  @font.Stack::for_family(self.theme().text("fontFamily"), bold~, italic~)
+  let family = self.theme().text("fontFamily")
+  // A family emptied by the sanitizer (one with a hyphen in a theme
+  // variable, such as `sans-serif`) leaves the stylesheet without a
+  // `font-family`, and the text in the font of the page. Only its
+  // regular face is embedded.
+  if family.trim().is_empty() && !bold && !italic {
+    return @font.Stack::page_default()
+  }
+  @font.Stack::for_family(family, bold~, italic~)
 }
 
 ///|

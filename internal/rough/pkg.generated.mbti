@@ -40,6 +40,7 @@ pub(all) struct Options {
   mut fill_weight : Double
   mut hachure_angle : Double
   mut hachure_gap : Double
+  mut disable_multi_stroke_fill : Bool
   // private fields
 }
 pub fn Options::new() -> Self

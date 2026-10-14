@@ -76,6 +76,14 @@ pub(all) suberror SankeyError {
 } derive(Eq, @debug.Debug)
 
 // Types and methods
+pub struct BandScale {
+  // private fields
+}
+pub fn BandScale::apply(Self, String) -> Double?
+pub fn BandScale::bandwidth(Self) -> Double
+pub fn BandScale::new(domain~ : Array[String], range~ : (Double, Double), padding_inner? : Double, padding_outer? : Double, align? : Double, round? : Bool) -> Self
+pub fn BandScale::step(Self) -> Double
+
 pub struct Format {
   // private fields
 }
@@ -99,6 +107,13 @@ pub fn[T] HierarchyNode::each_before(Self[T], (Self[T]) -> Unit) -> Unit
 pub fn[T] HierarchyNode::leaves(Self[T]) -> Array[Self[T]]
 pub fn[T] HierarchyNode::sort(Self[T], (Self[T], Self[T]) -> Double) -> Unit
 pub fn[T] HierarchyNode::sum(Self[T], (T) -> Double) -> Unit
+
+pub struct LinearScale {
+  // private fields
+}
+pub fn LinearScale::apply(Self, Double) -> Double?
+pub fn LinearScale::new(domain~ : (Double, Double), range~ : (Double, Double)) -> Self
+pub fn LinearScale::ticks(Self, count? : Double) -> Array[Double]
 
 pub struct Ordinal[T] {
   // private fields

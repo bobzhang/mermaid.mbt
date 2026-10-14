@@ -1,0 +1,18 @@
+C4Deployment
+title Deployment
+Deployment_Node(n1, "Node one", "Ubuntu", "A description of the node") {
+  Node_L(n2, "Left", "Docker") {
+    Container(c1, "C1", "Java")
+  }
+  Node_R(n3, "Right", "Docker", "described") {
+    ContainerDb(c2, "C2", "PG")
+  }
+  Node(n4, "Plain") {
+    Container(c3, "C3")
+  }
+}
+Node(n5, "Other", $descr="named description", $sprite="server") {
+  Container(c4, "C4")
+}
+Rel(c1, c2, "talks", "JDBC")
+Rel(c3, n5, "to node")

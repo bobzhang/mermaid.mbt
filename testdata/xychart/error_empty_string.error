@@ -1,0 +1,4 @@
+Parse error on line 2:
+...hart-beta  title ""  x-axis "" [a, b]
+----------------------^
+Expecting 'STR', 'MD_STR', 'AMP', 'NUM', 'ALPHA', 'PLUS', 'EQUALS', 'MULT', 'DOT', 'BRKT', 'MINUS', 'UNDERSCORE', got 'NEWLINE'

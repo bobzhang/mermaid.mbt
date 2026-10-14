@@ -1,0 +1,10 @@
+Parsing failed:  Parse error on line 2, column 12: Expecting: one of these possible Token sequences:
+  1. [json]
+  2. [jsobj]
+  3. [figma]
+  4. [salt]
+  5. [uri]
+  6. [md]
+  7. [html]
+  8. [text]
+but found: 'xml'

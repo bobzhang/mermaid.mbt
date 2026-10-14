@@ -24,13 +24,15 @@ pub(all) struct Options {
   mut preserve_vertices : Bool
   mut fill_shape_roughness_gain : Double
   mut stroke_line_dash : Array[Double]?
-  /// The width of the lines of a sketched fill; half the stroke width
+  /// The width of the lines of a sketchy fill; half the stroke width
   /// when negative.
   mut fill_weight : Double
-  /// The direction of the lines of a hachure fill, in degrees.
+  /// The angle of hachure lines, in degrees.
   mut hachure_angle : Double
-  /// The distance between them; four stroke widths when negative.
+  /// The distance between hachure lines; four stroke widths when
+  /// negative.
   mut hachure_gap : Double
+  mut disable_multi_stroke_fill : Bool
   priv mut randomizer : Randomizer?
 }
 
@@ -56,6 +58,7 @@ pub fn Options::new() -> Options {
     fill_weight: -1.0,
     hachure_angle: -41.0,
     hachure_gap: -1.0,
+    disable_multi_stroke_fill: false,
     randomizer: None,
   }
 }
@@ -117,4 +120,12 @@ fn Options::offset_opt(
   gain~ : Double = 1.0,
 ) -> Double {
   self.offset(-x, x, gain~)
+}
+
+///|
+/// The stroke width as a number, as JavaScript coerces it in arithmetic.
+fn Options::stroke_width_number(self : Options) -> Double {
+  @string.parse_double(self.stroke_width) catch {
+    _ => 0.0 / 0.0
+  }
 }

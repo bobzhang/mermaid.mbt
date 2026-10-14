@@ -376,3 +376,42 @@ test "boxes of transformed elements" {
     content="206.8490753173828 330.81671142578125 28.165817260742188 18.78460693359375",
   )
 }
+
+///|
+/// Alpha is written with two decimals when they give the same 8-bit
+/// value, with three otherwise; measured in Chrome.
+test "alpha of a color in an inline style" {
+  let stroke = (color : String) => {
+    @dom.Element::new("line").style("stroke", color).to_html()
+  }
+  inspect(
+    stroke("#ff000080"),
+    content=(
+      #|<line style="stroke: rgba(255, 0, 0, 0.5);"></line>
+    ),
+  )
+  inspect(
+    stroke("#10203001"),
+    content=(
+      #|<line style="stroke: rgba(16, 32, 48, 0.004);"></line>
+    ),
+  )
+  inspect(
+    stroke("rgba(10, 20, 30, 0.7)"),
+    content=(
+      #|<line style="stroke: rgba(10, 20, 30, 0.7);"></line>
+    ),
+  )
+  inspect(
+    stroke("rgba(10, 20, 30, 0.123)"),
+    content=(
+      #|<line style="stroke: rgba(10, 20, 30, 0.12);"></line>
+    ),
+  )
+  inspect(
+    stroke("rgba(10, 20, 30, 0.999)"),
+    content=(
+      #|<line style="stroke: rgb(10, 20, 30);"></line>
+    ),
+  )
+}

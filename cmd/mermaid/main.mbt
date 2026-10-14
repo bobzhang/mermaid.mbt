@@ -16,6 +16,7 @@ let usage : String =
   #|  sequence-db <file.mmd>...
   #|                         the same for sequence diagrams
   #|  git-db <file.mmd>...   print each git graph's parsed database as JSON
+  #|  c4-db <file.mmd>...    print each C4 diagram's parsed database as JSON
   #|  bbox <cases.json>      print getBBox() of an <svg> around each markup string
   #|  state-db <file.mmd>... print each state diagram's layout data as JSON
   #|  elk-graph <file.mmd> [--config site.json]
@@ -294,6 +295,35 @@ fn git_db(paths : ArrayView[String]) -> Unit raise CliError {
 }
 
 ///|
+fn c4_db(paths : ArrayView[String]) -> Unit raise CliError {
+  for path in paths {
+    let source = read_text(path)
+    let line = try {
+      let processed = @preprocess.preprocess(source)
+      let config = @config.Config::new(
+        directive=processed.config,
+        diagram_type="c4",
+      )
+      @c4.parse(@preprocess.encode_entities(processed.code) + "\n", config)
+      .dump()
+      .stringify()
+    } catch {
+      @jison.ParseError(message~, ..) => {
+        let report : Json = { "error": message }
+        report.stringify()
+      }
+      error => {
+        let report : Json = { "error": Repr(error).to_string() }
+        report.stringify()
+      }
+    } noraise {
+      text => text
+    }
+    println(line)
+  }
+}
+
+///|
 /// Print the box of an `<svg>` element holding each markup string of a
 /// JSON array, as `[x, y, width, height]`, for comparing with `getBBox()`.
 fn bboxes(path : String) -> Unit raise CliError {
@@ -406,6 +436,7 @@ fn main {
       ["flow-db", .. paths] => flow_db(paths)
       ["sequence-db", .. paths] => sequence_db(paths)
       ["git-db", .. paths] => git_db(paths)
+      ["c4-db", .. paths] => c4_db(paths)
       ["bbox", path] => bboxes(path)
       ["state-db", .. paths] => state_db(paths)
       ["elk-graph", path, .. options] => elk_graph(path, options)

@@ -8,6 +8,14 @@ pub(all) struct EntityAttribute {
 }
 
 ///|
+/// A line of a class box: its text as markdown, and the style its
+/// classifier asks for.
+pub(all) struct ClassBoxMember {
+  text : String
+  style : String
+}
+
+///|
 /// What the shapes of one diagram type draw besides the node's label.
 pub(all) enum NodeData {
   /// Nothing more.
@@ -26,6 +34,13 @@ pub(all) enum NodeData {
   )
   /// An element of a requirement diagram.
   RequirementElement(name~ : String, type_~ : String, doc_ref~ : String)
+  /// A class of a class diagram: its title and what its box lists.
+  ClassBox(
+    text~ : String,
+    annotations~ : Array[String],
+    members~ : Array[ClassBoxMember],
+    methods~ : Array[ClassBoxMember]
+  )
   /// A block of a block diagram, which draws every block twice: once to
   /// measure it and once `positioned`, at the size its grid gives it.
   /// `directions` are those a block arrow points in, `style` the inline
@@ -38,5 +53,16 @@ pub(all) enum NodeData {
     width_in_columns~ : Double,
     style~ : String,
     class_rules~ : Array[String]
+  )
+  /// An element of a C4 diagram, whose label is stacked sections: its
+  /// name, the `stereotype` (a type line such as `[Container: Node.js]`)
+  /// and the node's description lines. The diagram's stylesheet sets the
+  /// label in a font of its own: a CSS `font-family` list, a size in
+  /// pixels, and whether the weight is bold.
+  C4(
+    stereotype~ : String,
+    font_family~ : String,
+    font_size~ : Double,
+    bold~ : Bool
   )
 }

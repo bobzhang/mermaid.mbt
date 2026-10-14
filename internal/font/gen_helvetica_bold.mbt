@@ -829,4 +829,5 @@ let helvetica_bold : Face = Face::new(
   // left glyph id, right glyph id, code point of the ligature
   ligatures=[73, 76, 64257, 73, 79, 64258],
   mac_ascent_adjustment=true,
+  split_kerning=true,
 )
