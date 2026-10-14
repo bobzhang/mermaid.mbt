@@ -11,6 +11,10 @@ import {
 // Values
 pub fn configure_svg_size(@dom.Element, Double, Double, Bool) -> Unit
 
+pub fn is_js_space(Char) -> Bool
+
+pub fn parse_float(String) -> Double
+
 pub fn parse_font_size(String) -> Double?
 
 pub fn to_fixed0(Double) -> String
@@ -22,10 +26,23 @@ pub struct Context {
   id : String
   config : @config.Config
   svg : @dom.Element
+  now : Double
+  page : Page
 }
+pub fn Context::container_width(Self) -> Double
 pub fn Context::font(Self, bold? : Bool, italic? : Bool) -> @font.Stack
-pub fn Context::new(String, @config.Config, @dom.Element) -> Self
+pub fn Context::new(String, @config.Config, @dom.Element, now~ : Double, page~ : Page) -> Self
 pub fn Context::theme(Self) -> @theme.Theme
+pub fn Context::view_box_scale(Self, Double, Double, max_width? : Double, fixed? : Bool) -> Double
+
+pub struct Page {
+  viewport_width : Double
+  viewport_height : Double
+  margin : Double
+  scrollbar : Double
+  screen_width : Double
+}
+pub fn Page::new(viewport_width? : Double, viewport_height? : Double, margin? : Double, scrollbar? : Double, screen_width? : Double) -> Self
 
 // Type aliases
 

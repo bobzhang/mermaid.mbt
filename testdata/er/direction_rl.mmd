@@ -1,0 +1,10 @@
+---
+config:
+  handDrawnSeed: 7
+
+---
+erDiagram
+    direction RL
+    CUSTOMER ||--o{ ORDER : places
+    ORDER ||--|{ LINE-ITEM : contains
+    CUSTOMER }|..|{ DELIVERY-ADDRESS : uses

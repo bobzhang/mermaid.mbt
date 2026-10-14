@@ -212,18 +212,21 @@ test "a person: a head above a body, sized around the stacked label" {
     dom_id="id-a",
     look="classic",
     shape="person",
-    stereotype="[Person]",
+    data=C4(
+      stereotype="[Person]",
+      font_family="\"Open Sans\", sans-serif",
+      font_size=14.0,
+      bold=false,
+    ),
     description=["A customer of the bank"],
-    width=216.0,
-  )
+  ).placed(x=100.0, y=100.0, width=216.0, label_style="")
   let parent = @dom.Element::new("g")
-  let element = draw_node(
-    parent,
-    node,
-    config=@config.Config::new(),
+  let painter = Painter::new(
+    @config.Config::new(),
+    diagram_type="c4",
     diagram_id="id",
-    font={ family: "\"Open Sans\", sans-serif", size: 14.0, bold: false, },
   )
+  let element = painter.draw_shape(parent, node)
   // The head's radius is 0.23 of the width; the body holds the label and
   // its padding.
   inspect(
@@ -240,17 +243,16 @@ test "a person: a head above a body, sized around the stacked label" {
   )
   // Lines leave the silhouette, not the bounding box: straight up through
   // the top of the head, sideways through the body.
-  node.set_position(100.0, 100.0)
   debug_inspect(
-    node.intersection({ x: 100.0, y: -500.0, }),
+    node.leaves_at({ x: 100.0, y: -500.0, }),
     content=(
-      #|{ x: 100, y: 12.993713378906248 }
+      #|Some({ x: 100, y: 12.993713378906248 })
     ),
   )
   debug_inspect(
-    node.intersection({ x: 900.0, y: 143.0, }),
+    node.leaves_at({ x: 900.0, y: 143.0, }),
     content=(
-      #|{ x: 190.60976725860306, y: 104.87027499014991 }
+      #|Some({ x: 190.60976725860306, y: 104.87027499014991 })
     ),
   )
 }

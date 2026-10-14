@@ -1,0 +1,23 @@
+---
+config:
+  theme: redux
+---
+sequenceDiagram
+    autonumber
+    actor U as User
+    participant S as Server
+    participant D@{ "type": "database" } as DB
+    U->>+S: request
+    Note right of S: validate
+    loop retry
+        S->>+D: query
+        D-->>-S: rows
+    end
+    rect
+        S-->>-U: response
+    end
+    alt ok
+        U->>U: happy
+    else not ok
+        U-xS: complain
+    end

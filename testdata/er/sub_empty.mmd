@@ -1,0 +1,16 @@
+---
+config:
+  handDrawnSeed: 7
+---
+erDiagram
+    subgraph empty [Nothing inside]
+    end
+    subgraph one1
+        A
+    end
+    subgraph dup
+        A
+        B
+        B
+    end
+    A ||--|| B : x

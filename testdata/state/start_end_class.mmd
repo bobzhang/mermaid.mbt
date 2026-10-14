@@ -1,0 +1,13 @@
+---
+config:
+  handDrawnSeed: 7
+
+---
+stateDiagram-v2
+    classDef red fill:#f00
+    [*]:::red --> A
+    A --> [*]:::red
+    state A {
+      [*] --> x
+      x --> [*]
+    }

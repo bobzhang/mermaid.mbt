@@ -1,0 +1,119 @@
+---
+config:
+  handDrawnSeed: 3
+---
+stateDiagram-v2
+    [*] --> Done1
+    state Done1 {
+        [*] --> Stopped4
+        state Stopped4 {
+            [*] --> Init7
+            state Paused9 <<choice>>
+            Paused9 --> Paused9
+            Paused9 --> Init7
+            Paused9 --> Init7
+            Running8 --> [*]
+            note right of Running8
+                a rather long transition label that will wrap first line
+                and a **second** line
+            end note
+            state "stop alias with spaces" as Stopped10
+            Running8 --> Stopped10
+        }
+        state Config5 {
+            direction BT
+            state Running11 {
+                direction RL
+                state Ready15 <<join>>
+                Error16 : next step description
+                Error16 : second line
+                Draft17 : ok description
+                Draft17 --> Error16
+                note right of Draft17 : stop note
+                note left of Error16
+                    done first line
+                    and a **second** line
+                end note
+            }
+            state Ready12 <<choice>>
+            state Paused13 <<fork>>
+            Closed14 : timeout expired description
+            Paused13 --> Running11
+            Closed14 --> Ready12
+            Closed14 --> Running11
+            Closed14 --> Paused13
+            Ready12 --> Running11 : go
+            Ready12 --> [*]
+            note right of Closed14
+                user pressed the button first line
+                and a **second** line
+            end note
+            state "timeout expired alias with spaces" as Saving18
+            Closed14 --> Saving18
+        }
+        Locked6 : go description
+        Locked6 --> Stopped4 : go
+        Stopped4 --> Config5 : ok
+        Locked6 --> [*]
+        note left of Stopped4 : ok note
+        note right of Stopped4
+            go first line
+            and a **second** line
+        end note
+        state "stop alias with spaces" as Loading19
+        Locked6 --> Loading19
+    }
+    state Ready2 {
+        direction LR
+        [*] --> Ready20
+        state Review21 {
+            [*] --> Config23
+            Config23 : user pressed the button description
+            Stopped24 : timeout expired description
+            Stopped24 : second line
+            state Config25 <<fork>>
+            Stopped24 --> Config23
+            Stopped24 --> Config23 : ok
+            Config25 --> Stopped24 : fail
+            note left of Stopped24 : a rather long transition label that will wrap note
+            note left of Config25
+                done first line
+                and a **second** line
+            end note
+        }
+        state Stopped22 {
+            [*] --> Config26
+            state Config26 <<fork>>
+            Active27 : retry description
+            Active27 : second line
+            Open28 : ok description
+            Config26 --> Open28
+            Active27 --> Config26
+            Active27 --> Open28
+            Config26 --> Open28 : retry
+            Active27 --> Config26 : done
+            Active27 --> [*]
+            note right of Open28
+                evt first line
+                and a **second** line
+            end note
+            state "fail alias with spaces" as Error29
+            Config26 --> Error29
+        }
+        Review21 --> Stopped22 : x > 3
+        Review21 --> [*]
+        note left of Review21 : evt note
+        note left of Ready20
+            go first line
+            and a **second** line
+        end note
+    }
+    Idle3 : stop description
+    Idle3 --> Ready2
+    Done1 --> Done1 : stop
+    note left of Done1 : a rather long transition label that will wrap note
+    classDef hot fill:#f96,stroke:#333,color:#036,font-weight:bold
+    classDef cold fill:#9cf,stroke-dasharray:4 2
+    class Done1 hot
+    class Ready2,Done1 cold
+    style Done1 stroke:#f00,stroke-width:3px

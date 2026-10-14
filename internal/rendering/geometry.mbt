@@ -337,6 +337,7 @@ fn intersect_polygon(node : Node, poly : Array[Point], point : Point) -> Point {
       intersections.push(hit)
     }
   }
+  polygon_missed.val = intersections.is_empty()
   if intersections.is_empty() {
     return centre
   }

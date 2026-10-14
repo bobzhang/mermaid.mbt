@@ -38,7 +38,23 @@ Work in progress.
 | Packet | byte-identical |
 | Info | byte-identical |
 | Flowchart | byte-identical for the fixtures in `testdata/flowchart`; see below |
+| Git graph | byte-identical, all orientations and options; upstream's documentation examples match |
+| Entity relationship | byte-identical with the default ELK layout |
+| Requirement | byte-identical with the default ELK layout |
+| State | byte-identical with the default ELK layout, `stateDiagram` and `stateDiagram-v2` |
+| User journey | byte-identical, all `journey:` options |
+| Timeline | byte-identical, horizontal and vertical, both looks |
+| Gantt | byte-identical; see the note on time below |
+| Sequence | byte-identical: all participant kinds and arrow types, both looks; KaTeX is not ported |
 | everything else | not ported yet — `render` raises `Unsupported` |
+
+Git graphs name commits at random upstream (`Math.random`), so a graph
+whose commits have no explicit `id:` differs from render to render there;
+the fixtures seed the generator (`testdata/gitgraph/oracle-prelude.js`) and
+the port draws the same sequence. State diagrams have one such name too:
+the last region of a composite state split by `--` is called
+`id-<random>-<count>` upstream. The port writes `id-i-<count>`, and
+`scripts/oracle.py` renames the reference's regions the same way.
 
 Shared infrastructure that is in place: all eleven themes, configuration
 resolution, frontmatter and directives, diagram type detection, the
@@ -47,21 +63,35 @@ grammars mermaid writes in jison (`internal/jison`, with the tables taken
 from mermaid's own build by `scripts/extract_jison.js` and
 `scripts/gen_jison.py`).
 
+### Gantt charts and time
+
+A Gantt chart depends on three things outside its text, and `render` takes
+each as an argument that defaults to the reference page's value:
+
+- the time zone, which is that of the reference machine (Asia/Shanghai,
+  with its historical offsets) — `@jsdate.Zone::reference()` is the one
+  place that chooses it;
+- the present, for the today marker and for dates that leave parts out:
+  `now`, in milliseconds, defaulting to the system clock;
+- the page the diagram sits in, whose width the chart takes and whose
+  scrollbar changes how labels measure: `page`.
+
 ### Flowcharts
 
-Flowcharts go through a port of mermaid's unified renderer
-(`internal/rendering`): HTML labels, node shapes, subgraph frames, edge
-routing with rounded corners and line hops, class and link styling. The
-layout is ELK's, as upstream, computed by
+Flowcharts, entity relationship, requirement and state diagrams go through a port
+of mermaid's unified renderer (`internal/rendering`): HTML labels, node
+shapes, subgraph frames, edge routing with rounded corners and line hops,
+class and link styling. The layout is ELK's, as upstream, computed by
+[bobzhang/elk](https://github.com/bobzhang/elk), a fork of
 [moon_elk](https://github.com/moonbit-community/moon_elk).
 
 What is missing:
 
-- Matching elkjs 0.9.3 exactly needs fixes to moon_elk that currently live
-  on a branch of a local checkout (`../moon_elk`, joined through an untracked
-  `moon.work`). With them, every graph tried so far lays out exactly as in
-  elkjs: the fixtures, upstream's documentation examples and some eight
-  hundred generated graphs.
+- Matching elkjs 0.9.3 exactly needs fixes to moon_elk that live in the
+  fork, published as `bobzhang/elk`, until they are merged upstream. With
+  them, every graph tried so far lays out exactly as in elkjs: the
+  fixtures, upstream's documentation examples and some eight hundred
+  generated graphs.
 - The node shapes of flowcharts are ported, the classic ones and those of
   the `@{ shape: ... }` syntax. `render` raises `Unsupported` for the rest:
   icons and images, `person`, collapsed groups, and `state`, which upstream
@@ -104,10 +134,12 @@ single-precision arithmetic (`internal/dom`), the stylis CSS compiler
 `atan2f` of macOS on arm64 (`internal/libm`), which Skia shapes arcs with
 and which are not correctly rounded.
 
-Known limits: text outside the embedded faces (Trebuchet MS, Verdana, Arial;
-Latin and common symbols) is measured approximately, and fractional font
-sizes that are not multiples of 1/64 px can differ in the last float bit of
-an ink overhang.
+Known limits: the embedded faces are Trebuchet MS, Verdana, Arial, Times
+and Helvetica, with Latin, Greek, Cyrillic and common symbols. Text outside
+them (CJK, emoji, Hebrew, Arabic, ...) falls to other system fonts in the
+browser, which are not embedded: the newer diagram ports refuse such text
+with `Unsupported`, the older ones (flowchart, pie) measure it
+approximately.
 
 ## Layout
 

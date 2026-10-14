@@ -24,9 +24,16 @@ pub struct Node {
   link_target : String?
   tooltip : String?
   have_callback : Bool
-  /// The type line of a C4 element, such as `[Container: Node.js]`. A node
-  /// with one has a label of stacked sections: name, type, descriptions.
-  stereotype : String?
+  /// What shapes of one diagram type draw besides the label.
+  data : NodeData
+  /// The corner radii a diagram asks for; a `rect` with both is rounded.
+  rx : Double?
+  ry : Double?
+  /// Whether the label is centred by its box whatever kind it is.
+  center_label : Bool
+  /// The width labels wrap at, when the diagram sets its own.
+  wrapping_width : Double?
+  /// The lines under the title of a state with a description.
   description : Array[String]
   // Filled in while measuring and laying out.
   mut label_style : String
@@ -63,9 +70,12 @@ pub fn Node::new(
   link_target? : String,
   tooltip? : String,
   have_callback~ : Bool = false,
-  stereotype? : String,
+  data~ : NodeData = Plain,
+  rx? : Double,
+  ry? : Double,
+  center_label~ : Bool = false,
+  wrapping_width? : Double,
   description~ : Array[String] = [],
-  width? : Double,
 ) -> Node {
   {
     id,
@@ -87,10 +97,14 @@ pub fn Node::new(
     link_target,
     tooltip,
     have_callback,
-    stereotype,
+    data,
+    rx,
+    ry,
+    center_label,
+    wrapping_width,
     description,
     label_style: "",
-    width,
+    width: None,
     height: None,
     x: 0.0,
     y: 0.0,
@@ -215,15 +229,21 @@ priv struct Env {
   font_size : Double
   /// Whether labels are HTML in a `foreignObject` or SVG text.
   html_labels : Bool
-  /// Whether the stylesheet makes label text bold.
+  /// Whether the diagram's stylesheet anchors the SVG text of node labels
+  /// in the middle, as the flowchart's does.
+  node_text_centred : Bool
+  /// Whether the label being measured is bold or italic as a whole.
   bold : Bool
+  italic : Bool
 }
 
 ///|
 fn Env::new(config : @config.Config, diagram_id : String) -> Env {
   let theme = config.theme()
   let size = match theme.get("fontSize") {
-    Number(n, ..) => n
+    // A number without a unit is no CSS length: the stylesheet's
+    // `font-size` is dropped and text keeps the browser's size.
+    Number(_, ..) => 16.0
     String(text) => {
       let mut value = 0.0
       for c in text {
@@ -252,7 +272,9 @@ fn Env::new(config : @config.Config, diagram_id : String) -> Env {
     font_family: theme.text("fontFamily"),
     font_size: size,
     html_labels,
+    node_text_centred: true,
     bold: false,
+    italic: false,
   }
 }
 
@@ -263,5 +285,9 @@ fn Env::font(
   bold~ : Bool = false,
   italic~ : Bool = false,
 ) -> @font.Stack {
-  @font.Stack::for_family(self.font_family, bold=bold || self.bold, italic~)
+  @font.Stack::for_family(
+    self.font_family,
+    bold=bold || self.bold,
+    italic=italic || self.italic,
+  )
 }

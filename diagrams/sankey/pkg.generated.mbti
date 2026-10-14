@@ -1,0 +1,33 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/diagrams/sankey"
+
+import {
+  "bobzhang/mermaid/config",
+  "bobzhang/mermaid/diagram",
+  "bobzhang/mermaid/theme",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn draw(Sankey, @diagram.Context) -> Unit raise SankeyError
+
+pub fn parse(String, @config.Config) -> Sankey raise
+
+pub fn styles(@theme.Theme) -> String
+
+// Errors
+pub(all) suberror SankeyError {
+  Invalid(String)
+  Unsupported(String)
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+pub struct Sankey {
+  nodes : Array[String]
+  links : Array[(Int, Int, Double)]
+  // private fields
+}
+
+// Type aliases
+
+// Traits

@@ -7,6 +7,10 @@ priv struct Run {
   text : String
   bold : Bool
   italic : Bool
+  /// Whether the text is in a bold element inside bold text. Its weight
+  /// is `bolder` than bold: drawn with the same face, but a font of its
+  /// own, shaped apart from the bold text around it.
+  heavy : Bool
 }
 
 ///|
@@ -21,29 +25,29 @@ fn label_lines(root : @dom.Element) -> Array[Array[Run]] {
       break_line()
     }
   }
-  fn visit(element : @dom.Element, bold : Bool, italic : Bool) {
+  fn visit(element : @dom.Element, bold : Bool, italic : Bool, heavy : Bool) {
     for child in element.children() {
       match child {
         Text(text) =>
           if lines.last() is Some(line) {
-            line.push({ text, bold, italic, })
+            line.push({ text, bold, italic, heavy, })
           }
         Element(child) =>
           match child.tag {
             "br" => break_line()
             "p" | "div" => {
               block_boundary()
-              visit(child, bold, italic)
+              visit(child, bold, italic, heavy)
               block_boundary()
             }
-            "strong" | "b" => visit(child, true, italic)
-            "em" | "i" => visit(child, bold, true)
-            _ => visit(child, bold, italic)
+            "strong" | "b" => visit(child, true, italic, bold)
+            "em" | "i" => visit(child, bold, true, heavy)
+            _ => visit(child, bold, italic, heavy)
           }
       }
     }
   }
-  visit(root, false, false)
+  visit(root, false, false, false)
   // A trailing block boundary leaves an empty line behind.
   if lines.length() > 1 && lines.last() is Some(line) && line.is_empty() {
     lines.pop() |> ignore
@@ -54,26 +58,38 @@ fn label_lines(root : @dom.Element) -> Array[Array[Run]] {
 ///|
 /// Collapse white space across the runs of a line, as `white-space:
 /// nowrap` lays it out: runs of spaces become one, the ends are trimmed.
+/// A space stays in the run it was written in, which decides the face it
+/// is measured in and the item it is rounded with.
 fn collapse_runs(line : Array[Run]) -> Array[Run] {
-  let out : Array[Run] = []
-  let mut pending = false
+  let texts : Array[StringBuilder] = line.map(_ => StringBuilder())
+  // Whether the last character kept is a space, and the run holding it.
+  let mut space_in : Int32? = None
   let mut started = false
-  for run in line {
-    let text = StringBuilder()
+  for index, run in line {
     for c in run.text {
       if c is (' ' | '\t' | '\n' | '\r') {
-        pending = started
-      } else {
-        if pending {
-          text.write_char(' ')
-          pending = false
+        if started && space_in is None {
+          texts[index].write_char(' ')
+          space_in = Some(index)
         }
-        text.write_char(c)
+      } else {
+        texts[index].write_char(c)
         started = true
+        space_in = None
       }
     }
-    if !text.is_empty() {
-      out.push({ ..run, text: text.to_string(), })
+  }
+  let out : Array[Run] = []
+  for index, run in line {
+    let text = texts[index].to_string()
+    // The space the line ends in takes no room.
+    let text = if space_in == Some(index) {
+      text[:text.length() - 1].to_owned()
+    } else {
+      text
+    }
+    if text != "" {
+      out.push({ ..run, text, })
     }
   }
   out
@@ -91,7 +107,8 @@ fn runs_width(runs : Array[Run], env : Env) -> Double {
     let text = StringBuilder()
     while index < runs.length() &&
           runs[index].bold == first.bold &&
-          runs[index].italic == first.italic {
+          runs[index].italic == first.italic &&
+          runs[index].heavy == first.heavy {
       text.write_string(runs[index].text)
       index += 1
     }
@@ -194,6 +211,7 @@ priv struct Item {
   chars : Array[Char]
   bold : Bool
   italic : Bool
+  heavy : Bool
   positions : Map[Int32, Double]
 }
 
@@ -221,7 +239,9 @@ fn line_items(line : Array[Run]) -> Array[Item] {
   let items : Array[Item] = []
   for run in line {
     match items.last() {
-      Some(item) if item.bold == run.bold && item.italic == run.italic =>
+      Some(item) if item.bold == run.bold &&
+        item.italic == run.italic &&
+        item.heavy == run.heavy =>
         for c in run.text {
           item.chars.push(c)
         }
@@ -229,6 +249,7 @@ fn line_items(line : Array[Run]) -> Array[Item] {
         items.push({
           chars: run.text.to_array(),
           bold: run.bold,
+          heavy: run.heavy,
           italic: run.italic,
           positions: Map([]),
         })

@@ -1,0 +1,9 @@
+sequenceDiagram
+    participant A@{ "type": "entity", "alias": "Aliased" }
+    participant B@{ "alias": "Only alias" }
+    participant C@{ "type": "queue" } as Explicit
+    participant D@{ "type": "queue", "alias": "Ignored" } as Explicit D
+    actor E@{ "type": "database" }
+    A->>B: x
+    C->>D: y
+    D->>E: z

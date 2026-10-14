@@ -1,4 +1,5 @@
 import {
+  "bobzhang/mermaid/internal/jsregex",
   "moonbitlang/core/string",
 }
 

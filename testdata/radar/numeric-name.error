@@ -1,0 +1,2 @@
+Parsing failed:  Parse error on line 2, column 6: Expecting token of type 'ID' but found `1`.
+Parse error on line 2, column 10: Expecting token of type 'ID' but found `2`.

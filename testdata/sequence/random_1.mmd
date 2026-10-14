@@ -1,0 +1,23 @@
+---
+config: {"sequence": {"height": 40, "boxMargin": 15}}
+---
+sequenceDiagram
+    participant Bob@{ "type": "control" }
+    participant Eve@{ "type": "collections" }
+    participant Carl
+    Eve-->>+Carl: wrap:please<br />pong
+    Note right of Carl: wrap:fi database session cache a
+    Carl-//-Carl: fetch
+    Eve-//+Bob: <br/>ping queue WA
+    Eve->>Eve: OK token auth
+    Carl->+Bob: x+y done
+    Eve-)Eve: wrap:Wave, AV x-y error
+    alt AV Te Wave,
+        rect rgba(0, 255, 0, 0.2)
+            activate Carl
+        end
+    else WA x_y
+        Bob<<->>+Carl: nowrap:token<br />ping Great payment a and
+    end
+    Bob-->>Bob: x-y retry request x+y database
+    deactivate Bob

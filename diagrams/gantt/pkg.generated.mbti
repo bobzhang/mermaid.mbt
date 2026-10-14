@@ -1,0 +1,65 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/diagrams/gantt"
+
+import {
+  "bobzhang/mermaid/diagram",
+  "bobzhang/mermaid/theme",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn draw(GanttDb, @diagram.Context) -> Unit raise GanttError
+
+pub fn parse(String, title? : String) -> GanttDb raise
+
+pub fn styles(@theme.Theme) -> String
+
+// Errors
+pub(all) suberror GanttError {
+  GanttError(String)
+  Unsupported(String)
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+pub struct GanttDb {
+  mut date_format : String
+  mut axis_format : String
+  mut tick_interval : String?
+  mut today_marker : String
+  mut includes : Array[String]
+  mut excludes : Array[String]
+  mut title : String
+  mut acc_title : String
+  mut acc_description : String
+  sections : Array[String]
+  mut inclusive_end_dates : Bool
+  mut weekday : String
+  tasks : Array[Task]
+  links : Map[String, String]
+  // private fields
+}
+pub fn GanttDb::compile(Self, Double) -> Array[Task] raise GanttError
+pub fn GanttDb::dump(Self, Double) -> Json raise GanttError
+
+pub struct Task {
+  section : String
+  task : String
+  id : String
+  active : Bool
+  done : Bool
+  crit : Bool
+  milestone : Bool
+  vert : Bool
+  classes : Array[String]
+  mut order : Int
+  mut processed : Bool
+  mut manual_end_time : Bool
+  mut start_time : Double?
+  mut end_time : Double?
+  mut render_end_time : Double?
+  // private fields
+}
+
+// Type aliases
+
+// Traits

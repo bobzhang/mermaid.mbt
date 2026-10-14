@@ -1,0 +1,4 @@
+Parse error on line 1:
+block-beta  accTitle: Accessible
+------------^
+Expecting 'BLOCK_DIAGRAM_KEY', 'SPACE_BLOCK', 'COLUMNS', 'id-block', 'NODE_ID', 'classDef', 'class', 'style', got 'acc_title'

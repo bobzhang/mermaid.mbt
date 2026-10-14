@@ -1,0 +1,15 @@
+---
+config:
+  theme: redux
+  look: classic
+---
+sequenceDiagram
+    actor U as User
+    participant S as Server
+    participant Q@{ "type": "queue" } as Queue
+    U->>+S: request
+    Note over U,S: validate<br/>twice
+    opt sometimes
+        S-)Q: enqueue
+    end
+    S-->>-U: response

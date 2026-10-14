@@ -1,0 +1,23 @@
+---
+config:
+  look: classic
+  sequence:
+    height: 120
+---
+sequenceDiagram
+    actor A
+    participant B
+    participant C@{ "type": "entity" }
+    participant D@{ "type": "control" }
+    participant E@{ "type": "boundary" }
+    participant F@{ "type": "database" }
+    participant G@{ "type": "queue" }
+    participant H@{ "type": "collections" }
+    A->>B: x
+    destroy B
+    A-xB: gone
+    A->>C: y
+    create participant I@{ "type": "control" }
+    A->>I: new
+    create actor J
+    I->>J: new

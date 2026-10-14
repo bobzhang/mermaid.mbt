@@ -43,8 +43,13 @@ fn c4_label_helper(
     .attr("class", "label")
     .attr("style", node.label_style)
   let sections : Array[(String, String)] = [(node.label, "c4-name")]
-  if node.stereotype is Some(stereotype) {
-    sections.push((stereotype, "c4-type"))
+  // The stylesheet sets the label in the font of the element's type.
+  let env = match node.data {
+    C4(stereotype~, font_family~, font_size~, bold~) => {
+      sections.push((stereotype, "c4-type"))
+      { ..env, font_family, font_size, bold, italic: false, }
+    }
+    _ => env
   }
   for line in node.description {
     sections.push((line, "c4-descr"))
@@ -77,7 +82,7 @@ fn c4_label_helper(
       anchor_middle=true,
     )
     // Each line is centred in its section; the lines sit at x = 0.
-    for tspan in text.text.child_elements() {
+    for tspan in text.element.child_elements() {
       tspan.attr("text-anchor", "middle") |> ignore
       // Without the presentation attributes, weight and style come from
       // the stylesheet.
@@ -85,7 +90,7 @@ fn c4_label_helper(
         word.remove_attr("font-weight").remove_attr("font-style") |> ignore
       }
     }
-    text.text.set_text_box(text_box(text.lines, section_env, true))
+    text.element.set_text_box(text_box(text.lines, section_env, true))
     rendered.push((element, element.bbox()))
   }
   let total_width = rendered.fold(init=0.0, (widest, section) => {

@@ -1,0 +1,16 @@
+---
+config:
+  handDrawnSeed: 7
+
+---
+erDiagram
+    p[Person] {
+        string firstName
+        string lastName
+    }
+    a["Customer Account"] {
+        string email
+    }
+    p ||--o| a : has
+    b[Bare]
+    b ||--|| p : ""

@@ -12,8 +12,12 @@ so both sides get `handDrawnSeed` from `--seed`.
 `--prelude` names JavaScript to evaluate in the oracle page first, for
 diagrams whose output upstream leaves to `Math.random()`.
 
+Diagrams that show the present (the today marker of a Gantt chart) need
+both sides to agree on what time it is: `--now` stops both clocks.
+
 Usage: scripts/check_examples.py [docs.md ...] [--keywords flowchart graph]
-                                 [--seed 1] [--cache DIR] [--prelude FILE] [-v]
+                                 [--seed 1] [--now MS] [--cache DIR]
+                                 [--prelude FILE] [-v]
 """
 
 import argparse
@@ -50,6 +54,7 @@ def main():
     parser.add_argument("docs", nargs="*", type=pathlib.Path, default=DEFAULT_DOCS)
     parser.add_argument("--keywords", nargs="+", default=["flowchart", "graph"])
     parser.add_argument("--seed", type=int, default=1)
+    parser.add_argument("--now", type=int, help="the clock of both sides, in milliseconds since the epoch")
     parser.add_argument("--cache", type=pathlib.Path, default=ROOT / ".repos" / "oracle" / "examples")
     parser.add_argument("--prelude", type=pathlib.Path,
                         help="JavaScript evaluated in the oracle page before rendering (see compare.py)")
@@ -62,16 +67,26 @@ def main():
     args.cache.mkdir(parents=True, exist_ok=True)
     inputs = []
     for source in sources:
-        digest = hashlib.sha256((config + prelude + source).encode()).hexdigest()[:16]
+        clock = "" if args.now is None else f"now={args.now}"
+        digest = hashlib.sha256((config + clock + prelude + source).encode()).hexdigest()[:16]
         path = args.cache / f"{digest}.mmd"
         path.write_text(source)
         inputs.append(path)
     missing = [path for path in inputs if not path.with_suffix(".svg").exists()]
     for start in range(0, len(missing), compare.BATCH):
         batch = missing[start:start + compare.BATCH]
-        subprocess.run([sys.executable, str(ROOT / "scripts" / "oracle.py"), "--config", config,
-                        "-o", str(args.cache)] + (["--eval", prelude] if prelude else [])
-                       + [str(path) for path in batch], check=True, stdout=subprocess.DEVNULL)
+        clock = [] if args.now is None else ["--now", str(args.now)]
+        # A diagram upstream rejects makes the oracle exit with an error
+        # after rendering the others; its place is taken by the message.
+        done = subprocess.run([sys.executable, str(ROOT / "scripts" / "oracle.py"), "--config", config,
+                               "-o", str(args.cache)] + clock + (["--eval", prelude] if prelude else [])
+                              + [str(path) for path in batch], capture_output=True, text=True)
+        for path in batch:
+            if not path.with_suffix(".svg").exists():
+                errors = [line for line in done.stderr.splitlines() if line.startswith(f"{path}:")]
+                if not errors:
+                    sys.exit(done.stderr or f"the oracle rendered nothing for {path}")
+                path.with_suffix(".svg").write_text("error: " + errors[0] + "\n")
 
     binary = compare.build()
     with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as handle:
@@ -80,7 +95,8 @@ def main():
     identical = 0
     for index, path in enumerate(inputs):
         expected = path.with_suffix(".svg").read_text()
-        done = subprocess.run([str(binary), "render", str(path), "--id", compare.SVG_ID, "--config", handle.name],
+        clock = [] if args.now is None else ["--now", str(args.now)]
+        done = subprocess.run([str(binary), "render", str(path), "--id", compare.SVG_ID, "--config", handle.name] + clock,
                               capture_output=True, text=True)
         actual = done.stdout.removesuffix("\n")
         if actual == expected:

@@ -135,13 +135,23 @@ fn element_css_styles(
 }
 
 ///|
+/// The font the label of an element is set in.
+priv struct ElementFont {
+  /// A CSS `font-family` list.
+  family : String
+  /// The size in pixels.
+  size : Double
+  bold : Bool
+}
+
+///|
 /// The font the stylesheet sets the label of an element type in: the
 /// three `<type>Font...` keys of the configuration, each falling back to
 /// what the diagram inherits when it is not configured.
 fn element_font(
   config : @config.Config,
   kind : String,
-) -> @rendering.LabelFont raise Unsupported {
+) -> ElementFont raise Unsupported {
   let theme = config.theme()
   let configured = element_types.contains(kind)
   let family = match config.get("c4.\{kind}FontFamily") {
@@ -219,7 +229,8 @@ fn build_node(
   }
   let stereotype = stereotype_text(props, kind)
   // The label helper sanitizes and measures each text; make sure it can.
-  let stack = @font.Stack::for_family(element_font(config, kind).family)
+  let font = element_font(config, kind)
+  let stack = @font.Stack::for_family(font.family)
   for text in [label, stereotype, ..description] {
     let text = @dom.placeholders_to_references(text)
     sanitize_text(text, config, "a label") |> ignore
@@ -237,8 +248,12 @@ fn build_node(
     dom_id="\{diagram_id}-\{shape.name()}",
     look=config.text("look").unwrap_or("classic"),
     shape=node_shape,
-    stereotype~,
+    data=C4(
+      stereotype~,
+      font_family=font.family,
+      font_size=font.size,
+      bold=font.bold,
+    ),
     description~,
-    width=conf.width,
   )
 }

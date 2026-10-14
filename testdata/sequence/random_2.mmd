@@ -1,0 +1,11 @@
+---
+title: query
+config: {"theme": "forest", "sequence": {"wrap": true, "bottomMarginAdj": 0, "hideUnusedParticipants": true}, "wrap": false, "themeVariables": {"fontFamily": "Times", "primaryColor": "#00ff88"}}
+---
+sequenceDiagram
+    participant x-y as a log result<br/>
+    participant name as <br/>“smart” "quoted"
+    link x-y: request iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii @ https://example.com/b c
+    name->>x-y: wrap:× validate wait ×
+    x-y-xx-y: return “smart” retry response the
+    name-->>x-y: nowrap:'single' wait ¿Qué?

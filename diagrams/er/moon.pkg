@@ -1,0 +1,15 @@
+import {
+  "bobzhang/mermaid/config",
+  "bobzhang/mermaid/diagram",
+  "bobzhang/mermaid/internal/color",
+  "bobzhang/mermaid/internal/jison",
+  "bobzhang/mermaid/internal/jsregex",
+  "bobzhang/mermaid/internal/rendering",
+}
+
+warnings = "-implicit_impl_as_method"
+
+import {
+  "bobzhang/mermaid/config",
+  "bobzhang/mermaid/internal/jison",
+} for "test"

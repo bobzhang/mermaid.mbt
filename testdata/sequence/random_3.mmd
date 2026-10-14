@@ -1,0 +1,13 @@
+---
+config: {"theme": "base", "sequence": {"mirrorActors": false, "width": 60}, "fontSize": 18, "themeVariables": {"primaryColor": "#123456"}}
+---
+sequenceDiagram
+    participant Bob as database timeout query
+    participant title@{ "type": "database", "alias": "how" }
+    participant name@{ "type": "queue" }
+    link name: Great @ https://example.com/b c
+    link name: wait worker @ https://example.com/
+    link name: retry Ångström retry @ https://example.com/x?y=1&z=2
+    par
+        name-)Bob: nowrap:Pneumonoultramicroscopicsilicovolcanoconiosis
+    end

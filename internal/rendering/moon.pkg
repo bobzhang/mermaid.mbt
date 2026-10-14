@@ -1,11 +1,12 @@
 import {
   "moonbitlang/core/string",
   "bobzhang/mermaid/config",
+  "bobzhang/mermaid/internal/d3",
   "bobzhang/mermaid/internal/dom",
   "bobzhang/mermaid/internal/font",
   "bobzhang/mermaid/internal/jsmath",
   "bobzhang/mermaid/internal/rough",
-  "Milky2018/moon_elk/engine/all" @elk,
+  "bobzhang/elk/engine/all" @elk,
 }
 
 warnings = "-implicit_impl_as_method"

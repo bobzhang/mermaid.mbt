@@ -1,0 +1,42 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/internal/journeycommon"
+
+import {
+  "bobzhang/mermaid/internal/font",
+  "bobzhang/mermaid/theme",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn acc_description(String) -> String raise SanitizeError
+
+pub fn acc_title(String) -> String raise SanitizeError
+
+pub fn collapse_white_space(String) -> String
+
+pub fn js_number(String) -> Double
+
+pub fn js_trim(String) -> String
+
+pub fn require_glyphs(@font.Stack, String) -> Unit raise MeasureError
+
+pub fn sanitize_text(String) -> String raise SanitizeError
+
+pub fn theme_font(@theme.Theme, bold? : Bool) -> @font.Stack raise MeasureError
+
+pub fn theme_font_size(@theme.Theme) -> Double raise MeasureError
+
+// Errors
+pub(all) suberror MeasureError {
+  MeasureError(String)
+} derive(Eq, @debug.Debug)
+
+pub(all) suberror SanitizeError {
+  SanitizeError(String)
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+
+// Type aliases
+
+// Traits

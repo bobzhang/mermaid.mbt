@@ -1,0 +1,21 @@
+---
+config:
+  htmlLabels: false
+  handDrawnSeed: 3
+---
+block-beta
+  columns 4
+  a["Square"] b("Rounded") c(["Stadium"]) d[["Subroutine"]]
+  e[("Database")] f(("Circle")) g>"Asymmetric"] h{"Rhombus"}
+  i{{"Hexagon"}} j[/"Parallelogram"/] k[\"Parallelogram alt"\] l[/"Trapezoid"\]
+  m[\"Trapezoid alt"/] n((("Double circle"))) o<["Arrow"]>(x) 
+  block:grp
+    p q
+  end
+  a --> f
+  b -- "label" --> g
+  c -.-> i
+  d ==> e
+  classDef hot fill:#f96,stroke:#333,color:#00f
+  class b hot
+  style a fill:#f9F,stroke:#333,stroke-width:4px,color:#f00

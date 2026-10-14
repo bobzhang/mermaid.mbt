@@ -2,11 +2,6 @@
 // Upstream's `c4Renderer`.
 
 ///|
-/// The width the reference browser reports as `screen.availWidth`, which
-/// upstream wraps rows at.
-const SCREEN_WIDTH : Double = 800.0
-
-///|
 /// What drawing a diagram keeps track of.
 priv struct Renderer {
   db : C4Db
@@ -14,31 +9,30 @@ priv struct Renderer {
   conf : Conf
   svg : @dom.Element
   id : String
+  painter : @rendering.Painter
   /// The far corner of everything drawn so far.
   mut max_x : Double
   mut max_y : Double
 }
 
 ///|
-/// Draw one element with the unified shape that stands for it.
+/// Draw one element, centred on `(x, y)`, with the unified shape that
+/// stands for it. Elements start out as wide as the configuration says.
 fn Renderer::draw_node(
   self : Renderer,
   parent : @dom.Element,
   shape : Element,
+  x : Double,
+  y : Double,
 ) -> (@rendering.Node, @dom.Element) raise {
-  let node = build_node(shape, self.config, self.conf, self.id)
-  guard text_of(shape.props, "typeC4Shape") is Some(kind) else {
-    raise Unsupported("C4: an element without a type")
-  }
-  let element = @rendering.draw_node(
-    parent,
-    node,
-    config=self.config,
-    diagram_id=self.id,
-    font=element_font(self.config, kind),
-  ) catch {
+  let node = build_node(shape, self.config, self.conf, self.id).placed(
+    x~,
+    y~,
+    width=self.conf.width,
+    label_style="",
+  )
+  let element = self.painter.draw_shape(parent, node) catch {
     @rendering.LayoutError(message) => raise Unsupported(message)
-    error => raise error
   }
   (node, element)
 }
@@ -54,7 +48,7 @@ fn Renderer::draw_shapes(
   let conf = self.conf
   // Measure: every shape sizes itself around its label.
   for shape in shapes {
-    let (node, element) = self.draw_node(self.svg, shape)
+    let (node, element) = self.draw_node(self.svg, shape, 0.0, 0.0)
     shape.width = node.width.unwrap_or(conf.width)
     shape.height = node.height.unwrap_or(conf.height)
     element.remove()
@@ -78,9 +72,9 @@ fn Renderer::draw_shapes(
     let positioned = self.svg
       .append("g")
       .attr("transform", "translate(\{n(x)}, \{n(y)})")
-    let (node, _) = self.draw_node(positioned, shape)
-    node.set_position(x, y)
-    shape.intersect = Some(point => node.intersection(point))
+    let (node, _) = self.draw_node(positioned, shape, x, y)
+    // A line that does not cross the outline ends at the centre.
+    shape.intersect = Some(point => node.leaves_at(point).unwrap_or({ x, y, }))
   }
   bounds.bump_last_margin(conf.shape_margin)
 }
@@ -289,13 +283,19 @@ pub fn draw(db : C4Db, context : @diagram.Context) -> Unit raise {
     conf.diagram_margin_y,
     conf.diagram_margin_y,
   )
-  screen.width_limit = SCREEN_WIDTH
+  // Rows wrap at the width of the screen.
+  screen.width_limit = context.page.screen_width
+  // The unified shapes are not drawn by hand yet.
+  if config.text("look") == Some("handDrawn") {
+    raise Unsupported("The hand-drawn look is not supported yet.")
+  }
   let renderer = {
     db,
     config,
     conf,
     svg,
     id,
+    painter: @rendering.Painter::new(config, diagram_type="c4", diagram_id=id),
     max_x: conf.diagram_margin_x,
     max_y: conf.diagram_margin_y,
   }

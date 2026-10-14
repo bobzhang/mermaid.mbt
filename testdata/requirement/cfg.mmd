@@ -1,0 +1,21 @@
+---
+config:
+  handDrawnSeed: 7
+  state:
+    titleTopMargin: 50
+    useMaxWidth: false
+  fontFamily: verdana
+  themeVariables:
+    fontSize: 18px
+title: Margins
+---
+requirementDiagram
+    requirement test_req {
+    id: 1
+    text: the test text.
+    }
+    element test_entity {
+    type: simulation
+    }
+    test_entity - satisfies -> test_req
+    test_req - contains -> test_entity

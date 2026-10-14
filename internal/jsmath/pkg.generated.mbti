@@ -6,9 +6,13 @@ pub fn acos(Double) -> Double
 
 pub fn asin(Double) -> Double
 
+pub fn atan(Double) -> Double
+
 pub fn atan2(Double, Double) -> Double
 
 pub fn cos(Double) -> Double
+
+pub fn floor_log10(Double) -> Double
 
 pub fn hypot(Double, Double) -> Double
 

@@ -1,0 +1,16 @@
+---
+config:
+  handDrawnSeed: 7
+---
+stateDiagram-v2
+    A : a label that is long enough to pass the minimum width
+    B : another label that is long enough to pass the minimum
+    C : plain label that is long enough to pass the minimum
+    D : description label that is long enough to pass it
+    style A font-weight:500
+    style B font-weight:501
+    style C font-weight:lighter
+    style D font-weight:bolder,font-style:oblique
+    A --> B
+    B --> C
+    C --> D

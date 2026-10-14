@@ -1,0 +1,4 @@
+Parse error on line 10:
+...orms: y    forms->>Title: z
+----------------------^
+Expecting 'link', '+', '-', '()', 'ACTOR', got 'legacy_title'

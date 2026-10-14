@@ -53,10 +53,9 @@ fn js_round(value : Double) -> Double {
 ///
 /// Upstream measures in `sans-serif` and in the font's family and keeps
 /// the latter unless the former is larger in every respect. In the
-/// reference browser the default families end in `sans-serif`, which is
-/// Helvetica there, and so does everything the port can measure: a family
-/// list has to name an installed family the port embeds first, or none
-/// before a generic `sans-serif`.
+/// reference browser `sans-serif` is Helvetica, which is also what the
+/// default families of the configuration come down to. The port measures
+/// a family list whose first installed family it embeds.
 fn text_dimensions(text : String, font : Font) -> (Double, Double) raise {
   if text == "" {
     return (0.0, 0.0)
@@ -111,7 +110,7 @@ fn measurable_family(family : String, weight : String) -> Bool {
   for name in family.split(",") {
     let name = name.trim(chars=" \t\n\"'").to_owned().to_lower()
     match name {
-      "trebuchet ms" | "verdana" | "arial" => return true
+      "trebuchet ms" | "verdana" | "arial" | "times" | "serif" => return true
       // Helvetica, which is also the generic sans-serif there, has a
       // light face.
       "helvetica" | "sans-serif" => return !is_light(weight)

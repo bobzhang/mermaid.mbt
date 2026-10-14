@@ -37,12 +37,12 @@ test "weights above 500 are bold" {
 
 ///|
 test "a font the port does not embed is refused" {
-  let font : Font = { family: "serif", size: 14.0, weight: "normal", }
+  let font : Font = { family: "Courier New", size: 14.0, weight: "normal", }
   try text_dimensions("cat", font) catch {
     Unsupported(message) =>
       inspect(
         message,
-        content="C4: text in the font family serif at weight normal",
+        content="C4: text in the font family Courier New at weight normal",
       )
     _ => fail("expected Unsupported")
   } noraise {

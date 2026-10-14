@@ -1,0 +1,16 @@
+---
+config:
+  handDrawnSeed: 7
+
+---
+stateDiagram-v2
+    state f [[fork]]
+    state j [[join]]
+    state c [[choice]]
+    f --> A
+    f --> B
+    A --> j
+    B --> j
+    j --> c
+    c --> X : yes
+    c --> Y : no

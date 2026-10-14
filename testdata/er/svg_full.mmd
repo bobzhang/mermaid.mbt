@@ -1,0 +1,29 @@
+---
+config:
+  handDrawnSeed: 7
+  htmlLabels: false
+---
+erDiagram
+    accTitle: Title here
+    accDescr {
+        A longer description
+        on two lines
+    }
+    p[Person] {
+        string firstName PK "first"
+        string lastName
+        List~string~ tags
+    }
+    a["Customer Account"] {
+        string email UK
+    }
+    p ||--o| a : has
+    a }|..|{ "ORDER LINE" : "a rather long label that needs to wrap in svg text mode"
+    subgraph g1 [The Group]
+        "ORDER LINE"
+        X
+    end
+    X ||--|| p : self
+    style X fill:#f9f,stroke:#333,color:red
+    classDef big fill:#ffc,stroke-width:3px,font-weight:bold
+    class a big

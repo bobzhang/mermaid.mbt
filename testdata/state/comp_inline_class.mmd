@@ -1,0 +1,12 @@
+---
+config:
+  handDrawnSeed: 7
+
+---
+stateDiagram-v2
+    classDef big fill:#f96,stroke:#333,color:#00f
+    [*] --> Comp:::big
+    state Comp {
+       a --> b:::big
+    }
+    Comp --> c:::big
