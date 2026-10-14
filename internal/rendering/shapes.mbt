@@ -414,6 +414,7 @@ fn draw_shape(
     "requirementBox" => return requirement_box(parent, node, env)
     "classBox" => return class_box(parent, node, env)
     "block_arrow" => return block_arrow(parent, node, env)
+    "kanbanItem" => return kanban_item(parent, node, env)
     "usecaseActor"
     | "usecaseActorHollow"
     | "usecaseActorAwesome"

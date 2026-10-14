@@ -14,6 +14,7 @@ import {
   "bobzhang/mermaid/diagrams/info",
   "bobzhang/mermaid/diagrams/ishikawa",
   "bobzhang/mermaid/diagrams/journey",
+  "bobzhang/mermaid/diagrams/kanban",
   "bobzhang/mermaid/diagrams/packet",
   "bobzhang/mermaid/diagrams/pie",
   "bobzhang/mermaid/diagrams/radar",

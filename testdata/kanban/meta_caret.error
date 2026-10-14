@@ -1,0 +1,3 @@
+Lexical error on line 3. Unrecognized text.
+...  b[x]@{ assigned: a^b }
+-----------------------^

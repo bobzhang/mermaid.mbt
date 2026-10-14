@@ -153,6 +153,7 @@ fn insert_cluster_shape(
     "roundedWithTitle" => rounded_with_title(parent, node, env)
     "noteGroup" => note_group(parent, node)
     "divider" => divider(parent, node, env)
+    "kanbanSection" => kanban_section(parent, node, env)
     "flowGroup" => flow_group(parent, node, env)
     "usecaseSystemBoundary" => usecase_system_boundary(parent, node, env)
     other =>

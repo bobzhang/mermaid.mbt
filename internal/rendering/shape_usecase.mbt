@@ -60,12 +60,15 @@ priv struct InsertedLabel {
 
 ///|
 /// A label of its own in a shape: mermaid's `insertLabel`. The text is
-/// markdown, and wraps at `width` or the flowchart's wrapping width.
+/// markdown, and wraps at `width` or the flowchart's wrapping width. An
+/// HTML label is measured in `html_env` when the stylesheet sets it in a
+/// type of its own, which SVG text, measured before it gets its class,
+/// does not get.
 fn insert_label(
   parent : @dom.Element,
   text : String,
   env : Env,
-  html_env : Env,
+  html_env? : Env,
   width? : Double,
   style~ : String = "",
   center_label~ : Bool = false,
@@ -82,7 +85,7 @@ fn insert_label(
     let (fo, box) = create_html_label(
       label,
       text,
-      html_env,
+      html_env.unwrap_or(env),
       width~,
       style~,
       markdown=true,
@@ -104,7 +107,7 @@ fn insert_label(
       width~,
       style~,
       markdown=true,
-      anchor_middle=false,
+      anchor_middle=env.node_text_centred,
     )
     let box : LabelBox = {
       width: text.text_box.width,
@@ -308,7 +311,7 @@ fn usecase_actor(
         shape_svg,
         "«\{text}»",
         env,
-        usecase_font_env(node, env),
+        html_env=usecase_font_env(node, env),
         width?=node.wrapping_width,
         style=styles.label_styles,
         center_label=true,
@@ -460,7 +463,7 @@ fn usecase_business(
         shape_svg,
         "«\{text}»",
         env,
-        usecase_font_env(node, env),
+        html_env=usecase_font_env(node, env),
         width?=node.wrapping_width,
         style=styles.label_styles,
         center_label=true,
@@ -570,14 +573,12 @@ fn usecase_json_table(
       table_group,
       row.0,
       env,
-      env,
       style=styles.label_styles,
       center_label=true,
     )
     let value = insert_label(
       table_group,
       row.1,
-      env,
       env,
       style=styles.label_styles,
       center_label=true,

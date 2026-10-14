@@ -109,7 +109,12 @@ fn edge_label_uses_own_styles(diagram_type : String) -> Bool {
 /// on its position (`.node .label text { text-anchor: middle }`).
 fn node_text_centred(diagram_type : String) -> Bool {
   !(diagram_type
-  is ("er" | "requirement" | "stateDiagram" | "classDiagram" | "usecase"))
+  is ("er"
+  | "requirement"
+  | "stateDiagram"
+  | "classDiagram"
+  | "kanban"
+  | "usecase"))
 }
 
 ///|
