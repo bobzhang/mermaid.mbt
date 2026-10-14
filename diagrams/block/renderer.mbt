@@ -131,9 +131,6 @@ pub fn draw(db : BlockDb, context : @diagram.Context) -> Unit raise {
   let svg = context.svg
   db.diagram_id = context.id
   // What the port cannot draw yet is refused rather than drawn differently.
-  if config.text("look") == Some("handDrawn") {
-    raise @rendering.LayoutError("The hand-drawn look is not supported yet.")
-  }
   each_block(db.root.children, block => {
     // Its width is divided by the columns it spans, and everything is
     // infinitely wide; what the browser makes of that is not ported.
