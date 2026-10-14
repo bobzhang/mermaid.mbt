@@ -1,0 +1,48 @@
+---
+config:
+  handDrawnSeed: 1
+  swimlane:
+    automaticLaneOrdering: true
+---
+swimlane-beta TB
+  subgraph L0 [Q&A desk]
+    step1(Done)
+    N2[Build]
+    a3_x[Send]
+  end
+  subgraph Ops1 [Customer]
+    n4[Close ticket]
+  end
+  subgraph Team_2 [Customer]
+    n5[Notify customer]
+    step6[Approve]
+    N7[Send]
+  end
+  subgraph lane3 [Ops]
+    step8((Check))
+    step9{Notify customer}
+    n10[[Plan]]
+    N11{Create account}
+  end
+  subgraph lane4 [Engineering]
+    n12[Ask]
+    step13[Deploy]
+    a14_x(Review)
+    a15_x[Collect data]
+  end
+  step9 --> n5
+  N7 ==>|Invoice ready| step6
+  n10 ==> N7
+  a14_x --- N11
+  a14_x --- N2
+  N7 ---|ok| N11
+  a14_x --> N7
+  a15_x ==> a14_x
+  a3_x --> n12
+  step13 --- a14_x
+  n10 -->|No| step13
+  step9 --- a15_x
+  n12 --> N11
+  n4 ==> N11
+  a15_x -->|Yes| step1
+  N7 --> n4

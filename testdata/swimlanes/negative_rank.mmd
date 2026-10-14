@@ -1,0 +1,60 @@
+---
+config:
+  handDrawnSeed: 1
+  swimlane:
+    automaticLaneOrdering: true
+    ignoreCrossLaneEdges: false
+---
+swimlane-beta TB
+  subgraph lane0 [Customer]
+    N1((Pay))
+    a2_x[Ask]
+    a3_x[Review]
+    step4[Test]
+    n5[Start]
+  end
+  subgraph L1 [Engineering]
+    step6[Done]
+    step7{Close ticket}
+    step8[Ask]
+    n9[(Review)]
+  end
+  subgraph Ops2 [Finance]
+    n10[Validate request]
+    step11[Deploy]
+    step12>Deploy]
+    a13_x[Deploy]
+    a14_x[Wait]
+  end
+  subgraph Team_3
+    step15[Pay]
+    a16_x[Create account]
+    a17_x[Collect data]
+    n18[Send]
+  end
+  subgraph L4
+    n19[Test]
+    a20_x>Done]
+  end
+  n10 --> a17_x
+  a17_x --> step11
+  n18 -->|No| step12
+  a3_x --> a2_x
+  step11 --> a17_x
+  a20_x -->|retry| n10
+  step15 -->|retry| step15
+  step11 -->|No| a14_x
+  a16_x -.-> step8
+  step6 -.->|retry| a14_x
+  a3_x --> step8
+  step11 --> n10
+  n19 ==>|retry| step4
+  a2_x -->|No| step7
+  a13_x ---|retry| step7
+  step11 -->|ok| a17_x
+  n10 --> n9
+  a13_x --- a13_x
+  n18 -.-> n10
+  a16_x -.-> step12
+  n5 ==> n19
+  a3_x --- n10

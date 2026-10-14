@@ -1,0 +1,26 @@
+---
+config:
+  handDrawnSeed: 1
+  theme: default
+  look: classic
+  flowchart:
+    curve: linear
+---
+swimlane-beta TD
+  subgraph L0
+    n1[Deploy]
+    N2[(Create account)]
+    n3[Ship]
+    n4{Order}
+    n5[(Wait)]
+  end
+  free6[Pay]
+  free7[Ask]
+  n5 -.-> free6
+  N2 -.-> free7
+  n4 -.-> free6
+  n1 -.-> n4
+  n4 --> N2
+  n3 --> n4
+  N2 -->|retry| free7
+  n4 --> n1

@@ -1,0 +1,13 @@
+---
+config:
+  htmlLabels: false
+---
+swimlane-beta RL
+  subgraph Customer
+    p[Place a rather long order with many words]
+  end
+  subgraph Store
+    s[Send]
+  end
+  p -->|Order placed today| s
+  s --> done[Done]

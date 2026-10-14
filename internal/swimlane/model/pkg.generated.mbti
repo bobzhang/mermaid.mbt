@@ -1,0 +1,226 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/internal/swimlane/model"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub const EPS : Double = 1.0e-3
+
+pub fn build_orthogonal_port_path(Pt, Side, Pt, Side, Double, epsilon? : Double) -> Array[Pt]?
+
+pub fn build_same_side_track_path(Pt, Side, Pt, Double) -> Array[Pt]
+
+pub fn capture_sizes(Json) -> Map[String, (Double, Double)]
+
+pub fn classify_three_segment_route(Array[Pt], epsilon? : Double) -> ThreeSegmentRoute?
+
+pub fn code_unit_compare(String, String) -> Double
+
+pub fn code_unit_less(String, String) -> Bool
+
+pub fn collatable(String) -> Bool
+
+pub fn collect_layout_node_rects(Array[Node], include_edge_labels? : Bool) -> Array[RectEntry]
+
+pub fn collect_node_rect_entries(Iter[Node]) -> (Array[RectEntry], Array[RectEntry])
+
+pub fn collect_real_node_bounds(Array[Node]) -> (Map[String, NodeInfo], Array[RectEntry])
+
+pub fn count_orthogonal_bends(Array[Pt], epsilon? : Double) -> Int
+
+pub fn dedupe_consecutive_points(Array[Pt], epsilon? : Double) -> Array[Pt]
+
+pub fn get_node_pair_geometry(Edge, Map[String, NodeInfo], epsilon? : Double) -> NodePair?
+
+pub fn inflate_rect(Rect, Double) -> Rect
+
+pub fn is_horizontal_segment(Pt, Pt, epsilon? : Double) -> Bool
+
+pub fn is_neg_zero(Double) -> Bool
+
+pub fn is_vertical_segment(Pt, Pt, epsilon? : Double) -> Bool
+
+pub fn js_max(Double, Double) -> Double
+
+pub fn js_min(Double, Double) -> Double
+
+pub fn js_round(Double) -> Double
+
+pub fn locale_compare(String, String) -> Double
+
+pub fn measured_node_rect(Node) -> (Double, Double, Rect)?
+
+pub fn node_bounds_info_for(Node) -> NodeInfo?
+
+pub fn orthogonal_segments_cross(Pt, Pt, Pt, Pt, epsilon? : Double, endpoint_tolerance? : Double) -> Bool
+
+pub fn orthogonal_segments_for_points(Array[Pt], epsilon? : Double) -> Array[Seg]
+
+pub fn orthogonal_segments_strictly_cross(Pt, Pt, Pt, Pt, epsilon? : Double) -> Bool
+
+pub fn orthogonalize_polyline(Array[Pt]) -> Array[Pt]
+
+pub fn overlap_length(Double, Double, Double, Double) -> Double
+
+pub fn point_inside_rect(Pt, Rect, buffer? : Double) -> Bool
+
+pub fn port_for_rect_side(NodeInfo, Side) -> Pt
+
+pub fn pt(Double, Double) -> Pt
+
+pub fn rect_contains_rect(Rect, Rect) -> Bool
+
+pub fn rect_from_center_size(Double, Double, Double, Double) -> Rect
+
+pub fn rect_of_node_bounds(Node) -> Rect?
+
+pub fn rects_overlap(Rect, Rect) -> Bool
+
+pub fn same_axis_segment_overlap_length(Seg, Seg, epsilon? : Double) -> Double
+
+pub fn same_axis_segments_overlap(Pt, Pt, Pt, Pt, epsilon? : Double) -> Bool
+
+pub fn same_point(Pt, Pt, epsilon? : Double) -> Bool
+
+pub fn same_x(Pt, Pt, epsilon? : Double) -> Bool
+
+pub fn same_y(Pt, Pt, epsilon? : Double) -> Bool
+
+pub fn segment_bounds_overlap_rect(Pt, Pt, Rect, buffer? : Double) -> Bool
+
+pub fn segment_conflicts_with_any_edge(Pt, Pt, Array[Edge], Edge?, epsilon? : Double, skip_degenerate_other? : Bool) -> Bool
+
+pub fn segment_hits_any_rect(Pt, Pt, Array[RectEntry], exclude_ids? : Array[String], shrink? : Double) -> Bool
+
+pub fn simplify_polyline(Array[Pt]) -> Array[Pt]
+
+// Errors
+
+// Types and methods
+pub(all) struct Edge {
+  id : String
+  start : String
+  end : String
+  mut label : String?
+  label_style : String
+  mut points : Array[Pt]?
+  is_layout_only : Bool
+  mut label_node_id : String?
+  mut curve : String?
+  arrow_type_start : String?
+  arrow_type_end : String?
+}
+pub fn Edge::new(id~ : String, start~ : String, end~ : String, label? : String, label_style? : String, is_layout_only? : Bool, curve? : String, arrow_type_start? : String, arrow_type_end? : String) -> Self
+pub fn Edge::to_snapshot(Self) -> Json
+
+pub(all) struct Layout {
+  mut nodes : Array[Node]
+  mut edges : Array[Edge]
+  direction : String?
+  options : Options
+}
+pub fn Layout::from_capture(Json) -> Self
+pub fn Layout::from_snapshot(Json, direction? : String, options? : Options) -> Self
+pub fn Layout::snapshot(Self, String) -> Json
+
+pub(all) struct Node {
+  id : String
+  mut label : String
+  is_group : Bool
+  mut parent_id : String?
+  padding : Double?
+  mut shape : String
+  mut direction : String?
+  dir : String?
+  look : String?
+  color_index : Int?
+  is_edge_label : Bool
+  is_dummy : Bool
+  edge_start : String?
+  edge_end : String?
+  label_style : String
+  mut width : Double?
+  mut height : Double?
+  mut x : Double?
+  mut y : Double?
+  mut layer : Int?
+  mut order : Int?
+  mut swimlane_content_top : Double?
+  mut group_title_rect : Rect?
+}
+pub fn Node::new(id~ : String, label? : String, is_group? : Bool, parent_id? : String, padding? : Double, shape? : String, direction? : String, dir? : String, look? : String, color_index? : Int, is_edge_label? : Bool, is_dummy? : Bool, edge_start? : String, edge_end? : String, label_style? : String, width? : Double, height? : Double) -> Self
+pub fn Node::to_snapshot(Self) -> Json
+
+pub(all) struct NodeInfo {
+  id : String
+  cx : Double
+  cy : Double
+  rect : Rect
+}
+
+pub(all) struct NodePair {
+  src_id : String
+  dst_id : String
+  src_info : NodeInfo
+  dst_info : NodeInfo
+  collinear_x : Bool
+  collinear_y : Bool
+}
+
+pub(all) struct Options {
+  node_spacing : Double?
+  rank_spacing : Double?
+  ignore_cross_lane_edges : Bool
+  optimize_ranks_by_crossings : Bool
+  automatic_lane_ordering : Bool
+  look : String?
+}
+pub fn Options::default() -> Self
+
+pub(all) struct Pt {
+  mut x : Double
+  mut y : Double
+} derive(@debug.Debug)
+pub fn Pt::copy(Self) -> Self
+
+pub(all) struct Rect {
+  left : Double
+  right : Double
+  top : Double
+  bottom : Double
+} derive(Eq, @debug.Debug)
+
+pub(all) struct RectEntry {
+  id : String
+  rect : Rect
+}
+
+pub(all) struct Seg {
+  index : Int
+  a : Pt
+  b : Pt
+  horizontal : Bool
+  vertical : Bool
+}
+
+pub(all) enum Side {
+  Top
+  Bottom
+  Left
+  Right
+} derive(Eq, @debug.Debug)
+pub fn Side::is_horizontal(Self) -> Bool
+
+pub(all) struct ThreeSegmentRoute {
+  hvh : Bool
+  p0 : Pt
+  p1 : Pt
+  p2 : Pt
+  p3 : Pt
+}
+
+// Type aliases
+
+// Traits

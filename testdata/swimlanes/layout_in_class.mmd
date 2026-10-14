@@ -1,0 +1,15 @@
+---
+config:
+  layout: swimlane
+  handDrawnSeed: 1
+---
+classDiagram
+  class Animal
+  class Dog
+  Animal <|-- Dog
+  namespace Zoo {
+    class Cat
+  }
+  Animal <|-- Cat : is
+  Animal "1" --> "*" Dog : owns
+  Dog "many" --o "one" Cat

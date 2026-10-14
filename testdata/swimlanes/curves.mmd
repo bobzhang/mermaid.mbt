@@ -1,0 +1,16 @@
+---
+config:
+  flowchart:
+    curve: linear
+---
+swimlane-beta
+  subgraph A
+    a1[A1] --> a2[A2]
+  end
+  subgraph B
+    b1[B1]
+  end
+  a1 --> b1
+  b1 --> a2
+  linkStyle 1 interpolate stepBefore
+  linkStyle 2 interpolate basis

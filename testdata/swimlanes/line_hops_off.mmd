@@ -1,0 +1,28 @@
+---
+config:
+  handDrawnSeed: 1
+  theme: default
+  swimlane:
+    lineHops: false
+---
+swimlane-beta
+  subgraph Team_0
+    n1[Ask]
+    n2[Fix]
+    a3_x[Start]
+    a4_x{Deploy}
+  end
+  subgraph Ops1
+    step5[Validate request]
+    a6_x[Done]
+    step7[Build]
+  end
+  free8[Deploy]
+  free9[Check]
+  n2 --- free8
+  a3_x --> free9
+  free8 ==> free9
+  a4_x --- a6_x
+  n1 --> step7
+  free8 ==> step7
+  n1 --> n2

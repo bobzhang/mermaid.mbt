@@ -87,7 +87,7 @@ const encode = (value) => {
         const { svg } = await mermaid.render(job.id, job.text);
         results.push({ svg, console: consoleLines.slice() });
       } catch (error) {
-        results.push({ error: String(error && error.message || error) });
+        results.push({ error: String(error && error.message || error), console: consoleLines.slice() });
       }
     }
   } catch (error) {
