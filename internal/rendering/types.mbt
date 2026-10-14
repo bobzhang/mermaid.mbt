@@ -241,7 +241,9 @@ priv struct Env {
 fn Env::new(config : @config.Config, diagram_id : String) -> Env {
   let theme = config.theme()
   let size = match theme.get("fontSize") {
-    Number(n, ..) => n
+    // A number without a unit is no CSS length: the stylesheet's
+    // `font-size` is dropped and text keeps the browser's size.
+    Number(_, ..) => 16.0
     String(text) => {
       let mut value = 0.0
       for c in text {

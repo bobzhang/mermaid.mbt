@@ -1,0 +1,24 @@
+---
+config:
+  handDrawnSeed: 3
+  theme: neo-dark
+---
+block-beta
+  columns 3
+  a["Square"] b("Rounded") c[["Sub"]]
+  block:grp:2
+    d{"Rhombus"} e(("Circle"))
+    block:inner
+      x y
+    end
+  end
+  f<["Arrow"]>(right)
+  block
+    g[("Db")] h>"Flag"]
+  end
+  i{{"Hex"}} j[/"Lean"/]
+  a --> e
+  e -- "label" --> f
+  g ==> i
+  classDef hot fill:#f96,stroke:#333
+  class b hot

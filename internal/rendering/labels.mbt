@@ -65,11 +65,14 @@ fn create_html_label(
   .style("line-height", "1.5")
   |> ignore
   if width is Some(width) {
-    div
-    .style("max-width", @dom.number(width) + "px")
-    .style("text-align", "center")
-    |> ignore
+    // A negative length is no value for `max-width`, and is dropped.
+    if width >= 0.0 {
+      div.style("max-width", @dom.number(width) + "px") |> ignore
+    }
+    div.style("text-align", "center") |> ignore
   }
+  // Without the declaration nothing limits the label.
+  let width = width.filter(width => width >= 0.0)
   div.attr("xmlns", "http://www.w3.org/1999/xhtml") |> ignore
   if add_background {
     div.attr("class", "labelBkg") |> ignore
@@ -85,6 +88,9 @@ fn create_html_label(
     line.map(run => {
       ..run,
       bold: run.bold || font.bold,
+      // A bold element in a label that is bold as a whole, by its own
+      // style or by that of what it is in.
+      heavy: run.heavy || (run.bold && (font.bold || env.bold)),
       italic: run.italic || font.italic,
     })
   }
@@ -94,9 +100,15 @@ fn create_html_label(
     widest.max(runs_width(line, env))
   })
   let empty = lines.all(line => line.is_empty())
+  // A label wider than its limit is as wide as the limit, which the
+  // browser holds in layout units: a single precision number of pixels
+  // cut to a 64th.
   let mut box : LabelBox = {
     width: match width {
-      Some(width) => natural.min(width)
+      Some(width) =>
+        natural.min(
+          (Float::from_double(width) * 64.0).to_double().floor() / 64.0,
+        )
       None => natural
     },
     height: if empty {
@@ -111,12 +123,16 @@ fn create_html_label(
     .style("white-space", "break-spaces")
     .style("width", @dom.number(width) + "px")
     |> ignore
-    let mut rows = 0
+    // A table is as wide as its widest piece that cannot be broken, and
+    // the lines are then broken in the width it has.
+    let lines = label_lines(span).map(styled)
     let mut box_width = width
-    for line in label_lines(span) {
-      let (line_rows, widest) = wrapped_rows(styled(line), width, env)
-      rows += line_rows
-      box_width = box_width.max(widest)
+    for line in lines {
+      box_width = box_width.max(wrapped_rows(line, width, env).1)
+    }
+    let mut rows = 0
+    for line in lines {
+      rows += wrapped_rows(line, box_width, env).0
     }
     box = { width: box_width, height: line_height * rows.to_double(), }
   } else if box.width < min_width {
@@ -176,10 +192,12 @@ fn label_helper(
   } else {
     0.0
   }
-  let label_width = if unlimited {
-    None
-  } else {
-    Some(node.width.unwrap_or(wrapping_width))
+  // `node.width || node.wrappingWidth || ...`: a width of zero is none,
+  // and a label told to wrap at infinity never does.
+  let label_width = match node.width {
+    _ if unlimited => None
+    Some(width) if width != 0.0 && !width.is_nan() => Some(width)
+    _ => if wrapping_width.is_inf() { None } else { Some(wrapping_width) }
   }
   let markdown = node.label_type == "markdown"
   let n = @dom.number
