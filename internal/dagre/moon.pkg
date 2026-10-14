@@ -1,0 +1,6 @@
+import {
+  "bobzhang/mermaid/internal/graphlib",
+  "moonbitlang/core/double",
+}
+
+warnings = "-implicit_impl_as_method"

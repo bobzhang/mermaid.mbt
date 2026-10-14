@@ -1,0 +1,77 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/internal/dagre"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn layout(GraphAttrs, Array[NodeAttrs], Array[EdgeAttrs]) -> Layout raise LayoutError
+
+pub fn layout_json(Json) -> Json raise LayoutError
+
+// Errors
+pub(all) suberror LayoutError {
+  LayoutError(String)
+} derive(@debug.Debug)
+
+// Types and methods
+pub(all) struct EdgeAttrs {
+  v : String
+  w : String
+  name : String?
+  minlen : Double?
+  weight : Double?
+  width : Double?
+  height : Double?
+  labeloffset : Double?
+  labelpos : String?
+}
+
+pub(all) struct EdgeLayout {
+  points : Array[Point]
+  label : Point?
+}
+
+pub(all) struct GraphAttrs {
+  rankdir : String?
+  nodesep : Double?
+  edgesep : Double?
+  ranksep : Double?
+  marginx : Double?
+  marginy : Double?
+  acyclicer : String?
+  ranker : String?
+  align : String?
+}
+
+pub(all) struct Layout {
+  width : Double
+  height : Double
+  nodes : Array[NodeLayout]
+  edges : Array[EdgeLayout]
+}
+
+pub(all) struct NodeAttrs {
+  id : String
+  width : Double?
+  height : Double?
+  parent : String?
+}
+
+pub(all) struct NodeLayout {
+  x : Double
+  y : Double
+  width : Double
+  height : Double
+  compound : Bool
+}
+
+pub(all) struct Point {
+  x : Double
+  y : Double
+} derive(Eq, @debug.Debug)
+
+// Type aliases
+
+// Traits
