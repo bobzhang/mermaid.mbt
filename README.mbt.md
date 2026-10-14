@@ -61,6 +61,7 @@ Work in progress.
 | Event modeling | byte-identical |
 | Wardley map | byte-identical |
 | Agentflow | byte-identical with the ELK and dagre layouts, including collapsed containers |
+| Kanban | byte-identical, including the hand-drawn look |
 | Venn | byte-identical, including the hand-drawn look; the layout optimiser of venn.js is transcribed step by step |
 | everything else | not ported yet — `render` raises `Unsupported` |
 
