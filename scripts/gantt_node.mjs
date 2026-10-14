@@ -31,7 +31,8 @@ const here = path.dirname(url.fileURLToPath(import.meta.url));
 const chunks = path.resolve(here, '..', '.repos', 'oracle', 'package', 'dist', 'chunks', 'mermaid.esm');
 const find = (pattern) => path.join(chunks, fs.readdirSync(chunks).find((name) => pattern.test(name)));
 // Importing the Gantt chunk extends dayjs with its plugins.
-await import(find(/^ganttDiagram-.*\.mjs$/));
+const gantt = (await import(find(/^ganttDiagram-.*\.mjs$/))).diagram;
+gantt.parser.parser.yy = gantt.db;
 const d3 = await import(fs.readdirSync(chunks)
   .map((name) => path.join(chunks, name))
   .find((file) => file.endsWith('.mjs') && fs.readFileSync(file, 'utf8').includes('dayjs.min.js"(exports, module)')));
@@ -74,6 +75,27 @@ function evaluate(c) {
     case 'scale': {
       const scale = d3.time().domain([date(c.domain[0]), date(c.domain[1])]).rangeRound(c.range);
       return c.values.map((value) => clean(scale(date(value))));
+    }
+    case 'db': {
+      // The database of a chart: what the parser collects and the dates
+      // `getTasks` works out, tasks in the order of the text.
+      const db = gantt.db;
+      db.clear();
+      gantt.parser.parse(c.text + '\n');
+      const time = (value) => (value === undefined || value === null ? null : Number.isNaN(+value) ? 'NaN' : +value);
+      const tasks = db.getTasks().map((task) => ({
+        id: String(task.id), task: task.task, section: task.section, order: task.order,
+        start: time(task.startTime), end: time(task.endTime), renderEnd: time(task.renderEndTime),
+        manualEnd: !!task.manualEndTime, processed: !!task.processed, classes: task.classes,
+        flags: ['active', 'done', 'crit', 'milestone', 'vert'].filter((flag) => task[flag]),
+      }));
+      return {
+        tasks, dateFormat: db.getDateFormat(), axisFormat: db.getAxisFormat(), tickInterval: db.getTickInterval() ?? null,
+        todayMarker: db.getTodayMarker(), includes: db.getIncludes(), excludes: db.getExcludes(),
+        title: db.getDiagramTitle(), accTitle: db.getAccTitle(), accDescription: db.getAccDescription(),
+        sections: db.getSections(), links: [...db.getLinks().keys()], weekday: db.getWeekday(),
+        inclusiveEndDates: db.endDatesAreInclusive(),
+      };
     }
     default:
       throw new Error(`unknown op ${c.op}`);

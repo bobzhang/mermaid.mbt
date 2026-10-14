@@ -60,6 +60,9 @@ class Font:
         ascent, descent = struct.unpack(">hh", self.table("hhea")[4:8])
         return ascent, -descent
 
+    def line_gap(self):
+        return struct.unpack(">h", self.table("hhea")[8:10])[0]
+
     def cmap(self):
         """Map code points to glyph ids from the Windows Unicode BMP subtable."""
         table = self.table("cmap")
@@ -255,6 +258,7 @@ def emit(ident, filename):
         f"  units_per_em={font.units_per_em()},",
         f"  ascent={ascent},",
         f"  descent={descent},",
+        f"  line_gap={font.line_gap()},",
         "  // code point, glyph id, advance, xMin, yMin, xMax, yMax",
         "  glyphs=[",
         *glyph_rows,

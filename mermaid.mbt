@@ -108,6 +108,28 @@ fn parse_diagram(
         },
       }
     }
+    "gantt" => {
+      let db = @gantt.parse(code, title?) catch {
+        @jison.ParseError(message~, ..) => raise Syntax(message)
+        @gantt.GanttError(message) => raise Syntax(message)
+        @gantt.Unsupported(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      {
+        styles: @gantt.styles(config.theme()),
+        acc_title: db.acc_title,
+        acc_description: db.acc_description,
+        classes: [],
+        draw: context => {
+          // Dates are only worked out when the chart is drawn, and may
+          // prove invalid then.
+          @gantt.draw(db, context) catch {
+            @gantt.GanttError(message) => raise Syntax(message)
+            @gantt.Unsupported(message) => raise Unsupported(message)
+          }
+        },
+      }
+    }
     other => raise Unsupported(other)
   }
 }
@@ -121,12 +143,22 @@ fn parse_diagram(
 ///   `mermaid.initialize`. The diagram's own frontmatter and directives are
 ///   layered on top.
 ///
+/// - `now` is the moment of rendering in milliseconds since the epoch, for
+///   the diagrams that show the present (the today marker of a Gantt
+///   chart). It defaults to the system clock, as in mermaid.
+/// - `page` describes the page the diagram is rendered in, which a Gantt
+///   chart takes its width from. The default is the page the reference
+///   renderings are made in.
+///
 /// The output is byte for byte what mermaid produces in the reference
-/// browser, for the diagram types and features ported so far.
+/// browser, for the diagram types and features ported so far. Local times
+/// are those of the reference machine's time zone, Asia/Shanghai.
 pub fn render(
   text : String,
   id~ : String = "mermaid-svg",
   config~ : Json = Json::object(Map([])),
+  now? : Double,
+  page~ : @diagram.Page = @diagram.Page::new(),
 ) -> String raise MermaidError {
   let processed = @preprocess.preprocess(text) catch {
     @preprocess.UnknownDiagramError(message) => raise UnknownDiagram(message)
@@ -163,7 +195,11 @@ pub fn render(
     compiled_styles(id, parsed.styles, config, parsed.classes),
   )
   svg.insert_before(style, first_child)
-  (parsed.draw)(@diagram.Context::new(id, config, svg))
+  let now = match now {
+    Some(now) => now
+    None => @env.now().to_double()
+  }
+  (parsed.draw)(@diagram.Context::new(id, config, svg, now~, page~))
   // Accessibility: the diagram type, then its title and description.
   svg
   .attr("role", "graphics-document document")

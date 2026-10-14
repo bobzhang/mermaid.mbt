@@ -15,6 +15,8 @@ pub struct Face {
   priv units_per_em : Int32
   priv ascent : Int32
   priv descent : Int32
+  /// The extra space the font asks for between lines.
+  priv line_gap : Int32
   /// Glyphs by code point.
   priv glyphs : Map[Int32, Glyph]
   /// Pair adjustments, keyed by `left_glyph * 65536 + right_glyph`.
@@ -29,6 +31,7 @@ fn Face::new(
   units_per_em~ : Int32,
   ascent~ : Int32,
   descent~ : Int32,
+  line_gap~ : Int32,
   glyphs~ : FixedArray[Int32],
   kerning~ : FixedArray[Int32],
 ) -> Face {
@@ -47,7 +50,7 @@ fn Face::new(
   for i = 0; i + 2 < kerning.length(); i = i + 3 {
     pairs[kerning[i] * 65536 + kerning[i + 1]] = kerning[i + 2]
   }
-  { units_per_em, ascent, descent, glyphs: by_code, kerning: pairs, }
+  { units_per_em, ascent, descent, line_gap, glyphs: by_code, kerning: pairs, }
 }
 
 ///|

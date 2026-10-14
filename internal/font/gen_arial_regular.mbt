@@ -6,6 +6,7 @@ let arial_regular : Face = Face::new(
   units_per_em=2048,
   ascent=1854,
   descent=434,
+  line_gap=67,
   // code point, glyph id, advance, xMin, yMin, xMax, yMax
   glyphs=[
     32, 3, 569, 0, 0, 0, 0, 33, 4, 569, 176, 0, 399, 1466, 34, 5, 727, 94, 947, 631,

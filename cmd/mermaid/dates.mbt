@@ -180,6 +180,10 @@ fn time_case(item : Json) -> Json raise {
           field_number(item, "amount"),
         ),
       )
+    "db" =>
+      @gantt.parse(@preprocess.encode_entities(field_text(item, "text")) + "\n").dump(
+        now,
+      )
     "ticks" => {
       let scale = @d3.TimeScale::new(zone).set_domain(
         field_number(item, "start"),
@@ -256,6 +260,8 @@ fn time_cases(path : String) -> Unit raise CliError {
     results.push(
       time_case(item) catch {
         @dayjs.DayjsError(message) => { "error": message }
+        @gantt.GanttError(message) => { "error": message }
+        @jison.ParseError(message~, ..) => { "error": message }
         error => { "error": Repr(error).to_string() }
       },
     )

@@ -2,6 +2,7 @@ import {
   "bobzhang/mermaid/config",
   "bobzhang/mermaid/diagram",
   "bobzhang/mermaid/diagrams/flowchart",
+  "bobzhang/mermaid/diagrams/gantt",
   "bobzhang/mermaid/diagrams/info",
   "bobzhang/mermaid/diagrams/packet",
   "bobzhang/mermaid/diagrams/pie",
@@ -11,6 +12,7 @@ import {
   "bobzhang/mermaid/internal/langium",
   "bobzhang/mermaid/internal/preprocess",
   "bobzhang/mermaid/internal/rendering",
+  "moonbitlang/core/env",
 }
 
 warnings = "-implicit_impl_as_method"

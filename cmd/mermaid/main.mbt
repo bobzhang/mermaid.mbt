@@ -3,8 +3,11 @@ let usage : String =
   #|usage: mermaid <command> [arguments]
   #|
   #|commands:
-  #|  render <file.mmd> [--id ID] [--config site.json]
-  #|                         render a diagram to SVG on stdout
+  #|  render <file.mmd> [--id ID] [--config site.json] [--now MS]
+  #|         [--viewport WIDTHxHEIGHT]
+  #|                         render a diagram to SVG on stdout; --now sets
+  #|                         the clock (milliseconds since the epoch) and
+  #|                         --viewport the size of the page's viewport
   #|  config [site.json]     print the effective configuration as JSON
   #|  measure <cases.json>   measure text; cases are {text, size, bold, italic}
   #|  regex <cases.json>     match prefixes; cases are {source, flags, input}
@@ -37,11 +40,33 @@ fn read_json(path : String) -> Json raise CliError {
 fn render(path : String, options : ArrayView[String]) -> Unit raise CliError {
   let mut id = "mermaid-svg"
   let mut site : Json = Json::object(Map([]))
+  let mut now : Double? = None
+  let mut page = @diagram.Page::new()
+  let number = (value : String) => {
+    @string.parse_double(value) catch {
+      _ => raise CliError("\{value} is not a number", status=2)
+    }
+  }
   let mut rest = options
   while true {
     match rest {
       ["--id", value, .. tail] => {
         id = value
+        rest = tail
+      }
+      ["--now", value, .. tail] => {
+        now = Some(number(value))
+        rest = tail
+      }
+      ["--viewport", value, .. tail] => {
+        guard value.split("x").map(part => part.to_owned()).collect()
+          is [width, height] else {
+          raise CliError("\{value} is not WIDTHxHEIGHT", status=2)
+        }
+        page = @diagram.Page::new(
+          viewport_width=number(width),
+          viewport_height=number(height),
+        )
         rest = tail
       }
       ["--config", value, .. tail] => {
@@ -52,7 +77,7 @@ fn render(path : String, options : ArrayView[String]) -> Unit raise CliError {
       [other, ..] => raise CliError("unknown option \{other}", status=2)
     }
   }
-  let svg = @lib.render(read_text(path), id~, config=site) catch {
+  let svg = @lib.render(read_text(path), id~, config=site, now?, page~) catch {
     error => raise CliError(Repr(error).to_string(), status=1)
   }
   println(svg)

@@ -1,7 +1,9 @@
 import {
   "bobzhang/mermaid" @lib,
   "bobzhang/mermaid/config",
+  "bobzhang/mermaid/diagram",
   "bobzhang/mermaid/diagrams/flowchart",
+  "bobzhang/mermaid/diagrams/gantt",
   "bobzhang/mermaid/internal/d3",
   "bobzhang/mermaid/internal/dayjs",
   "bobzhang/mermaid/internal/dom",
