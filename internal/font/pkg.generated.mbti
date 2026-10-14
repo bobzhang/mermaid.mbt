@@ -10,6 +10,25 @@ import {
 // Errors
 
 // Types and methods
+pub(all) enum Anchor {
+  Start
+  Middle
+  End
+} derive(Eq, @debug.Debug)
+
+pub(all) enum Baseline {
+  Alphabetic
+  Middle
+  Central
+  Hanging
+} derive(Eq, @debug.Debug)
+
+pub(all) struct Chunk {
+  text : String
+  x : Double
+  y : Double
+}
+
 pub struct Face {
   // private fields
 }
@@ -30,6 +49,7 @@ pub struct Stack {
 pub fn Stack::advance(Self, StringView, Double) -> Double
 pub fn Stack::bbox(Self, StringView, Double) -> Rect
 pub fn Stack::bbox_middle(Self, StringView, Double, x? : Double, y? : Double) -> Rect
+pub fn Stack::chunks_box(Self, Array[Chunk], Double, anchor? : Anchor, baseline? : Baseline) -> Rect
 pub fn Stack::covers(Self, StringView) -> Bool
 pub fn Stack::default(bold? : Bool, italic? : Bool) -> Self
 pub fn Stack::for_family(String, bold? : Bool, italic? : Bool) -> Self

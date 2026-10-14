@@ -282,6 +282,26 @@ fn parse_diagram(
         },
       }
     }
+    "ishikawa" => {
+      let diagram = @ishikawa.parse(code) catch {
+        @jison.ParseError(message~, ..) => raise Syntax(message)
+        @ishikawa.Unsupported(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      // The grammar has no accessibility statements, and the title — the
+      // effect — is drawn as the head, not as a title.
+      {
+        styles: @ishikawa.styles(config.theme()),
+        acc_title: "",
+        acc_description: "",
+        classes: [],
+        draw: context => {
+          @ishikawa.draw(diagram, context) catch {
+            @ishikawa.Unsupported(message) => raise Unsupported(message)
+          }
+        },
+      }
+    }
     other => raise Unsupported(other)
   }
 }
