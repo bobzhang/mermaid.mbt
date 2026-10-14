@@ -107,3 +107,88 @@ fn dates(path : String) -> Unit raise CliError {
   }
   println(Json::array(results).stringify())
 }
+
+///|
+fn field_number(item : Json, name : String) -> Double {
+  match item {
+    Object(fields) =>
+      match fields.get(name) {
+        Some(Number(n, ..)) => n
+        _ => @double.not_a_number
+      }
+    _ => @double.not_a_number
+  }
+}
+
+///|
+fn field_text(item : Json, name : String) -> String {
+  match item {
+    Object(fields) =>
+      match fields.get(name) {
+        Some(String(text)) => text
+        _ => ""
+      }
+    _ => ""
+  }
+}
+
+///|
+/// Evaluate one dayjs or d3 time operation; the cases are those of
+/// scripts/gantt_node.mjs.
+fn time_case(item : Json) -> Json raise {
+  let zone = @jsdate.Zone::system()
+  let now = match field_number(item, "now") {
+    n if n.is_nan() => 0.0
+    n => n
+  }
+  let at = (name : String) => @dayjs.Dayjs::new(zone, field_number(item, name))
+  match field_text(item, "op") {
+    "parse" =>
+      number_or_null(
+        @dayjs.Dayjs::parse(
+          zone,
+          field_text(item, "text"),
+          field_text(item, "format"),
+          now~,
+        ).value_of(),
+      )
+    "format" => Json::string(at("time").format(field_text(item, "format")))
+    "add" =>
+      number_or_null(
+        at("time")
+        .add(field_number(item, "amount"), field_text(item, "unit"))
+        .value_of(),
+      )
+    "startOfDay" => number_or_null(at("time").start_of_day().value_of())
+    "endOfDay" => number_or_null(at("time").end_of_day().value_of())
+    "diffYears" => number_or_null(at("a").diff_years(at("b")))
+    "isoWeekday" => number_or_null(at("time").iso_weekday())
+    "duration" =>
+      number_or_null(
+        @dayjs.duration_milliseconds(
+          field_text(item, "unit"),
+          field_number(item, "amount"),
+        ),
+      )
+    other => fail("unknown op \{other}")
+  }
+}
+
+///|
+/// Evaluate dayjs and d3 time operations, for comparing with the bundled
+/// libraries (scripts/check_time.py).
+fn time_cases(path : String) -> Unit raise CliError {
+  guard read_json(path) is Array(cases) else {
+    raise CliError("\{path} must hold an array of cases", status=2)
+  }
+  let results : Array[Json] = []
+  for item in cases {
+    results.push(
+      time_case(item) catch {
+        @dayjs.DayjsError(message) => { "error": message }
+        error => { "error": Repr(error).to_string() }
+      },
+    )
+  }
+  println(Json::array(results).stringify())
+}
