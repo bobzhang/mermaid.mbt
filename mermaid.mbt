@@ -426,6 +426,29 @@ fn parse_diagram(
         },
       }
     }
+    "venn" => {
+      let venn = @venn.parse(code) catch {
+        @jison.ParseError(message~, ..) => raise Syntax(message)
+        @venn.Invalid(message) => raise Syntax(message)
+        @venn.Unsupported(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      if title is Some(title) {
+        venn.set_title(title)
+      }
+      {
+        styles: @venn.styles(config.theme()),
+        acc_title: venn.acc_title,
+        acc_description: venn.acc_description,
+        classes: [],
+        draw: context => {
+          @venn.draw(venn, context) catch {
+            @venn.Invalid(message) => raise Syntax(message)
+            @venn.Unsupported(message) => raise Unsupported(message)
+          }
+        },
+      }
+    }
     other => raise Unsupported(other)
   }
 }
