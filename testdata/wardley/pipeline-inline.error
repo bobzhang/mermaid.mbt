@@ -1,0 +1,5 @@
+Parsing failed:  Parse error on line 3, column 14: Expecting: expecting at least one iteration which starts with one of these possible Token sequences::
+  <[NEWLINE]>
+but found: 'component'
+Parse error on line 3, column 30: Expecting token of type ',' but found `]`.
+Parse error on line 4, column 1: Expecting token of type 'EOF' but found `}`.

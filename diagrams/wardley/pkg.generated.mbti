@@ -1,0 +1,96 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/diagrams/wardley"
+
+import {
+  "bobzhang/mermaid/diagram",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn draw(Wardley, @diagram.Context) -> Unit raise WardleyError
+
+pub fn parse(String) -> Wardley raise
+
+// Errors
+pub(all) suberror WardleyError {
+  Invalid(String)
+  Unsupported(String)
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+pub struct Annotation {
+  number : Double
+  x : Double
+  y : Double
+  text : String
+} derive(@debug.Debug)
+
+pub(all) enum Flow {
+  Forward
+  Backward
+  Bidirectional
+} derive(Eq, @debug.Debug)
+
+pub struct Link {
+  source : String
+  target : String
+  dashed : Bool
+  label : String?
+  flow : Flow?
+} derive(@debug.Debug)
+
+pub struct Node {
+  id : String
+  mut label : String
+  mut x : Double
+  mut y : Double
+  mut class_name : String
+  mut label_offset_x : Double?
+  mut label_offset_y : Double?
+  mut in_pipeline : Bool
+  mut is_pipeline_parent : Bool
+  mut inertia : Bool
+  mut source_strategy : String?
+} derive(@debug.Debug)
+
+pub struct Pipeline {
+  node_id : String
+  mut component_ids : Array[String]
+} derive(@debug.Debug)
+
+pub struct Placed {
+  text : String
+  x : Double
+  y : Double
+} derive(@debug.Debug)
+
+pub struct Trend {
+  node_id : String
+  mut target_x : Double
+  mut target_y : Double
+} derive(@debug.Debug)
+
+pub struct Wardley {
+  nodes : Array[Node]
+  links : Array[Link]
+  trends : Array[Trend]
+  pipelines : Array[Pipeline]
+  annotations : Array[Annotation]
+  notes : Array[Placed]
+  accelerators : Array[Placed]
+  deaccelerators : Array[Placed]
+  mut annotations_box : (Double, Double)?
+  mut stages : Array[String]
+  mut stage_boundaries : Array[Double]?
+  mut size : (Double, Double)?
+  mut title : String
+  mut acc_title : String
+  mut acc_description : String
+  // private fields
+}
+pub fn Wardley::node(Self, String) -> Node?
+pub fn Wardley::set_title(Self, String) -> Unit
+
+// Type aliases
+
+// Traits

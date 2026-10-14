@@ -1,0 +1,15 @@
+wardley-beta
+component P [0.40, 0.60] (inertia)
+component Q [0.70, 0.30] (buy) inertia
+pipeline P {
+  component c [0.9]
+  component a [0.1]
+  component b [0.5]
+  component a2 [0.1]
+}
+pipeline Q {
+  component only [0.5]
+}
+P -> Q
+Q -> P
+a -> c
