@@ -1,0 +1,19 @@
+---
+config:
+  look: handDrawn
+  handDrawnSeed: 2
+  layout: dagre
+  theme: dark
+---
+requirementDiagram
+  direction LR
+  designConstraint dc {
+    id: 7
+    text: keep it small
+    risk: medium
+    verifymethod: analysis
+  }
+  element thing {
+    type: part
+  }
+  thing - refines -> dc
