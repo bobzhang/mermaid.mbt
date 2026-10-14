@@ -1,0 +1,4 @@
+Error parsing usecase diagram: Expecting: one of these possible Token sequences:
+  1. [NEWLINE]
+  2. [EOF]
+but found: ';' at line 2, column 8 [20,21)
