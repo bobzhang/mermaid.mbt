@@ -351,17 +351,12 @@ pub fn Stack::bbox(self : Stack, text : StringView, size : Double) -> Rect {
 }
 
 ///|
-/// The stack a CSS `font-family` list resolves to in the reference
-/// environment. Families that are not installed there are skipped; of the
+/// The embedded faces a CSS `font-family` list names, in order. Families
+/// that are not installed in the reference environment are skipped; of the
 /// installed ones, Trebuchet MS, Verdana, Arial, Helvetica and Times are
 /// embedded. The generic `sans-serif` is Helvetica there and `serif` is
-/// Times. A list naming none of them falls back to Arial, the closest
-/// embedded face to the system sans-serif.
-pub fn Stack::for_family(
-  family : String,
-  bold~ : Bool = false,
-  italic~ : Bool = false,
-) -> Stack {
+/// Times.
+fn listed_faces(family : String, bold : Bool, italic : Bool) -> Array[Face] {
   let faces = []
   for name in family.split(",") {
     let name = name.trim(chars=" \t\n\"';").to_owned().to_lower()
@@ -387,8 +382,33 @@ pub fn Stack::for_family(
       faces.push(face)
     }
   }
+  faces
+}
+
+///|
+/// The stack a CSS `font-family` list resolves to in the reference
+/// environment. A list naming no embedded face falls back to Arial, the
+/// closest one to what flowchart themes ask for.
+pub fn Stack::for_family(
+  family : String,
+  bold~ : Bool = false,
+  italic~ : Bool = false,
+) -> Stack {
+  let faces = listed_faces(family, bold, italic)
   if faces.is_empty() {
     faces.push(arial(bold, italic))
+  }
+  { faces, }
+}
+
+///|
+/// Like `for_family`, with the browser's own last resort after the listed
+/// families: its standard font.
+pub fn Stack::for_css(family : String, bold~ : Bool = false) -> Stack {
+  let faces = listed_faces(family, bold, false)
+  let standard = if bold { times_bold } else { times_regular }
+  if !faces.iter().any(face => physical_equal(face, standard)) {
+    faces.push(standard)
   }
   { faces, }
 }

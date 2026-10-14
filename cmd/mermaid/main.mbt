@@ -9,6 +9,8 @@ let usage : String =
   #|  measure <cases.json>   measure text; cases are {text, size, bold, italic}
   #|  regex <cases.json>     match prefixes; cases are {source, flags, input}
   #|  flow-db <file.mmd>...  print each flowchart's parsed database as JSON
+  #|  sequence-db <file.mmd>...
+  #|                         the same for sequence diagrams
   #|
 
 ///|
@@ -187,6 +189,38 @@ fn flow_db(paths : ArrayView[String]) -> Unit raise CliError {
 }
 
 ///|
+fn sequence_db(paths : ArrayView[String]) -> Unit raise CliError {
+  for path in paths {
+    let source = read_text(path)
+    let line = try {
+      let processed = @preprocess.preprocess(source)
+      let config = @config.Config::new(
+        directive=processed.config,
+        diagram_type="sequence",
+      )
+      @sequence.parse(
+        @preprocess.encode_entities(processed.code) + "\n",
+        config,
+      )
+      .dump()
+      .stringify()
+    } catch {
+      @jison.ParseError(message~, ..) => {
+        let report : Json = { "error": message }
+        report.stringify()
+      }
+      error => {
+        let report : Json = { "error": Repr(error).to_string() }
+        report.stringify()
+      }
+    } noraise {
+      text => text
+    }
+    println(line)
+  }
+}
+
+///|
 fn main {
   let arguments = @env.args()
   try {
@@ -196,6 +230,7 @@ fn main {
       ["measure", path] => measure(path)
       ["regex", path] => regex(path)
       ["flow-db", .. paths] => flow_db(paths)
+      ["sequence-db", .. paths] => sequence_db(paths)
       ["path-length", path] => path_lengths(path)
       _ => println(usage)
     }

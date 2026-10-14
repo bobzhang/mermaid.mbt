@@ -1,0 +1,10 @@
+sequenceDiagram
+    autonumber
+    participant Alice
+    participant John
+    Alice->>()John: Hello John
+    Alice()->>John: How are you?
+    John()->>()Alice: Great!
+    John()-->>()John: self
+    Alice()/|-()John: reverse dual
+    John()<<->>()Alice: bi dual

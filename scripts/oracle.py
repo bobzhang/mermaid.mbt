@@ -20,6 +20,7 @@ Environment: CHROME overrides the Chrome binary.
 
 import argparse
 import base64
+import concurrent.futures
 import json
 import os
 import pathlib
@@ -83,8 +84,34 @@ const encode = (value) => {
 """
 
 
+# Diagram types whose renderer keeps state for as long as the page lives: the
+# sequence diagram numbers the participants of everything it has drawn
+# (`actor0`, `actor1`, ... never restart). Each such diagram gets a page of
+# its own, so its reference does not depend on what was rendered before it.
+STATEFUL = re.compile(r"^\s*sequenceDiagram\b", re.M)
+
+
 def run(jobs, config, expression=None):
     """Render `jobs` (dicts with `id` and `text`) and return one result each."""
+    if len(jobs) > 1 and any(STATEFUL.search(job["text"]) for job in jobs):
+        # The expression, if any, is evaluated once, in a page without jobs.
+        results = run_page([], config, expression) if expression is not None else []
+        alone = [index for index, job in enumerate(jobs) if STATEFUL.search(job["text"])]
+        others = [index for index in range(len(jobs)) if index not in alone]
+        rendered = {}
+        with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:
+            pages = {index: pool.submit(run_page, [jobs[index]], config) for index in alone}
+            if others:
+                for index, result in zip(others, run_page([jobs[index] for index in others], config)):
+                    rendered[index] = result
+            for index, page in pages.items():
+                rendered[index] = page.result()[0]
+        return results + [rendered[index] for index in range(len(jobs))]
+    return run_page(jobs, config, expression)
+
+
+def run_page(jobs, config, expression=None):
+    """Load one page, evaluate `expression` in it and render `jobs` in order."""
     if not BUNDLE.exists():
         sys.exit(f"missing {BUNDLE}; see the setup notes in {__file__}")
     page = PAGE % {

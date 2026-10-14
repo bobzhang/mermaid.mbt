@@ -1,0 +1,6 @@
+sequenceDiagram
+    participant Alice
+    participant John
+    properties Alice: {"class": "internal-service-actor"}
+    properties John: {"class": "external-service-actor", "type": "@clock"}
+    Alice->>John: Hello John, how are you?

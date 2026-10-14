@@ -1,0 +1,31 @@
+---
+config:
+  sequence:
+    diagramMarginX: 20
+    diagramMarginY: 30
+    actorMargin: 80
+    width: 120
+    height: 40
+    boxMargin: 6
+    boxTextMargin: 3
+    noteMargin: 14
+    messageAlign: left
+    noteAlign: right
+    activationWidth: 14
+    bottomMarginAdj: 10
+    wrapPadding: 6
+    labelBoxWidth: 70
+    labelBoxHeight: 26
+    useMaxWidth: false
+    showSequenceNumbers: true
+---
+sequenceDiagram
+    Alice->>+Bob: Hello Bob
+    Note right of Bob: Bob thinks
+    loop again
+        Bob-->>-Alice: Hi
+    end
+    box Group
+    participant Carl
+    end
+    Alice->>Carl: yo

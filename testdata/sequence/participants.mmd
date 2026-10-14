@@ -1,0 +1,17 @@
+sequenceDiagram
+    participant A as Alice
+    actor B as Bob
+    participant C@{ "type": "boundary" } as Checkout
+    participant D@{ "type": "control" }
+    participant E@{ "type": "entity" } as Order entity
+    participant F@{ "type": "database" } as Orders DB
+    participant G@{ "type": "collections" } as Items
+    participant H@{ "type": "queue" } as Jobs
+    A->>B: hi
+    B->>C: one
+    C->>D: two
+    D->>E: three
+    E->>F: four
+    F->>G: five
+    G->>H: six
+    H-->>A: done

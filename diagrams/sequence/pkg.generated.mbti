@@ -1,0 +1,35 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/diagrams/sequence"
+
+import {
+  "bobzhang/mermaid/config",
+  "bobzhang/mermaid/diagram",
+  "bobzhang/mermaid/theme",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn draw(SequenceDb, @diagram.Context) -> Unit raise SequenceError
+
+pub fn parse(String, @config.Config) -> SequenceDb raise
+
+pub fn styles(@theme.Theme, String) -> String
+
+// Errors
+pub(all) suberror SequenceError {
+  SequenceError(String)
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+pub struct SequenceDb {
+  mut title : String
+  mut acc_title : String
+  mut acc_description : String
+  // private fields
+}
+pub fn SequenceDb::dump(Self) -> Json
+pub fn SequenceDb::set_title(Self, String) -> Unit
+
+// Type aliases
+
+// Traits
