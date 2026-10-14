@@ -420,14 +420,19 @@ fn draw_shape(
     raise LayoutError("No such shape: \{node.shape}. Please check your syntax.")
   }
   match handler {
-    "squareRect" =>
-      draw_rect(
+    "squareRect" => {
+      let shape_svg = draw_rect(
         parent,
         node,
         env,
         label_padding_x=if neo { 16.0 } else { padding * 2.0 },
         label_padding_y=if neo { 12.0 } else { padding },
       )
+      // A group drawn as a node (one without children, under dagre) keeps
+      // its slot in the palette.
+      stamp_color_slot(shape_svg, node.color_index, env)
+      shape_svg
+    }
     "roundedRect" =>
       draw_rect(
         parent,
