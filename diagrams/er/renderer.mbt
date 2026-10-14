@@ -7,8 +7,10 @@ pub fn draw(
 ) -> Unit raise @rendering.LayoutError {
   let config = context.config
   // What the port cannot draw yet is refused rather than drawn differently.
+  // Only `elk` names the layered ELK layout; every other name, known or
+  // not, ends in another engine upstream.
   let layout = config.text("layout").unwrap_or("elk")
-  if layout != "elk" && layout != "elk.layered" {
+  if layout != "elk" {
     raise @rendering.LayoutError("The \{layout} layout is not supported yet.")
   }
   if config.text("look") == Some("handDrawn") {

@@ -197,7 +197,9 @@ fn insert_themed_marker(
     _ => "white"
   }
   guard er_marker_shapes(kind, stroke, fill) is Some((name, shapes)) else {
-    return false
+    return insert_requirement_marker(
+      parent, kind, diagram_type, diagram_id, stroke,
+    )
   }
   for shape in shapes {
     let marker = parent

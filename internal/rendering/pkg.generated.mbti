@@ -102,6 +102,8 @@ pub fn Node::with_styles(Self, css_styles~ : Array[String], css_compiled_styles~
 pub(all) enum NodeData {
   Plain
   Entity(alias_name~ : String, attributes~ : Array[EntityAttribute])
+  Requirement(name~ : String, type_~ : String, requirement_id~ : String, text~ : String, risk~ : String, verify_method~ : String)
+  RequirementElement(name~ : String, type_~ : String, doc_ref~ : String)
 }
 
 pub(all) struct Point {

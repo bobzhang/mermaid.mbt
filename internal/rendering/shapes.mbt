@@ -395,6 +395,7 @@ fn draw_shape(
   // Shapes that belong to one diagram type are not in the shape table.
   match node.shape {
     "erBox" => return er_box(parent, node, env)
+    "requirementBox" => return requirement_box(parent, node, env)
     _ => ()
   }
   guard shape_handler(node.shape) is Some(handler) else {

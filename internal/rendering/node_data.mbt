@@ -15,4 +15,15 @@ pub(all) enum NodeData {
   /// An entity of an ER diagram: the name it is shown under, if not its
   /// own, and its rows.
   Entity(alias_name~ : String, attributes~ : Array[EntityAttribute])
+  /// A requirement of a requirement diagram, with the words it shows.
+  Requirement(
+    name~ : String,
+    type_~ : String,
+    requirement_id~ : String,
+    text~ : String,
+    risk~ : String,
+    verify_method~ : String
+  )
+  /// An element of a requirement diagram.
+  RequirementElement(name~ : String, type_~ : String, doc_ref~ : String)
 }

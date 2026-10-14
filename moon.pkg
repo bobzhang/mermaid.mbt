@@ -6,6 +6,7 @@ import {
   "bobzhang/mermaid/diagrams/info",
   "bobzhang/mermaid/diagrams/packet",
   "bobzhang/mermaid/diagrams/pie",
+  "bobzhang/mermaid/diagrams/requirement",
   "bobzhang/mermaid/internal/css",
   "bobzhang/mermaid/internal/dom",
   "bobzhang/mermaid/internal/jison",

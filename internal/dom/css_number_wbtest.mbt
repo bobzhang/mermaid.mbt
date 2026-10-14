@@ -33,3 +33,56 @@ test "css numbers as the reference browser serializes them" {
   assert_eq(css_length("414.203125px"), Some("414.203px"))
   assert_eq(css_length("table-cell"), None)
 }
+
+///|
+test "repeated and important declarations" {
+  // What the reference browser makes of each style attribute once a
+  // declaration is added through the CSSOM.
+  let serialized = (style : String) => {
+    Element::new("div")
+    .attr("style", style)
+    .style("display", "table-cell")
+    .to_html()
+  }
+  inspect(
+    serialized(
+      "color:red !important; font-weight: bold; fill: blue; color: green",
+    ),
+    content=(
+      #|<div style="font-weight: bold; fill: blue; color: red !important; display: table-cell;"></div>
+    ),
+  )
+  inspect(
+    serialized("font-weight:bold !important; font-weight: bold;"),
+    content=(
+      #|<div style="font-weight: bold !important; display: table-cell;"></div>
+    ),
+  )
+  // Two declarations of different properties stay as written.
+  inspect(
+    serialized("color:green !important; font-weight: bold;"),
+    content=(
+      #|<div style="color: green !important; font-weight: bold; display: table-cell;"></div>
+    ),
+  )
+  inspect(
+    serialized("color:red !important; font-weight: bold; fill: blue"),
+    content=(
+      #|<div style="font-weight: bold; fill: blue; color: red !important; display: table-cell;"></div>
+    ),
+  )
+  inspect(
+    serialized("fill: blue; color: red; fill: green"),
+    content=(
+      #|<div style="color: red; fill: green; display: table-cell;"></div>
+    ),
+  )
+  inspect(
+    serialized(
+      "font-size: 12px !important; font-size: 14px !important; font-size: 16px",
+    ),
+    content=(
+      #|<div style="font-size: 14px !important; display: table-cell;"></div>
+    ),
+  )
+}

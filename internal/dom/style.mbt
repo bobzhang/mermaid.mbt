@@ -1,8 +1,11 @@
 ///|
 /// Parse the declarations of a `style` attribute, normalizing values as
-/// the CSSOM would.
+/// the CSSOM would. Of several declarations of one property the last
+/// stands, unless an earlier one is important and it is not; important
+/// declarations come after the others.
 fn parse_declarations(text : String) -> Array[(String, String)] {
-  let declarations = []
+  // Name, serialized value, importance.
+  let parsed : Array[(String, String, Bool)] = []
   for part in text.split(";") {
     guard part.find(":") is Some(colon) else { continue }
     let name = part[:colon].trim().to_owned()
@@ -10,16 +13,91 @@ fn parse_declarations(text : String) -> Array[(String, String)] {
     if name != "" && value != "" {
       // Priority is kept apart from the value while it is normalized.
       let lower = value.to_lower()
-      let value = if lower.has_suffix("!important") {
+      if lower.has_suffix("!important") {
         let base = value[:value.length() - 10].trim().to_owned()
-        normalize_value(name, base) + " !important"
+        parsed.push((name, normalize_value(name, base) + " !important", true))
       } else {
-        normalize_value(name, value)
+        parsed.push((name, normalize_value(name, value), false))
       }
-      declarations.push((name, value))
+    }
+  }
+  let declarations = []
+  // One declaration, or two of different longhand properties, are kept
+  // as they are: Blink only sorts out what could collide.
+  let plain = match parsed {
+    [] | [_] => true
+    [first, second] =>
+      first.0 != second.0 && !is_shorthand(first.0) && !is_shorthand(second.0)
+    _ => false
+  }
+  if plain {
+    return parsed.map(declaration => (declaration.0, declaration.1))
+  }
+  for important in [false, true] {
+    for index, declaration in parsed {
+      let (name, value, is_important) = declaration
+      if is_important != important {
+        continue
+      }
+      // Overridden by a later declaration of the same importance, or by
+      // an important one anywhere.
+      let mut overridden = false
+      for other, later in parsed {
+        if later.0 == name &&
+          ((later.2 == important && other > index) || (later.2 && !important)) {
+          overridden = true
+          break
+        }
+      }
+      if !overridden {
+        declarations.push((name, value))
+      }
     }
   }
   declarations
+}
+
+///|
+/// Whether a property stands for several, which the parser expands
+/// before it counts declarations.
+fn is_shorthand(name : String) -> Bool {
+  name
+  is ("animation"
+  | "background"
+  | "border"
+  | "border-bottom"
+  | "border-color"
+  | "border-left"
+  | "border-radius"
+  | "border-right"
+  | "border-style"
+  | "border-top"
+  | "border-width"
+  | "columns"
+  | "flex"
+  | "flex-flow"
+  | "font"
+  | "gap"
+  | "grid"
+  | "grid-area"
+  | "grid-column"
+  | "grid-row"
+  | "grid-template"
+  | "inset"
+  | "list-style"
+  | "margin"
+  | "marker"
+  | "outline"
+  | "overflow"
+  | "padding"
+  | "place-content"
+  | "place-items"
+  | "place-self"
+  | "text-decoration"
+  | "text-emphasis"
+  | "text-wrap"
+  | "transition"
+  | "white-space")
 }
 
 ///|

@@ -243,6 +243,7 @@ fn text_box(
   lines : Array[Array[Word]],
   env : Env,
   anchor_middle : Bool,
+  restyle~ : (Int32, Run) -> Run = (_, run) => run,
 ) -> @dom.Rect {
   let mut box : BoxF = { x: 0, y: 0, width: 0, height: 0, }
   let size = env.font_size
@@ -250,7 +251,9 @@ fn text_box(
   for index, line in lines {
     let y = em_to_px(index.to_double() * 1.1 - 0.1, size)
     let baseline = y + em_to_px(1.1, size)
-    let items = line_items_text(line)
+    // `restyle` changes the face of the items of a line, as a style
+    // on its elements would.
+    let items = line_items_text(line).map(run => restyle(index, run))
     let widths = item_widths(items, env)
     let total = widths.fold(init=0.0, (a, b) => a + b)
     let mut x = if anchor_middle { -total / 2.0 } else { 0.0 }
