@@ -138,7 +138,7 @@ pub(all) enum NodeData {
   ClassBox(text~ : String, annotations~ : Array[String], members~ : Array[ClassBoxMember], methods~ : Array[ClassBoxMember])
   Block(positioned~ : Bool, directions~ : Array[String], width_in_columns~ : Double, style~ : String, class_rules~ : Array[String])
   C4(stereotype~ : String, font_family~ : String, font_size~ : Double, bold~ : Bool)
-  KanbanItem(ticket~ : String, assigned~ : String, priority~ : String?, icon~ : Bool)
+  KanbanItem(ticket~ : String, ticket_text~ : String, assigned~ : String, priority~ : String?, icon~ : Bool)
 }
 
 pub struct Painter {

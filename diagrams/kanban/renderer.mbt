@@ -86,7 +86,10 @@ fn check_text(
       raise Unsupported("text the embedded fonts do not cover: \{shown}")
     }
   }
-  guard html else { return }
+  guard html else {
+    check_markdown_text(@dom.placeholders_to_references(text))
+    return
+  }
   fn visit(element : @dom.Element) raise KanbanError {
     for child in element.children() {
       guard child is Element(child) else { continue }
@@ -102,14 +105,117 @@ fn check_text(
 }
 
 ///|
+/// A label as the label helpers sanitize it before it becomes markup:
+/// `sanitizeText(decodeEntities(text))`. Where the sanitizer has to parse
+/// the text, which it does when there is a tag in it, the character
+/// references come back resolved, before markdown sees the text: `#35;`
+/// at the start of a line is then a heading.
+fn label_text(text : String) -> String raise KanbanError {
+  guard text.contains("<") else { return text }
+  let text = @dom.placeholders_to_references(text)
+  @dom.sanitize_fragment(text) catch {
+    _ => raise Unsupported("kanban text with markup: \{text}")
+  }
+}
+
+///|
+/// Whether a line of markdown may start a block other than a paragraph
+/// (a heading, a list, a quote, code), which text labels take over as
+/// written, white space and line breaks included.
+fn starts_block(line : String) -> Bool {
+  let indent = line.length() - line.trim_start(chars=" ").length()
+  if indent >= 4 || line.contains("\t") {
+    return true
+  }
+  let chars = line.trim_start(chars=" ").to_array()
+  guard chars is [first, ..] else { return false }
+  let after = (i : Int32) => i >= chars.length() || chars[i] is (' ' | '\t')
+  match first {
+    '#' | '>' => true
+    // A fence.
+    '`' => line.contains("```")
+    '-' | '*' | '+' | '_' => {
+      // A bullet, or a thematic break.
+      if after(1) {
+        return true
+      }
+      chars.iter().all(c => c == first || c == ' ') &&
+      chars.iter().filter(c => c == first).count() >= 3
+    }
+    '0'..<='9' => {
+      let mut i = 0
+      while i < chars.length() && chars[i] is ('0'..<='9') {
+        i += 1
+      }
+      i < chars.length() && chars[i] is ('.' | ')') && after(i + 1)
+    }
+    _ => false
+  }
+}
+
+///|
+/// `x@y.z`, which marked links as an e-mail address.
+let email_pattern : @jsregex.Regex = try! @jsregex.Regex::compile(
+  "[A-Za-z0-9._+-]@[A-Za-z0-9_-]+\\.[A-Za-z0-9]",
+)
+
+///|
+/// `<br>` in its forms, where markdown text labels break lines.
+let break_pattern : @jsregex.Regex = try! @jsregex.Regex::compile(
+  "<br\\s*/?>",
+  flags="gi",
+)
+
+///|
+/// Refuse markdown that text labels draw from tokens the port's markdown
+/// does not make: blocks other than paragraphs, and the inline links and
+/// strike-through of GitHub's flavour, which text labels leave out.
+fn check_markdown_text(text : String) -> Unit raise KanbanError {
+  let text = break_pattern.replace_all(text, _ => "\n")
+  let refuse = () => {
+    Unsupported("markdown the port's text labels do not read: \{text}")
+  }
+  if text.contains("~") ||
+    text.contains("://") ||
+    text.contains("www.") ||
+    text.contains("  \n") ||
+    email_pattern.exec(text) is Some(_) {
+    raise refuse()
+  }
+  // A block as the last line comes out as marked has it; one with lines
+  // after it does not, and code keeps white space SVG text collapses.
+  let lines = text.split("\n").map(line => line.to_owned()).collect()
+  for index, line in lines {
+    if starts_block(line) &&
+      (
+        index < lines.length() - 1 ||
+        line.has_prefix("    ") ||
+        line.contains("\t")
+      ) {
+      raise refuse()
+    }
+  }
+}
+
+///|
 /// Refuse a board whose text the port cannot measure exactly.
 fn check_measurable(
+  db : KanbanDb,
   data : Array[LayoutNode],
   context : @diagram.Context,
 ) -> Unit raise KanbanError {
   let family = context.theme().text("fontFamily")
   if !is_measurable_family(family) {
     raise Unsupported("measuring text in the font family \{family}")
+  }
+  // Sizes in pixels are what the labels are measured at; a number alone
+  // is dropped by the browser and leaves its default size, which is that
+  // of the labels too.
+  match context.theme().get("fontSize") {
+    Number(_, ..) => ()
+    String(size) if size.has_suffix("px") &&
+      size[:size.length() - 2].iter().all(c => c is ('0'..<='9' | '.')) => ()
+    size => raise Unsupported("the font size \{size.stringify()}")
   }
   let stacks = [
     context.font(),
@@ -133,18 +239,15 @@ fn check_measurable(
     value => @config.evaluate(value)
   }
   for entry in data {
+    if entry.is_group {
+      check_text(entry.label, html_labels, stacks)
+      continue
+    }
+    // The text of a card is sanitized once more on its way to its label.
     let item = entry.node
-    check_text(
-      entry.label,
-      if entry.is_group {
-        html_labels
-      } else {
-        html_titles
-      },
-      stacks,
-    )
+    check_text(label_text(entry.label), html_titles, stacks)
     for text in [item.ticket.unwrap_or(""), item.assigned.unwrap_or("")] {
-      check_text(text, html_labels, stacks)
+      check_text(label_text(db.sanitize_text(text)), html_labels, stacks)
     }
   }
 }
@@ -156,7 +259,7 @@ pub fn draw(db : KanbanDb, context : @diagram.Context) -> Unit raise {
   let config = context.config
   let svg = context.svg
   let data = db.data()
-  check_measurable(data, context)
+  check_measurable(db, data, context)
   let painter = @rendering.Painter::new(
     config,
     diagram_type="kanban",
@@ -228,7 +331,7 @@ pub fn draw(db : KanbanDb, context : @diagram.Context) -> Unit raise {
           @rendering.Node::new(
             id=item.id,
             parent_id=section_node.id,
-            label=entry.label,
+            label=label_text(entry.label),
             label_type="markdown",
             padding=0.0,
             css_styles=["text-align: left"],
@@ -238,8 +341,11 @@ pub fn draw(db : KanbanDb, context : @diagram.Context) -> Unit raise {
             look="",
             shape="kanbanItem",
             data=KanbanItem(
-              ticket=db.sanitize_text(item.ticket.unwrap_or("")),
-              assigned=db.sanitize_text(item.assigned.unwrap_or("")),
+              ticket=item.ticket.unwrap_or(""),
+              ticket_text=label_text(
+                db.sanitize_text(item.ticket.unwrap_or("")),
+              ),
+              assigned=label_text(db.sanitize_text(item.assigned.unwrap_or(""))),
               priority=item.priority,
               icon=item.icon is Some(icon) && icon != "",
             ),

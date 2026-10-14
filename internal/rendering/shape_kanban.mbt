@@ -124,7 +124,8 @@ fn kanban_item(
   node : Node,
   env : Env,
 ) -> @dom.Element raise LayoutError {
-  guard node.data is KanbanItem(ticket~, assigned~, priority~, icon~) else {
+  guard node.data
+    is KanbanItem(ticket~, ticket_text~, assigned~, priority~, icon~) else {
     raise LayoutError("A kanban item without its data.")
   }
   let styles = shape_styles(node)
@@ -206,7 +207,7 @@ fn kanban_item(
   let style = node.label_style
   let ticket_label = insert_label(
     link.unwrap_or(shape_svg),
-    ticket,
+    ticket_text,
     env,
     style~,
     width=label_width,

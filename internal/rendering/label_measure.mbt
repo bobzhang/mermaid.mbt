@@ -246,23 +246,42 @@ fn Item::position(self : Item, offset : Int32, env : Env) -> Double {
 /// shaped together.
 fn line_items(line : Array[Run]) -> Array[Item] {
   let items : Array[Item] = []
+  let item_of = (run : Run) => {
+    chars: run.text.to_array(),
+    bold: run.bold,
+    heavy: run.heavy,
+    italic: run.italic,
+    positions: Map([]),
+  }
+  // Spaces a line starts with (after a `<br>`) are an item of their own:
+  // what follows is measured from the first character after them.
+  let mut separate = false
+  let line = match line {
+    [first, .. rest] if first.text.has_prefix(" ") => {
+      let text = first.text.trim_start(chars=" ").to_owned()
+      let spaces = first.text[:first.text.length() - text.length()].to_owned()
+      items.push(item_of({ ..first, text: spaces, }))
+      separate = true
+      if text == "" {
+        rest.to_owned()
+      } else {
+        [{ ..first, text, }, ..rest]
+      }
+    }
+    line => line
+  }
   for run in line {
     match items.last() {
-      Some(item) if item.bold == run.bold &&
+      Some(item) if !separate &&
+        item.bold == run.bold &&
         item.italic == run.italic &&
         item.heavy == run.heavy =>
         for c in run.text {
           item.chars.push(c)
         }
-      _ =>
-        items.push({
-          chars: run.text.to_array(),
-          bold: run.bold,
-          heavy: run.heavy,
-          italic: run.italic,
-          positions: Map([]),
-        })
+      _ => items.push(item_of(run))
     }
+    separate = false
   }
   items
 }
