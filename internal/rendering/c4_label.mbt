@@ -52,9 +52,10 @@ fn c4_label_helper(
     _ => env.config.number("flowchart.wrappingWidth").unwrap_or(200.0)
   }
   // `c4.wrap` is the diagram's own switch, on unless configured off.
-  let width = match env.config.get("c4.wrap") {
-    False => None
-    _ => Some(wrap_width)
+  let width = if env.config.get("c4.wrap") is Null || env.config.flag("c4.wrap") {
+    Some(wrap_width)
+  } else {
+    None
   }
   let rendered : Array[(@dom.Element, @dom.Rect)] = []
   for section in sections {

@@ -18,7 +18,6 @@ pub(all) suberror C4Error {
 /// pairs, and a pair sets whatever key it names, so the parsed fields are
 /// kept as the properties of upstream's object.
 priv struct Element {
-  name : String
   props : Map[String, Json]
   // Filled in by the renderer: the top left corner and the size.
   mut x : Double
@@ -33,9 +32,26 @@ priv struct Element {
 ///|
 /// A relationship: upstream's `C4Rel`.
 priv struct Rel {
-  from : String
-  to : String
   props : Map[String, Json]
+}
+
+///|
+/// The alias of an element. Like every other field it can be renamed by a
+/// `$alias="..."` attribute.
+fn Element::name(self : Element) -> String {
+  string_of_prop(self.props, "alias").unwrap_or("")
+}
+
+///|
+/// The alias of the element a relationship starts at.
+fn Rel::from(self : Rel) -> String {
+  string_of_prop(self.props, "from").unwrap_or("")
+}
+
+///|
+/// The alias of the element a relationship ends at.
+fn Rel::to(self : Rel) -> String {
+  string_of_prop(self.props, "to").unwrap_or("")
 }
 
 ///|
@@ -77,7 +93,7 @@ fn C4Db::new(config : @config.Config) -> C4Db {
   {
     config,
     shapes: [],
-    boundaries: [Element::new("global", global)],
+    boundaries: [Element::new(global)],
     rels: [],
     boundary_parse_stack: [""],
     current_boundary_parse: "global",
@@ -92,8 +108,8 @@ fn C4Db::new(config : @config.Config) -> C4Db {
 }
 
 ///|
-fn Element::new(name : String, props : Map[String, Json]) -> Element {
-  { name, props, x: 0.0, y: 0.0, width: 0.0, height: 0.0, intersect: None, }
+fn Element::new(props : Map[String, Json]) -> Element {
+  { props, x: 0.0, y: 0.0, width: 0.0, height: 0.0, intersect: None, }
 }
 
 ///|
@@ -224,10 +240,11 @@ fn C4Db::add_rel(
   }
   let from = name_of(from, "source of a relationship")
   let to = name_of(to, "target of a relationship")
-  let rel = match self.rels.search_by(rel => rel.from == from && rel.to == to) {
+  let rel = match
+    self.rels.search_by(rel => rel.from() == from && rel.to() == to) {
     Some(index) => self.rels[index]
     None => {
-      let rel = { from, to, props: Map([]), }
+      let rel : Rel = { props: Map([]), }
       self.rels.push(rel)
       rel
     }
@@ -250,11 +267,11 @@ fn C4Db::add_rel(
 ///|
 /// The shape called `name`, created at the end of the list when new.
 fn C4Db::shape(self : C4Db, name : String) -> Element {
-  match self.shapes.search_by(shape => shape.name == name) {
+  match self.shapes.search_by(shape => shape.name() == name) {
     Some(index) => self.shapes[index]
     None => {
       let props : Map[String, Json] = { "alias": Json::string(name) }
-      let shape = Element::new(name, props)
+      let shape = Element::new(props)
       self.shapes.push(shape)
       shape
     }
@@ -308,11 +325,11 @@ fn C4Db::add_container(
 ///|
 /// The boundary called `name`, created at the end of the list when new.
 fn C4Db::boundary(self : C4Db, name : String) -> Element {
-  match self.boundaries.search_by(boundary => boundary.name == name) {
+  match self.boundaries.search_by(boundary => boundary.name() == name) {
     Some(index) => self.boundaries[index]
     None => {
       let props : Map[String, Json] = { "alias": Json::string(name) }
-      let boundary = Element::new(name, props)
+      let boundary = Element::new(props)
       self.boundaries.push(boundary)
       boundary
     }
@@ -398,10 +415,10 @@ fn set_style_slot(
 /// shadowing?, shape?, sprite?, techn?, legendText?, legendSprite?)`
 fn C4Db::update_el_style(self : C4Db, args : Array[Json]) -> Unit {
   guard args.get(0) is Some(String(name)) else { return }
-  let element = match self.shapes.search_by(shape => shape.name == name) {
+  let element = match self.shapes.search_by(shape => shape.name() == name) {
     Some(index) => self.shapes[index]
     None =>
-      match self.boundaries.search_by(boundary => boundary.name == name) {
+      match self.boundaries.search_by(boundary => boundary.name() == name) {
         Some(index) => self.boundaries[index]
         None => return
       }
@@ -473,7 +490,7 @@ fn C4Db::update_rel_style(self : C4Db, args : Array[Json]) -> Unit {
   guard args.get(0) is Some(String(from)) && args.get(1) is Some(String(to)) else {
     return
   }
-  guard self.rels.search_by(rel => rel.from == from && rel.to == to)
+  guard self.rels.search_by(rel => rel.from() == from && rel.to() == to)
     is Some(index) else {
     return
   }
@@ -529,10 +546,10 @@ fn C4Db::boundaries_in(self : C4Db, parent : String) -> Array[Element] {
 ///|
 /// The end of a relationship: a shape, or else a boundary.
 fn C4Db::element(self : C4Db, name : String) -> Element? {
-  match self.shapes.search_by(shape => shape.name == name) {
+  match self.shapes.search_by(shape => shape.name() == name) {
     Some(index) => Some(self.shapes[index])
     None =>
-      match self.boundaries.search_by(boundary => boundary.name == name) {
+      match self.boundaries.search_by(boundary => boundary.name() == name) {
         Some(index) => Some(self.boundaries[index])
         None => None
       }

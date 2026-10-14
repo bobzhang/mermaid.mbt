@@ -225,13 +225,13 @@ fn build_node(
     }
   }
   @rendering.Node::new(
-    id=shape.name,
+    id=shape.name(),
     label~,
     label_type="string",
     padding=conf.shape_padding,
     css_styles=styles,
     css_classes=classes.join(" "),
-    dom_id="\{diagram_id}-\{shape.name}",
+    dom_id="\{diagram_id}-\{shape.name()}",
     look=config.text("look").unwrap_or("classic"),
     shape=node_shape,
     stereotype~,

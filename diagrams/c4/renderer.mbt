@@ -168,15 +168,15 @@ fn Renderer::draw_inside_boundary(
       let top = current.starty
       current.set_data(x, x, top, top)
     }
-    let shapes = self.db.shapes_in(boundary.name)
+    let shapes = self.db.shapes_in(boundary.name())
     if !shapes.is_empty() {
       self.draw_shapes(current, shapes)
     }
-    let inner = self.db.boundaries_in(boundary.name)
+    let inner = self.db.boundaries_in(boundary.name())
     if !inner.is_empty() {
       self.draw_inside_boundary(current, inner)
     }
-    if boundary.name != "global" {
+    if boundary.name() != "global" {
       boundary.x = current.startx
       boundary.y = current.starty
       boundary.width = current.stopx - current.startx
@@ -211,7 +211,7 @@ fn Renderer::draw_inside_boundary(
 fn intersection(from : Element, to : Element) -> @rendering.Point raise C4Error {
   guard from.intersect is Some(intersect) else {
     raise C4Error(
-      "C4 element \"\{from.name}\" has no intersect function. Please report this to https://github.com/mermaid-js/mermaid/issues",
+      "C4 element \"\{from.name()}\" has no intersect function. Please report this to https://github.com/mermaid-js/mermaid/issues",
     )
   }
   intersect({ x: to.x + to.width / 2.0, y: to.y + to.height / 2.0, })
@@ -261,10 +261,10 @@ fn Renderer::draw_rels(self : Renderer) -> Unit raise {
     if text("descr") is Some(text) {
       measure(text) |> ignore
     }
-    guard self.db.element(rel.from) is Some(from) &&
-      self.db.element(rel.to) is Some(to) else {
+    guard self.db.element(rel.from()) is Some(from) &&
+      self.db.element(rel.to()) is Some(to) else {
       raise C4Error(
-        "C4 rel \"\{rel.from}\" -> \"\{rel.to}\" references an unknown shape or boundary",
+        "C4 rel \"\{rel.from()}\" -> \"\{rel.to()}\" references an unknown shape or boundary",
       )
     }
     let start = intersection(from, to)
