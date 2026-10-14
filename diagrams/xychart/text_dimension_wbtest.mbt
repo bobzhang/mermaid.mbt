@@ -100,3 +100,22 @@ test "two sizes under one key of the font cache share the first one's face" {
   // 7.45 times a hundred is 745 in single precision: a key of its own.
   json_inspect(width([7.45, 7.44, 7.46]), content=[90.53125, 90.40625, 90.65625])
 }
+
+///|
+test "font families that can be measured" {
+  inspect(
+    is_measurable_family("\"trebuchet ms\",verdana,arial,sans-serif;"),
+    content="true",
+  )
+  inspect(is_measurable_family("Verdana, sans-serif"), content="true")
+  inspect(
+    is_measurable_family("\"Recursive Variable\", arial, sans-serif"),
+    content="true",
+  )
+  // Emptied by the sanitizer: the font of the page.
+  inspect(is_measurable_family(""), content="true")
+  // Installed on the reference machine, but not embedded here.
+  inspect(is_measurable_family("Georgia"), content="false")
+  inspect(is_measurable_family("courier, arial"), content="false")
+  inspect(is_measurable_family("sans-serif"), content="false")
+}

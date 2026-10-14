@@ -115,6 +115,27 @@ fn Measurer::cached_size(self : Measurer, size : Double) -> Double {
 }
 
 ///|
+/// Whether text in `family`, a CSS list of font families, can be measured
+/// as the reference browser would: the first family installed there has
+/// to be one of the embedded ones. A family not known either way may or
+/// may not be installed, and would be measured in a stand-in. No family
+/// at all is the font of the page.
+fn is_measurable_family(family : String) -> Bool {
+  if family.trim().is_empty() {
+    return true
+  }
+  for name in family.split(",") {
+    match name.trim(chars=" \t\n\"';").to_owned().to_lower() {
+      // The font of the redux themes, which the reference machine lacks.
+      "recursive variable" => continue
+      "trebuchet ms" | "verdana" | "arial" => return true
+      _ => return false
+    }
+  }
+  false
+}
+
+///|
 /// Text as SVG lays it out: white space collapses to single spaces and
 /// goes from both ends.
 fn collapse_spaces(text : String) -> String {

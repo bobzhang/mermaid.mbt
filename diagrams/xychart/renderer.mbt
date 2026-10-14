@@ -165,6 +165,17 @@ pub fn draw(chart : XYChart, context : @diagram.Context) -> Unit raise {
   background.attr("fill", theme.background_color) |> ignore
   // The group the texts are measured in stays, empty.
   svg.append("g").attr("class", "mermaid-tmp-group") |> ignore
+  // The chart's geometry follows from the size of its texts, and the
+  // page's own font decides whether the page scrolls.
+  for
+    family in [
+      context.theme().text("fontFamily"),
+      context.config.text("fontFamily").unwrap_or(""),
+    ] {
+    if !is_measurable_family(family) {
+      raise Unsupported("measuring text in the font family \{family}")
+    }
+  }
   let measure = Measurer::new(
     context.font(),
     context.placement(config.width, config.height, max_width=config.width),
