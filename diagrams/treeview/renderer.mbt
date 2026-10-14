@@ -21,6 +21,7 @@ priv struct Layout {
   regular : @font.Stack
   bold : @font.Stack
   italic : @font.Stack
+  bold_italic : @font.Stack
 }
 
 ///|
@@ -152,13 +153,14 @@ fn Layout::position_label(
     .attr("dominant-baseline", "middle")
     .attr("class", classes)
   // The stylesheet's own classes can be given to any node, and then
-  // change how its label is measured.
-  let font = if has_class(node, "treeView-node-description") {
-    self.italic_for(node)
-  } else if node.directory || has_class(node, "treeView-node-dir") {
-    self.bold
-  } else {
-    self.regular
+  // change how its label is measured: bold as for a directory, italic as
+  // for a description.
+  let bold = node.directory || has_class(node, "treeView-node-dir")
+  let font = match (bold, has_class(node, "treeView-node-description")) {
+    (false, false) => self.regular
+    (true, false) => self.bold
+    (false, true) => self.italic
+    (true, true) => self.bold_italic
   }
   let (label_width, label_height) = text_size(font, node.name, self.font_size)
   let height = label_height + self.padding_y * 2.0
@@ -191,19 +193,6 @@ fn Layout::position_label(
     label_right_edge: label_x + label_width,
     highlighted,
   }
-}
-
-///|
-/// The face of a label that carries the description's class: italic, and
-/// bold as well for a directory.
-fn Layout::italic_for(
-  self : Layout,
-  node : Node,
-) -> @font.Stack raise Unsupported {
-  if node.directory {
-    raise Unsupported("a directory styled as a description")
-  }
-  self.italic
 }
 
 ///|
@@ -254,6 +243,7 @@ pub fn draw(tree : TreeView, context : @diagram.Context) -> Unit raise {
     regular: context.font(),
     bold: context.font(bold=true),
     italic: context.font(italic=true),
+    bold_italic: context.font(bold=true, italic=true),
   }
   let svg = context.svg
   let elem = svg.append("g").attr("class", "tree-view")
