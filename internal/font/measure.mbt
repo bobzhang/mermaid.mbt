@@ -364,8 +364,15 @@ fn measured_fallback_em(c : Char) -> Double? {
     0x2665 => Some(0.59375)
     // HEAVY BLACK HEART
     0x2764 => Some(0.91015625)
-    // Emoji, from Apple Color Emoji: 20 pixels at 16.
-    code if code >= 0x1F300 && code <= 0x1FAFF => Some(1.25)
+    // Emoji, from Apple Color Emoji: 20 pixels at 16. Not the skin tone
+    // modifiers (U+1F3FB..U+1F3FF), which join the emoji before them, nor
+    // the alchemical symbols, arrows and chess symbols between the emoji
+    // blocks, which come from other fonts.
+    code if (code >= 0x1F300 && code <= 0x1F3FA) ||
+      (code >= 0x1F400 && code <= 0x1F64F) ||
+      (code >= 0x1F680 && code <= 0x1F6FF) ||
+      (code >= 0x1F900 && code <= 0x1F9FF) ||
+      (code >= 0x1FA70 && code <= 0x1FAFF) => Some(1.25)
     _ => None
   }
 }
@@ -375,6 +382,13 @@ fn measured_fallback_em(c : Char) -> Double? {
 /// exactly: one that no face has and whose fallback advance was not read
 /// off the reference browser.
 pub fn Stack::first_unmeasured(self : Stack, text : StringView) -> Char? {
+  // Emoji sequences are drawn as one glyph: joiners, variation selectors
+  // and skin tone modifiers are not measured.
+  for c in text {
+    if c.to_int() is (0x200D | 0xFE0E | 0xFE0F | 0x1F3FB..<=0x1F3FF) {
+      return Some(c)
+    }
+  }
   for drawn in self.glyphs(text) {
     if drawn is Missing(c) && measured_fallback_em(c) is None {
       return Some(c)

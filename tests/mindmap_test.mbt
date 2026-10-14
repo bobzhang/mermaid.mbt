@@ -30,6 +30,11 @@ test "mindmaps the port refuses rather than draw differently" {
     ),
     content="Unsupported: the character 😀 has no embedded font to measure it with: a 😀 b",
   )
+  // An emoji sequence is drawn as one glyph.
+  inspect(
+    refusal("mindmap\n  root[thumbs 👍🏽]\n"),
+    content="Unsupported: the character 🏽 has no embedded font to measure it with: thumbs 👍🏽",
+  )
   // Subscripts and superscripts change the height of their line.
   inspect(
     refusal("mindmap\n  root[H<sub>2</sub>O]\n"),
