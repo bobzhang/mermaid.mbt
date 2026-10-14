@@ -82,6 +82,7 @@ fn line_items_text(line : Array[Word]) -> Array[Run] {
       },
       bold: word.kind == "strong",
       italic: word.kind == "em",
+      heavy: false,
     }
   })
 }

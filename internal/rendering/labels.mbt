@@ -88,6 +88,8 @@ fn create_html_label(
     line.map(run => {
       ..run,
       bold: run.bold || font.bold,
+      // A bold element in a label that is bold as a whole.
+      heavy: run.heavy || (run.bold && font.bold),
       italic: run.italic || font.italic,
     })
   }
@@ -120,12 +122,16 @@ fn create_html_label(
     .style("white-space", "break-spaces")
     .style("width", @dom.number(width) + "px")
     |> ignore
-    let mut rows = 0
+    // A table is as wide as its widest piece that cannot be broken, and
+    // the lines are then broken in the width it has.
+    let lines = label_lines(span).map(styled)
     let mut box_width = width
-    for line in label_lines(span) {
-      let (line_rows, widest) = wrapped_rows(styled(line), width, env)
-      rows += line_rows
-      box_width = box_width.max(widest)
+    for line in lines {
+      box_width = box_width.max(wrapped_rows(line, width, env).1)
+    }
+    let mut rows = 0
+    for line in lines {
+      rows += wrapped_rows(line, box_width, env).0
     }
     box = { width: box_width, height: line_height * rows.to_double(), }
   } else if box.width < min_width {
