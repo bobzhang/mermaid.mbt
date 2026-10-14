@@ -46,6 +46,10 @@ Work in progress.
 | Timeline | byte-identical, horizontal and vertical, both looks |
 | Gantt | byte-identical; see the note on time below |
 | Sequence | byte-identical: all participant kinds and arrow types, both looks; KaTeX is not ported |
+| Sankey | byte-identical, all `sankey:` options |
+| Radar | byte-identical |
+| Treemap | byte-identical; depends on the page like Gantt charts |
+| Block | byte-identical: grid layout, block arrows, all edge curves |
 | everything else | not ported yet — `render` raises `Unsupported` |
 
 Git graphs name commits at random upstream (`Math.random`), so a graph
@@ -55,6 +59,9 @@ the port draws the same sequence. State diagrams have one such name too:
 the last region of a composite state split by `--` is called
 `id-<random>-<count>` upstream. The port writes `id-i-<count>`, and
 `scripts/oracle.py` renames the reference's regions the same way.
+Block diagrams name `space` blocks and anonymous composites likewise;
+their fixtures give the reference the port's generator
+(`testdata/block/oracle-prelude.js`).
 
 Shared infrastructure that is in place: all eleven themes, configuration
 resolution, frontmatter and directives, diagram type detection, the
