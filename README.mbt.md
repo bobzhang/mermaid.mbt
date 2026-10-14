@@ -59,6 +59,8 @@ Work in progress.
 | Cynefin | byte-identical |
 | Railroad | byte-identical, all four front ends (railroad, EBNF, ABNF, PEG) |
 | Event modeling | byte-identical |
+| Wardley map | byte-identical |
+| Venn | byte-identical, including the hand-drawn look; the layout optimiser of venn.js is transcribed step by step |
 | everything else | not ported yet — `render` raises `Unsupported` |
 
 Git graphs name commits at random upstream (`Math.random`), so a graph
@@ -142,8 +144,8 @@ the default font stack resolving to Trebuchet MS.
   documentation.
 
 To match, the port reproduces a number of browser behaviors: Blink's text
-shaping arithmetic (`internal/font`), V8's results for `Math.sin`, `cos`,
-`acos`, `atan2` and `hypot` (`internal/jsmath`), CSSOM serialization of
+shaping arithmetic (`internal/font`), V8's results for `Math.sin`, `cos`, `tan`,
+`asin`, `acos`, `atan`, `atan2` and `hypot` (`internal/jsmath`), CSSOM serialization of
 inline styles and colors, `getBBox` and `getTotalLength` in Blink's
 single-precision arithmetic (`internal/dom`), the stylis CSS compiler
 (`internal/css`), and the single-precision `sinf`, `cosf`, `tanf` and
