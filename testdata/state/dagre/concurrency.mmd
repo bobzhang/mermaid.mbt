@@ -1,0 +1,29 @@
+---
+config:
+  layout: dagre
+  look: classic
+  handDrawnSeed: 7
+---
+stateDiagram-v2
+  direction LR
+  [*] --> Active
+  state Active {
+    [*] --> NumLockOff
+    NumLockOff --> NumLockOn : EvNumLockPressed
+    NumLockOn --> NumLockOff : EvNumLockPressed
+    --
+    [*] --> CapsLockOff
+    CapsLockOff --> CapsLockOn : EvCapsLockPressed
+    CapsLockOn --> CapsLockOff : EvCapsLockPressed
+  }
+  state fork_state <<fork>>
+  Active --> fork_state
+  fork_state --> A
+  fork_state --> B
+  state join_state <<join>>
+  A --> join_state
+  B --> join_state
+  state if_state <<choice>>
+  join_state --> if_state
+  if_state --> [*] : done
+  if_state --> Active : again

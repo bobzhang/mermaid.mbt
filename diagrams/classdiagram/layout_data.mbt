@@ -180,6 +180,7 @@ fn ClassDb::layout_data(
         style=[""],
         pattern=if relation.dotted { "dashed" } else { "solid" },
         look~,
+        labelpos="c",
       ),
     )
   }

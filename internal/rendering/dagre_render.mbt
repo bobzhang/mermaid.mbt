@@ -326,6 +326,10 @@ fn DagreState::measure_graph(
       _ => raise LayoutError("The node \{v} has no label to draw.")
     }
   }
+  // The labels of all edges are made at once: each edge's centre label
+  // first, then, one terminal label of every edge at a time, the terminal
+  // labels, in the order the browser finishes measuring them.
+  let labelled : Array[Edge] = []
   for e in graph.edges() {
     guard graph.edge(e) is Some(edge) else { continue }
     if merge_self_loops && edge.self_loop is Some((id, order)) {
@@ -342,14 +346,17 @@ fn DagreState::measure_graph(
         end_label_right: original.end_label_right,
         terminals: [],
       }
-      self.insert_dagre_edge_label(edge_labels, label_edge)
+      self.insert_centre_label(edge_labels, label_edge)
+      labelled.push(label_edge)
       edge.edge.width = label_edge.width
       edge.edge.height = label_edge.height
       edge.edge.label_style = label_edge.label_style
       continue
     }
-    self.insert_dagre_edge_label(edge_labels, edge.edge)
+    self.insert_centre_label(edge_labels, edge.edge)
+    labelled.push(edge.edge)
   }
+  self.insert_terminal_labels_in_rounds(edge_labels, labelled)
   let top = self.data.config
     .number("flowchart.subGraphTitleMargin.top")
     .unwrap_or(0.0)
@@ -367,23 +374,61 @@ fn DagreState::measure_graph(
 }
 
 ///|
-/// Create and measure the labels of an edge: mermaid's `insertEdgeLabel`.
+/// Create and measure the centre label of an edge: the first half of
+/// mermaid's `insertEdgeLabel`.
+fn DagreState::insert_centre_label(
+  self : DagreState,
+  group : @dom.Element,
+  edge : Edge,
+) -> Unit {
+  let element = if edge.label == "" && !self.label_env.html_labels {
+    insert_empty_text_label(group, edge)
+  } else {
+    insert_edge_label(group, edge, self.env, self.label_env)
+  }
+  self.edge_labels[edge.id] = element
+}
+
+///|
+/// Create and measure the terminal labels of edges whose centre labels
+/// are made: the second half of mermaid's `insertEdgeLabel`, run for all
+/// edges at once, so that the first terminal label of every edge comes
+/// before the second of any.
+fn DagreState::insert_terminal_labels_in_rounds(
+  self : DagreState,
+  group : @dom.Element,
+  edges : Array[Edge],
+) -> Unit {
+  let env = {
+    ..self.env,
+    font_size: terminal_label_font_size(
+      self.data.diagram_type,
+      self.env.font_size,
+    ),
+  }
+  let texts = edges.map(terminal_label_texts)
+  let mut round = 0
+  while texts.iter().any(entries => round < entries.length()) {
+    for i, edge in edges {
+      if texts[i].get(round) is Some((key, text)) {
+        insert_terminal_label(group, edge, env, key, text)
+        self.terminal_labels[edge.id] = edge.terminals
+      }
+    }
+    round += 1
+  }
+}
+
+///|
+/// Create and measure the labels of an edge that had none made yet:
+/// mermaid's `insertEdgeLabel`.
 fn DagreState::insert_dagre_edge_label(
   self : DagreState,
   group : @dom.Element,
   edge : Edge,
 ) -> Unit {
-  let element = insert_edge_labels(
-    group,
-    edge,
-    self.env,
-    self.label_env,
-    self.data.diagram_type,
-  )
-  self.edge_labels[edge.id] = element
-  if !edge.terminals.is_empty() {
-    self.terminal_labels[edge.id] = edge.terminals
-  }
+  self.insert_centre_label(group, edge)
+  self.insert_terminal_labels_in_rounds(group, [edge])
 }
 
 ///|
