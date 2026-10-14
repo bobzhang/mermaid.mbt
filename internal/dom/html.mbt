@@ -109,7 +109,7 @@ pub fn Element::set_inner_html(self : Element, html : String) -> Unit {
       }
       flush()
       for depth = stack.length() - 1; depth > 0; depth = depth - 1 {
-        if stack[depth].tag == name {
+        if stack[depth].tag.to_lower() == name {
           stack.truncate(depth)
           break
         }
@@ -130,7 +130,11 @@ pub fn Element::set_inner_html(self : Element, html : String) -> Unit {
       continue
     }
     flush()
-    let element = Element::new(html[i + 1:j].to_owned().to_lower())
+    let tag = html[i + 1:j].to_owned().to_lower()
+    // Inside `<svg>`, or in an SVG element's content, names keep their
+    // SVG case.
+    let svg = tag == "svg" || children_in_svg(stack[stack.length() - 1])
+    let element = Element::new(adjusted_tag(tag, svg))
     // Attributes: name, name=value, name="value", name='value'.
     let mut self_closing = false
     while j < n && html[j] != '>' {
@@ -147,7 +151,10 @@ pub fn Element::set_inner_html(self : Element, html : String) -> Unit {
       while j < n && !(html[j] is (' ' | '\t' | '\n' | '\r' | '=' | '>' | '/')) {
         j += 1
       }
-      let name = html[name_start:j].to_owned().to_lower()
+      let name = adjusted_attribute(
+        html[name_start:j].to_owned().to_lower(),
+        svg,
+      )
       let mut value = ""
       if j < n && html[j] == '=' {
         j += 1
