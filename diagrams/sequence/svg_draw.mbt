@@ -183,26 +183,27 @@ fn Renderer::draw_loop(
   let startx = model.startx.unwrap_or(nan)
   let starty = model.starty.unwrap_or(nan)
   let stopx = model.stopx.unwrap_or(nan)
-  let stopy = model.stopy.unwrap_or(nan)
   let group = self.svg
     .append("g")
     .attr("data-et", "control-structure")
     .attr("data-id", "i\{msg.id}")
-  let draw_line = (x1 : Double, y1 : Double, x2 : Double, y2 : Double) => {
-    group
-    .append("line")
-    .attr_number("x1", x1)
-    .attr_number("y1", y1)
-    .attr_number("x2", x2)
-    .attr_number("y2", y2)
-    .attr("class", "loopLine")
+  // An edge nothing ever grew is undefined, and an undefined attribute
+  // is not set at all.
+  let draw_line = (x1 : Double?, y1 : Double?, x2 : Double?, y2 : Double?) => {
+    let line = group.append("line")
+    for name, value in { "x1": x1, "y1": y1, "x2": x2, "y2": y2 } {
+      if value is Some(value) {
+        line.attr_number(name, value) |> ignore
+      }
+    }
+    line.attr("class", "loopLine")
   }
-  draw_line(startx, starty, stopx, starty) |> ignore
-  draw_line(stopx, starty, stopx, stopy) |> ignore
-  draw_line(startx, stopy, stopx, stopy) |> ignore
-  draw_line(startx, starty, startx, stopy) |> ignore
+  draw_line(model.startx, model.starty, model.stopx, model.starty) |> ignore
+  draw_line(model.stopx, model.starty, model.stopx, model.stopy) |> ignore
+  draw_line(model.startx, model.stopy, model.stopx, model.stopy) |> ignore
+  draw_line(model.startx, model.starty, model.startx, model.stopy) |> ignore
   for section in model.sections {
-    draw_line(startx, section.y, stopx, section.y).style(
+    draw_line(model.startx, Some(section.y), model.stopx, Some(section.y)).style(
       "stroke-dasharray", "3, 3",
     )
     |> ignore
@@ -226,11 +227,20 @@ fn Renderer::draw_loop(
   txt.class_name = Some("labelText")
   let width = txt.width.unwrap_or(nan)
   let cut = 7.0
+  // Written into the point list as JavaScript prints them.
+  let or_undefined = (value : Double?) => {
+    match value {
+      Some(value) => n(value)
+      None => "undefined"
+    }
+  }
+  let left = or_undefined(model.startx)
+  let top = or_undefined(model.starty)
   group
   .append("polygon")
   .attr(
     "points",
-    "\{n(txt.x)},\{n(txt.y)} \{n(txt.x + width)},\{n(txt.y)} \{n(txt.x + width)},\{n(txt.y + txt.height - cut)} \{n(txt.x + width - cut * 1.2)},\{n(txt.y + txt.height)} \{n(txt.x)},\{n(txt.y + txt.height)}",
+    "\{left},\{top} \{n(txt.x + width)},\{top} \{n(txt.x + width)},\{n(txt.y + txt.height - cut)} \{n(txt.x + width - cut * 1.2)},\{n(txt.y + txt.height)} \{left},\{n(txt.y + txt.height)}",
   )
   .attr("class", "labelBox")
   |> ignore
@@ -280,10 +290,10 @@ fn Renderer::draw_box(self : Renderer, box : Box) -> Unit raise SequenceError {
   let stopy = starty + box.height + padding * 0.75
   draw_background_rect(
     group,
-    startx,
-    starty,
-    stopx,
-    stopy,
+    Some(startx),
+    Some(starty),
+    Some(stopx),
+    Some(stopy),
     Some(box.fill),
     Some("rgb(0,0,0, 0.5)"),
   )

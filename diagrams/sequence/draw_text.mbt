@@ -391,22 +391,31 @@ fn lower(element : @dom.Element) -> Unit {
 /// (`drawBackgroundRect`).
 fn draw_background_rect(
   parent : @dom.Element,
-  startx : Double,
-  starty : Double,
-  stopx : Double,
-  stopy : Double,
+  startx : Double?,
+  starty : Double?,
+  stopx : Double?,
+  stopy : Double?,
   fill : String?,
   stroke : String?,
 ) -> Unit {
+  let nan = @double.not_a_number
   let rect = RectSpec::new()
-  rect.x = startx
-  rect.y = starty
-  rect.width = stopx - startx
-  rect.height = stopy - starty
+  rect.x = startx.unwrap_or(nan)
+  rect.y = starty.unwrap_or(nan)
+  rect.width = stopx.unwrap_or(nan) - rect.x
+  rect.height = stopy.unwrap_or(nan) - rect.y
   rect.fill = fill
   rect.stroke = stroke
   rect.class_name = Some("rect")
-  lower(draw_plain_rect(parent, rect))
+  let element = draw_plain_rect(parent, rect)
+  // An edge that was never set is undefined, and the attribute with it.
+  if startx is None {
+    element.remove_attr("x") |> ignore
+  }
+  if starty is None {
+    element.remove_attr("y") |> ignore
+  }
+  lower(element)
 }
 
 ///|

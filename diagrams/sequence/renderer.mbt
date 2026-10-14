@@ -738,14 +738,13 @@ pub fn draw(
   if conf.mirror_actors {
     self.draw_actors(true)
   }
-  let nan = @double.not_a_number
   for model in backgrounds {
     draw_background_rect(
       svg,
-      model.startx.unwrap_or(nan),
-      model.starty.unwrap_or(nan),
-      model.stopx.unwrap_or(nan),
-      model.stopy.unwrap_or(nan),
+      model.startx,
+      model.starty,
+      model.stopx,
+      model.stopy,
       model.fill,
       None,
     )
