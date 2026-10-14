@@ -1,0 +1,14 @@
+---
+config:
+  htmlLabels: false
+  usecase:
+    usecaseFontFamily: Georgia
+    actorFontFamily: Georgia, serif
+    actorFontWeight: bold
+---
+usecase-beta
+actor Clerk("Head clerk")
+Quote("`Prepare **quote** _fast_`")
+Biz("Biz")@{ business: true } <<Core>>
+Clerk --> Quote
+Clerk --> Biz

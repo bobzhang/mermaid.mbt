@@ -13,13 +13,23 @@ fn escape_attribute(value : String, out : StringBuilder) -> Unit {
 }
 
 ///|
+/// A carriage return comes out as a line feed, and takes a line feed
+/// after it along: the sanitizer parses the markup again, and the HTML
+/// parser normalizes line breaks.
 fn escape_text(value : String, out : StringBuilder) -> Unit {
+  let mut after_return = false
   for c in value {
+    let skipped = after_return && c == '\n'
+    after_return = c == '\r'
+    if skipped {
+      continue
+    }
     match c {
       '&' => out.write_string("&amp;")
       '<' => out.write_string("&lt;")
       '>' => out.write_string("&gt;")
       '\u{a0}' => out.write_string("&nbsp;")
+      '\r' => out.write_char('\n')
       _ => out.write_char(c)
     }
   }

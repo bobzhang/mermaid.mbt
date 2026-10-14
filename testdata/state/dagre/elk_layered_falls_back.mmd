@@ -1,0 +1,15 @@
+---
+config:
+  layout: elk.layered
+  handDrawnSeed: 7
+---
+stateDiagram-v2
+  [*] --> Still
+  Still --> Moving : push
+  Moving --> Still : stop
+  Moving --> Crash
+  state Crash {
+    [*] --> Broken
+    Broken --> Repaired
+  }
+  Crash --> [*]

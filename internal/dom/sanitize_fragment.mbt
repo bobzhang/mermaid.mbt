@@ -87,8 +87,16 @@ fn reserialized_text(text : String) -> String raise SanitizeError {
       continue
     }
     guard length < after.length() && after[length] == ';' else {
-      // The parser knows some names without their semicolon.
-      raise Unmodelled(text)
+      // The parser knows some names without their semicolon, and numbers.
+      // Where none of those starts the run, the ampersand is text.
+      let run = after[:length]
+      if run.has_prefix("#") ||
+        legacy_reference_names.iter().any(name => run.has_prefix(name)) {
+        raise Unmodelled(text)
+      }
+      out.write_string("&amp;")
+      rest = after
+      continue
     }
     let reference = "&" + after[:length + 1].to_owned()
     let resolved = resolve_references(reference)
@@ -106,6 +114,25 @@ fn reserialized_text(text : String) -> String raise SanitizeError {
   escape(rest)
   out.to_string()
 }
+
+///|
+/// The named character references the HTML parser resolves without their
+/// semicolon, in text: a run of letters after `&` that starts with one of
+/// these is a reference.
+let legacy_reference_names : Array[String] = [
+  "AElig", "AMP", "Aacute", "Acirc", "Agrave", "Aring", "Atilde", "Auml", "COPY",
+  "Ccedil", "ETH", "Eacute", "Ecirc", "Egrave", "Euml", "GT", "Iacute", "Icirc",
+  "Igrave", "Iuml", "LT", "Ntilde", "Oacute", "Ocirc", "Ograve", "Oslash", "Otilde",
+  "Ouml", "QUOT", "REG", "THORN", "Uacute", "Ucirc", "Ugrave", "Uuml", "Yacute",
+  "aacute", "acirc", "acute", "aelig", "agrave", "amp", "aring", "atilde", "auml",
+  "brvbar", "ccedil", "cedil", "cent", "copy", "curren", "deg", "divide", "eacute",
+  "ecirc", "egrave", "eth", "euml", "frac12", "frac14", "frac34", "gt", "iacute",
+  "icirc", "iexcl", "igrave", "iquest", "iuml", "laquo", "lt", "macr", "micro", "middot",
+  "nbsp", "not", "ntilde", "oacute", "ocirc", "ograve", "ordf", "ordm", "oslash",
+  "otilde", "ouml", "para", "plusmn", "pound", "quot", "raquo", "reg", "sect", "shy",
+  "sup1", "sup2", "sup3", "szlig", "thorn", "times", "uacute", "ucirc", "ugrave",
+  "uml", "uuml", "yacute", "yen", "yuml",
+]
 
 ///|
 /// The end of a tag whose name ends at `from`: the index after its `>`,

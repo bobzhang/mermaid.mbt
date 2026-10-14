@@ -1,0 +1,18 @@
+agentflow-beta RL
+  n0["write"]@{ shape: tool }
+  n1["write"]@{ shape: tool }
+  n2["plan"]@{ shape: tool }
+  flow f4[""]
+    n3["fetch"]
+    n4["long label that needs some wrapping in the node"]@{ shape: input }
+    n5["plan"]
+    flow f8["Research team"]
+      n6["long label that needs some wrapping in the node"]@{ shape: action }
+      n7["check"]@{ shape: action }
+    end
+  end
+  n2 --> n5
+  n5 --> n0
+  n1 -- retry later --> n4
+  n2 --> n7
+  n4 --> n3

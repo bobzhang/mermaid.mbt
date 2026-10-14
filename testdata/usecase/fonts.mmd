@@ -1,0 +1,22 @@
+---
+config:
+  usecase:
+    actorFontSize: 16
+    actorFontFamily: Arial
+    actorFontWeight: bold
+    usecaseFontSize: 14
+    usecaseFontFamily: Verdana
+    usecaseFontWeight: normal
+    nodeSpacing: 60
+    rankSpacing: 70
+    diagramPadding: 24
+    useMaxWidth: false
+---
+usecase-beta
+direction LR
+actor Customer
+actor B("Bob") <<Person>>
+Browse("Browse catalog")
+Biz("Biz")@{ business: true } <<Core>>
+Customer --> Browse
+B --> Biz

@@ -420,20 +420,33 @@ fn draw_shape(
     "requirementBox" => return requirement_box(parent, node, env)
     "classBox" => return class_box(parent, node, env)
     "block_arrow" => return block_arrow(parent, node, env)
+    "kanbanItem" => return kanban_item(parent, node, env)
+    "usecaseActor"
+    | "usecaseActorHollow"
+    | "usecaseActorAwesome"
+    | "usecaseActorIcon"
+    | "usecaseEllipse"
+    | "usecaseBusiness"
+    | "usecaseJsonTable" => return usecase_shape(parent, node, env)
     _ => ()
   }
   guard shape_handler(node.shape) is Some(handler) else {
     raise LayoutError("No such shape: \{node.shape}. Please check your syntax.")
   }
   match handler {
-    "squareRect" =>
-      draw_rect(
+    "squareRect" => {
+      let shape_svg = draw_rect(
         parent,
         node,
-        env,
+        usecase_label_env(node, env),
         label_padding_x=if neo { 16.0 } else { padding * 2.0 },
         label_padding_y=if neo { 12.0 } else { padding },
       )
+      // A use case rectangle, and a group drawn as a node (one without
+      // children, under dagre), keep their slot in the palette.
+      stamp_color_slot(shape_svg, node.color_index, env)
+      shape_svg
+    }
     "roundedRect" =>
       draw_rect(
         parent,
@@ -494,6 +507,8 @@ fn draw_shape(
     "anchor" => anchor(parent, node, env)
     "choice" => choice(parent, node, env)
     "rectWithTitle" => rect_with_title(parent, node, env)
+    "collapsedGroup" => collapsed_group(parent, node, env)
+    "labelRect" => label_rect(parent, node, env)
     "subroutine" =>
       polygon_shape(parent, node, env, box => {
         let label_padding_x = if neo { 28.0 } else { padding }

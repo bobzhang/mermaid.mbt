@@ -1,0 +1,14 @@
+usecase-beta
+actor Customer:::external
+Checkout("Checkout"):::critical
+Payment
+Customer opens@-- "starts checkout" ---> Checkout
+Checkout payment@..> : include Payment
+classDef emphasized stroke:#d33,stroke-width:3px
+classDef external fill:#eef,color:#333
+classDef critical stroke:#c33,stroke-width:4px,color:red
+class opens,payment emphasized
+style opens stroke:#06c,stroke-width:4px
+style Customer stroke:#0a0
+opens@{ animation: slow }
+payment@{ animate: true }

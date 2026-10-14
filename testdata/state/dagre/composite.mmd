@@ -1,0 +1,17 @@
+---
+config:
+  layout: dagre
+  handDrawnSeed: 7
+---
+stateDiagram-v2
+  [*] --> Idle
+  Idle --> Working : start
+  state Working {
+    [*] --> Loading
+    Loading --> Ready
+    Ready --> Loading : reload
+    Ready --> Ready : tick
+  }
+  Working --> Done
+  Done --> [*]
+  note right of Idle : waiting for input

@@ -1,0 +1,3 @@
+Parsing failed:  Parse error on line 2, column 7: Expecting: expecting at least one iteration which starts with one of these possible Token sequences::
+  <[ABNF_REPEAT] ,[ABNF_EXACT_REPEAT] ,[ABNF_STRING] ,[ABNF_NUMVAL] ,[ABNF_RULENAME] ,[(] ,[[]>
+but found: ')'

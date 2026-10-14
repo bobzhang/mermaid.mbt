@@ -1,0 +1,4 @@
+Error parsing usecase diagram: Expecting token of type --> JSON_OBJECT_LITERAL <-- but found --> '{ "a": 1
+A --> J
+
+' <-- at line 2, column 8 [20,38)

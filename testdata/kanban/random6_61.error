@@ -1,0 +1,6 @@
+missed comma between flow collection entries (2:24)
+
+ 1 | {
+ 2 |  assigned: "Value dog "dq"", priority: 'Very High' 
+----------------------------^
+ 3 | }

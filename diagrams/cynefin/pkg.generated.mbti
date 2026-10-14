@@ -1,0 +1,40 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/diagrams/cynefin"
+
+import {
+  "bobzhang/mermaid/diagram",
+  "bobzhang/mermaid/theme",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn draw(Cynefin, @diagram.Context) -> Unit raise Unsupported
+
+pub fn parse(String) -> Cynefin raise
+
+pub fn styles(@theme.Theme) -> String
+
+// Errors
+pub(all) suberror Unsupported {
+  Unsupported(String)
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+pub struct Cynefin {
+  domains : Map[String, Array[String]]
+  transitions : Array[Transition]
+  mut title : String
+  mut acc_title : String
+  mut acc_description : String
+}
+pub fn Cynefin::set_title(Self, String) -> Unit raise Unsupported
+
+pub struct Transition {
+  from : String
+  to : String
+  label : String?
+}
+
+// Type aliases
+
+// Traits

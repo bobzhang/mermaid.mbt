@@ -1,0 +1,6 @@
+missed comma between flow collection entries (2:30)
+
+ 1 | {
+ 2 |  assigned: "a-b-c-d-e-f-g-h "dq" Toyota", priority: 'Medium' 
+----------------------------------^
+ 3 | }

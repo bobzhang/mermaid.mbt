@@ -1,0 +1,28 @@
+---
+config:
+  handDrawnSeed: 6
+  htmlLabels: false
+  usecase:
+    colorScheme: rotate
+---
+usecase-beta
+direction TB
+actor A0@{ business: true }
+U0[Login] <<Core>>
+U1("Sign out")
+U2("Ünïcode café") <<Rule>>
+A0 ---> U2
+A0 --x U2
+U1 ..> : extend U2
+U2 o-- "back" -- U1
+A0 --o U2
+U2 --> U0
+note for U1 "`**md** note`"
+json J@{ "k": "v", "n": 1, "list": [1, 2], "o": { "p": true } }
+U1 --> J
+classDef hot stroke:#c33,stroke-width:3px
+class A0 hot
+
+A0 E1@-- "styled" --> U0
+style E1 stroke:#06c,stroke-width:3px,color:#c00
+E1@{ animate: true }

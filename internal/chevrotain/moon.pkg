@@ -1,0 +1,5 @@
+import {
+  "bobzhang/mermaid/internal/jsregex",
+}
+
+warnings = "-implicit_impl_as_method"

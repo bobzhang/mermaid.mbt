@@ -1,0 +1,5 @@
+Parsing failed: Lexer error on line 2, column 9: unexpected character: ->/<- at offset: 27, skipped 1 characters. Parse error on line 2, column 10: Expecting token of type 'EOF' but found `*`.
+Parse error on line ?, column ?: Expecting: one of these possible Token sequences:
+  1. [=]
+  2. [::=]
+but found: ''

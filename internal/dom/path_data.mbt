@@ -78,7 +78,22 @@ fn parse_svg_number(text : StringView) -> Float {
 }
 
 ///|
-/// Split path data into commands and their numbers.
+/// How many numbers a path command takes for one segment.
+fn command_arity(command : Char) -> Int32 {
+  match command {
+    'M' | 'm' | 'L' | 'l' | 'T' | 't' => 2
+    'H' | 'h' | 'V' | 'v' => 1
+    'C' | 'c' => 6
+    'S' | 's' | 'Q' | 'q' => 4
+    'A' | 'a' => 7
+    _ => 0
+  }
+}
+
+///|
+/// Split path data into commands and their numbers. Path data is used up
+/// to its first error, such as a number that is not one (`NaN`): what
+/// precedes it is drawn, and what follows is not.
 fn tokenize_path(data : String) -> Array[(Char, Array[Float])] {
   let commands : Array[(Char, Array[Float])] = []
   let current = StringBuilder()
@@ -93,9 +108,45 @@ fn tokenize_path(data : String) -> Array[(Char, Array[Float])] {
   for c in data {
     match c {
       'e' | 'E' => current.write_char(c)
-      'A'..<='Z' | 'a'..<='z' => {
+      'M'
+      | 'm'
+      | 'L'
+      | 'l'
+      | 'H'
+      | 'h'
+      | 'V'
+      | 'v'
+      | 'C'
+      | 'c'
+      | 'S'
+      | 's'
+      | 'Q'
+      | 'q'
+      | 'T'
+      | 't'
+      | 'A'
+      | 'a'
+      | 'Z'
+      | 'z' => {
         flush()
         commands.push((c, []))
+      }
+      'A'..<='Z' | 'a'..<='z' => {
+        // Not a command: the segment being read is dropped, and the rest.
+        flush()
+        if commands.last() is Some((command, numbers)) {
+          let arity = command_arity(command)
+          if arity > 0 {
+            let complete = numbers.length() / arity * arity
+            while numbers.length() > complete {
+              numbers.pop() |> ignore
+            }
+            if numbers.is_empty() {
+              commands.pop() |> ignore
+            }
+          }
+        }
+        return commands
       }
       ' ' | ',' | '\n' | '\t' | '\r' => flush()
       '-' | '+' => {

@@ -79,8 +79,29 @@ fn edge_label_font_size(diagram_type : String, font_size : Double) -> Double {
   match diagram_type {
     // `.edgeLabel .label { font-size: 14px }`
     "er" => 14.0
+    // `.relationship-label, .edgeLabel { font-size: 10px }`
+    "usecase" => 10.0
     _ => font_size
   }
+}
+
+///|
+/// The horizontal padding the diagram's stylesheet gives the background
+/// of HTML edge labels, on both sides together.
+fn label_background_padding(diagram_type : String) -> Double {
+  match diagram_type {
+    // `.labelBkg { padding: 0 2px }`
+    "usecase" => 4.0
+    _ => 0.0
+  }
+}
+
+///|
+/// Whether the label of an edge takes the edge's own styles besides
+/// those of its classes. Use case edges keep their own in `style`, which
+/// upstream's label code does not read.
+fn edge_label_uses_own_styles(diagram_type : String) -> Bool {
+  diagram_type != "usecase"
 }
 
 ///|
@@ -88,7 +109,13 @@ fn edge_label_font_size(diagram_type : String, font_size : Double) -> Double {
 /// on its position (`.node .label text { text-anchor: middle }`).
 fn node_text_centred(diagram_type : String) -> Bool {
   !(diagram_type
-  is ("er" | "requirement" | "stateDiagram" | "classDiagram" | "mindmap"))
+  is ("er"
+  | "requirement"
+  | "stateDiagram"
+  | "classDiagram"
+  | "kanban"
+  | "usecase"
+  | "mindmap"))
 }
 
 ///|

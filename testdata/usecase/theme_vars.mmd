@@ -1,0 +1,20 @@
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 18px
+    primaryColor: "#ffcc00"
+    lineColor: "#333333"
+    noteBkgColor: "#eeeeff"
+    usecaseActorBkg: "#ffeeee"
+    usecaseBoundaryBorder: "#00aa00"
+  handDrawnSeed: 4
+---
+usecase-beta
+actor A
+systemBoundary S
+  U1("one")
+end
+note for U1 "A note that is long enough to wrap at one hundred twenty pixels"
+A -- "lbl" --> U1
+U1 ..> : extend U2

@@ -37,12 +37,12 @@ Work in progress.
 | Pie | byte-identical |
 | Packet | byte-identical |
 | Info | byte-identical |
-| Flowchart | byte-identical for the fixtures in `testdata/flowchart`; see below |
+| Flowchart | byte-identical with the ELK and dagre layouts; see below |
 | Git graph | byte-identical, all orientations and options; upstream's documentation examples match |
-| Entity relationship | byte-identical with the default ELK layout |
-| Requirement | byte-identical with the default ELK layout |
-| State | byte-identical with the default ELK layout, `stateDiagram` and `stateDiagram-v2` |
-| Class | byte-identical with the default ELK layout, including cardinalities, namespaces and notes |
+| Entity relationship | byte-identical with the ELK and dagre layouts |
+| Requirement | byte-identical with the ELK and dagre layouts |
+| State | byte-identical with the ELK and dagre layouts, `stateDiagram` and `stateDiagram-v2` |
+| Class | byte-identical with the ELK and dagre layouts, including cardinalities, namespaces and notes |
 | User journey | byte-identical, all `journey:` options |
 | Timeline | byte-identical, horizontal and vertical, both looks |
 | Gantt | byte-identical; see the note on time below |
@@ -54,6 +54,16 @@ Work in progress.
 | C4 | byte-identical: all five kinds, boundaries, relationships, style updates |
 | Quadrant chart | byte-identical |
 | XY chart | byte-identical, both orientations; depends on the page like Gantt charts |
+| Tree view | byte-identical; emoji labels are refused |
+| Ishikawa | byte-identical, including the hand-drawn look with a seed |
+| Cynefin | byte-identical |
+| Railroad | byte-identical, all four front ends (railroad, EBNF, ABNF, PEG) |
+| Event modeling | byte-identical |
+| Wardley map | byte-identical |
+| Agentflow | byte-identical with the ELK and dagre layouts, including collapsed containers |
+| Kanban | byte-identical, including the hand-drawn look |
+| Use case | byte-identical with the ELK and dagre layouts |
+| Venn | byte-identical, including the hand-drawn look; the layout optimiser of venn.js is transcribed step by step |
 | everything else | not ported yet — `render` raises `Unsupported` |
 
 Git graphs name commits at random upstream (`Math.random`), so a graph
@@ -117,8 +127,9 @@ What is missing:
 - Labels are HTML in a `foreignObject` by default, as upstream; with
   `htmlLabels: false` they are plain SVG text, which every SVG viewer
   shows.
-- Not ported: the hand-drawn look, and layouts other than ELK (`layout:
-  dagre` and the rest). `render` raises `Unsupported` for them.
+- Layouts: ELK (the default) and dagre, as upstream for `layout: dagre`
+  and for layout names mermaid does not register. The hand-drawn look is
+  not ported for these diagrams; `render` raises `Unsupported` for it.
 - Line breaking inside labels knows Blink's rules for ASCII text; other
   scripts break at spaces only.
 
@@ -137,16 +148,16 @@ the default font stack resolving to Trebuchet MS.
   documentation.
 
 To match, the port reproduces a number of browser behaviors: Blink's text
-shaping arithmetic (`internal/font`), V8's results for `Math.sin`, `cos`,
-`acos`, `atan2` and `hypot` (`internal/jsmath`), CSSOM serialization of
+shaping arithmetic (`internal/font`), V8's results for `Math.sin`, `cos`, `tan`,
+`asin`, `acos`, `atan`, `atan2` and `hypot` (`internal/jsmath`), CSSOM serialization of
 inline styles and colors, `getBBox` and `getTotalLength` in Blink's
 single-precision arithmetic (`internal/dom`), the stylis CSS compiler
 (`internal/css`), and the single-precision `sinf`, `cosf`, `tanf` and
 `atan2f` of macOS on arm64 (`internal/libm`), which Skia shapes arcs with
 and which are not correctly rounded.
 
-Known limits: the embedded faces are Trebuchet MS, Verdana, Arial, Times
-and Helvetica, with Latin, Greek, Cyrillic and common symbols. Text outside
+Known limits: the embedded faces are Trebuchet MS, Verdana, Arial, Times,
+Helvetica and Georgia, with Latin, Greek, Cyrillic and common symbols. Text outside
 them (CJK, emoji, Hebrew, Arabic, ...) falls to other system fonts in the
 browser, which are not embedded: the newer diagram ports refuse such text
 with `Unsupported`, the older ones (flowchart, pie) measure it

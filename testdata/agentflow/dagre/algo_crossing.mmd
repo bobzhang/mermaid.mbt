@@ -1,0 +1,11 @@
+---
+config:
+  layout: dagre
+---
+agentflow-beta TB
+  flow tools["Tools"]
+    a["a"]@{ shape: tool }
+    b["b"]@{ shape: tool }
+  end
+  tools@{ algorithm: "elk.rectpacking" }
+  x["Start"] --> a

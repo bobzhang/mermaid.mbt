@@ -1,0 +1,28 @@
+---
+config:
+  layout: dagre
+---
+agentflow-beta LR
+  flow f1["One"]
+    a1
+  end
+  flow f2["Two"]
+    a2
+    flow f3["Three"]
+      a3
+      flow f4["Four"]
+        a4
+      end
+    end
+  end
+  flow f5["Five"]
+    a5
+  end
+  flow f6["Six"]
+    a6
+  end
+  flow f7["Seven"]
+    a7
+  end
+  f6@{ view: collapsed }
+  a1 --> a2 --> a3 --> a4 --> a5 --> a6 --> a7

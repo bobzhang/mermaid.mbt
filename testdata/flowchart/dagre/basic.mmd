@@ -1,0 +1,14 @@
+---
+config:
+  handDrawnSeed: 7
+  layout: dagre
+---
+flowchart TD
+  A[Start] --> B{Is it?}
+  B -->|Yes| C[OK]
+  B -->|No| D[End]
+  subgraph S1 [Sub]
+    C --> E
+  end
+  E --> A
+  D --> D

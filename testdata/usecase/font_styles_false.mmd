@@ -1,0 +1,21 @@
+---
+config:
+  htmlLabels: false
+---
+usecase-beta
+actor A("Agent")@{ business: true } <<Role>>:::big
+U1("Browse things"):::big
+U2[Rect thing]:::bold
+U3("Biz case")@{ business: true } <<Core>>:::big
+systemBoundary S["Shop"]:::bold
+  U4("inside")
+end
+json J@{ "k": "v" }:::big
+A --> U1
+A --> U2
+A --> U3
+U3 --> U4
+U4 --> J
+classDef big font-size:18px,color:#036
+classDef bold font-weight:bold,stroke-dasharray:4 2
+style U1 font-style:italic

@@ -561,27 +561,68 @@ fn markdown_to_lines(markdown : String) -> Array[Array[Word]] {
 }
 
 ///|
-/// Remove the indentation all non-blank lines share, and blank lines at
-/// both ends: what `ts-dedent` does to a single string.
+/// What `ts-dedent` does to a single string: the indentation that the
+/// lines after a line break share goes (the first line keeps its own), as
+/// do a line break the text starts with and one it ends with, with the
+/// spaces after it.
 fn dedent(text : String) -> String {
-  let lines = text.split("\n").map(line => line.to_owned()).collect()
+  let chars = text.to_array()
+  let is_space = (c : Char) => c is (' ' | '\t')
+  // `/\r?\n([\t ]*)$/`
+  let mut end = chars.length()
+  while end > 0 && is_space(chars[end - 1]) {
+    end -= 1
+  }
+  let chars = if end > 0 && chars[end - 1] == '\n' {
+    let cut = if end > 1 && chars[end - 2] == '\r' { end - 2 } else { end - 1 }
+    chars[:cut].to_owned()
+  } else {
+    chars
+  }
+  let n = chars.length()
+  // `/\n([\t ]+|(?!\s).)/g`: the indentation of every line after a break
+  // that is not blank, or starts with its text.
   let mut indent = -1
-  for line in lines {
-    let trimmed = line.trim_start(chars=" \t")
-    if trimmed.length() == 0 {
-      continue
+  for i, c in chars {
+    guard c == '\n' && i + 1 < n else { continue }
+    let mut j = i + 1
+    while j < n && is_space(chars[j]) {
+      j += 1
     }
-    let leading = line.length() - trimmed.length()
-    if indent < 0 || leading < indent {
-      indent = leading
+    let next = chars[i + 1]
+    let counts = j > i + 1 ||
+      !(next is (' ' | '\t' | '\n' | '\r' | '\u{b}' | '\u{c}') ||
+      next.to_int()
+      is (0xa0 | 0x1680 | 0x2028 | 0x2029 | 0x202f | 0x205f | 0x3000 | 0xfeff) ||
+      next.to_int() is (0x2000..<=0x200a))
+    if counts && (indent < 0 || j - i - 1 < indent) {
+      indent = j - i - 1
     }
   }
-  let out = lines.map(line => {
-    if indent > 0 && line.length() >= indent {
-      line[indent:].to_owned()
-    } else {
-      line
+  let out = StringBuilder()
+  let mut i = 0
+  while i < n {
+    out.write_char(chars[i])
+    if chars[i] == '\n' && indent > 0 {
+      // `/\n[\t ]{indent}/g`: only where there are that many.
+      let mut j = i + 1
+      while j < n && j - i - 1 < indent && is_space(chars[j]) {
+        j += 1
+      }
+      if j - i - 1 == indent {
+        i = j
+        continue
+      }
     }
-  })
-  out.join("\n").trim().to_owned()
+    i += 1
+  }
+  let text = out.to_string()
+  // `/^\r?\n/`
+  if text.has_prefix("\r\n") {
+    text[2:].to_owned()
+  } else if text.has_prefix("\n") {
+    text[1:].to_owned()
+  } else {
+    text
+  }
 }

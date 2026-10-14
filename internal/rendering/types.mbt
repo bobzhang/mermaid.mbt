@@ -37,6 +37,8 @@ pub struct Node {
   description : Array[String]
   /// The icon the node shows, which gives its label a background.
   icon : String?
+  /// Whether ELK spreads the ports of the node around its centre.
+  spread_ports : Bool
   // Filled in while measuring and laying out.
   mut label_style : String
   mut width : Double?
@@ -79,6 +81,7 @@ pub fn Node::new(
   wrapping_width? : Double,
   description~ : Array[String] = [],
   icon? : String,
+  spread_ports~ : Bool = false,
 ) -> Node {
   {
     id,
@@ -107,6 +110,7 @@ pub fn Node::new(
     wrapping_width,
     description,
     icon,
+    spread_ports,
     label_style: "",
     width: None,
     height: None,
@@ -161,6 +165,12 @@ pub struct Edge {
   start_label_right : String
   end_label_left : String
   end_label_right : String
+  /// How many ranks the edge spans at least, and where its label goes
+  /// along it (`l`, `c` or `r`), for the dagre layout; `None` when the
+  /// diagram leaves them unset. A length that is not a number is one set
+  /// to `undefined`.
+  minlen : Double?
+  labelpos : String?
   // Filled in while measuring and laying out.
   priv terminals : Array[TerminalLabel]
   mut label_style : String
@@ -194,6 +204,8 @@ pub fn Edge::new(
   start_label_right~ : String = "",
   end_label_left~ : String = "",
   end_label_right~ : String = "",
+  minlen? : Double,
+  labelpos? : String,
   curve~ : String = "",
 ) -> Edge {
   {
@@ -216,6 +228,8 @@ pub fn Edge::new(
     start_label_right,
     end_label_left,
     end_label_right,
+    minlen,
+    labelpos,
     terminals: [],
     label_style: "",
     curve,
@@ -266,10 +280,14 @@ fn Env::new(config : @config.Config, diagram_id : String) -> Env {
     // `font-size` is dropped and text keeps the browser's size.
     Number(_, ..) => 16.0
     String(text) => {
-      let mut value = 0.0
+      // The leading number, fraction included: `15.5px` is 15.5 pixels.
+      let mut length = 0
       for c in text {
-        guard c is ('0'..<='9') else { break }
-        value = value * 10.0 + (c.to_int() - '0').to_double()
+        guard c is ('0'..<='9' | '.') else { break }
+        length += 1
+      }
+      let value = @string.parse_double(text[:length].to_owned()) catch {
+        _ => 0.0
       }
       if value == 0.0 {
         16.0

@@ -1,0 +1,14 @@
+agentflow-beta RL
+  n0["check"]@{ shape: decision }
+  n1["ok?"]@{ shape: tool }
+  flow f3["Agent"]
+    n2["A"]@{ shape: tool }
+  end
+  flow f6[""]
+    n3["A"]
+    n4["ok?"]@{ shape: tool }
+    n5["summarise the results"]@{ shape: task }
+  end
+  n5 -.- n4
+  n5 --x n1
+  n5 --> n5

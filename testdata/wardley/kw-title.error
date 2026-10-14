@@ -1,0 +1,5 @@
+Parsing failed:  Parse error on line 2, column 11: Expecting: one of these possible Token sequences:
+  1. [STRING]
+  2. [ID]
+  3. [NAME_WITH_SPACES]
+but found: 'title bar [0.5, 0.5]'

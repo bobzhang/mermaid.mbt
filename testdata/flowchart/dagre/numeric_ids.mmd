@@ -1,0 +1,16 @@
+---
+config:
+  handDrawnSeed: 7
+  layout: dagre
+  theme: dark
+---
+flowchart RL
+  10[Ten] --> 2[Two]
+  2 --> 1[One]
+  b --> 10
+  a --> 2
+  1 --> a
+  subgraph 3 [Numbered group]
+    20 --> 4
+  end
+  4 --> b

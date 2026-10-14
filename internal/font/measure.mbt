@@ -112,12 +112,13 @@ pub fn Stack::default(bold~ : Bool = false, italic~ : Bool = false) -> Stack {
     (false, true) => trebuchet_italic
     (true, true) => trebuchet_bold_italic
   }
-  // Verdana and Arial italics are not embedded; their upright faces stand in.
-  if bold {
-    { faces: [trebuchet, verdana_bold, arial_bold], }
-  } else {
-    { faces: [trebuchet, verdana_regular, arial_regular], }
+  let verdana = match (bold, italic) {
+    (false, false) => verdana_regular
+    (true, false) => verdana_bold
+    (false, true) => verdana_italic
+    (true, true) => verdana_bold_italic
   }
+  { faces: [trebuchet, verdana, arial(bold, italic)], }
 }
 
 ///|
@@ -860,8 +861,8 @@ pub fn Stack::bbox(
 ///|
 /// The embedded faces a CSS `font-family` list names, in order. Families
 /// that are not installed in the reference environment are skipped; of the
-/// installed ones, Trebuchet MS, Verdana, Arial, Helvetica and Times are
-/// embedded. The generic `sans-serif` is Helvetica there and `serif` is
+/// installed ones, Trebuchet MS, Verdana, Arial, Helvetica, Times and
+/// Georgia are embedded. The generic `sans-serif` is Helvetica there and `serif` is
 /// Times.
 fn listed_faces(family : String, bold : Bool, italic : Bool) -> Array[Face] {
   let faces = []
@@ -877,7 +878,15 @@ fn listed_faces(family : String, bold : Bool, italic : Bool) -> Array[Face] {
             (true, true) => trebuchet_bold_italic
           },
         )
-      "verdana" => Some(if bold { verdana_bold } else { verdana_regular })
+      "verdana" =>
+        Some(
+          match (bold, italic) {
+            (false, false) => verdana_regular
+            (true, false) => verdana_bold
+            (false, true) => verdana_italic
+            (true, true) => verdana_bold_italic
+          },
+        )
       "arial" => Some(arial(bold, italic))
       "helvetica" | "sans-serif" =>
         Some(
@@ -889,6 +898,15 @@ fn listed_faces(family : String, bold : Bool, italic : Bool) -> Array[Face] {
           },
         )
       "times" | "serif" => Some(if bold { times_bold } else { times_regular })
+      "georgia" =>
+        Some(
+          match (bold, italic) {
+            (false, false) => georgia_regular
+            (true, false) => georgia_bold
+            (false, true) => georgia_italic
+            (true, true) => georgia_bold_italic
+          },
+        )
       _ => None
     }
     if face is Some(face) && !faces.iter().any(f => physical_equal(f, face)) {

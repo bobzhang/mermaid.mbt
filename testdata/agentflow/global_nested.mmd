@@ -1,0 +1,16 @@
+---
+config:
+  handDrawnSeed: 1
+---
+agentflow-beta TB
+  flow a["A"]
+    x["X"]
+    global
+      shared["Shared"]@{ shape: refdoc }
+    end
+    x -.- shared
+  end
+  flow b["B"]
+    y["Y"]
+    y -.- shared
+  end

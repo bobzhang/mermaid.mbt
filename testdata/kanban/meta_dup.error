@@ -1,0 +1,6 @@
+duplicated mapping key (2:15)
+
+ 1 | {
+ 2 |  assigned: a, assigned: b 
+-------------------^
+ 3 | }

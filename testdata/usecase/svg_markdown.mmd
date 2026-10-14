@@ -1,0 +1,17 @@
+---
+config:
+  htmlLabels: false
+  handDrawnSeed: 1
+---
+usecase-beta
+actor Reviewer("`*Reviewer*`")
+Formatted("`**Formatted label**
+with a physical line break`")
+B["`a **bold** rect`"]
+systemBoundary S["`**Bold** boundary`"]@{ type: package }
+  C("c")
+end
+note for C "`note **md**`"
+Reviewer -- "`opens **form**`" --> Formatted
+Reviewer --> B
+B --> C

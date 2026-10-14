@@ -1,0 +1,35 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/diagrams/ishikawa"
+
+import {
+  "bobzhang/mermaid/diagram",
+  "bobzhang/mermaid/theme",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn draw(Ishikawa, @diagram.Context) -> Unit raise Unsupported
+
+pub fn parse(String) -> Ishikawa raise
+
+pub fn styles(@theme.Theme) -> String
+
+// Errors
+pub(all) suberror Unsupported {
+  Unsupported(String)
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+pub struct Ishikawa {
+  mut root : Node?
+  // private fields
+}
+
+pub struct Node {
+  text : String
+  children : Array[Node]
+}
+
+// Type aliases
+
+// Traits

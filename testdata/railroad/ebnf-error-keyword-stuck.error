@@ -1,0 +1,5 @@
+Parsing failed:  Parse error on line 1, column 1: Expecting token of type 'railroad-ebnf-beta' but found `railroad-ebnf-betax`.
+Parse error on line 2, column 1: Expecting: one of these possible Token sequences:
+  1. [=]
+  2. [::=]
+but found: 'a'

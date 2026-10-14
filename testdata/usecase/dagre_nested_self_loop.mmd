@@ -1,0 +1,21 @@
+---
+config:
+  handDrawnSeed: 3
+  layout: dagre
+  htmlLabels: false
+  usecase:
+    actorFontSize: 18
+---
+usecase-beta
+direction TD
+systemBoundary B0["Payment service"]@{ type: package }
+  U0(Reset password)
+end
+U0 o-- U0
+U0 -- "calls the service" --> U0
+U0 --|> U0
+U0 ..> : extend U0
+U0 ..> : include U0
+U0 ..> : include U0
+U0 ..> : include U0
+U0 --> U0

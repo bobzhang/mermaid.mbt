@@ -1,0 +1,6 @@
+cannot resolve a node with !<tag:yaml.org,2002:int> explicit tag (3:1)
+
+ 1 | {
+ 2 |  assigned: !!int x 
+ 3 | }
+-----^

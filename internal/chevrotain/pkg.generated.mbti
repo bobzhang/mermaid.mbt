@@ -1,0 +1,79 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/internal/chevrotain"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+
+// Errors
+pub(all) suberror ParseError {
+  ParseError(message~ : String, offset~ : Int)
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+pub(all) enum CstElement {
+  Leaf(Token)
+  Node(CstNode)
+}
+
+pub struct CstNode {
+  name : String
+  children : Map[String, Array[CstElement]]
+  mut start : Int
+}
+pub fn CstNode::all_tokens(Self) -> Array[Token]
+pub fn CstNode::nodes(Self, String) -> Array[Self]
+pub fn CstNode::tokens(Self, String) -> Array[Token]
+
+pub struct Grammar {
+  // private fields
+}
+pub fn Grammar::accepts(Self, String, Token) -> Bool
+pub fn Grammar::new(tokens~ : Array[TokenType], modes~ : Map[String, Array[String]], default_mode~ : String, rules~ : Array[(String, Array[Production])]) -> Self
+pub fn Grammar::parse(Self, Array[Token], gate? : (String, Parser) -> Bool) -> CstNode raise ParseError
+pub fn Grammar::tokenize(Self, String, custom? : (String, String, Int) -> Int?) -> Array[Token] raise ParseError
+
+pub struct Parser {
+  // private fields
+}
+pub fn Parser::la(Self, Int) -> Token
+
+pub(all) enum Pattern {
+  Regex(String, String)
+  Custom
+  Category
+}
+
+pub(all) enum Production {
+  Terminal(String)
+  NonTerminal(String)
+  Option(Int, Array[Array[String]], Array[Production])
+  Repetition(Int, Array[Array[String]], Array[Production])
+  RepetitionMandatory(Int, Array[Array[String]], Array[Production])
+  Alternation(Int, Array[(Array[Array[String]], Array[Production])])
+}
+
+pub struct Token {
+  name : String
+  image : String
+  start : Int
+  end : Int
+  // private fields
+}
+
+pub(all) struct TokenType {
+  name : String
+  pattern : Pattern
+  skipped : Bool
+  longer_alt : Array[String]
+  push_mode : String?
+  pop_mode : Bool
+  matched_by : Array[String]
+}
+pub fn TokenType::new(String, Pattern, skipped? : Bool, longer_alt? : Array[String], push_mode? : String, pop_mode? : Bool, matched_by? : Array[String]) -> Self
+
+// Type aliases
+
+// Traits

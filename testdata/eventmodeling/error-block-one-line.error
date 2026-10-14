@@ -1,0 +1,1 @@
+Parsing failed:  Parse error on line 4, column 9: Expecting token of type 'EM_DATA_BLOCK' but found `{ a: 1 }`.

@@ -1,0 +1,16 @@
+---
+config:
+  theme: dark
+---
+usecase-beta
+json Order@{
+  "id": 42,
+  "total": 1e3,
+  "neg": -0.5,
+  "note": "*emphasis* and **bold**",
+  "longValue": "a value that is long enough to need wrapping at the default width of two hundred pixels",
+  "lines": [{ "a": [1, 2] }, { "b": { "c": "d" } }],
+  "esc": "tab\there é",
+  "empty": ""
+}
+Viewer("View order") --> Order

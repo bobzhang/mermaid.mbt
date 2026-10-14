@@ -1,0 +1,11 @@
+usecase-beta
+actor Reviewer("`*Reviewer*`")
+Formatted("`**Formatted label**
+with a physical line break`")
+B["`a **bold** rect`"]
+systemBoundary S["`**Bold** boundary`"]
+  C("c")
+end
+Reviewer -- "`opens **form**`" --> Formatted
+Reviewer --> B
+B --> C

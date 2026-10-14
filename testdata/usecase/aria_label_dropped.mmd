@@ -1,0 +1,13 @@
+---
+config:
+  handDrawnSeed: 1
+---
+usecase-beta
+actor Reviewer("`*Reviewer*`")
+Literal("**Literal markers**")
+Formatted("`**Formatted label**
+with a physical line break -- l ----> `")
+Quoted("Show #quot;quoted#quot; text")
+Reviewer -- "`opens **form**`" --> Formatted
+Reviewer --> Literal
+Reviewer --> Quoted
