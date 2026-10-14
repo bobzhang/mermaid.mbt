@@ -398,6 +398,7 @@ fn insert_edge_label(
       is_node=false,
       add_background=true,
       markdown~,
+      sanitize=false,
     )
     let centre = if env.font_size == base_env.font_size {
       text.text_box

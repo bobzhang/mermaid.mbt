@@ -187,6 +187,21 @@ pub fn Stack::page_default() -> Stack {
 }
 
 ///|
+/// The advance in ems of a character no embedded face has. The reference
+/// browser draws it from a system fallback font; the advances of a few
+/// symbols were read off it, the rest is approximated with half an em, or
+/// a full one for the wide scripts.
+fn fallback_em(c : Char) -> Double {
+  match c.to_int() {
+    // BLACK HEART SUIT
+    0x2665 => 0.59375
+    // HEAVY BLACK HEART
+    0x2764 => 0.91015625
+    code => if code >= 0x1100 { 1.0 } else { 0.5 }
+  }
+}
+
+///|
 /// The result of shaping: the advance width before rounding, and the ink
 /// bounds around the baseline origin, y down.
 priv struct Shaped {
@@ -205,9 +220,8 @@ fn Stack::shape(self : Stack, text : StringView, size : Double) -> Shaped {
     let face = self.face_for(c)
     guard face.glyphs.get(c.to_int()) is Some(glyph) else {
       // No embedded face has this character. The reference browser would
-      // use a system fallback font; approximate with half or a full em.
-      let em = if c.to_int() >= 0x1100 { 1.0 } else { 0.5 }
-      shaped.pen = shaped.pen + Float::from_double(size * em)
+      // use a system fallback font.
+      shaped.pen = shaped.pen + Float::from_double(size * fallback_em(c))
       previous = None
       continue
     }
@@ -263,8 +277,7 @@ pub fn Stack::item_advances(
     for c in item {
       let face = self.face_for(c)
       guard face.glyphs.get(c.to_int()) is Some(glyph) else {
-        let em = if c.to_int() >= 0x1100 { 1.0 } else { 0.5 }
-        sums[index] = sums[index] + Float::from_double(size * em)
+        sums[index] = sums[index] + Float::from_double(size * fallback_em(c))
         previous = None
         continue
       }

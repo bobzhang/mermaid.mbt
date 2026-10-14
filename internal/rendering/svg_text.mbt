@@ -308,15 +308,22 @@ fn create_svg_label(
   add_background~ : Bool = false,
   markdown~ : Bool = false,
   anchor_middle~ : Bool = !is_node,
+  sanitize~ : Bool = true,
 ) -> SvgLabel {
-  let structured = if markdown {
-    markdown_to_lines(
-      @dom.sanitized_text(@dom.placeholders_to_references(text)),
-    )
+  // Node labels are sanitized on their way here, which resolves the
+  // character references of text that has markup in it: the sanitizer
+  // hands back text without a tag as it is. Edge labels are not
+  // sanitized, and keep their references as text.
+  let source = @dom.placeholders_to_references(text)
+  let source = if sanitize && source.contains("<") {
+    @dom.sanitized_text(source)
   } else {
-    non_markdown_to_lines(
-      @dom.sanitized_text(@dom.placeholders_to_references(text)),
-    )
+    source
+  }
+  let structured = if markdown {
+    markdown_to_lines(source)
+  } else {
+    non_markdown_to_lines(source)
   }
   let center = !is_node
   let group = parent.append("g")

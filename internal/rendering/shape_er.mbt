@@ -185,6 +185,7 @@ fn er_add_text(
     style~,
     markdown=true,
     anchor_middle=false,
+    sanitize=false,
   )
   let mut box = svg_label.text_box
   guard svg_label.group.descendants(["text"]) is [element, ..] else {
