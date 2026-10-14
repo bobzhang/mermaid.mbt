@@ -45,6 +45,7 @@ Work in progress.
 | User journey | byte-identical, all `journey:` options |
 | Timeline | byte-identical, horizontal and vertical, both looks |
 | Gantt | byte-identical; see the note on time below |
+| Sequence | byte-identical: all participant kinds and arrow types, both looks; KaTeX is not ported |
 | everything else | not ported yet — `render` raises `Unsupported` |
 
 Git graphs name commits at random upstream (`Math.random`), so a graph
@@ -133,10 +134,12 @@ single-precision arithmetic (`internal/dom`), the stylis CSS compiler
 `atan2f` of macOS on arm64 (`internal/libm`), which Skia shapes arcs with
 and which are not correctly rounded.
 
-Known limits: text outside the embedded faces (Trebuchet MS, Verdana, Arial;
-Latin and common symbols) is measured approximately, and fractional font
-sizes that are not multiples of 1/64 px can differ in the last float bit of
-an ink overhang.
+Known limits: the embedded faces are Trebuchet MS, Verdana, Arial, Times
+and Helvetica, with Latin, Greek, Cyrillic and common symbols. Text outside
+them (CJK, emoji, Hebrew, Arabic, ...) falls to other system fonts in the
+browser, which are not embedded: the newer diagram ports refuse such text
+with `Unsupported`, the older ones (flowchart, pie) measure it
+approximately.
 
 ## Layout
 
