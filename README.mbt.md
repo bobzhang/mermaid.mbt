@@ -62,6 +62,7 @@ Work in progress.
 | Wardley map | byte-identical |
 | Agentflow | byte-identical with the ELK and dagre layouts, including collapsed containers |
 | Kanban | byte-identical, including the hand-drawn look |
+| Use case | byte-identical with the ELK and dagre layouts |
 | Venn | byte-identical, including the hand-drawn look; the layout optimiser of venn.js is transcribed step by step |
 | everything else | not ported yet — `render` raises `Unsupported` |
 
@@ -155,8 +156,8 @@ single-precision arithmetic (`internal/dom`), the stylis CSS compiler
 `atan2f` of macOS on arm64 (`internal/libm`), which Skia shapes arcs with
 and which are not correctly rounded.
 
-Known limits: the embedded faces are Trebuchet MS, Verdana, Arial, Times
-and Helvetica, with Latin, Greek, Cyrillic and common symbols. Text outside
+Known limits: the embedded faces are Trebuchet MS, Verdana, Arial, Times,
+Helvetica and Georgia, with Latin, Greek, Cyrillic and common symbols. Text outside
 them (CJK, emoji, Hebrew, Arabic, ...) falls to other system fonts in the
 browser, which are not embedded: the newer diagram ports refuse such text
 with `Unsupported`, the older ones (flowchart, pie) measure it
