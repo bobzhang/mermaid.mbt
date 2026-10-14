@@ -13,6 +13,11 @@ A directory may hold `oracle-prelude.js`: JavaScript evaluated in the oracle
 page before its fixtures are rendered. That is how output upstream leaves to
 `Math.random()` (the ids of git graph commits) is made reproducible.
 
+A directory may hold `oracle-fresh-page` (an empty file): each of its
+fixtures is then rendered in a page of its own. That is for diagrams whose
+output depends on what the page rendered before (class diagrams number
+their classes across all the diagrams of a page).
+
 Usage:
     scripts/compare.py                 # all fixtures
     scripts/compare.py testdata/pie    # one directory or file
@@ -32,6 +37,7 @@ ROOT = oracle.ROOT
 SVG_ID = "mermaid-svg"
 BATCH = 40
 PRELUDE = "oracle-prelude.js"
+FRESH_PAGE = "oracle-fresh-page"
 
 
 def collect(paths):
@@ -63,11 +69,13 @@ def refresh(inputs, force):
     groups = {}
     for path in stale:
         prelude = path.parent / PRELUDE
-        groups.setdefault(prelude if prelude.exists() else None, []).append(path)
-    for prelude, paths in groups.items():
+        fresh = (path.parent / FRESH_PAGE).exists()
+        groups.setdefault((prelude if prelude.exists() else None, fresh), []).append(path)
+    for (prelude, fresh), paths in groups.items():
         expression = prelude.read_text() if prelude else None
-        for start in range(0, len(paths), BATCH):
-            batch = paths[start:start + BATCH]
+        size = 1 if fresh else BATCH
+        for start in range(0, len(paths), size):
+            batch = paths[start:start + size]
             jobs = [{"id": SVG_ID, "text": path.read_text()} for path in batch]
             results = oracle.run(jobs, {}, expression)
             if expression is not None:
