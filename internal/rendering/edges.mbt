@@ -137,7 +137,14 @@ fn base64(text : String) -> String {
 ///|
 /// `JSON.stringify` of a route.
 fn points_json(points : Array[Point]) -> String {
-  let n = @dom.number
+  // A number that is not finite is `null` in JSON.
+  let n = (value : Double) => {
+    if value.is_nan() || value.is_inf() {
+      "null"
+    } else {
+      @dom.number(value)
+    }
+  }
   let parts = points.map(p => "{\"x\":\{n(p.x)},\"y\":\{n(p.y)}}")
   "[" + parts.join(",") + "]"
 }
@@ -271,12 +278,18 @@ fn insert_edge(
   group : @dom.Element,
   edge : Edge,
   data : LayoutData,
+  path? : String,
+  points_text? : String,
 ) -> @dom.Element {
   let points = edge.points
-  let points_attr = base64(points_json(points))
+  // What is written of the route, unless the caller wrote it out itself.
+  let points_attr = base64(points_text.unwrap_or(points_json(points)))
   let line_data = points.filter(p => !p.y.is_nan())
   let n = @dom.number
-  let line_path = if edge.curve == "rounded" {
+  let line_path = if path is Some(path) {
+    // Drawn by the caller, in a curve of its own.
+    path
+  } else if edge.curve == "rounded" {
     rounded_path(apply_marker_offsets(line_data, edge), 5.0)
   } else {
     // A straight line, where ELK returned no route.
@@ -344,8 +357,11 @@ fn insert_edge(
   .attr("data-et", "edge")
   .attr("data-id", edge.id)
   .attr("data-points", points_attr)
-  .attr("data-look", edge.look)
   |> ignore
+  // An edge without a look has no such attribute.
+  if edge.look != "" {
+    path.attr("data-look", edge.look) |> ignore
+  }
   let use_margin = !animated && edge.look == "neo"
   let stroke_color = stroke_color_of(path_style)
   add_edge_marker(

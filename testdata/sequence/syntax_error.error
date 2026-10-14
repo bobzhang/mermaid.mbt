@@ -1,0 +1,4 @@
+Parse error on line 2:
+...Diagram    Alice->>: nobody
+----------------------^
+Expecting 'link', '+', '-', '()', 'ACTOR', got 'TXT'

@@ -14,12 +14,14 @@ Usage:
     scripts/oracle.py diagram.mmd                # SVG on stdout
     scripts/oracle.py -o out/ a.mmd b.mmd        # out/a.svg, out/b.svg
     scripts/oracle.py --eval 'mermaid.version()' # evaluate in the page
+    scripts/oracle.py --now 1700000000000 g.mmd  # with the clock stopped
 
 Environment: CHROME overrides the Chrome binary.
 """
 
 import argparse
 import base64
+import concurrent.futures
 import json
 import os
 import pathlib
@@ -34,6 +36,23 @@ CHROME = os.environ.get("CHROME", "/Applications/Google Chrome.app/Contents/MacO
 
 PAGE = """<!doctype html>
 <html><head><meta charset="utf-8"></head><body>
+<script>
+// A fixed clock, when asked for: `new Date()` and `Date.now()` answer with
+// it, everything else is the real `Date`.
+const fixedNow = %(now)s;
+if (fixedNow !== null) {
+  const RealDate = Date;
+  function FixedDate(...args) {
+    if (!new.target) return new RealDate(fixedNow).toString();
+    return args.length === 0 ? new RealDate(fixedNow) : new RealDate(...args);
+  }
+  FixedDate.prototype = RealDate.prototype;
+  FixedDate.now = () => fixedNow;
+  FixedDate.UTC = RealDate.UTC;
+  FixedDate.parse = RealDate.parse;
+  window.Date = FixedDate;
+}
+</script>
 <script src="%(bundle)s"></script>
 <script>
 const jobs = %(jobs)s;
@@ -83,8 +102,65 @@ const encode = (value) => {
 """
 
 
-def run(jobs, config, expression=None):
-    """Render `jobs` (dicts with `id` and `text`) and return one result each."""
+RANDOM_STATE_ID = re.compile(r"(?<=state-)id-[0-9a-z]{1,12}-(\d+)")
+
+
+def pin_random_ids(svg):
+    """Name the randomly named regions of a state diagram as the port does.
+
+    The last region of a composite state split by `--` has no name in the
+    diagram text; mermaid calls it `id-<Math.random() in base 36>-<count>`,
+    counting over the lifetime of the page. The port takes every draw to be
+    0.5 (`i` in base 36) and counts per diagram, which is what a fresh page
+    with that draw prints; the reference is rewritten to the same names.
+    """
+    if 'aria-roledescription="stateDiagram"' not in svg:
+        return svg
+    counts = sorted({int(match.group(1)) for match in RANDOM_STATE_ID.finditer(svg)})
+    names = {}
+    for match in RANDOM_STATE_ID.finditer(svg):
+        names[match.group(0)] = f"id-i-{counts.index(int(match.group(1))) + 1}"
+    return RANDOM_STATE_ID.sub(lambda match: names[match.group(0)], svg)
+
+
+# Diagram types whose renderer keeps state for as long as the page lives: the
+# sequence diagram numbers the participants of everything it has drawn
+# (`actor0`, `actor1`, ... never restart), Sankey the nodes and gradients
+# (`node-1`, `linearGradient-5`, ...), and the class diagram its classes
+# (`classId-Animal-0`, ...). Each such diagram gets a page of its own, so
+# its reference does not depend on what was rendered before it.
+STATEFUL = re.compile(r"^\s*(?:sequenceDiagram|sankey(?:-beta)?|classDiagram(?:-v2)?)\b", re.M)
+
+
+def run(jobs, config, expression=None, now=None):
+    """Render `jobs` (dicts with `id` and `text`) and return one result each.
+
+    `now` (milliseconds since the epoch) stops the page's clock there, for
+    diagrams that show the present. With an `expression`, its value comes
+    first; it is evaluated in every page before the jobs of that page.
+    """
+    if len(jobs) <= 1 or not any(STATEFUL.search(job["text"]) for job in jobs):
+        return run_page(jobs, config, expression, now)
+    alone = [index for index, job in enumerate(jobs) if STATEFUL.search(job["text"])]
+    others = [index for index in range(len(jobs)) if index not in alone]
+    lead = 0 if expression is None else 1
+    rendered, value = {}, None
+    with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:
+        pages = {index: pool.submit(run_page, [jobs[index]], config, expression, now) for index in alone}
+        if others:
+            results = run_page([jobs[index] for index in others], config, expression, now)
+            value = results[:lead]
+            for index, result in zip(others, results[lead:]):
+                rendered[index] = result
+        for index, page in pages.items():
+            results = page.result()
+            value = value or results[:lead]
+            rendered[index] = results[lead]
+    return (value or []) + [rendered[index] for index in range(len(jobs))]
+
+
+def run_page(jobs, config, expression=None, now=None):
+    """Load one page, evaluate `expression` in it and render `jobs` in order."""
     if not BUNDLE.exists():
         sys.exit(f"missing {BUNDLE}; see the setup notes in {__file__}")
     page = PAGE % {
@@ -92,6 +168,7 @@ def run(jobs, config, expression=None):
         "jobs": json.dumps(jobs).replace("</", "<\\/"),
         "config": json.dumps(config),
         "expression": json.dumps(expression).replace("</", "<\\/"),
+        "now": json.dumps(now),
     }
     with tempfile.TemporaryDirectory() as tmp:
         path = pathlib.Path(tmp) / "oracle.html"
@@ -115,7 +192,11 @@ def run(jobs, config, expression=None):
     match = re.search(r'<pre id="oracle-output">([^<]*)</pre>', dom)
     if not match:
         sys.exit("oracle page produced no output:\n" + dom[:2000])
-    return json.loads(base64.b64decode(match.group(1)).decode("utf-8"))
+    results = json.loads(base64.b64decode(match.group(1)).decode("utf-8"))
+    for result in results:
+        if isinstance(result.get("svg"), str):
+            result["svg"] = pin_random_ids(result["svg"])
+    return results
 
 
 def main():
@@ -126,10 +207,11 @@ def main():
     parser.add_argument("--config", default="{}", help="JSON passed to mermaid.initialize")
     parser.add_argument("--eval", dest="expression", help="JavaScript expression to evaluate in the page")
     parser.add_argument("--console", type=pathlib.Path, help="write captured console output here as JSON lines")
+    parser.add_argument("--now", type=int, help="fix the page's clock at this many milliseconds since the epoch")
     args = parser.parse_args()
 
     jobs = [{"id": args.id, "text": path.read_text()} for path in args.inputs]
-    results = run(jobs, json.loads(args.config), args.expression)
+    results = run(jobs, json.loads(args.config), args.expression, args.now)
     if args.expression is not None:
         value = results.pop(0)
         print(json.dumps(value.get("value", value), indent=2, ensure_ascii=False))

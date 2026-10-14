@@ -137,6 +137,29 @@ fn parse_diagram(
         },
       }
     }
+    "journey" => {
+      let journey = @journey.parse(code) catch {
+        @jison.ParseError(message~, ..) => raise Syntax(message)
+        @journeycommon.SanitizeError(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      if title is Some(title) && journey.title == "" {
+        journey.set_title(title)
+      }
+      {
+        styles: @journey.styles(config.theme()),
+        acc_title: journey.acc_title,
+        acc_description: journey.acc_description,
+        classes: [],
+        draw: context => {
+          @journey.draw(journey, context) catch {
+            @journey.JourneyError(message) => raise Unsupported(message)
+            @journeycommon.MeasureError(message) => raise Unsupported(message)
+            error => raise Unsupported(error.to_string())
+          }
+        },
+      }
+    }
     "er" => {
       let db = @er.parse(code, config) catch {
         @jison.ParseError(message~, ..) => raise Syntax(message)
@@ -175,6 +198,204 @@ fn parse_diagram(
         draw: context => {
           @requirement.draw(db, context) catch {
             @rendering.LayoutError(message) => raise Unsupported(message)
+          }
+        },
+      }
+    }
+    "stateDiagram" => {
+      let db = @state.parse(code, config) catch {
+        @jison.ParseError(message~, ..) => raise Syntax(message)
+        @state.StateError(message) => raise Syntax(message)
+        error => raise Syntax(error.to_string())
+      }
+      if title is Some(title) {
+        db.set_title(title) catch {
+          @state.StateError(message) => raise Syntax(message)
+        }
+      }
+      {
+        styles: @state.styles(
+          config.theme(),
+          config.text("theme").unwrap_or(""),
+          config.text("look").unwrap_or(""),
+          "#" + id,
+        ),
+        acc_title: db.acc_title,
+        acc_description: db.acc_description,
+        classes: db.classes
+        .values()
+        .map(c => { id: c.id, styles: c.styles, text_styles: c.text_styles, })
+        .collect(),
+        draw: context => {
+          @state.draw(db, context) catch {
+            @rendering.LayoutError(message) => raise Unsupported(message)
+          }
+        },
+      }
+    }
+    "timeline" => {
+      let timeline = @timeline.parse(code) catch {
+        @jison.ParseError(message~, ..) => raise Syntax(message)
+        @journeycommon.SanitizeError(message) => raise Unsupported(message)
+        @timeline.TimelineError(message) => raise Syntax(message)
+        error => raise Syntax(error.to_string())
+      }
+      // The timeline's database exposes neither `setDiagramTitle` nor the
+      // accessibility getters to the renderer, so a frontmatter title and
+      // `accTitle`/`accDescr` leave no trace in the output.
+      {
+        styles: @timeline.styles(
+          config.theme(),
+          config.text("theme").unwrap_or(""),
+          id,
+        ),
+        acc_title: "",
+        acc_description: "",
+        classes: [],
+        draw: context => {
+          @timeline.draw(timeline, context) catch {
+            @timeline.TimelineError(message) => raise Unsupported(message)
+            @journeycommon.MeasureError(message) => raise Unsupported(message)
+            error => raise Unsupported(error.to_string())
+          }
+        },
+      }
+    }
+    "gantt" => {
+      let db = @gantt.parse(code, title?) catch {
+        @jison.ParseError(message~, ..) => raise Syntax(message)
+        @gantt.GanttError(message) => raise Syntax(message)
+        @gantt.Unsupported(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      {
+        styles: @gantt.styles(config.theme()),
+        acc_title: db.acc_title,
+        acc_description: db.acc_description,
+        classes: [],
+        draw: context => {
+          // Dates are only worked out when the chart is drawn, and may
+          // prove invalid then.
+          @gantt.draw(db, context) catch {
+            @gantt.GanttError(message) => raise Syntax(message)
+            @gantt.Unsupported(message) => raise Unsupported(message)
+          }
+        },
+      }
+    }
+    "sequence" => {
+      let db = @sequence.parse(code, config) catch {
+        @jison.ParseError(message~, ..) => raise Syntax(message)
+        @sequence.SequenceError(message) => raise Syntax(message)
+        error => raise Syntax(error.to_string())
+      }
+      if title is Some(title) && db.title == "" {
+        db.set_title(title)
+      }
+      {
+        styles: @sequence.styles(
+          config.theme(),
+          config.text("look").unwrap_or(""),
+        ),
+        acc_title: db.acc_title,
+        acc_description: db.acc_description,
+        classes: [],
+        draw: context => {
+          @sequence.draw(db, context) catch {
+            @sequence.SequenceError(message) => raise Unsupported(message)
+          }
+        },
+      }
+    }
+    "sankey" => {
+      let sankey = @sankey.parse(code, config) catch {
+        @jison.ParseError(message~, ..) => raise Syntax(message)
+        @sankey.Invalid(message) => raise Syntax(message)
+        @sankey.Unsupported(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      {
+        styles: @sankey.styles(config.theme()),
+        acc_title: "",
+        acc_description: "",
+        classes: [],
+        draw: context => {
+          @sankey.draw(sankey, context) catch {
+            @sankey.Invalid(message) => raise Syntax(message)
+            @sankey.Unsupported(message) => raise Unsupported(message)
+          }
+        },
+      }
+    }
+    "radar" => {
+      let radar = @radar.parse(code) catch {
+        @langium.ParseError(message~, ..) => raise Syntax(message)
+        @radar.Invalid(message) => raise Syntax(message)
+        @radar.Unsupported(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      let radar = match title {
+        Some(title) if radar.title == "" => radar.with_title(title)
+        _ => radar
+      }
+      {
+        styles: @radar.styles(config.theme()),
+        acc_title: radar.acc_title,
+        acc_description: radar.acc_description,
+        classes: [],
+        draw: context => @radar.draw(radar, context),
+      }
+    }
+    "treemap" => {
+      let treemap = @treemap.parse(code) catch {
+        @langium.ParseError(message~, ..) => raise Syntax(message)
+        @treemap.Invalid(message) => raise Syntax(message)
+        @treemap.Unsupported(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      if title is Some(title) && treemap.title == "" {
+        treemap.set_title(title)
+      }
+      {
+        styles: @treemap.styles(config.theme()),
+        acc_title: treemap.acc_title,
+        acc_description: treemap.acc_description,
+        classes: treemap.classes
+        .values()
+        .map(c => { id: c.id, styles: c.styles, text_styles: c.text_styles, })
+        .collect(),
+        draw: context => {
+          @treemap.draw(treemap, context) catch {
+            @treemap.Invalid(message) => raise Syntax(message)
+            @treemap.Unsupported(message) => raise Unsupported(message)
+          }
+        },
+      }
+    }
+    "block" => {
+      let db = @block.parse(code, config) catch {
+        @jison.ParseError(message~, ..) => raise Syntax(message)
+        @block.BlockError(message) => raise Syntax(message)
+        error => raise Syntax(error.to_string())
+      }
+      {
+        styles: @block.styles(
+          config.theme(),
+          config.text("theme").unwrap_or(""),
+          config.text("look").unwrap_or(""),
+        ),
+        // The block database keeps no accessibility text.
+        acc_title: "",
+        acc_description: "",
+        classes: db.classes
+        .values()
+        .map(c => { id: c.id, styles: c.styles, text_styles: c.text_styles, })
+        .collect(),
+        draw: context => {
+          @block.draw(db, context) catch {
+            @rendering.LayoutError(message) => raise Unsupported(message)
+            @block.BlockError(message) => raise Syntax(message)
+            error => raise Unsupported(error.to_string())
           }
         },
       }
@@ -221,12 +442,22 @@ fn parse_diagram(
 ///   `mermaid.initialize`. The diagram's own frontmatter and directives are
 ///   layered on top.
 ///
+/// - `now` is the moment of rendering in milliseconds since the epoch, for
+///   the diagrams that show the present (the today marker of a Gantt
+///   chart). It defaults to the system clock, as in mermaid.
+/// - `page` describes the page the diagram is rendered in, which a Gantt
+///   chart takes its width from. The default is the page the reference
+///   renderings are made in.
+///
 /// The output is byte for byte what mermaid produces in the reference
-/// browser, for the diagram types and features ported so far.
+/// browser, for the diagram types and features ported so far. Local times
+/// are those of the reference machine's time zone, Asia/Shanghai.
 pub fn render(
   text : String,
   id~ : String = "mermaid-svg",
   config~ : Json = Json::object(Map([])),
+  now? : Double,
+  page~ : @diagram.Page = @diagram.Page::new(),
 ) -> String raise MermaidError {
   let processed = @preprocess.preprocess(text) catch {
     @preprocess.UnknownDiagramError(message) => raise UnknownDiagram(message)
@@ -264,7 +495,11 @@ pub fn render(
     compiled_styles(id, parsed.styles, config, parsed.classes),
   )
   svg.insert_before(style, first_child)
-  (parsed.draw)(@diagram.Context::new(id, config, svg))
+  let now = match now {
+    Some(now) => now
+    None => @env.now().to_double()
+  }
+  (parsed.draw)(@diagram.Context::new(id, config, svg, now~, page~))
   // Accessibility: the diagram type, then its title and description.
   svg
   .attr("role", "graphics-document document")

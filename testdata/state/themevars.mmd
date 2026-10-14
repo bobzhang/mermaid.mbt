@@ -1,0 +1,15 @@
+---
+config:
+  handDrawnSeed: 7
+  themeVariables:
+    primaryColor: '#ff0000'
+    lineColor: '#00ff00'
+    fontSize: 20px
+---
+stateDiagram-v2
+    [*] --> A
+    A --> B : go
+    state B {
+      c --> d
+    }
+    note right of A : hello

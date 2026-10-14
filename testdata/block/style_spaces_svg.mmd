@@ -1,0 +1,17 @@
+---
+config:
+  htmlLabels: false
+---
+block-beta
+  columns 3
+  a b c<["arrow"]>(right)
+  block:g["title"]
+    d
+  end
+  classDef x fill:#f00;
+  classDef y fill:#0f0 , stroke : #333 , color: white;
+  class a x;
+  class b,c,g y
+  style a fill:#f00, stroke:#333 , color: blue
+  style c fill:#ff0 , stroke:#00f, color:#090
+  style g stroke:#0ff,stroke-width:4px , color:red

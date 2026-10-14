@@ -65,7 +65,9 @@ fn Channels::to_hex_string(self : Channels) -> String {
 ///|
 /// The 8-bit sRGB channels a browser resolves this color to. An HSL color
 /// is converted in 32-bit floats with the CSS Color 4 formula, as Blink
-/// does, which decides the rounding of channels that land on a half.
+/// does (`gfx::HSLToSRGB`), and nudged up by a small epsilon before it is
+/// scaled (`SerializeLegacyColorAsCSSColor`): together they decide the
+/// rounding of channels that land on a half.
 pub fn Channels::to_css_rgb(self : Channels) -> (Int32, Int32, Int32) {
   let round = (value : Float) => {
     let scaled = value * 255.0
@@ -92,13 +94,15 @@ pub fn Channels::to_css_rgb(self : Channels) -> (Int32, Int32, Int32) {
     )
   }
   let (h, s, l) = self.hsl_data()
-  let h = Float::from_double(h)
-  // Percentages become floats before they are scaled down.
-  let hundred : Float = 100.0
-  let s = Float::from_double(s) / hundred
-  let l = Float::from_double(l) / hundred
+  // The parser brings the hue into one turn and scales the percentages
+  // down, all in doubles; the color then keeps floats.
+  let turn = h % 360.0
+  let h = Float::from_double(if turn < 0.0 { turn + 360.0 } else { turn })
+  let s = Float::from_double(s / 100.0)
+  let l = Float::from_double(l / 100.0)
+  let epsilon : Float = 1.0e-7
   if s == 0.0 {
-    return (round(l), round(l), round(l))
+    return (round(l + epsilon), round(l + epsilon), round(l + epsilon))
   }
   let channel = (n : Float) => {
     let k = Float::from_double((n + h / 30.0).to_double() % 12.0)
@@ -115,7 +119,7 @@ pub fn Channels::to_css_rgb(self : Channels) -> (Int32, Int32, Int32) {
     if m < -one {
       m = -one
     }
-    l - a * m
+    l - a * m + epsilon
   }
   (round(channel(0.0)), round(channel(8.0)), round(channel(4.0)))
 }

@@ -143,3 +143,13 @@ test "invalid pies are rejected" {
     ),
   )
 }
+
+///|
+test "labels keep characters outside the basic plane" {
+  inspect(
+    summary("pie title Pets 🐶\n \"Dogs 🐕\" : 3\n \"Cats\" : 1"),
+    content=(
+      #|sections: Dogs 🐕=3, Cats=1; title: Pets 🐶
+    ),
+  )
+}

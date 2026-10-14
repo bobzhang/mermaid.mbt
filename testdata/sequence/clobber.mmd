@@ -1,0 +1,10 @@
+sequenceDiagram
+    participant title
+    actor links
+    participant URL@{ "type": "database" }
+    participant forms@{ "type": "queue" }
+    participant Title
+    title->>links: named like document properties
+    links->>URL: x
+    URL->>forms: y
+    forms->>Title: z

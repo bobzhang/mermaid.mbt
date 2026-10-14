@@ -167,6 +167,11 @@ fn number_attr(element : Element, name : String) -> Float? {
     whole + fraction / scale
   } else {
     let magnitude = if negative { text[1:].to_owned() } else { text }
+    // `NaN` and `Infinity`, as JavaScript prints them, are not numbers
+    // here: the attribute is invalid.
+    if magnitude.contains("N") || magnitude.contains("n") {
+      return None
+    }
     @string.parse_double(magnitude) catch {
       _ => return None
     }
@@ -417,6 +422,10 @@ fn pixel_declaration(element : Element, name : String) -> Float? {
 }
 
 ///|
+/// `gfx::SizeF::kTrivial`: `8 * std::numeric_limits<float>::epsilon()`.
+const TRIVIAL_SIZE : Float = 9.5367431640625e-7
+
+///|
 /// The element's box in its own coordinate system, before its transform.
 /// Nothing for an element that renders no geometry.
 fn Element::local_bounds(self : Element) -> Bounds? {
@@ -428,6 +437,11 @@ fn Element::local_bounds(self : Element) -> Bounds? {
       let width = pixel_declaration(self, "width").unwrap_or(attr("width"))
       let height = pixel_declaration(self, "height").unwrap_or(attr("height"))
       if width <= 0 || height <= 0 {
+        return None
+      }
+      // The box of a `<rect>` is a `gfx::RectF`, whose `SizeF` takes
+      // anything up to eight float epsilons for nothing.
+      if self.tag == "rect" && (width <= TRIVIAL_SIZE || height <= TRIVIAL_SIZE) {
         return None
       }
       Some({ x: attr("x"), y: attr("y"), width, height, })
@@ -477,6 +491,10 @@ fn Element::local_bounds(self : Element) -> Bounds? {
       let mut bounds : Bounds? = None
       for node in self.children {
         guard node is Element(child) else { continue }
+        // A link directly inside a link is not rendered.
+        if self.tag == "a" && child.tag == "a" {
+          continue
+        }
         guard child.bounds() is Some(child_bounds) else { continue }
         bounds = match bounds {
           Some(bounds) => Some(bounds.unite(child_bounds))
@@ -505,9 +523,37 @@ fn Element::local_bounds(self : Element) -> Bounds? {
 }
 
 ///|
+/// Whether the element's inline style hides it: with `display: none` it
+/// has no box at all, and its parent's box ignores it.
+fn Element::is_display_none(self : Element) -> Bool {
+  for declaration in self.declarations {
+    if declaration.0 == "display" {
+      return declaration.1 == "none"
+    }
+  }
+  guard self.get_attr("style") is Some(text) else { return false }
+  let mut hidden = false
+  for part in text.split(";") {
+    guard part.find(":") is Some(colon) else { continue }
+    if part[:colon].trim().to_owned().to_lower() == "display" {
+      let value = part[colon + 1:].trim().to_owned().to_lower()
+      let value = match value.strip_suffix("!important") {
+        Some(base) => base.trim().to_owned()
+        None => value
+      }
+      hidden = value == "none"
+    }
+  }
+  hidden
+}
+
+///|
 /// The element's box in its parent's coordinate system: its own box
 /// mapped through its `transform`.
 fn Element::bounds(self : Element) -> Bounds? {
+  if self.is_display_none() {
+    return None
+  }
   guard self.local_bounds() is Some(bounds) else { return None }
   Some(element_transform(self).map(bounds))
 }

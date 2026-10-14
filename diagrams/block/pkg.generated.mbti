@@ -1,0 +1,37 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/diagrams/block"
+
+import {
+  "bobzhang/mermaid/config",
+  "bobzhang/mermaid/diagram",
+  "bobzhang/mermaid/theme",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn draw(BlockDb, @diagram.Context) -> Unit raise
+
+pub fn parse(String, @config.Config) -> BlockDb raise
+
+pub fn styles(@theme.Theme, String, String) -> String
+
+// Errors
+pub(all) suberror BlockError {
+  BlockError(String)
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+pub struct BlockDb {
+  classes : Map[String, ClassDef]
+  // private fields
+}
+
+pub struct ClassDef {
+  id : String
+  styles : Array[String]
+  text_styles : Array[String]
+}
+
+// Type aliases
+
+// Traits

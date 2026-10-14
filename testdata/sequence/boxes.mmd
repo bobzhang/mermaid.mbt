@@ -1,0 +1,26 @@
+sequenceDiagram
+    box Purple Alice & John
+    participant A
+    participant J
+    end
+    box Another Group
+    participant B
+    participant C
+    end
+    box rgb(33,66,99)
+    participant D
+    end
+    box rgba(33,66,99,0.5) With alpha
+    actor E
+    end
+    box transparent Aqua
+    participant F
+    end
+    participant G
+    A->>J: Hello John, how are you?
+    J->>A: Great!
+    A->>B: Hello Bob, how is Charley?
+    B->>C: Hello Charley, how are you?
+    C->>G: outside
+    D->>E: d to e
+    E->>F: e to f

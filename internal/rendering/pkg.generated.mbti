@@ -26,6 +26,10 @@ pub fn setup_viewport(@dom.Element, Double, String, Bool) -> Unit
 
 pub fn shape_handler(String) -> String?
 
+pub fn trace_elk_graphs() -> Unit
+
+pub fn traced_elk_graphs() -> Array[(String, Json)]
+
 // Errors
 pub(all) suberror LayoutError {
   LayoutError(String)
@@ -105,6 +109,11 @@ pub struct Node {
   tooltip : String?
   have_callback : Bool
   data : NodeData
+  rx : Double?
+  ry : Double?
+  center_label : Bool
+  wrapping_width : Double?
+  description : Array[String]
   mut label_style : String
   mut width : Double?
   mut height : Double?
@@ -114,7 +123,9 @@ pub struct Node {
   mut element : @dom.Element?
   mut intersect : ((Point) -> Point)?
 }
-pub fn Node::new(id~ : String, label~ : String, label_type? : String, parent_id? : String, padding~ : Double, css_styles? : Array[String], css_compiled_styles? : Array[String], css_classes? : String, dir? : String, dom_id? : String, look~ : String, is_group? : Bool, shape~ : String, min_width? : Double, color_index? : Int, link? : String, link_target? : String, tooltip? : String, have_callback? : Bool, data? : NodeData) -> Self
+pub fn Node::leaves_at(Self, Point) -> Point?
+pub fn Node::new(id~ : String, label~ : String, label_type? : String, parent_id? : String, padding~ : Double, css_styles? : Array[String], css_compiled_styles? : Array[String], css_classes? : String, dir? : String, dom_id? : String, look~ : String, is_group? : Bool, shape~ : String, min_width? : Double, color_index? : Int, link? : String, link_target? : String, tooltip? : String, have_callback? : Bool, data? : NodeData, rx? : Double, ry? : Double, center_label? : Bool, wrapping_width? : Double, description? : Array[String]) -> Self
+pub fn Node::placed(Self, x~ : Double, y~ : Double, width? : Double, height? : Double, label_style~ : String) -> Self
 pub fn Node::with_styles(Self, css_styles~ : Array[String], css_compiled_styles~ : Array[String], css_classes~ : String) -> Self
 
 pub(all) enum NodeData {
@@ -123,7 +134,17 @@ pub(all) enum NodeData {
   Requirement(name~ : String, type_~ : String, requirement_id~ : String, text~ : String, risk~ : String, verify_method~ : String)
   RequirementElement(name~ : String, type_~ : String, doc_ref~ : String)
   ClassBox(text~ : String, annotations~ : Array[String], members~ : Array[ClassBoxMember], methods~ : Array[ClassBoxMember])
+  Block(positioned~ : Bool, directions~ : Array[String], width_in_columns~ : Double, style~ : String, class_rules~ : Array[String])
 }
+
+pub struct Painter {
+  // private fields
+}
+pub fn Painter::insert_edge(Self, @dom.Element, Edge, Array[Point], points_json? : String) -> @dom.Element raise LayoutError
+pub fn Painter::insert_edge_label(Self, @dom.Element, Edge) -> @dom.Element
+pub fn Painter::insert_look_defs(Self, @dom.Element) -> Unit
+pub fn Painter::insert_node(Self, @dom.Element, Node) -> @dom.Element raise LayoutError
+pub fn Painter::new(@config.Config, diagram_type~ : String, diagram_id~ : String) -> Self
 
 pub(all) struct Point {
   x : Double

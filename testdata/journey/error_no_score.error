@@ -1,0 +1,4 @@
+Parse error on line 2:
+...  Task without score
+-----------------------^
+Expecting 'taskData', got 'NEWLINE'

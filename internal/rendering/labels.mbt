@@ -49,6 +49,8 @@ fn create_html_label(
   let span = div.append("span")
   span.set_inner_html(html)
   let label_style = style.replace(old="fill:", new="color:")
+  // The style is written on the label, so its text is laid out with it.
+  let env = env.styled(label_style)
   if label_style != "" {
     span.attr("style", label_style) |> ignore
   }
@@ -63,11 +65,14 @@ fn create_html_label(
   .style("line-height", "1.5")
   |> ignore
   if width is Some(width) {
-    div
-    .style("max-width", @dom.number(width) + "px")
-    .style("text-align", "center")
-    |> ignore
+    // A negative length is no value for `max-width`, and is dropped.
+    if width >= 0.0 {
+      div.style("max-width", @dom.number(width) + "px") |> ignore
+    }
+    div.style("text-align", "center") |> ignore
   }
+  // Without the declaration nothing limits the label.
+  let width = width.filter(width => width >= 0.0)
   div.attr("xmlns", "http://www.w3.org/1999/xhtml") |> ignore
   if add_background {
     div.attr("class", "labelBkg") |> ignore
@@ -82,8 +87,11 @@ fn create_html_label(
   let styled = (line : Array[Run]) => {
     line.map(run => {
       ..run,
-      bold: run.bold || font.bold || env.bold,
-      italic: run.italic || font.italic || env.italic,
+      bold: run.bold || font.bold,
+      // A bold element in a label that is bold as a whole, by its own
+      // style or by that of what it is in.
+      heavy: run.heavy || (run.bold && (font.bold || env.bold)),
+      italic: run.italic || font.italic,
     })
   }
   let lines = label_lines(span).map(collapse_runs).map(styled)
@@ -92,9 +100,15 @@ fn create_html_label(
     widest.max(runs_width(line, env))
   })
   let empty = lines.all(line => line.is_empty())
+  // A label wider than its limit is as wide as the limit, which the
+  // browser holds in layout units: a single precision number of pixels
+  // cut to a 64th.
   let mut box : LabelBox = {
     width: match width {
-      Some(width) => natural.min(width)
+      Some(width) =>
+        natural.min(
+          (Float::from_double(width) * 64.0).to_double().floor() / 64.0,
+        )
       None => natural
     },
     height: if empty {
@@ -109,18 +123,22 @@ fn create_html_label(
     .style("white-space", "break-spaces")
     .style("width", @dom.number(width) + "px")
     |> ignore
-    let mut rows = 0
+    // A table is as wide as its widest piece that cannot be broken, and
+    // the lines are then broken in the width it has.
+    let lines = label_lines(span).map(styled)
     let mut box_width = width
+    let mut rows = 0
     if keeps_on_one_line(label_style) {
       // The label's own style reaches the text through the `span` and
       // keeps it from wrapping; the table grows to hold it.
-      rows = lines.length()
       box_width = box_width.max(natural)
+      rows = lines.length()
     } else {
-      for line in label_lines(span) {
-        let (line_rows, widest) = wrapped_rows(styled(line), width, env)
-        rows += line_rows
-        box_width = box_width.max(widest)
+      for line in lines {
+        box_width = box_width.max(wrapped_rows(line, width, env).1)
+      }
+      for line in lines {
+        rows += wrapped_rows(line, box_width, env).0
       }
     }
     box = { width: box_width, height: line_height * rows.to_double(), }
@@ -169,9 +187,10 @@ fn label_helper(
     .append("g")
     .attr("class", "label")
     .attr("style", node.label_style)
-  let wrapping_width = env.config
-    .number("flowchart.wrappingWidth")
-    .unwrap_or(200.0)
+  let wrapping_width = match node.wrapping_width {
+    Some(width) if width != 0.0 => width
+    _ => env.config.number("flowchart.wrappingWidth").unwrap_or(200.0)
+  }
   let min_label_width = if node.label != "" &&
     node.width is None &&
     !unlimited &&
@@ -180,10 +199,12 @@ fn label_helper(
   } else {
     0.0
   }
-  let label_width = if unlimited {
-    None
-  } else {
-    Some(node.width.unwrap_or(wrapping_width))
+  // `node.width || node.wrappingWidth || ...`: a width of zero is none,
+  // and a label told to wrap at infinity never does.
+  let label_width = match node.width {
+    _ if unlimited => None
+    Some(width) if width != 0.0 && !width.is_nan() => Some(width)
+    _ => if wrapping_width.is_inf() { None } else { Some(wrapping_width) }
   }
   let markdown = node.label_type == "markdown"
   let n = @dom.number
@@ -221,11 +242,11 @@ fn label_helper(
     |> ignore
     box
   } else {
-    // Text is centred by its anchor; only the height needs a shift.
+    // Text centred by its anchor needs only its height shifted.
     let text = create_svg_label(
       label,
       node.label,
-      env.styled(node.label_style),
+      env.styled(node.label_style, faces=false),
       width?=label_width,
       style=node.label_style,
       markdown~,
@@ -244,6 +265,13 @@ fn label_helper(
     offset_y = text.text_box.y
     label.attr("transform", "translate(0, \{n(-box.height / 2.0)})") |> ignore
     box
+  }
+  if node.center_label {
+    label.attr(
+      "transform",
+      "translate(\{n(-box.width / 2.0)}, \{n(-box.height / 2.0)})",
+    )
+    |> ignore
   }
   label.insert_first("rect") |> ignore
   { shape_svg, label, bbox: box, offset_x, offset_y, }

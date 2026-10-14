@@ -1,0 +1,13 @@
+sequenceDiagram
+    participant A
+    link A: L0 @ https://x.example
+    link A: L1 @ https://x.example/
+    link A: L2 @ HTTPS://X.Example/Path
+    link A: L3 @ http://x.example/a b
+    link A: L4 @ https://x.example/a/../b/./c
+    link A: L5 @ https://x.example?q=1
+    link A: L6 @ https://x.example/?q=a b&c='d'
+    link A: L7 @ https://x.example:8080/a
+    link A: L8 @ mailto:someone@example.com
+    link A: L9 @ ftp://x.example/file
+    A->>A: x

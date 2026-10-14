@@ -1,0 +1,22 @@
+---
+config:
+  handDrawnSeed: 7
+  theme: neo
+---
+stateDiagram-v2
+    [*] --> A
+    A --> B : go
+    state B {
+      [*] --> c
+      c --> d
+      --
+      e --> f
+    }
+    note right of A : a note
+    state f1 <<fork>>
+    state ch <<choice>>
+    B --> f1
+    f1 --> ch
+    ch --> [*]
+    A : with description
+    A : and more

@@ -43,7 +43,7 @@ fn requirement_add_text(
     |> ignore
     return place(box.width, box.height)
   }
-  let env = env.styled(style)
+  let env = env.styled(style, faces=false)
   let svg_label = create_svg_label(
     label,
     text,

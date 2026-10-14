@@ -177,6 +177,9 @@ fn root_layout_options(
 ///|
 /// The width the frame painter needs for a group's title.
 fn ElkNode::title_width(self : ElkNode) -> Double {
+  if !cluster_paints_title(self.node.shape) {
+    return 0.0
+  }
   let label_width = match self.label_data {
     Some(data) => data.width
     None => 0.0
@@ -207,10 +210,12 @@ fn subgraph_layout_options(
   )
   let options : Map[String, Json] = Map([])
   // Reserve the painted title width before routing.
-  options["nodeSize.constraints"] = "[MINIMUM_SIZE, NODE_LABELS]"
-  options["nodeSize.minimum"] = Json::string(
-    "(\{@dom.number(node.title_width())}, 0)",
-  )
+  if cluster_paints_title(node.node.shape) {
+    options["nodeSize.constraints"] = "[MINIMUM_SIZE, NODE_LABELS]"
+    options["nodeSize.minimum"] = Json::string(
+      "(\{@dom.number(node.title_width())}, 0)",
+    )
+  }
   options["spacing.baseValue"] = 24
   options["elk.layered.spacing.edgeNodeBetweenLayers"] = 30
   options["elk.spacing.edgeEdge"] = 20

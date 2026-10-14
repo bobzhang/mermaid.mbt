@@ -1,0 +1,43 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/diagrams/state"
+
+import {
+  "bobzhang/mermaid/config",
+  "bobzhang/mermaid/diagram",
+  "bobzhang/mermaid/internal/rendering",
+  "bobzhang/mermaid/theme",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn draw(StateDb, @diagram.Context) -> Unit raise @rendering.LayoutError
+
+pub fn parse(String, @config.Config) -> StateDb raise
+
+pub fn styles(@theme.Theme, String, String, String) -> String
+
+// Errors
+pub(all) suberror StateError {
+  StateError(String)
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+pub struct StateDb {
+  classes : Map[String, StyleClass]
+  mut acc_title : String
+  mut acc_description : String
+  mut title : String
+  // private fields
+}
+pub fn StateDb::dump(Self) -> Json
+pub fn StateDb::set_title(Self, String) -> Unit raise StateError
+
+pub struct StyleClass {
+  id : String
+  styles : Array[String]
+  text_styles : Array[String]
+}
+
+// Type aliases
+
+// Traits

@@ -1,0 +1,4 @@
+Parse error on line 3:
+... 3  node_1 node.2 "quoted"  end1 x
+----------------------^
+Expecting 'EOF', 'BLOCK_DIAGRAM_KEY', 'LINK', 'START_LINK', 'SPACE_BLOCK', 'SIZE', 'COLUMNS', 'id-block', 'end', 'NODE_ID', 'NODE_DSTART', 'BLOCK_ARROW_START', 'classDef', 'class', 'style', got 'STR'

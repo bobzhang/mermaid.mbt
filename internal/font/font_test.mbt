@@ -48,6 +48,45 @@ test "font size is truncated to two decimals" {
 }
 
 ///|
+test "the truncation is done in single precision" {
+  // 18.4 and 19.99 times a hundred fall just short of a whole number in
+  // double precision, but not in the browser's floats. Values measured in
+  // Chrome.
+  let font = @font.Stack::for_family("trebuchet ms")
+  let text = "A reasonably long actor name, Tj fi WAVE. Another actor that is long enough to wrap"
+  inspect(font.advance(text, 18.4), content="697.21875")
+  inspect(font.advance(text, 18.39), content="696.828125")
+  inspect(font.advance(text, 18.39996), content="696.828125")
+  inspect(font.advance(text, 19.99), content="757.453125")
+  inspect(font.advance(text, 19.999), content="757.453125")
+  inspect(font.advance(text, 4.35), content="164.828125")
+  inspect(font.advance(text, 16.4), content="621.421875")
+  // The truncated size is a float as well: 33.46 as a double would put
+  // the top of this ink one step higher.
+  let bold = @font.Stack::default(bold=true)
+  inspect(
+    bold.bbox(
+      "Sym ĀāĂăĄą Čč Ďď Ēē Ğğ Łł Ńń Őő Řř Śś Šš Ťť Űű Žž here",
+      33.46875,
+    ).y,
+    content="-31.20536994934082",
+  )
+}
+
+///|
+test "x-height and glyph coverage" {
+  // Four x-heights of Trebuchet at 16px is what `font-size: 4ex` computes
+  // to there: 33.4688px.
+  inspect(@font.Stack::default().x_height(16.0) * 4.0, content="33.46875")
+  inspect(
+    @font.Stack::for_family("verdana", bold=true).x_height(32.0),
+    content="17.546875",
+  )
+  inspect(@font.Stack::default().covers("naïve — text"), content="true")
+  inspect(@font.Stack::default().covers("日本"), content="false")
+}
+
+///|
 test "bold and italic faces" {
   inspect(
     @font.Stack::default(bold=true).advance("Dogs", 16.0),
@@ -67,4 +106,91 @@ test "bold and italic faces" {
       #|35.140625
     ),
   )
+}
+
+///|
+test "Times and Helvetica join fi and fl, and stand taller on macOS" {
+  let times = @font.Stack::page_default()
+  inspect(times.advance("f", 16.0), content="5.328125")
+  inspect(times.advance("i", 16.0), content="4.453125")
+  inspect(times.advance("fi", 16.0), content="8.90625")
+  // The pair `ff` is kerned; before a ligature it is not.
+  inspect(times.advance("ff", 16.0), content="10.375")
+  inspect(times.advance("ffi", 16.0), content="14.234375")
+  debug_inspect(
+    times.bbox("Hello John, how are you?", 16.0),
+    content="{ x: 0, y: -14, width: 163.96875, height: 18 }",
+  )
+  let helvetica = @font.Stack::for_family("sans-serif")
+  inspect(helvetica.advance("fl", 16.0), content="8")
+  debug_inspect(
+    helvetica.bbox("Hello John, how are you?", 16.0),
+    content="{ x: 0, y: -14, width: 180.5625, height: 18 }",
+  )
+  // A zero-width space takes no room but still makes a line.
+  debug_inspect(
+    times.bbox("\u{200B}", 16.0),
+    content="{ x: 0, y: -14, width: 0, height: 18 }",
+  )
+}
+
+///|
+test "a kerning pair the shaper cannot find does not kern" {
+  // Trebuchet MS Bold lists `v.` out of order; HarfBuzz looks pairs up by
+  // binary search and misses it. Chrome: 12.203125.
+  inspect(
+    @font.Stack::default(bold=true).advance("v.", 16.0),
+    content="12.203125",
+  )
+}
+
+///|
+test "the middle baseline shifts glyphs and can stretch the cell" {
+  let arial = @font.Stack::for_family("arial")
+  // At 16px half of Arial's x-height is 265.5 layout units: the ascent
+  // above the middle line rounds up, and so does the descent below it.
+  debug_inspect(
+    arial.bbox("Features:", 16.0, baseline=Middle),
+    content="{ x: 0, y: -9.859375, width: 67.59375, height: 17.015625 }",
+  )
+  // Ink below the descent moves down with the glyphs.
+  debug_inspect(
+    arial.bbox("- createCssStyles()", 16.0, baseline=Middle),
+    content="{ x: 0, y: -9.859375, width: 136.03125, height: 17.3671875 }",
+  )
+  // No tie at other sizes: the cell keeps its height.
+  debug_inspect(
+    arial.bbox("H", 10.0, baseline=Middle),
+    content="{ x: 0, y: -6.40625, width: 7.234375, height: 11 }",
+  )
+  let times = @font.Stack::page_default()
+  debug_inspect(
+    times.bbox("H", 32.0, baseline=Middle),
+    content=(
+      #|{ x: 0, y: -21.828125, width: 23.109375, height: 37.015625 }
+    ),
+  )
+}
+
+///|
+test "ink at sizes that do not scale to whole floats" {
+  // Values are `getBBox()` of plain SVG text in Chrome. The ink of each
+  // glyph is the box of its outline; a run keeps the extreme edges and
+  // subtracts them once.
+  let box = (family : String, text : String, size : Double) => {
+    let b = @font.Stack::for_family(family).bbox(text, size)
+    [b.x, b.y, b.width, b.height]
+  }
+  json_inspect(box("arial", "[object Object]", 10.46), content=[
+    0, -9, 66.875, 11.201299667358398,
+  ])
+  json_inspect(box("arial", "j", 10.46), content=[
+    -0.4800976514816284, -9, 2.808222770690918, 11.201300621032715,
+  ])
+  json_inspect(box("arial", "[object Object]", 9.6), content=[
+    0, -9, 61.375, 11.02031421661377,
+  ])
+  json_inspect(box("verdana", "Ĝi a\\b ¥7 (x)", 13.067), content=[
+    0, -13.066377639770508, 85.59375, 16.066377639770508,
+  ])
 }

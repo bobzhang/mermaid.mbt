@@ -362,8 +362,17 @@ pub fn Lexer::string(self : Lexer) -> String? {
       )
       cursor += 2
     } else {
-      out.write_view(self.input[cursor:cursor + 1])
-      cursor += 1
+      // Both halves of a character outside the basic plane go together.
+      let code = unit.to_int()
+      let width = if code >= 0xD800 &&
+        code < 0xDC00 &&
+        cursor + 1 < self.input.length() {
+        2
+      } else {
+        1
+      }
+      out.write_view(self.input[cursor:cursor + width])
+      cursor += width
     }
   }
   None

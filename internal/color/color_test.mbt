@@ -221,3 +221,25 @@ test "luminance and darkness" {
     ),
   )
 }
+
+///|
+test "hsl channels that land on a half round as the browser's floats do" {
+  // Values from Chrome: `element.style.stroke = hsl` read back.
+  let resolved = (color : String) => @color.Channels::parse(color).to_css_rgb()
+  debug_inspect(
+    resolved("hsl(210, 25.3846153846%, 10.3921568627%)"),
+    content="(20, 27, 33)",
+  )
+  debug_inspect(
+    resolved("hsl(150, 92.4197619428%, 27.6470588235%)"),
+    content="(5, 136, 71)",
+  )
+  debug_inspect(
+    resolved("hsl(30, 82.2055004451%, 37.8431372549%)"),
+    content="(176, 97, 17)",
+  )
+  debug_inspect(
+    resolved("hsl(90, 55.5511058183%, 4.5098039216%)"),
+    content="(12, 18, 5)",
+  )
+}

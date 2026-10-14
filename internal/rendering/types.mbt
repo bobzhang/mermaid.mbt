@@ -26,6 +26,15 @@ pub struct Node {
   have_callback : Bool
   /// What shapes of one diagram type draw besides the label.
   data : NodeData
+  /// The corner radii a diagram asks for; a `rect` with both is rounded.
+  rx : Double?
+  ry : Double?
+  /// Whether the label is centred by its box whatever kind it is.
+  center_label : Bool
+  /// The width labels wrap at, when the diagram sets its own.
+  wrapping_width : Double?
+  /// The lines under the title of a state with a description.
+  description : Array[String]
   // Filled in while measuring and laying out.
   mut label_style : String
   mut width : Double?
@@ -62,6 +71,11 @@ pub fn Node::new(
   tooltip? : String,
   have_callback~ : Bool = false,
   data~ : NodeData = Plain,
+  rx? : Double,
+  ry? : Double,
+  center_label~ : Bool = false,
+  wrapping_width? : Double,
+  description~ : Array[String] = [],
 ) -> Node {
   {
     id,
@@ -84,6 +98,11 @@ pub fn Node::new(
     tooltip,
     have_callback,
     data,
+    rx,
+    ry,
+    center_label,
+    wrapping_width,
+    description,
     label_style: "",
     width: None,
     height: None,
@@ -227,9 +246,9 @@ priv struct Env {
   /// Whether labels are HTML in a `foreignObject` or SVG text.
   html_labels : Bool
   /// Whether the diagram's stylesheet anchors the SVG text of node labels
-  /// in the middle.
+  /// in the middle, as the flowchart's does.
   node_text_centred : Bool
-  /// The face HTML labels inherit from the group they are created in.
+  /// Whether the label being measured is bold or italic as a whole.
   bold : Bool
   italic : Bool
 }
@@ -238,7 +257,9 @@ priv struct Env {
 fn Env::new(config : @config.Config, diagram_id : String) -> Env {
   let theme = config.theme()
   let size = match theme.get("fontSize") {
-    Number(n, ..) => n
+    // A number without a unit is no CSS length: the stylesheet's
+    // `font-size` is dropped and text keeps the browser's size.
+    Number(_, ..) => 16.0
     String(text) => {
       let mut value = 0.0
       for c in text {
@@ -280,5 +301,9 @@ fn Env::font(
   bold~ : Bool = false,
   italic~ : Bool = false,
 ) -> @font.Stack {
-  @font.Stack::for_family(self.font_family, bold~, italic~)
+  @font.Stack::for_family(
+    self.font_family,
+    bold=bold || self.bold,
+    italic=italic || self.italic,
+  )
 }

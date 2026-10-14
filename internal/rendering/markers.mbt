@@ -271,6 +271,10 @@ pub fn insert_markers(
   config? : @config.Config,
 ) -> Unit {
   for kind in kinds {
+    if config is Some(config) &&
+      insert_state_markers(parent, kind, diagram_type, diagram_id, config) {
+      continue
+    }
     if insert_class_marker(parent, kind, diagram_type, diagram_id) {
       continue
     }

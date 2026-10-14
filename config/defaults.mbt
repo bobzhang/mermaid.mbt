@@ -97,10 +97,15 @@ fn build_defaults() -> Map[String, Json] {
 let default_data : Map[String, Json] = build_defaults()
 
 ///|
-/// Collect the keys of `value` at every depth, skipping arrays.
+/// Collect the keys of `value` at every depth, skipping arrays: a key
+/// whose default is an array is not collected at all, as in upstream's
+/// `keyify`, so a directive cannot set it.
 fn collect_keys(value : Json, keys : Map[String, Unit]) -> Unit {
   guard value is Object(fields) else { return }
   for key, item in fields {
+    if item is Array(_) {
+      continue
+    }
     keys[key] = ()
     collect_keys(item, keys)
   }
