@@ -36,6 +36,7 @@ pub fn Stack::ink(Self, StringView, Double) -> Rect
 pub fn Stack::item_advances(Self, Array[String], Double) -> Array[Double]
 pub fn Stack::line_metrics(Self, Double) -> (Double, Double)
 pub fn Stack::svg_text_box(Self, StringView, Double, x~ : Double, y~ : Double, anchor? : String, baseline? : String, scale? : Double) -> Rect
+pub fn Stack::svg_text_ink_below(Self, StringView, Double, scale? : Double) -> Bool
 pub fn Stack::svg_text_length(Self, StringView, Double, scale? : Double) -> Double
 
 // Type aliases

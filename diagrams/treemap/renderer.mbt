@@ -646,8 +646,11 @@ pub fn draw(
     texts.push(label)
   }
   // Write the styles the way the document serializes them, and give
-  // every text that is displayed its box.
-  let frame = svg.bbox()
+  // every text that is displayed its box. In a scaled diagram, the
+  // bottom of a text whose glyphs reach below the line is the one edge
+  // the port may have a hair off (see `Stack::svg_text_box`): such texts
+  // are placed last, and must not reach lower than everything else.
+  let low : Array[(DrawnText, @font.Stack, Double)] = []
   for text in texts {
     let style = text.style
     if style.changed {
@@ -657,6 +660,11 @@ pub fn draw(
       continue
     }
     let (font, size) = style.font(context, bold=text.bold, italic=text.italic)
+    let content = collapse_spaces(text.element.text_content())
+    if scale != 1.0 && font.svg_text_ink_below(content, size, scale~) {
+      low.push((text, font, size))
+      continue
+    }
     place_text(
       text.element,
       font,
@@ -666,13 +674,22 @@ pub fn draw(
       scale~,
     )
   }
-  // In a scaled diagram, the bottom of a text whose glyphs reach below
-  // the line is the one edge the port may have a hair off (see
-  // `Stack::svg_text_box`).
+  let rest = svg.bbox()
+  for entry in low {
+    let (text, font, size) = entry
+    place_text(
+      text.element,
+      font,
+      size,
+      anchor=text.anchor,
+      baseline=text.baseline,
+      scale~,
+    )
+  }
   let bounds = svg.bbox()
-  if scale != 1.0 &&
-    bounds.y + bounds.height - (frame.y + frame.height) > 0.001 &&
-    !(frame.width == 0.0 && frame.height == 0.0) {
+  let nothing_else = rest.width == 0.0 && rest.height == 0.0
+  if (nothing_else && !low.is_empty()) ||
+    bounds.y + bounds.height - (rest.y + rest.height) > 0.001 {
     raise Unsupported("a treemap whose text reaches below its cells")
   }
   let diagram_padding = config.number("treemap.diagramPadding").unwrap_or(8.0)

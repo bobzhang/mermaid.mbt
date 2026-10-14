@@ -63,11 +63,13 @@ pub fn Stack::svg_text_length(
 /// (`SvgTextLayoutAlgorithm::WriteBackToFragmentItems`,
 /// `FragmentItem::ObjectBoundingBox`).
 ///
-/// Checked against 600 boxes measured in the reference browser at
-/// scales from 0.25 to 1: the length, `x`, `y` and `width` always agree;
-/// the height is one or two steps of single precision off in about one
-/// box of 25 whose glyphs reach below the descent of the font, where
-/// the ink the port computes is that much off.
+/// Checked against 1400 boxes measured in the reference browser at
+/// scales from 0.25 to 1: the length, `x` and `y` always agree. Where
+/// glyphs reach below the descent of the font (see `svg_text_ink_below`)
+/// the height is a few steps of single precision off in one box of
+/// eight, and so is the width of slanted text whose last glyph leans
+/// over its advance, in one box of twenty: the ink the port computes is
+/// that much off.
 pub fn Stack::svg_text_box(
   self : Stack,
   text : StringView,
@@ -122,4 +124,20 @@ pub fn Stack::svg_text_box(
     width: (box.width * k).to_double(),
     height: (box.height * k).to_double(),
   }
+}
+
+///|
+/// Whether glyphs of `text` reach below the descent of the font, at the
+/// size `scale` makes of `size`: the bottom of the box `svg_text_box`
+/// reports is then that of the ink, and only as exact as the ink.
+pub fn Stack::svg_text_ink_below(
+  self : Stack,
+  text : StringView,
+  size : Double,
+  scale~ : Double = 1.0,
+) -> Bool {
+  let scaled_size = (Float::from_double(size) * Float::from_double(scale)).to_double()
+  let ink = self.shape(text, scaled_size).ink
+  !ink.is_empty() &&
+  ink.y + ink.height > Float::from_double(self.faces[0].descent(scaled_size))
 }
