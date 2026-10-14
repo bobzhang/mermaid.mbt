@@ -11,6 +11,7 @@ import {
   "bobzhang/mermaid/diagrams/flowchart",
   "bobzhang/mermaid/diagrams/gitgraph",
   "bobzhang/mermaid/diagrams/gantt",
+  "bobzhang/mermaid/diagrams/mindmap",
   "bobzhang/mermaid/diagrams/info",
   "bobzhang/mermaid/diagrams/ishikawa",
   "bobzhang/mermaid/diagrams/journey",

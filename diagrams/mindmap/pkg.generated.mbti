@@ -1,0 +1,61 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/diagrams/mindmap"
+
+import {
+  "bobzhang/mermaid/config",
+  "bobzhang/mermaid/diagram",
+  "bobzhang/mermaid/internal/rendering",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn draw(MindmapDb, @diagram.Context) -> Unit raise MindmapError
+
+pub fn parse(String, @config.Config) -> MindmapDb raise MindmapError
+
+pub fn styles(@config.Config, String) -> String
+
+// Errors
+pub(all) suberror MindmapError {
+  Invalid(String)
+  Unsupported(String)
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+pub struct MindmapDb {
+  // private fields
+}
+pub fn MindmapDb::dump(Self) -> Json
+pub fn MindmapDb::layout_data(Self) -> (Array[@rendering.Node], Array[@rendering.Edge])
+pub fn MindmapDb::nodes(Self) -> Array[MindmapNode]
+pub fn MindmapDb::root(Self) -> MindmapNode?
+
+pub struct MindmapNode {
+  id : Int
+  node_id : String
+  level : Int
+  descr : String
+  type_ : NodeType
+  children : Array[MindmapNode]
+  width : Double
+  padding : Double
+  is_root : Bool
+  mut icon : String?
+  mut class : String?
+  mut section : Int?
+}
+
+pub(all) enum NodeType {
+  Default
+  RoundedRect
+  Rect
+  Circle
+  Cloud
+  Bang
+  Hexagon
+} derive(Eq, @debug.Debug)
+pub fn NodeType::number(Self) -> Int
+
+// Type aliases
+
+// Traits

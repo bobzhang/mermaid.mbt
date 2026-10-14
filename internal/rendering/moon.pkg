@@ -2,6 +2,7 @@ import {
   "moonbitlang/core/string",
   "moonbitlang/core/double",
   "bobzhang/mermaid/config",
+  "bobzhang/mermaid/internal/cose",
   "bobzhang/mermaid/internal/d3",
   "bobzhang/mermaid/internal/dagre",
   "bobzhang/mermaid/internal/graphlib",

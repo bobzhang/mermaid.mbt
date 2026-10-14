@@ -219,6 +219,7 @@ priv struct Item {
   /// of one face together, but rounds each one's width on its own.
   starts : Array[Int32]
   positions : Map[Int32, Double]
+  unrounded : Map[Int32, Double]
 }
 
 ///|
@@ -262,6 +263,41 @@ fn Item::position(self : Item, offset : Int32, env : Env) -> Double {
 }
 
 ///|
+/// The width of the item's text between two character offsets before it
+/// is rounded to layout units. The text is shaped on its own: a row that
+/// starts inside an item is shaped anew from there where the break is not
+/// safe (a kerning pair across it), and measures the same otherwise.
+fn Item::unrounded_width(
+  self : Item,
+  start : Int32,
+  end : Int32,
+  env : Env,
+) -> Double {
+  let key = start * 65536 + end
+  if self.unrounded.get(key) is Some(width) {
+    return width
+  }
+  let width = env
+    .font(bold=self.bold, italic=self.italic)
+    .advance_unrounded(String::from_array(self.chars[start:end]), env.font_size)
+  self.unrounded[key] = width
+  width
+}
+
+///|
+/// The element of the item a character offset is in: the start of its
+/// text.
+fn Item::element_start(self : Item, offset : Int32) -> Int32 {
+  let mut start = 0
+  for element in self.starts {
+    if element <= offset {
+      start = element
+    }
+  }
+  start
+}
+
+///|
 /// The runs of a line merged into items: adjacent runs in one face are
 /// shaped together.
 fn line_items(line : Array[Run]) -> Array[Item] {
@@ -273,6 +309,7 @@ fn line_items(line : Array[Run]) -> Array[Item] {
     italic: run.italic,
     starts: [0],
     positions: Map([]),
+    unrounded: Map([]),
   }
   // Spaces a line starts with (after a `<br>`) are an item of their own:
   // what follows is measured from the first character after them.
@@ -310,11 +347,27 @@ fn line_items(line : Array[Run]) -> Array[Item] {
 }
 
 ///|
-/// The widths of the pieces of a line that cannot be broken with
-/// `white-space: break-spaces`: a line may break after every space and
-/// wherever `breaks_between` allows.
-fn unbreakable_widths(line : Array[Run], env : Env) -> Array[Double] {
-  let items = line_items(line)
+/// A stretch of one element's text inside a piece of a line: the item
+/// and the character offsets it runs between.
+priv struct Segment {
+  item : Int32
+  start : Int32
+  end : Int32
+}
+
+///|
+/// A piece of a line that cannot be broken: its width in whole layout
+/// units, and the stretches of element texts it is made of.
+priv struct Piece {
+  width : Double
+  segments : Array[Segment]
+}
+
+///|
+/// The pieces of a line that cannot be broken with `white-space:
+/// break-spaces`: a line may break after every space and wherever
+/// `breaks_between` allows.
+fn unbreakable_pieces(items : Array[Item], env : Env) -> Array[Piece] {
   // Every character with the item it is in.
   let flat : Array[(Int32, Int32, Char)] = []
   for index, item in items {
@@ -322,10 +375,13 @@ fn unbreakable_widths(line : Array[Run], env : Env) -> Array[Double] {
       flat.push((index, offset, c))
     }
   }
-  let widths = []
+  let pieces = []
   let mut width = 0.0
-  // Where the current piece starts within the current item.
+  let mut segments = []
+  // Where the current piece starts within the current item, and where the
+  // current segment does.
   let mut start = 0
+  let mut segment_start = 0
   for k, entry in flat {
     let (index, offset, c) = entry
     let item = items[index]
@@ -344,38 +400,102 @@ fn unbreakable_widths(line : Array[Run], env : Env) -> Array[Double] {
           breaks_between(before, c, next)
         }
     }
+    let element_ends = last_of_item || item.starts.contains(offset + 1)
+    if break_after || element_ends {
+      segments.push({ item: index, start: segment_start, end: offset + 1, })
+      segment_start = if last_of_item { 0 } else { offset + 1 }
+    }
     if break_after || last_of_item {
       width += item.position(offset + 1, env) - item.position(start, env)
       start = if last_of_item { 0 } else { offset + 1 }
     }
     if break_after {
-      widths.push(width)
+      pieces.push({ width, segments, })
       width = 0.0
+      segments = []
     }
   }
-  widths
+  pieces
 }
 
 ///|
 /// How a line is laid out in a box `width` wide with `white-space:
 /// break-spaces`: the number of rows, and the width of the widest piece,
 /// which the box grows to when it is wider.
+///
+/// Whether a piece still fits on a row is decided as the line breaker
+/// decides it: the text of the element the row ends in is measured from
+/// where the row reaches it, shaped from there and not rounded (the texts
+/// of elements the row has finished take whole layout units), and the row
+/// may overflow the box by one layout unit (`AvailableWidthToFit` adds an
+/// epsilon).
 fn wrapped_rows(
   line : Array[Run],
   width : Double,
   env : Env,
 ) -> (Int32, Double) {
+  let items = line_items(line)
+  let fit = width + 1.0 / 64.0
   let mut rows = 1
   let mut widest = 0.0
-  let mut current = 0.0
   let mut empty = true
-  for unit in unbreakable_widths(line, env) {
-    widest = widest.max(unit)
-    if !empty && current + unit > width {
+  // The element texts the row has finished, and the element it is in with
+  // where the row reaches it.
+  let mut finished = 0.0
+  let mut open : (Int32, Int32)? = None
+  // The width of the row up to the end of `segments`, from the state of
+  // the row before them.
+  let measure = (
+    finished : Double,
+    open : (Int32, Int32)?,
+    segments : Array[Segment],
+  ) => {
+    let mut finished = finished
+    let mut open = open
+    let mut width = 0.0
+    for segment in segments {
+      let item = items[segment.item]
+      let from = match open {
+        Some((index, from)) if index == segment.item &&
+          item.element_start(from) == item.element_start(segment.start) => from
+        Some((index, from)) => {
+          // The row moves on to another element: the one it leaves takes
+          // whole layout units.
+          let done = items[index]
+          let element = done.element_start(from)
+          let end = match done.starts.search(element) {
+            Some(k) if k + 1 < done.starts.length() => done.starts[k + 1]
+            _ => done.chars.length()
+          }
+          finished += done.position(end, env) - done.position(from, env)
+          segment.start
+        }
+        None => segment.start
+      }
+      open = Some((segment.item, from))
+      width = finished + item.unrounded_width(from, segment.end, env)
+    }
+    (width, finished, open)
+  }
+  for piece in unbreakable_pieces(items, env) {
+    widest = widest.max(piece.width)
+    let (row_width, next_finished, next_open) = measure(
+      finished,
+      open,
+      piece.segments,
+    )
+    if !empty && row_width > fit {
       rows += 1
-      current = unit
+      let (_, restart_finished, restart_open) = measure(
+        0.0,
+        None,
+        piece.segments,
+      )
+      finished = restart_finished
+      open = restart_open
     } else {
-      current += unit
+      finished = next_finished
+      open = next_open
       empty = false
     }
   }
