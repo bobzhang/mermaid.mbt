@@ -1,0 +1,22 @@
+agentflow-beta TB
+  flow outer["Outer"]
+    flow mid["Middle"]
+      flow inner["Inner"]
+        a["A"] --> b["B"]
+      end
+      c["C"]
+    end
+    d["D"]
+    c --> d
+  end
+  flow other["Other"]
+    e["E"]
+  end
+  flow
+    z["Z"]
+  end
+  flow untitled
+    y["Y"]
+  end
+  d --> e
+  b --> z
