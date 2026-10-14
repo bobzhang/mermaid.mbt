@@ -1,0 +1,9 @@
+sequenceDiagram
+    A->>B: x
+    create participant C
+    A->>+C: make and activate
+    C-->>-A: done
+    activate A
+    destroy C
+    A-xC: kill
+    deactivate A
