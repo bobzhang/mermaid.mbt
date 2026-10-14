@@ -82,8 +82,8 @@ fn create_html_label(
   let styled = (line : Array[Run]) => {
     line.map(run => {
       ..run,
-      bold: run.bold || font.bold,
-      italic: run.italic || font.italic,
+      bold: run.bold || font.bold || env.bold,
+      italic: run.italic || font.italic || env.italic,
     })
   }
   let lines = label_lines(span).map(collapse_runs).map(styled)
@@ -111,10 +111,17 @@ fn create_html_label(
     |> ignore
     let mut rows = 0
     let mut box_width = width
-    for line in label_lines(span) {
-      let (line_rows, widest) = wrapped_rows(styled(line), width, env)
-      rows += line_rows
-      box_width = box_width.max(widest)
+    if keeps_on_one_line(label_style) {
+      // The label's own style reaches the text through the `span` and
+      // keeps it from wrapping; the table grows to hold it.
+      rows = lines.length()
+      box_width = box_width.max(natural)
+    } else {
+      for line in label_lines(span) {
+        let (line_rows, widest) = wrapped_rows(styled(line), width, env)
+        rows += line_rows
+        box_width = box_width.max(widest)
+      }
     }
     box = { width: box_width, height: line_height * rows.to_double(), }
   } else if box.width < min_width {

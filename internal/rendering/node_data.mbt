@@ -8,6 +8,14 @@ pub(all) struct EntityAttribute {
 }
 
 ///|
+/// A line of a class box: its text as markdown, and the style its
+/// classifier asks for.
+pub(all) struct ClassBoxMember {
+  text : String
+  style : String
+}
+
+///|
 /// What the shapes of one diagram type draw besides the node's label.
 pub(all) enum NodeData {
   /// Nothing more.
@@ -26,4 +34,11 @@ pub(all) enum NodeData {
   )
   /// An element of a requirement diagram.
   RequirementElement(name~ : String, type_~ : String, doc_ref~ : String)
+  /// A class of a class diagram: its title and what its box lists.
+  ClassBox(
+    text~ : String,
+    annotations~ : Array[String],
+    members~ : Array[ClassBoxMember],
+    methods~ : Array[ClassBoxMember]
+  )
 }

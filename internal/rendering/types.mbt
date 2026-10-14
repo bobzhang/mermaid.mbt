@@ -132,7 +132,14 @@ pub struct Edge {
   look : String
   animate : Bool
   animation : String?
+  /// The labels at the two ends of the edge, on the left and on the
+  /// right of its direction.
+  start_label_left : String
+  start_label_right : String
+  end_label_left : String
+  end_label_right : String
   // Filled in while measuring and laying out.
+  priv terminals : Array[TerminalLabel]
   mut label_style : String
   mut curve : String
   mut points : Array[Point]
@@ -160,6 +167,10 @@ pub fn Edge::new(
   look~ : String,
   animate~ : Bool = false,
   animation? : String,
+  start_label_left~ : String = "",
+  start_label_right~ : String = "",
+  end_label_left~ : String = "",
+  end_label_right~ : String = "",
 ) -> Edge {
   {
     id,
@@ -177,6 +188,11 @@ pub fn Edge::new(
     look,
     animate,
     animation,
+    start_label_left,
+    start_label_right,
+    end_label_left,
+    end_label_right,
+    terminals: [],
     label_style: "",
     curve: "",
     points: [],
@@ -213,6 +229,9 @@ priv struct Env {
   /// Whether the diagram's stylesheet anchors the SVG text of node labels
   /// in the middle.
   node_text_centred : Bool
+  /// The face HTML labels inherit from the group they are created in.
+  bold : Bool
+  italic : Bool
 }
 
 ///|
@@ -249,6 +268,8 @@ fn Env::new(config : @config.Config, diagram_id : String) -> Env {
     font_size: size,
     html_labels,
     node_text_centred: true,
+    bold: false,
+    italic: false,
   }
 }
 

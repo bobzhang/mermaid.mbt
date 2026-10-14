@@ -403,6 +403,7 @@ fn draw_shape(
   match node.shape {
     "erBox" => return er_box(parent, node, env)
     "requirementBox" => return requirement_box(parent, node, env)
+    "classBox" => return class_box(parent, node, env)
     _ => ()
   }
   guard shape_handler(node.shape) is Some(handler) else {

@@ -324,7 +324,7 @@ fn create_svg_label(
     source
   }
   let structured = if markdown {
-    markdown_to_lines(source)
+    markdown_to_lines(self_closing_breaks(source))
   } else {
     non_markdown_to_lines(source)
   }
@@ -405,6 +405,29 @@ fn create_svg_label(
     tspan.attr("class", "text-outer-tspan row") |> ignore
   }
   { group, text_box: box, element, lines, }
+}
+
+///|
+/// Line break tags written as `<br/>`, the form the markdown code splits
+/// lines at: `text.replace(/<br\s*\/?>/g, '<br/>')`.
+fn self_closing_breaks(text : String) -> String {
+  guard text.contains("<br") else { return text }
+  let out = StringBuilder()
+  let mut rest = text[:]
+  while rest.find("<br") is Some(at) {
+    out.write_view(rest[:at])
+    let after = rest[at + 3:].trim_start(chars=" \t\n\r")
+    let after = if after.has_prefix("/") { after[1:] } else { after }
+    if after.has_prefix(">") {
+      out.write_string("<br/>")
+      rest = after[1:]
+    } else {
+      out.write_string("<br")
+      rest = rest[at + 3:]
+    }
+  }
+  out.write_view(rest)
+  out.to_string()
 }
 
 ///|

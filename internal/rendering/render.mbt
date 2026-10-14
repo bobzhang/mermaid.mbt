@@ -163,10 +163,14 @@ pub fn render(data : LayoutData, svg : @dom.Element) -> Unit raise LayoutError {
   for edge in data.edges {
     // Line breaks in edge labels are plain newlines from here on.
     edge.label = normalize_breaks(edge.label)
-    if edge.label != "" {
+    if has_edge_label(edge) {
       label_elements[edge.id] = insert_edge_label(
         edge_labels, edge, env, label_env,
       )
+      insert_terminal_labels(edge_labels, edge, {
+        ..env,
+        font_size: terminal_label_font_size(data.diagram_type, env.font_size),
+      })
     }
   }
   // Lay out.
@@ -178,6 +182,7 @@ pub fn render(data : LayoutData, svg : @dom.Element) -> Unit raise LayoutError {
   apply_node_positions(json_items(graph, "children"), state, 0.0, 0.0)
   even_group_frames(state.children, state, routed)
   apply_edge_layout(data, state, routed)
+  place_terminal_labels(data, state, graph)
   order_nodes_for_paint(data.nodes)
   // Paint.
   let n = @dom.number
@@ -215,6 +220,7 @@ pub fn render(data : LayoutData, svg : @dom.Element) -> Unit raise LayoutError {
       )
       |> ignore
     }
+    position_terminal_labels(edge)
   }
   apply_line_jumps(data, paths)
 }
