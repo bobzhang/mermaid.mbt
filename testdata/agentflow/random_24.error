@@ -1,0 +1,4 @@
+Parse error on line 5:
+... tool }  flow f4[""]    n3["fetch"]  
+----------------------^
+Expecting 'TAGEND', 'STR', 'MD_STR', 'UNICODE_TEXT', 'TEXT', 'TAGSTART', got 'SQE'

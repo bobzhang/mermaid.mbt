@@ -1,0 +1,20 @@
+---
+config:
+  handDrawnSeed: 1
+---
+agentflow-beta RL
+  n0["long label that needs some wrapping in the node"]
+  n1["ok?"]@{ shape: input }
+  n2["send"]
+  flow f4["Research team"]
+    n3["send"]@{ shape: input }
+    n4["summarise the results"]
+    n5["long label that needs some wrapping in the node"]@{ shape: task }
+    flow f8["Agent"]
+      n6["fetch"]
+      n7["A"]@{ shape: refdoc }
+      n8["send"]@{ shape: input }
+    end
+  end
+  n0 --> n0
+  n0 --x n7
