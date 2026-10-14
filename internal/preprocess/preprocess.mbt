@@ -20,6 +20,9 @@ fn cleanup_text(code : String) -> String {
   let n = code.length()
   let out = StringBuilder()
   let mut i = 0
+  // Everything else is copied a run at a time, which keeps surrogate
+  // pairs whole.
+  let mut copied = 0
   while i < n {
     // `<(\w+)([^>]*)>`
     if code[i] == '<' && i + 1 < n && is_word_unit(code[i + 1]) {
@@ -32,16 +35,17 @@ fn cleanup_text(code : String) -> String {
         while name_end < close && is_word_unit(code[name_end]) {
           name_end += 1
         }
-        out.write_view(code[i:name_end])
+        out.write_view(code[copied:name_end])
         out.write_string(requote(code[name_end:close].to_owned()))
         out.write_char('>')
         i = close + 1
+        copied = i
         continue
       }
     }
-    out.write_view(code[i:i + 1])
     i += 1
   }
+  out.write_view(code[copied:])
   out.to_string()
 }
 
@@ -51,6 +55,7 @@ fn requote(attributes : String) -> String {
   let n = attributes.length()
   let out = StringBuilder()
   let mut i = 0
+  let mut copied = 0
   while i < n {
     if starts_with_at(attributes, "=\"", i) {
       let mut close = i + 2
@@ -58,16 +63,18 @@ fn requote(attributes : String) -> String {
         close += 1
       }
       if close < n {
+        out.write_view(attributes[copied:i])
         out.write_string("='")
         out.write_view(attributes[i + 2:close])
         out.write_char('\'')
         i = close + 1
+        copied = i
         continue
       }
     }
-    out.write_view(attributes[i:i + 1])
     i += 1
   }
+  out.write_view(attributes[copied:])
   out.to_string()
 }
 
