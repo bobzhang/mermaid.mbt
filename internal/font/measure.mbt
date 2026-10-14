@@ -59,10 +59,12 @@ pub fn Face::line_descent(self : Face, size : Double) -> Double {
 }
 
 ///|
-/// The size glyphs are actually scaled to: the reference browser drops
-/// everything past the second decimal of a font size.
+/// The size glyphs are actually scaled to. Blink keys its font cache by
+/// the size in hundredths of a pixel, truncated, and creates the font at
+/// that size — in single precision, on both counts.
 fn effective_size(size : Double) -> Double {
-  (size * 100.0).floor() / 100.0
+  let hundredths = (Float::from_double(size) * 100.0).to_int()
+  (Float::from_int(hundredths) / 100.0).to_double()
 }
 
 ///|
@@ -192,18 +194,21 @@ fn Stack::shape(self : Stack, text : StringView, size : Double) -> Shaped {
         Float::from_int(face.scale_fixed(adjust, size)) / HB_ONE
     }
     if glyph.x_min != glyph.x_max || glyph.y_min != glyph.y_max {
-      // Skia receives the box from CoreText as origin and size in
-      // doubles, converts each to a float and adds them up again.
+      // The box is that of the glyph's outline, which Skia asks for at a
+      // size of 64 pixels (where every coordinate of these fonts is exact)
+      // and scales to the size of the text: each edge is one
+      // single-precision product, and the size is the difference of two.
       let scale = size / face.units_per_em.to_double()
-      let x = Float::from_double(glyph.x_min.to_double() * scale)
-      let y = Float::from_double(-glyph.y_max.to_double() * scale)
-      let width = Float::from_double(
-        (glyph.x_max - glyph.x_min).to_double() * scale,
-      )
-      let height = Float::from_double(
-        (glyph.y_max - glyph.y_min).to_double() * scale,
-      )
-      let bounds = RectF::from_edges(x, y, x + width, y + height)
+      let left = Float::from_double(glyph.x_min.to_double() * scale)
+      let right = Float::from_double(glyph.x_max.to_double() * scale)
+      let top = Float::from_double(-glyph.y_max.to_double() * scale)
+      let bottom = Float::from_double(-glyph.y_min.to_double() * scale)
+      let bounds : RectF = {
+        x: left,
+        y: top,
+        width: right - left,
+        height: bottom - top,
+      }
       shaped.ink = shaped.ink.union({ ..bounds, x: bounds.x + shaped.pen, })
     }
     shaped.pen = shaped.pen +

@@ -25,6 +25,14 @@ FORMATS = {
     "YYYY-MM": lambda t: t.strftime("%Y-%m"),
     "D/M/YY": lambda t: f"{t.day}/{t.month}/{t.year % 100:02}",
     "D MMM YYYY": lambda t: f"{t.day} {MONTHS[t.month - 1]} {t.year}",
+    "Do MMMM YYYY": lambda t: f"{t.day}{ordinal(t.day)} {t.strftime('%B')} {t.year}",
+    "DD/MM/YYYY HH:mm": lambda t: t.strftime("%d/%m/%Y %H:%M"),
+    "h:mm A": lambda t: t.strftime("%I:%M %p").lstrip("0"),
+    "YYYY-MM-DD[T]HH": lambda t: t.strftime("%Y-%m-%dT%H"),
+    "YY-M-D": lambda t: f"{t.year % 100:02}-{t.month}-{t.day}",
+    "YYYY-MM-DD HH:mm:ss.SSS": lambda t: t.strftime("%Y-%m-%d %H:%M:%S.000"),
+    "YYYY-MM-DD ww": lambda t: t.strftime("%Y-%m-%d 00"),
+    "dddd D MMMM YYYY": lambda t: f"{t.strftime('%A')} {t.day} {t.strftime('%B')} {t.year}",
     "YYYYMMDD": lambda t: t.strftime("%Y%m%d"),
     "x": lambda t: str(int(t.replace(tzinfo=datetime.timezone.utc).timestamp() * 1000) - 8 * 3600000),
     "X": lambda t: str(int(t.replace(tzinfo=datetime.timezone.utc).timestamp()) - 8 * 3600),
@@ -47,6 +55,12 @@ THEMES = ["default", "dark", "forest", "neutral", "base", "neo", "neo-dark", "re
           "redux-dark-color"]
 
 
+def ordinal(day):
+    if 10 <= day % 100 <= 20:
+        return "th"
+    return {1: "st", 2: "nd", 3: "rd"}.get(day % 10, "th")
+
+
 def chart(rng, index, rich=False):
     """One chart. `rich` adds what only shows in the drawing: titles,
     themes, configuration."""
@@ -55,7 +69,7 @@ def chart(rng, index, rich=False):
     # Charts span hours, days or years depending on the format.
     base = datetime.datetime(rng.choice([1987, 1999, 2014, 2023, 2024, 2026]), rng.randint(1, 12), rng.randint(1, 28),
                              rng.randint(0, 23), rng.choice([0, 15, 30, 49]))
-    if name in ("HH:mm", "HH:mm:ss"):
+    if name in ("HH:mm", "HH:mm:ss", "h:mm A"):
         step = datetime.timedelta(minutes=rng.choice([1, 7, 30]))
     elif name in ("YYYY", "YYYY-MM"):
         step = datetime.timedelta(days=rng.choice([40, 200, 400]))
@@ -89,7 +103,7 @@ def chart(rng, index, rich=False):
     if rng.random() < 0.15:
         lines.append("    todayMarker " + rng.choice(["off", "stroke-width:5px,stroke:#0f0,opacity:0.5", "stroke:blue"]))
     ids = []
-    count = rng.randint(1, 9)
+    count = rng.choice([1, 2, 3, 4, 5, 6, 7, 8, 9, 9, 14, 20, 28]) if rich else rng.randint(1, 9)
     for number in range(count):
         if rng.random() < 0.25:
             lines.append("    section " + rng.choice(["Planning", "Work", "2", "1", "Launch<br>day", "Ünïcode", "A long section name"]))
@@ -136,6 +150,10 @@ def chart(rng, index, rich=False):
         config = []
         if rng.random() < 0.4:
             config.append(f"  theme: {rng.choice(THEMES)}")
+        if rng.random() < 0.15:
+            config.append(f"  fontFamily: {rng.choice(['verdana', 'arial', 'trebuchet ms'])}")
+        elif rng.random() < 0.1:
+            config.append(f"  themeVariables:\n    fontFamily: {rng.choice(['verdana', 'arial'])}")
         gantt = []
         if rng.random() < 0.2:
             gantt.append("    displayMode: compact")
