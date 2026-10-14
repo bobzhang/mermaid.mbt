@@ -6,6 +6,7 @@ let trebuchet_italic : Face = Face::new(
   units_per_em=2048,
   ascent=1923,
   descent=455,
+  line_gap=0,
   // code point, glyph id, advance, xMin, yMin, xMax, yMax
   glyphs=[
     32, 3, 617, 0, 0, 0, 0, 33, 4, 752, 132, -20, 624, 1491, 34, 5, 665, 193, 1086,

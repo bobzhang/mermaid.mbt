@@ -66,6 +66,22 @@ fn Face::rounded_metric(self : Face, units : Int32, size : Double) -> Double {
 }
 
 ///|
+/// How far a line box of normal height reaches below its baseline, in
+/// pixels. The line is as tall as the rounded ascent, descent and line gap
+/// together, and the larger half of the gap goes below.
+pub fn Face::line_descent(self : Face, size : Double) -> Double {
+  let gap = round_half_up(
+    self.line_gap.to_double() * size / self.units_per_em.to_double(),
+  )
+  self.descent(size) + (gap - (gap / 2.0).floor())
+}
+
+///|
+fn round_half_up(value : Double) -> Double {
+  (value + 0.5).floor()
+}
+
+///|
 /// The size glyphs are actually scaled to: the reference browser drops
 /// everything past the second decimal of a font size. Its font cache keys
 /// faces by the size times a hundred as an integer and hands that back
@@ -463,6 +479,14 @@ pub fn Stack::ink(self : Stack, text : StringView, size : Double) -> Rect {
 /// which is what lines of text are as tall as.
 pub fn Stack::line_metrics(self : Stack, size : Double) -> (Double, Double) {
   (self.faces[0].ascent(size), self.faces[0].descent(size))
+}
+
+///|
+/// How far a line of this stack's first face, at normal line height,
+/// reaches below its baseline: the gap a browser leaves under an inline
+/// image or `<svg>` standing on the baseline of an otherwise empty block.
+pub fn Stack::line_descent(self : Stack, size : Double) -> Double {
+  self.faces[0].line_descent(size)
 }
 
 ///|

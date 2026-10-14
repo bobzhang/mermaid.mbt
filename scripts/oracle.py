@@ -14,6 +14,7 @@ Usage:
     scripts/oracle.py diagram.mmd                # SVG on stdout
     scripts/oracle.py -o out/ a.mmd b.mmd        # out/a.svg, out/b.svg
     scripts/oracle.py --eval 'mermaid.version()' # evaluate in the page
+    scripts/oracle.py --now 1700000000000 g.mmd  # with the clock stopped
 
 Environment: CHROME overrides the Chrome binary.
 """
@@ -34,6 +35,23 @@ CHROME = os.environ.get("CHROME", "/Applications/Google Chrome.app/Contents/MacO
 
 PAGE = """<!doctype html>
 <html><head><meta charset="utf-8"></head><body>
+<script>
+// A fixed clock, when asked for: `new Date()` and `Date.now()` answer with
+// it, everything else is the real `Date`.
+const fixedNow = %(now)s;
+if (fixedNow !== null) {
+  const RealDate = Date;
+  function FixedDate(...args) {
+    if (!new.target) return new RealDate(fixedNow).toString();
+    return args.length === 0 ? new RealDate(fixedNow) : new RealDate(...args);
+  }
+  FixedDate.prototype = RealDate.prototype;
+  FixedDate.now = () => fixedNow;
+  FixedDate.UTC = RealDate.UTC;
+  FixedDate.parse = RealDate.parse;
+  window.Date = FixedDate;
+}
+</script>
 <script src="%(bundle)s"></script>
 <script>
 const jobs = %(jobs)s;
@@ -104,8 +122,12 @@ def pin_random_ids(svg):
     return RANDOM_STATE_ID.sub(lambda match: names[match.group(0)], svg)
 
 
-def run(jobs, config, expression=None):
-    """Render `jobs` (dicts with `id` and `text`) and return one result each."""
+def run(jobs, config, expression=None, now=None):
+    """Render `jobs` (dicts with `id` and `text`) and return one result each.
+
+    `now` (milliseconds since the epoch) stops the page's clock there, for
+    diagrams that show the present.
+    """
     if not BUNDLE.exists():
         sys.exit(f"missing {BUNDLE}; see the setup notes in {__file__}")
     page = PAGE % {
@@ -113,6 +135,7 @@ def run(jobs, config, expression=None):
         "jobs": json.dumps(jobs).replace("</", "<\\/"),
         "config": json.dumps(config),
         "expression": json.dumps(expression).replace("</", "<\\/"),
+        "now": json.dumps(now),
     }
     with tempfile.TemporaryDirectory() as tmp:
         path = pathlib.Path(tmp) / "oracle.html"
@@ -151,10 +174,11 @@ def main():
     parser.add_argument("--config", default="{}", help="JSON passed to mermaid.initialize")
     parser.add_argument("--eval", dest="expression", help="JavaScript expression to evaluate in the page")
     parser.add_argument("--console", type=pathlib.Path, help="write captured console output here as JSON lines")
+    parser.add_argument("--now", type=int, help="fix the page's clock at this many milliseconds since the epoch")
     args = parser.parse_args()
 
     jobs = [{"id": args.id, "text": path.read_text()} for path in args.inputs]
-    results = run(jobs, json.loads(args.config), args.expression)
+    results = run(jobs, json.loads(args.config), args.expression, args.now)
     if args.expression is not None:
         value = results.pop(0)
         print(json.dumps(value.get("value", value), indent=2, ensure_ascii=False))

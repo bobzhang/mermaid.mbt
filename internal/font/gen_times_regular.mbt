@@ -6,6 +6,7 @@ let times_regular : Face = Face::new(
   units_per_em=2048,
   ascent=1536,
   descent=512,
+  line_gap=0,
   // code point, glyph id, advance, xMin, yMin, xMax, yMax
   glyphs=[
     32, 3, 512, 0, 0, 0, 0, 33, 4, 682, 265, -22, 488, 1384, 34, 5, 836, 188, 794,

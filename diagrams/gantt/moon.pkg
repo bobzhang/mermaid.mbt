@@ -1,0 +1,16 @@
+import {
+  "bobzhang/mermaid/config",
+  "bobzhang/mermaid/diagram",
+  "bobzhang/mermaid/internal/d3",
+  "bobzhang/mermaid/internal/dayjs",
+  "bobzhang/mermaid/internal/dom",
+  "bobzhang/mermaid/internal/font",
+  "bobzhang/mermaid/internal/jison",
+  "bobzhang/mermaid/internal/jsdate",
+  "bobzhang/mermaid/internal/jsregex",
+  "bobzhang/mermaid/theme",
+  "moonbitlang/core/double",
+  "moonbitlang/core/string",
+}
+
+warnings = "-implicit_impl_as_method"

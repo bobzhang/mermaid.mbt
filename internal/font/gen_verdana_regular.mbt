@@ -6,6 +6,7 @@ let verdana_regular : Face = Face::new(
   units_per_em=2048,
   ascent=2059,
   descent=430,
+  line_gap=0,
   // code point, glyph id, advance, xMin, yMin, xMax, yMax
   glyphs=[
     32, 3, 720, 0, 0, 0, 0, 33, 4, 806, 291, 0, 515, 1489, 34, 5, 940, 168, 977,

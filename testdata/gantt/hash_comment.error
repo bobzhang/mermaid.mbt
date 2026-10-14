@@ -1,0 +1,4 @@
+Parse error on line 4:
+...01-01, 2d # trailing
+-----------------------^
+Expecting 'taskData', got 'NL'
