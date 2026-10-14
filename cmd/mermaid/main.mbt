@@ -10,6 +10,9 @@ let usage : String =
   #|  regex <cases.json>     match prefixes; cases are {source, flags, input}
   #|  flow-db <file.mmd>...  print each flowchart's parsed database as JSON
   #|  state-db <file.mmd>... print each state diagram's layout data as JSON
+  #|  elk-graph <file.mmd> [--config site.json]
+  #|                         print the graph a diagram hands to ELK and the
+  #|                         layout that came back, one JSON document a line
   #|
 
 ///|
@@ -188,6 +191,22 @@ fn flow_db(paths : ArrayView[String]) -> Unit raise CliError {
 }
 
 ///|
+fn elk_graph(path : String, options : ArrayView[String]) -> Unit raise CliError {
+  let site = match options {
+    ["--config", value, ..] => read_json(value)
+    _ => Json::object(Map([]))
+  }
+  @rendering.trace_elk_graphs()
+  let _ = @lib.render(read_text(path), config=site) catch {
+    error => raise CliError(Repr(error).to_string(), status=1)
+  }
+  for pair in @rendering.traced_elk_graphs() {
+    println(pair.0)
+    println(pair.1.stringify())
+  }
+}
+
+///|
 fn state_db(paths : ArrayView[String]) -> Unit raise CliError {
   for path in paths {
     let source = read_text(path)
@@ -227,6 +246,7 @@ fn main {
       ["regex", path] => regex(path)
       ["flow-db", .. paths] => flow_db(paths)
       ["state-db", .. paths] => state_db(paths)
+      ["elk-graph", path, .. options] => elk_graph(path, options)
       ["path-length", path] => path_lengths(path)
       _ => println(usage)
     }

@@ -167,9 +167,12 @@ pub fn render(data : LayoutData, svg : @dom.Element) -> Unit raise LayoutError {
   }
   // Lay out.
   let state = build_elk_state(data, "elk.layered")
-  let graph = @elk.new_elk_engine().layout(graph=state.to_json()) catch {
+  let input = state.to_json()
+  let traced = traced_input(input)
+  let graph = @elk.new_elk_engine().layout(graph=input) catch {
     error => raise LayoutError(error.to_string())
   }
+  trace_graph(traced, graph)
   let routed = result_edges(graph)
   apply_node_positions(json_items(graph, "children"), state, 0.0, 0.0)
   even_group_frames(state.children, state, routed)

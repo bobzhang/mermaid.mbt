@@ -18,6 +18,10 @@ pub fn setup_viewport(@dom.Element, Double, String, Bool) -> Unit
 
 pub fn shape_handler(String) -> String?
 
+pub fn trace_elk_graphs() -> Unit
+
+pub fn traced_elk_graphs() -> Array[(String, Json)]
+
 // Errors
 pub(all) suberror LayoutError {
   LayoutError(String)

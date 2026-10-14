@@ -7,6 +7,7 @@ import {
   "bobzhang/mermaid/internal/font",
   "bobzhang/mermaid/internal/jison",
   "bobzhang/mermaid/internal/preprocess",
+  "bobzhang/mermaid/internal/rendering",
   "bobzhang/mermaid/internal/jsregex",
   "moonbitlang/core/env",
   "moonbitlang/core/json",
