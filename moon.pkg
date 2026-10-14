@@ -18,6 +18,8 @@ import {
   "bobzhang/mermaid/diagrams/state",
   "bobzhang/mermaid/diagrams/timeline",
   "bobzhang/mermaid/diagrams/sequence",
+  "bobzhang/mermaid/diagrams/quadrant",
+  "bobzhang/mermaid/diagrams/xychart",
   "bobzhang/mermaid/internal/css",
   "bobzhang/mermaid/internal/dom",
   "bobzhang/mermaid/internal/jison",

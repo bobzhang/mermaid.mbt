@@ -1,0 +1,35 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/diagrams/quadrant"
+
+import {
+  "bobzhang/mermaid/diagram",
+  "bobzhang/mermaid/internal/journeycommon",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn draw(Quadrant, @diagram.Context) -> Unit raise Unsupported
+
+pub fn parse(String, title? : String) -> Quadrant raise
+
+// Errors
+pub(all) suberror QuadrantError {
+  QuadrantError(String)
+} derive(Eq, @debug.Debug)
+
+pub(all) suberror Unsupported {
+  Unsupported(String)
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+pub struct Quadrant {
+  mut title : String
+  mut acc_title : String
+  mut acc_description : String
+  // private fields
+}
+pub fn Quadrant::set_title(Self, String) -> Unit raise @journeycommon.SanitizeError
+
+// Type aliases
+
+// Traits

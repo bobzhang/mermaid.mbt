@@ -32,6 +32,7 @@ pub struct Context {
 pub fn Context::container_width(Self) -> Double
 pub fn Context::font(Self, bold? : Bool, italic? : Bool) -> @font.Stack
 pub fn Context::new(String, @config.Config, @dom.Element, now~ : Double, page~ : Page) -> Self
+pub fn Context::placement(Self, Double, Double, max_width~ : Double) -> Placement
 pub fn Context::theme(Self) -> @theme.Theme
 pub fn Context::view_box_scale(Self, Double, Double, max_width? : Double, fixed? : Bool) -> Double
 
@@ -42,6 +43,14 @@ pub struct Page {
   scrollbar : Double
 }
 pub fn Page::new(viewport_width? : Double, viewport_height? : Double, margin? : Double, scrollbar? : Double) -> Self
+
+pub struct Placement {
+  scale : Double
+  dx : Double
+  dy : Double
+  left : Double
+  top : Double
+}
 
 // Type aliases
 

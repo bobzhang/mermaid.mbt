@@ -429,6 +429,47 @@ fn parse_diagram(
         },
       }
     }
+    "quadrantChart" => {
+      let chart = @quadrant.parse(code, title?) catch {
+        @jison.ParseError(message~, ..) => raise Syntax(message)
+        @quadrant.QuadrantError(message) => raise Syntax(message)
+        @journeycommon.SanitizeError(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      {
+        // The chart has no styles of its own.
+        styles: "",
+        acc_title: chart.acc_title,
+        acc_description: chart.acc_description,
+        classes: [],
+        draw: context => {
+          @quadrant.draw(chart, context) catch {
+            @quadrant.Unsupported(message) => raise Unsupported(message)
+          }
+        },
+      }
+    }
+    "xychart" => {
+      let chart = @xychart.parse(code, title?) catch {
+        @jison.ParseError(message~, ..) => raise Syntax(message)
+        @journeycommon.SanitizeError(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      {
+        // The chart has no styles of its own.
+        styles: "",
+        acc_title: chart.acc_title,
+        acc_description: chart.acc_description,
+        classes: [],
+        draw: context => {
+          @xychart.draw(chart, context) catch {
+            @xychart.XYChartError(message) => raise Syntax(message)
+            @xychart.Unsupported(message) => raise Unsupported(message)
+            error => raise Unsupported(error.to_string())
+          }
+        },
+      }
+    }
     other => raise Unsupported(other)
   }
 }

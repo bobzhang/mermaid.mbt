@@ -147,7 +147,15 @@ pub fn Context::font(
   bold~ : Bool = false,
   italic~ : Bool = false,
 ) -> @font.Stack {
-  @font.Stack::for_family(self.theme().text("fontFamily"), bold~, italic~)
+  let family = self.theme().text("fontFamily")
+  // A family emptied by the sanitizer (one with a hyphen in a theme
+  // variable, such as `sans-serif`) leaves the stylesheet without a
+  // `font-family`, and the text in the font of the page. Only its
+  // regular face is embedded.
+  if family.trim().is_empty() && !bold && !italic {
+    return @font.Stack::page_default()
+  }
+  @font.Stack::for_family(family, bold~, italic~)
 }
 
 ///|

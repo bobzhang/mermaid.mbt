@@ -89,3 +89,30 @@ test "a diagram of a fixed size is drawn at that size" {
   inspect(limited_scale(1000.0, 400.0, fixed=true), content="1")
   inspect(limited_scale(2000.0, 3000.0, fixed=true), content="1")
 }
+
+///|
+test "a font family the sanitizer empties leaves text in the page's font" {
+  let font = (family : String) => {
+    let directive : Json = {
+      "themeVariables": { "fontFamily": Json::string(family) },
+    }
+    @diagram.Context::new(
+      "id",
+      @config.Config::new(directive~),
+      @dom.Element::new("svg"),
+      now=0.0,
+      page=@diagram.Page::new(),
+    ).font()
+  }
+  // `getComputedTextLength()` in the reference browser, in Arial and
+  // with no family at all.
+  inspect(
+    font("Arial, Verdana").advance("Dogs with a long label", 17.0),
+    content="166.328125",
+  )
+  // The hyphen is not among the characters a theme variable may hold.
+  inspect(
+    font("Arial, sans-serif").advance("Dogs with a long label", 17.0),
+    content="153.921875",
+  )
+}
