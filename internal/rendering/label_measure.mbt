@@ -96,25 +96,28 @@ fn collapse_runs(line : Array[Run]) -> Array[Run] {
 }
 
 ///|
-/// The width of runs laid out side by side: every run is shaped on its
-/// own and takes a whole number of layout units.
+/// The width of runs laid out side by side: every run takes a whole
+/// number of layout units.
 fn runs_width(runs : Array[Run], env : Env) -> Double {
   let mut width = 0.0
-  // Adjacent runs in one face are shaped together.
+  // Adjacent runs in one face are shaped together, kerning across.
   let mut index = 0
   while index < runs.length() {
     let first = runs[index]
-    let text = StringBuilder()
+    let texts = []
     while index < runs.length() &&
           runs[index].bold == first.bold &&
           runs[index].italic == first.italic &&
           runs[index].heavy == first.heavy {
-      text.write_string(runs[index].text)
+      texts.push(runs[index].text)
       index += 1
     }
-    width += env
+    for
+      advance in env
       .font(bold=first.bold, italic=first.italic)
-      .advance(text.to_string(), env.font_size)
+      .item_advances(texts, env.font_size) {
+      width += advance
+    }
   }
   width
 }
@@ -212,6 +215,9 @@ priv struct Item {
   bold : Bool
   italic : Bool
   heavy : Bool
+  /// Where the text of each element starts: the browser shapes the texts
+  /// of one face together, but rounds each one's width on its own.
+  starts : Array[Int32]
   positions : Map[Int32, Double]
 }
 
@@ -225,18 +231,32 @@ fn Item::position(self : Item, offset : Int32, env : Env) -> Double {
   if self.positions.get(offset) is Some(position) {
     return position
   }
-  // Kerning between the characters on either side of the offset moves it:
-  // a line broken after a space that kerns against the next letter (as
-  // `. A` does in Trebuchet MS) is that much narrower.
-  let position = env
+  // The texts before the offset, the one it is in up to it, and the rest:
+  // kerning between the characters on either side of the offset moves it
+  // (a line broken after a space that kerns against the next letter, as
+  // `. A` does in Trebuchet MS, is that much narrower).
+  let pieces = []
+  let mut before = 0
+  for k, start in self.starts {
+    let end = if k + 1 < self.starts.length() {
+      self.starts[k + 1]
+    } else {
+      self.chars.length()
+    }
+    if start < offset {
+      pieces.push(String::from_array(self.chars[start:offset.min(end)]))
+      before += 1
+      if offset < end {
+        pieces.push(String::from_array(self.chars[offset:end]))
+      }
+    } else {
+      pieces.push(String::from_array(self.chars[start:end]))
+    }
+  }
+  let advances = env
     .font(bold=self.bold, italic=self.italic)
-    .item_advances(
-      [
-        String::from_array(self.chars[:offset]),
-        String::from_array(self.chars[offset:]),
-      ],
-      env.font_size,
-    )[0]
+    .item_advances(pieces, env.font_size)
+  let position = advances[:before].fold(init=0.0, (sum, a) => sum + a)
   self.positions[offset] = position
   position
 }
@@ -251,6 +271,7 @@ fn line_items(line : Array[Run]) -> Array[Item] {
     bold: run.bold,
     heavy: run.heavy,
     italic: run.italic,
+    starts: [0],
     positions: Map([]),
   }
   // Spaces a line starts with (after a `<br>`) are an item of their own:
@@ -275,10 +296,12 @@ fn line_items(line : Array[Run]) -> Array[Item] {
       Some(item) if !separate &&
         item.bold == run.bold &&
         item.italic == run.italic &&
-        item.heavy == run.heavy =>
+        item.heavy == run.heavy => {
+        item.starts.push(item.chars.length())
         for c in run.text {
           item.chars.push(c)
         }
+      }
       _ => items.push(item_of(run))
     }
     separate = false

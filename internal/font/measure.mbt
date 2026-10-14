@@ -810,7 +810,15 @@ fn listed_faces(family : String, bold : Bool, italic : Bool) -> Array[Face] {
             (true, true) => trebuchet_bold_italic
           },
         )
-      "verdana" => Some(if bold { verdana_bold } else { verdana_regular })
+      "verdana" =>
+        Some(
+          match (bold, italic) {
+            (false, false) => verdana_regular
+            (true, false) => verdana_bold
+            (false, true) => verdana_italic
+            (true, true) => verdana_bold_italic
+          },
+        )
       "arial" => Some(arial(bold, italic))
       "helvetica" | "sans-serif" =>
         Some(

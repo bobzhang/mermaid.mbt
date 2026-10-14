@@ -182,16 +182,10 @@ fn check_markdown_text(text : String) -> Unit raise KanbanError {
     email_pattern.exec(text) is Some(_) {
     raise refuse()
   }
-  // A block as the last line comes out as marked has it; one with lines
-  // after it does not, and code keeps white space SVG text collapses.
-  let lines = text.split("\n").map(line => line.to_owned()).collect()
-  for index, line in lines {
-    if starts_block(line) &&
-      (
-        index < lines.length() - 1 ||
-        line.has_prefix("    ") ||
-        line.contains("\t")
-      ) {
+  // Text labels take such a block as one word, which the port neither
+  // ends where marked does nor breaks where mermaid does.
+  for line in text.split("\n") {
+    if starts_block(line.to_owned()) {
       raise refuse()
     }
   }
