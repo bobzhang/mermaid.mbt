@@ -41,6 +41,7 @@ priv struct Rel {
 ///|
 /// The parsed diagram: mermaid's `c4Db`.
 pub struct C4Db {
+  priv config : @config.Config
   priv shapes : Array[Element]
   priv boundaries : Array[Element]
   priv rels : Array[Rel]
@@ -74,6 +75,7 @@ fn C4Db::new(config : @config.Config) -> C4Db {
     "parentBoundary": "",
   }
   {
+    config,
     shapes: [],
     boundaries: [Element::new("global", global)],
     rels: [],

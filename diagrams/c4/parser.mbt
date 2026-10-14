@@ -34,16 +34,6 @@ fn js_trim(text : String) -> String {
 }
 
 ///|
-/// mermaid's `sanitizeText` for text shown as it is. Without markup the
-/// sanitizer returns its input; markup would go through an HTML parser.
-fn sanitize_text(text : String) -> String raise Unsupported {
-  if text.contains("<") {
-    raise Unsupported("C4: markup in a title: \{text}")
-  }
-  text
-}
-
-///|
 /// jison's `performAction` for c4Diagram.jison: run the semantic action of
 /// one production. `None` keeps the default value, that of the first
 /// symbol.
@@ -68,7 +58,7 @@ fn C4Db::reduce(self : C4Db, reduction : @jison.Reduction[Json]) -> Json? raise 
     }
     19 => {
       let title = substring(string_of(v(0)), 6)
-      self.title = sanitize_text(title)
+      self.title = sanitize_text(title, self.config, "the title")
       Some(Json::string(title))
     }
     20 => {
@@ -78,7 +68,7 @@ fn C4Db::reduce(self : C4Db, reduction : @jison.Reduction[Json]) -> Json? raise 
     }
     21 => {
       let title = js_trim(string_of(v(0)))
-      self.title = sanitize_text(title)
+      self.title = sanitize_text(title, self.config, "the title")
       Some(Json::string(title))
     }
     22 | 23 => {
@@ -205,9 +195,10 @@ fn C4Db::set_acc_description(
   description : String,
 ) -> Unit raise Unsupported {
   let indent = try! @jsregex.Regex::compile("\\n\\s+", flags="g")
-  self.acc_description = indent.replace_all(sanitize_text(description), _ => {
-    "\n"
-  })
+  self.acc_description = indent.replace_all(
+    sanitize_text(description, self.config, "the description"),
+    _ => "\n",
+  )
 }
 
 ///|

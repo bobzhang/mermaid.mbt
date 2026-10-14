@@ -214,6 +214,12 @@ fn build_node(
     Some(text) if text != "" => [text]
     _ => []
   }
+  let stereotype = stereotype_text(props, kind)
+  // The label helper sanitizes each text; make sure it can.
+  for text in [label, stereotype, ..description] {
+    sanitize_text(@dom.placeholders_to_references(text), config, "a label")
+    |> ignore
+  }
   @rendering.Node::new(
     id=shape.name,
     label~,
@@ -224,7 +230,7 @@ fn build_node(
     dom_id="\{diagram_id}-\{shape.name}",
     look=config.text("look").unwrap_or("classic"),
     shape=node_shape,
-    stereotype=stereotype_text(props, kind),
+    stereotype~,
     description~,
     width=conf.width,
   )
