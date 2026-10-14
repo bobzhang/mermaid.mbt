@@ -43,36 +43,108 @@ fn viewbox_options(config : @config.Config) -> (Double, Bool) raise KanbanError 
 }
 
 ///|
-/// Refuse text with characters the embedded fonts do not have: the
-/// browser draws them from fonts of the system, which the port cannot
-/// measure.
-fn check_coverage(
+/// Whether text in `family`, a CSS list of font families, can be measured
+/// as the reference browser would: the first family installed there has
+/// to be one of the embedded ones. A family not known either way may or
+/// may not be installed, and would be measured in a stand-in; no family
+/// at all leaves the text in the font of the page.
+fn is_measurable_family(family : String) -> Bool {
+  for name in family.split(",") {
+    match name.trim(chars=" \t\n\"';").to_owned().to_lower() {
+      // The font of the redux themes, which the reference machine lacks.
+      "recursive variable" => continue
+      "trebuchet ms" | "verdana" | "arial" => return true
+      _ => return false
+    }
+  }
+  false
+}
+
+///|
+/// Elements of an HTML label whose text the measuring lays out as the
+/// browser does: those that change the face, line breaks, paragraphs.
+/// Any other element starts text the browser rounds on its own, if it
+/// does not change its size or face as well.
+let plain_elements : Array[String] = ["b", "strong", "i", "em", "br", "p"]
+
+///|
+/// Refuse text that cannot be measured as the browser does: characters
+/// the embedded fonts do not have, which the browser draws from fonts of
+/// the system, and, in HTML labels, elements the measuring does not know
+/// (`sub`, `code`, `u`, ...).
+fn check_text(
+  text : String,
+  html : Bool,
+  stacks : Array[@font.Stack],
+) -> Unit raise KanbanError {
+  // The text as it is shown: references resolved, markup apart.
+  let holder = @dom.Element::new("div")
+  holder.set_inner_html(@dom.placeholders_to_references(text))
+  let shown = holder.text_content()
+  for stack in stacks {
+    guard stack.covers(shown) else {
+      raise Unsupported("text the embedded fonts do not cover: \{shown}")
+    }
+  }
+  guard html else { return }
+  fn visit(element : @dom.Element) raise KanbanError {
+    for child in element.children() {
+      guard child is Element(child) else { continue }
+      // An element with attributes may be styled by them.
+      guard plain_elements.contains(child.tag) &&
+        child.to_html().has_prefix("<\{child.tag}>") else {
+        raise Unsupported("<\{child.tag}> in a label")
+      }
+      visit(child)
+    }
+  }
+  visit(holder)
+}
+
+///|
+/// Refuse a board whose text the port cannot measure exactly.
+fn check_measurable(
   data : Array[LayoutNode],
   context : @diagram.Context,
 ) -> Unit raise KanbanError {
+  let family = context.theme().text("fontFamily")
+  if !is_measurable_family(family) {
+    raise Unsupported("measuring text in the font family \{family}")
+  }
   let stacks = [
     context.font(),
     context.font(bold=true),
     context.font(italic=true),
     context.font(bold=true, italic=true),
   ]
+  let config = context.config
+  // Titles of cards follow the root `htmlLabels`; the other labels take
+  // the flowchart's into account.
+  let html_titles = match config.get("htmlLabels") {
+    Null => true
+    value => @config.evaluate(value)
+  }
+  let html_labels = match config.get("htmlLabels") {
+    Null =>
+      match config.get("flowchart.htmlLabels") {
+        Null => true
+        value => @config.evaluate(value)
+      }
+    value => @config.evaluate(value)
+  }
   for entry in data {
     let item = entry.node
-    for
-      text in [
-        entry.label,
-        item.ticket.unwrap_or(""),
-        item.assigned.unwrap_or(""),
-      ] {
-      // The text as it is shown: references resolved, markup gone.
-      let holder = @dom.Element::new("div")
-      holder.set_inner_html(@dom.placeholders_to_references(text))
-      let shown = holder.text_content()
-      for stack in stacks {
-        guard stack.covers(shown) else {
-          raise Unsupported("text the embedded fonts do not cover: \{text}")
-        }
-      }
+    check_text(
+      entry.label,
+      if entry.is_group {
+        html_labels
+      } else {
+        html_titles
+      },
+      stacks,
+    )
+    for text in [item.ticket.unwrap_or(""), item.assigned.unwrap_or("")] {
+      check_text(text, html_labels, stacks)
     }
   }
 }
@@ -84,7 +156,7 @@ pub fn draw(db : KanbanDb, context : @diagram.Context) -> Unit raise {
   let config = context.config
   let svg = context.svg
   let data = db.data()
-  check_coverage(data, context)
+  check_measurable(data, context)
   let painter = @rendering.Painter::new(
     config,
     diagram_type="kanban",
