@@ -443,12 +443,17 @@ pub fn draw(venn : Venn, context : @diagram.Context) -> Unit raise VennError {
         }
         let fill = checked_color(value, "fill")
         if hand_drawn {
-          // Upstream cross-hatches the outline of the overlap with
-          // rough.js, which turns its arcs into curves with `Math.tan`
-          // and `Math.asin`; `internal/rough` draws arcs as lines.
-          raise Unsupported(
-            "a filled overlap in the hand-drawn look of a Venn diagram",
-          )
+          // A cross-hatched outline in place of the path.
+          let options = rough_options(config)
+          options.fill = transparentize(fill, 0.3)
+          options.fill_style = "cross-hatch"
+          options.hachure_gap = 6.0
+          options.hachure_angle = 60.0
+          options.stroke = "none"
+          let d = node.path.get_attr("d").unwrap_or("")
+          let sketch = @rough.path(d, options)
+          node.group.insert_before(sketch, node.path)
+          node.path.remove()
         } else {
           node.path.style("fill-opacity", "1").style("fill", fill) |> ignore
         }
