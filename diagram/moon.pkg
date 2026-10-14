@@ -3,6 +3,8 @@ import {
   "bobzhang/mermaid/internal/dom",
   "bobzhang/mermaid/internal/font",
   "bobzhang/mermaid/theme",
+  "moonbitlang/core/double",
+  "moonbitlang/core/string",
 }
 
 warnings = "-implicit_impl_as_method"

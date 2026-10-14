@@ -1,18 +1,4 @@
 ///|
-test "parseFloat reads the longest numeric prefix" {
-  inspect(parse_float("12.5"), content="12.5")
-  inspect(parse_float("  -3e2xyz"), content="-300")
-  inspect(parse_float(".5"), content="0.5")
-  inspect(parse_float("5."), content="5")
-  inspect(parse_float("1e"), content="1")
-  inspect(parse_float("12abc"), content="12")
-  inspect(parse_float("-Infinity"), content="-Infinity")
-  inspect(parse_float("x").is_nan(), content="true")
-  inspect(parse_float("").is_nan(), content="true")
-  inspect(parse_float("-.e3").is_nan(), content="true")
-}
-
-///|
 test "only the ends of the text are trimmed, and blank lines dropped" {
   inspect(
     prepare_text_for_parsing("  sankey-beta \r\n\r\n a , b,1 \n\n\nb,c,2\n \n"),
