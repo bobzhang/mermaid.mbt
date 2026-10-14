@@ -324,7 +324,7 @@ fn Env::append_title(
     .attr("font-size", "4ex")
     .attr("font-weight", "bold")
     .attr_number("y", 20.0)
-  let content = collapse_white_space(title)
+  let content = @journeycommon.collapse_white_space(title)
   @journeycommon.require_glyphs(self.title_font, content)
   if content == "" {
     return

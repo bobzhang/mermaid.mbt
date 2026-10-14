@@ -85,3 +85,23 @@ pub fn require_glyphs(
     raise MeasureError("text needs a fallback font to be measured: \{text}")
   }
 }
+
+///|
+/// Text as SVG lays it out with the default `white-space`: runs of
+/// blanks, tabs and line breaks are one blank, and none at either end.
+pub fn collapse_white_space(text : String) -> String {
+  let out = StringBuilder()
+  let mut pending = false
+  for c in text {
+    if c is (' ' | '\t' | '\n' | '\r' | '\u{0c}') {
+      pending = !out.is_empty()
+    } else {
+      if pending {
+        out.write_char(' ')
+        pending = false
+      }
+      out.write_char(c)
+    }
+  }
+  out.to_string()
+}

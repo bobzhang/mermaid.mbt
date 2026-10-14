@@ -70,11 +70,7 @@ fn client_width(
   x : Double,
 ) -> Double {
   let f = Float::from_double
-  // White space collapses as in any SVG text.
-  let blank = try! @jsregex.Regex::compile("\\s+", flags="g")
-  let text = blank.replace_all(text, _ => " ").trim(chars=" ").to_owned()
-  let (ascent, descent) = font.line_metrics(size)
-  ignore((ascent, descent))
+  let text = @journeycommon.collapse_white_space(text)
   let advance = f(font.advance(text, size))
   let ink = font.ink(text, size)
   // The box is the cell united with the ink, which may overhang it.

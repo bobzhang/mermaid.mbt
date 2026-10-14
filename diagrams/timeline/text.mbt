@@ -39,29 +39,9 @@ fn TextStyle::new(font : @font.Stack, size : Double) -> TextStyle {
 }
 
 ///|
-/// Text as SVG lays it out with the default `white-space`: runs of
-/// blanks, tabs and line breaks are one blank, and none at either end.
-fn collapse_white_space(text : String) -> String {
-  let out = StringBuilder()
-  let mut pending = false
-  for c in text {
-    if c is (' ' | '\t' | '\n' | '\r' | '\u{0c}') {
-      pending = !out.is_empty()
-    } else {
-      if pending {
-        out.write_char(' ')
-        pending = false
-      }
-      out.write_char(c)
-    }
-  }
-  out.to_string()
-}
-
-///|
 /// What `getComputedTextLength()` reports for a `<tspan>` holding `text`.
 fn TextStyle::text_length(self : TextStyle, text : String) -> Double {
-  self.font.advance(collapse_white_space(text), self.size)
+  self.font.advance(@journeycommon.collapse_white_space(text), self.size)
 }
 
 ///|
@@ -186,7 +166,7 @@ fn text_box(spans : Array[String], style : TextStyle) -> @dom.Rect {
   let mut box : BoxF = { x: 0, y: 0, width: 0, height: 0, }
   let mut baseline : Float = 0
   for index, span in spans {
-    let text = collapse_white_space(span)
+    let text = @journeycommon.collapse_white_space(span)
     if text == "" {
       continue
     }

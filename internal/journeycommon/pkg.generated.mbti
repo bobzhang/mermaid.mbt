@@ -12,6 +12,8 @@ pub fn acc_description(String) -> String raise SanitizeError
 
 pub fn acc_title(String) -> String raise SanitizeError
 
+pub fn collapse_white_space(String) -> String
+
 pub fn is_js_space(Char) -> Bool
 
 pub fn js_number(String) -> Double
