@@ -58,18 +58,20 @@ from mermaid's own build by `scripts/extract_jison.js` and
 ### Flowcharts
 
 Flowcharts, entity relationship and requirement diagrams go through a port
-of mermaid's unified renderer (`internal/rendering`): HTML labels, node shapes, subgraph frames, edge
-routing with rounded corners and line hops, class and link styling. The
-layout is ELK's, as upstream, computed by
+of mermaid's unified renderer (`internal/rendering`): HTML labels, node
+shapes, subgraph frames, edge routing with rounded corners and line hops,
+class and link styling. The layout is ELK's, as upstream, computed by
+[bobzhang/elk](https://github.com/bobzhang/elk), a fork of
 [moon_elk](https://github.com/moonbit-community/moon_elk).
 
 What is missing:
 
-- Matching elkjs 0.9.3 exactly needs fixes to moon_elk that currently live
-  on a branch of a local checkout (`../moon_elk`, joined through an untracked
-  `moon.work`). With them, every graph tried so far lays out exactly as in
-  elkjs: the fixtures, upstream's documentation examples and some eight
-  hundred generated graphs.
+- Matching elkjs 0.9.3 exactly needs fixes to moon_elk that live in the
+  fork until they are merged upstream. The fork is not on the registry yet:
+  check it out next to this repository (`../elk`) and join the two with a
+  `moon.work` whose members are `.` and `../elk`. With the fixes, every
+  graph tried so far lays out exactly as in elkjs: the fixtures, upstream's
+  documentation examples and some eight hundred generated graphs.
 - The node shapes of flowcharts are ported, the classic ones and those of
   the `@{ shape: ... }` syntax. `render` raises `Unsupported` for the rest:
   icons and images, `person`, collapsed groups, and `state`, which upstream
