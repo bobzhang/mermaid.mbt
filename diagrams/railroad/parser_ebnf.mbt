@@ -10,7 +10,7 @@
 /// Primary: STRING | SPECIAL_SEQUENCE | ID
 ///        | "(" Choice ")" | "[" Choice "]" | "{" Choice "}"
 /// ```
-fn parse_ebnf(tokens : @langium.TokenStream) -> Railroad raise {
+fn parse_ebnf(tokens : @langium.TokenStream) -> (Header, Array[Rule]) raise {
   let header = header(tokens, "railroad-ebnf-beta", decode_escaped_string)
   let rules = []
   while !tokens.at("EOF") {
@@ -22,7 +22,7 @@ fn parse_ebnf(tokens : @langium.TokenStream) -> Railroad raise {
     tokens.expect(";") |> ignore
     rules.push({ name, definition, })
   }
-  header.diagram(rules)
+  (header, rules)
 }
 
 ///|

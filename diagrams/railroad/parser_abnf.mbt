@@ -10,7 +10,7 @@
 /// Primary: STRING | NUMVAL | RULENAME
 ///        | "(" Alternation ")" | "[" Alternation "]"
 /// ```
-fn parse_abnf(tokens : @langium.TokenStream) -> Railroad raise {
+fn parse_abnf(tokens : @langium.TokenStream) -> (Header, Array[Rule]) raise {
   // A title in quotes loses them; nothing is an escape in this notation.
   let header = header(tokens, "railroad-abnf-beta", quoted => {
     quoted[1:quoted.length() - 1].to_owned()
@@ -23,7 +23,7 @@ fn parse_abnf(tokens : @langium.TokenStream) -> Railroad raise {
     tokens.expect(";") |> ignore
     rules.push({ name, definition, })
   }
-  header.diagram(rules)
+  (header, rules)
 }
 
 ///|

@@ -35,6 +35,7 @@ pub struct Railroad {
   acc_title : String
   acc_description : String
   rules : Array[Rule]
+  entities : Bool
 }
 
 pub(all) struct Rule {

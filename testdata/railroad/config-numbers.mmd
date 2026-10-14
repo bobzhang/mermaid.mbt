@@ -1,0 +1,5 @@
+---
+config: {"railroad": {"padding": 0.3333333333333333, "arcRadius": 0.1, "verticalSeparation": 1e-07, "horizontalSeparation": 123456789.123, "strokeWidth": 1e+21}}
+---
+railroad-beta
+rule = sequence(terminal("lit"), choice(nonterminal("name"), special("any")), optional(terminal("x")), zeroOrMore(nonterminal("y"))) ;

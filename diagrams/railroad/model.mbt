@@ -40,6 +40,9 @@ pub struct Railroad {
   acc_title : String
   acc_description : String
   rules : Array[Rule]
+  /// Whether the text holds entity codes (`#35;`), shielded as
+  /// placeholders until the diagram is serialized.
+  entities : Bool
 }
 
 ///|

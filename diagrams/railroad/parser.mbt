@@ -54,6 +54,7 @@ fn header(
 fn Header::diagram(
   self : Header,
   rules : Array[Rule],
+  entities~ : Bool,
 ) -> Railroad raise Unsupported {
   let acc_title = @journeycommon.acc_title(self.acc_title) catch {
     @journeycommon.SanitizeError(message) => raise Unsupported(message)
@@ -69,6 +70,7 @@ fn Header::diagram(
       name: sanitize_text(rule.name),
       definition: sanitize_node(rule.definition),
     }),
+    entities,
   }
 }
 
@@ -109,10 +111,11 @@ pub fn parse(diagram_type : String, source : String) -> Railroad raise {
     @langium.tokenize(source, types),
     source.length(),
   )
-  match diagram_type {
+  let (header, rules) = match diagram_type {
     "railroadEbnf" => parse_ebnf(tokens)
     "railroadAbnf" => parse_abnf(tokens)
     "railroadPeg" => parse_peg(tokens)
     _ => parse_ir(tokens)
   }
+  header.diagram(rules, entities=source.contains("ﬂ°"))
 }

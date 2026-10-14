@@ -9,7 +9,7 @@
 /// Prefix: ("&" | "!")? Primary ("?" | "*" | "+")?
 /// Primary: STRING | ID | "(" OrderedChoice ")" | "."
 /// ```
-fn parse_peg(tokens : @langium.TokenStream) -> Railroad raise {
+fn parse_peg(tokens : @langium.TokenStream) -> (Header, Array[Rule]) raise {
   let header = header(tokens, "railroad-peg-beta", decode_escaped_string)
   let rules = []
   while !tokens.at("EOF") {
@@ -19,7 +19,7 @@ fn parse_peg(tokens : @langium.TokenStream) -> Railroad raise {
     tokens.expect(";") |> ignore
     rules.push({ name, definition, })
   }
-  header.diagram(rules)
+  (header, rules)
 }
 
 ///|

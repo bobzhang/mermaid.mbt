@@ -8,7 +8,7 @@
 ///           | ("optional" | "oneOrMore" | "zeroOrMore") "(" Expression ")"
 ///           | ("terminal" | "nonterminal" | "special") "(" STRING ")"
 /// ```
-fn parse_ir(tokens : @langium.TokenStream) -> Railroad raise {
+fn parse_ir(tokens : @langium.TokenStream) -> (Header, Array[Rule]) raise {
   let header = header(tokens, "railroad-beta", decode_escaped_string)
   let rules = []
   while !tokens.at("EOF") {
@@ -18,7 +18,7 @@ fn parse_ir(tokens : @langium.TokenStream) -> Railroad raise {
     tokens.expect(";") |> ignore
     rules.push({ name, definition, })
   }
-  header.diagram(rules)
+  (header, rules)
 }
 
 ///|
