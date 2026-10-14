@@ -794,8 +794,8 @@ pub fn Stack::bbox(
 ///|
 /// The embedded faces a CSS `font-family` list names, in order. Families
 /// that are not installed in the reference environment are skipped; of the
-/// installed ones, Trebuchet MS, Verdana, Arial, Helvetica and Times are
-/// embedded. The generic `sans-serif` is Helvetica there and `serif` is
+/// installed ones, Trebuchet MS, Verdana, Arial, Helvetica, Times and
+/// Georgia are embedded. The generic `sans-serif` is Helvetica there and `serif` is
 /// Times.
 fn listed_faces(family : String, bold : Bool, italic : Bool) -> Array[Face] {
   let faces = []
@@ -831,6 +831,15 @@ fn listed_faces(family : String, bold : Bool, italic : Bool) -> Array[Face] {
           },
         )
       "times" | "serif" => Some(if bold { times_bold } else { times_regular })
+      "georgia" =>
+        Some(
+          match (bold, italic) {
+            (false, false) => georgia_regular
+            (true, false) => georgia_bold
+            (false, true) => georgia_italic
+            (true, true) => georgia_bold_italic
+          },
+        )
       _ => None
     }
     if face is Some(face) && !faces.iter().any(f => physical_equal(f, face)) {

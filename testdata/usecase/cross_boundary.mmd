@@ -1,0 +1,17 @@
+usecase-beta
+direction TB
+actor User
+systemBoundary Front["Front end"]
+  Login("Log in")
+  Browse("Browse")
+end
+systemBoundary Back["Back end"]@{ type: package }
+  Auth("Authenticate")
+  Store("Store session")
+end
+User --> Login
+User --> Browse
+Login ..> : include Auth
+Auth ..> : include Store
+Browse ..> : extend Login
+Store --> Browse

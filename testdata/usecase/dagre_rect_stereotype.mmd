@@ -1,0 +1,19 @@
+---
+config:
+  handDrawnSeed: 4
+  layout: dagre
+  usecase:
+    colorScheme: rotate
+    minNodeWidth: 160
+---
+usecase-beta
+direction TD
+actor A0("Bank")
+actor A1@{ type: hollow } <<System>>
+U0(R & D)
+U1[Reset password] <<Core>>
+U2("Admin panel")
+U3("Pay")
+A0 --x U2
+json J@{ "k": "v", "n": 1, "list": [1, 2], "o": { "p": true } }
+A1 --> J

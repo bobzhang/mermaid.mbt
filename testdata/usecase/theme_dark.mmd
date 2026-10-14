@@ -1,0 +1,25 @@
+---
+config:
+  theme: dark
+  handDrawnSeed: 2
+---
+usecase-beta
+direction LR
+actor Customer
+actor Staff("Order staff")@{ type: hollow, business: true } <<Employee>>
+systemBoundary ordering["Ordering System"]@{ type: package }
+  Browse("Browse products")
+  Checkout("Checkout") <<Core>>
+  Pay("Pay")@{ business: true }
+  Review[Review order]
+end
+systemBoundary B2
+  Track("Track")
+end
+note for Checkout "Validates the cart"
+Customer -- "places order" --> Checkout
+Customer --> Browse
+Checkout ..> : include Pay
+Track ..> : extend Checkout
+Staff --> Review
+Staff --> Track

@@ -111,6 +111,35 @@ fn parse_diagram(
         },
       }
     }
+    "agentflow" => {
+      let db = @agentflow.parse(code, config) catch {
+        @jison.ParseError(message~, ..) => raise Syntax(message)
+        @agentflow.AgentflowError(message) => raise Syntax(message)
+        @flowchart.FlowError(message) => raise Syntax(message)
+        error => raise Syntax(error.to_string())
+      }
+      if title is Some(title) && db.title == "" {
+        db.set_title(title)
+      }
+      {
+        styles: @agentflow.styles(
+          config.theme(),
+          config.text("theme").unwrap_or(""),
+          config.text("look").unwrap_or(""),
+        ),
+        acc_title: db.acc_title,
+        acc_description: db.acc_description,
+        classes: db.flow.classes
+        .values()
+        .map(c => { id: c.id, styles: c.styles, text_styles: c.text_styles, })
+        .collect(),
+        draw: context => {
+          @agentflow.draw(db, context) catch {
+            @rendering.LayoutError(message) => raise Unsupported(message)
+          }
+        },
+      }
+    }
     "swimlane" => {
       // A flowchart laid out in lanes: the flowchart's parser, database and
       // renderer, with the lane rules added to its stylesheet.
@@ -485,6 +514,26 @@ fn parse_diagram(
         },
       }
     }
+    "usecase" => {
+      let db = @usecase.parse(code, config) catch {
+        @usecase.Invalid(message) => raise Syntax(message)
+        @usecase.Unsupported(message) => raise Unsupported(message)
+      }
+      // A frontmatter title is not shown: parsing clears the title the
+      // database was given before.
+      {
+        styles: @usecase.styles(config),
+        acc_title: db.acc_title,
+        acc_description: db.acc_description,
+        classes: [],
+        draw: context => {
+          @usecase.draw(db, context) catch {
+            @usecase.Invalid(message) => raise Syntax(message)
+            @usecase.Unsupported(message) => raise Unsupported(message)
+          }
+        },
+      }
+    }
     "quadrantChart" => {
       let chart = @quadrant.parse(code, title?) catch {
         @jison.ParseError(message~, ..) => raise Syntax(message)
@@ -684,6 +733,34 @@ fn parse_diagram(
         },
       }
     }
+    "kanban" => {
+      let convert = (error : Error) => {
+        match error {
+          @jison.ParseError(message~, ..) => Syntax(message)
+          @kanban.Invalid(message) => Syntax(message)
+          @kanban.Unsupported(message) => Unsupported(message)
+          @rendering.LayoutError(message) => Unsupported(message)
+          error => Syntax(error.to_string())
+        }
+      }
+      let db = @kanban.parse(code, config) catch {
+        error => raise convert(error)
+      }
+      // The database keeps neither a title nor accessibility text.
+      {
+        styles: @kanban.styles(config.theme()) catch {
+          error => raise convert(error)
+        },
+        acc_title: "",
+        acc_description: "",
+        classes: [],
+        draw: context => {
+          @kanban.draw(db, context) catch {
+            error => raise convert(error)
+          }
+        },
+      }
+    }
     other => raise Unsupported(other)
   }
 }
@@ -738,9 +815,10 @@ pub fn render(
     .attr("width", "100%")
     .attr("xmlns", "http://www.w3.org/2000/svg")
   let first_child = svg.append("g")
-  // The event modeling database asks for the text with its comments
-  // (`preserveCommentsWhenParsing`), as long as that is not too long.
-  let source = if diagram_type == "eventmodeling" &&
+  // The event modeling and agentflow databases ask for the text with its
+  // comments (`preserveCommentsWhenParsing`), as long as that is not too
+  // long.
+  let source = if diagram_type is ("eventmodeling" | "agentflow") &&
     processed.with_comments.length().to_double() <= max_length {
     processed.with_comments
   } else {

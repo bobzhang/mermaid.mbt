@@ -1,0 +1,20 @@
+---
+config:
+  handDrawnSeed: 2
+  theme: neo-dark
+  usecase:
+    colorScheme: rotate
+---
+usecase-beta
+actor A("Agent")@{ business: true } <<Role>>
+systemBoundary S["Shop **x**"]@{ type: package }
+  U1("Browse")
+  U2["`**Pay** now`"]
+end
+U3("Biz")@{ business: true }
+note for U1 "note"
+A -- "uses it" --> U1
+A --> U2
+U1 ..> : include U2
+U3 --|> U1
+A --o U3

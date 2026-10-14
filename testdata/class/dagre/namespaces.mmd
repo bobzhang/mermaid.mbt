@@ -1,0 +1,19 @@
+---
+config:
+  layout: dagre
+  look: classic
+  handDrawnSeed: 7
+---
+classDiagram
+  namespace Shapes {
+    class Shape {
+      <<abstract>>
+      +area() double
+    }
+    class Circle
+    class Square
+  }
+  Shape <|-- Circle
+  Shape <|-- Square
+  Circle "1" *-- "1" Point : centre
+  Square --> Point : corner

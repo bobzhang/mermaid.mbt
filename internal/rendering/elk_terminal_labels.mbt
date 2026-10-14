@@ -64,7 +64,14 @@ fn insert_edge_labels(
   let edge_label = if edge.label == "" && !env.html_labels {
     insert_empty_text_label(group, edge)
   } else {
-    insert_edge_label(group, edge, base_env, env)
+    insert_edge_label(
+      group,
+      edge,
+      base_env,
+      env,
+      padding_x=label_background_padding(diagram_type),
+      own_styles=edge_label_uses_own_styles(diagram_type),
+    )
   }
   insert_terminal_labels(group, edge, {
     ..base_env,
@@ -113,69 +120,77 @@ fn insert_empty_text_label(group : @dom.Element, edge : Edge) -> @dom.Element {
 /// mermaid's `insertEdgeLabel`. Each is a group of its own, centred on
 /// its origin, to be positioned after the layout.
 fn insert_terminal_labels(group : @dom.Element, edge : Edge, env : Env) -> Unit {
-  let n = @dom.number
   for entry in terminal_label_texts(edge) {
-    let (key, text) = entry
-    let element = group.append("g").attr("class", "edgeTerminals")
-    let inner = element.append("g").attr("class", "inner")
-    let (width, height) = if env.html_labels {
-      let (fo, box) = create_html_label(
-        inner,
-        text,
-        env,
-        style=edge.label_style,
-        is_node=false,
-      )
-      fo.attr_number("width", box.width).attr_number("height", box.height)
-      |> ignore
-      inner.attr(
-        "transform",
-        "translate(\{n(-box.width / 2.0)}, \{n(-box.height / 2.0)})",
-      )
-      |> ignore
-      // Never narrower than nine pixels a character: `setTerminalWidth`.
-      fo
-      .style(
-        "width",
-        n((text.length().to_double() * 9.0).max(box.width)) + "px",
-      )
-      .style("height", n(box.height) + "px")
-      |> ignore
-      (box.width, box.height)
-    } else {
-      let label = create_svg_label(
-        inner,
-        text,
-        env,
-        style=edge.label_style,
-        is_node=false,
-        sanitize=false,
-      )
-      // Upstream styles what the label code returns, which without a
-      // background is the text itself: neither the rectangle nor the text
-      // inside it is found, and both stay as they were created.
-      for rect in label.group.descendants(["rect"]) {
-        rect.attr("style", "stroke: none") |> ignore
-      }
-      label.element.remove_attr("style") |> ignore
-      let box = label.text_box
-      inner.attr(
-        "transform",
-        "translate(\{n(or_zero(-(box.x + box.width / 2.0)))}, \{n(or_zero(-(box.y + box.height / 2.0)))})",
-      )
-      |> ignore
-      (box.width, box.height)
-    }
-    edge.terminals.push({
-      key,
-      text,
-      element,
-      width,
-      height,
-      centre: None,
-      port: None,
-    })
+    insert_terminal_label(group, edge, env, entry.0, entry.1)
   }
+}
+
+///|
+/// Create and measure one terminal label of an edge, `key` saying which.
+fn insert_terminal_label(
+  group : @dom.Element,
+  edge : Edge,
+  env : Env,
+  key : String,
+  text : String,
+) -> Unit {
+  let n = @dom.number
+  let element = group.append("g").attr("class", "edgeTerminals")
+  let inner = element.append("g").attr("class", "inner")
+  let (width, height) = if env.html_labels {
+    let (fo, box) = create_html_label(
+      inner,
+      text,
+      env,
+      style=edge.label_style,
+      is_node=false,
+    )
+    fo.attr_number("width", box.width).attr_number("height", box.height)
+    |> ignore
+    inner.attr(
+      "transform",
+      "translate(\{n(-box.width / 2.0)}, \{n(-box.height / 2.0)})",
+    )
+    |> ignore
+    // Never narrower than nine pixels a character: `setTerminalWidth`.
+    fo
+    .style("width", n((text.length().to_double() * 9.0).max(box.width)) + "px")
+    .style("height", n(box.height) + "px")
+    |> ignore
+    (box.width, box.height)
+  } else {
+    let label = create_svg_label(
+      inner,
+      text,
+      env,
+      style=edge.label_style,
+      is_node=false,
+      sanitize=false,
+    )
+    // Upstream styles what the label code returns, which without a
+    // background is the text itself: neither the rectangle nor the text
+    // inside it is found, and both stay as they were created.
+    for rect in label.group.descendants(["rect"]) {
+      rect.attr("style", "stroke: none") |> ignore
+    }
+    label.element.remove_attr("style") |> ignore
+    let box = label.text_box
+    inner.attr(
+      "transform",
+      "translate(\{n(or_zero(-(box.x + box.width / 2.0)))}, \{n(or_zero(-(box.y + box.height / 2.0)))})",
+    )
+    |> ignore
+    (box.width, box.height)
+  }
+  edge.terminals.push({
+    key,
+    text,
+    element,
+    width,
+    height,
+    centre: None,
+    port: None,
+  })
 }
 
 ///|

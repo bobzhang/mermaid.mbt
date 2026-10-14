@@ -1,0 +1,4 @@
+Parse error on line 2:
+...o__: { shape: tool }, label: "P" }
+-----------------------^
+Expecting 'COMMENT', 'SEMI', 'NEWLINE', 'SPACE', 'EOF', 'SHAPE_DATA', 'START_LINK', 'LINK', 'LINK_ID', got 'COMMA'

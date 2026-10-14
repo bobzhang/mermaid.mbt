@@ -65,4 +65,31 @@ pub(all) enum NodeData {
     font_size~ : Double,
     bold~ : Bool
   )
+  /// An item of a kanban board: its ticket, as given and as its label
+  /// shows it, and whom it is assigned to, empty when it has none; its
+  /// priority, if any; and whether it has an icon, which only gives its
+  /// title a background.
+  KanbanItem(
+    ticket~ : String,
+    ticket_text~ : String,
+    assigned~ : String,
+    priority~ : String?,
+    icon~ : Bool
+  )
+  /// A container of an agentflow, expanded or collapsed, with its
+  /// `@{ ... }` metadata: `algorithm` picks the layout of its children,
+  /// `containerType` the look of the collapsed node.
+  Container(metadata~ : Map[String, Json])
+  /// An element of a use case diagram: the type the stylesheet sets its
+  /// label in, if it sets one, and what its shape draws besides the
+  /// label: the slash of a business element, a stereotype, an icon, the
+  /// rows of a JSON table (key and value) or the kind of a boundary.
+  Usecase(
+    font~ : UsecaseFont?,
+    business~ : Bool,
+    stereotype~ : String?,
+    icon~ : String?,
+    rows~ : Array[(String, String)],
+    boundary_type~ : String
+  )
 }

@@ -1,0 +1,22 @@
+---
+config:
+  layout: dagre
+---
+agentflow-beta TB
+  flow outer["Outer"]
+    flow mid["Middle"]
+      flow inner["Inner"]
+        a["A"] --> b["B"]
+      end
+      c["C"]
+    end
+    d["D"]
+    c --> d
+  end
+  mid@{ view: collapsed }
+  flow other["Other"]
+    e["E"]
+  end
+  d --> e
+  a --> e
+  b --> c

@@ -33,6 +33,8 @@ pub(all) struct Options {
   /// negative.
   mut hachure_gap : Double
   mut disable_multi_stroke_fill : Bool
+  /// The dashes of the lines of a hachure fill (`fillLineDash`).
+  mut fill_line_dash : Array[Double]?
   priv mut randomizer : Randomizer?
 }
 
@@ -59,6 +61,7 @@ pub fn Options::new() -> Options {
     hachure_angle: -41.0,
     hachure_gap: -1.0,
     disable_multi_stroke_fill: false,
+    fill_line_dash: None,
     randomizer: None,
   }
 }

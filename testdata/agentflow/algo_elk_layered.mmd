@@ -1,0 +1,15 @@
+---
+config:
+  handDrawnSeed: 1
+---
+agentflow-beta TB
+  flow tools["Tool box"]
+    a["search_web"]@{ shape: tool }
+    b["fetch_page"]@{ shape: tool }
+    c["summarise long text"]@{ shape: tool }
+    d["d"]@{ shape: refdoc }
+    e["Decide"]@{ shape: decision }
+    a --> b
+  end
+  tools@{ algorithm: "elk.layered" }
+  x["Start"] --> tools

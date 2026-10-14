@@ -10,13 +10,15 @@ pub fn draw(
   // Only `elk` names the layered ELK layout; every other name, known or
   // not, ends in another engine upstream.
   let layout = config.text("layout").unwrap_or("elk")
-  if layout != "elk" {
+  if layout != "elk" &&
+    layout != "swimlane" &&
+    !@rendering.is_dagre_layout(layout) {
     raise @rendering.LayoutError("The \{layout} layout is not supported yet.")
   }
   if config.text("look") == Some("handDrawn") {
     raise @rendering.LayoutError("The hand-drawn look is not supported yet.")
   }
-  let (nodes, edges) = db.layout_data()
+  let (nodes, edges) = db.layout_data(dagre=layout != "elk")
   let markers = if config.text("look") == Some("neo") {
     ["only_one_neo", "zero_or_one_neo", "one_or_more_neo", "zero_or_more_neo"]
   } else {

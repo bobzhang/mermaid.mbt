@@ -1,0 +1,18 @@
+---
+config:
+  htmlLabels: false
+  theme: redux-color
+  usecase:
+    colorScheme: rotate
+---
+usecase-beta
+actor C
+actor A@{ type: awesome }
+B("Browse")
+P("Pay")@{ business: true } <<x>>
+systemBoundary S
+  Q[Q]
+end
+C --> B
+A --> P
+P --> Q

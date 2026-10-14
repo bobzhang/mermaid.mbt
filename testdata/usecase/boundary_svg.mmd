@@ -1,0 +1,18 @@
+---
+config:
+  htmlLabels: false
+---
+usecase-beta
+direction TB
+systemBoundary sb1["Payment service"]@{ type: package }:::system
+  actor Clerk("Payment clerk")
+  Authorize("Authorize payment")
+  Receipt[Create receipt]
+end
+systemBoundary Other
+  X("Other thing")
+end
+Clerk --> Authorize
+Authorize --> Receipt
+Receipt --> X
+classDef system stroke:#4b4b7a

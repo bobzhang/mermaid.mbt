@@ -292,14 +292,10 @@ fn insert_edge(
   } else if edge.curve == "rounded" {
     rounded_path(apply_marker_offsets(line_data, edge), 5.0)
   } else {
-    // A straight line, where ELK returned no route.
-    let shortened = apply_marker_offsets(line_data, edge)
-    let path = StringBuilder()
-    for i, p in shortened {
-      path.write_string(if i == 0 { "M" } else { "L" })
-      path.write_string("\{n(p.x)},\{n(p.y)}")
-    }
-    path.to_string()
+    // A straight line, where ELK returned no route: `d3.line`, whose
+    // path keeps three decimals.
+    let points = offset_line_points(fix_corners(line_data), edge)
+    @d3.line("linear", points).unwrap_or("")
   }
   let thickness = match edge.thickness {
     "thick" => "edge-thickness-thick"
@@ -391,8 +387,12 @@ fn insert_edge_label(
   edge : Edge,
   base_env : Env,
   env : Env,
+  padding_x~ : Double = 0.0,
+  own_styles~ : Bool = true,
 ) -> @dom.Element {
-  let split = split_styles([..edge.css_compiled_styles, ..edge.style])
+  let split = split_styles(
+    [..edge.css_compiled_styles, ..if own_styles { edge.style } else { [] }],
+  )
   edge.label_style = split.label_styles
   let edge_label = group.append("g").attr("class", "edgeLabel")
   let label = edge_label
@@ -443,6 +443,7 @@ fn insert_edge_label(
     is_node=false,
     add_background=true,
     markdown~,
+    padding_x~,
   )
   fo.attr_number("width", box.width).attr_number("height", box.height) |> ignore
   label.attr(

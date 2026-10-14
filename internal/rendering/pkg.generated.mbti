@@ -14,7 +14,11 @@ pub fn insert_title(@dom.Element, String, String, Double, @config.Config) -> Uni
 
 pub fn intersect_box(x~ : Double, y~ : Double, width~ : Double, height~ : Double, Point) -> Point
 
+pub fn is_dagre_layout(String) -> Bool
+
 pub fn is_valid_shape(String) -> Bool
+
+pub fn markdown_plain_text(String) -> String
 
 pub fn node_palette_rules(@config.Config) -> String
 
@@ -63,6 +67,8 @@ pub struct Edge {
   start_label_right : String
   end_label_left : String
   end_label_right : String
+  minlen : Double?
+  labelpos : String?
   mut label_style : String
   mut curve : String
   mut points : Array[Point]
@@ -71,7 +77,7 @@ pub struct Edge {
   mut position : Point?
   // private fields
 }
-pub fn Edge::new(id~ : String, start~ : String, end~ : String, label? : String, label_type? : String, thickness? : String, pattern? : String, classes? : String, arrow_type_start? : String, arrow_type_end? : String, css_compiled_styles? : Array[String], style? : Array[String], look~ : String, animate? : Bool, animation? : String, start_label_left? : String, start_label_right? : String, end_label_left? : String, end_label_right? : String, curve? : String) -> Self
+pub fn Edge::new(id~ : String, start~ : String, end~ : String, label? : String, label_type? : String, thickness? : String, pattern? : String, classes? : String, arrow_type_start? : String, arrow_type_end? : String, css_compiled_styles? : Array[String], style? : Array[String], look~ : String, animate? : Bool, animation? : String, start_label_left? : String, start_label_right? : String, end_label_left? : String, end_label_right? : String, minlen? : Double, labelpos? : String, curve? : String) -> Self
 
 pub(all) struct EntityAttribute {
   type_ : String
@@ -116,6 +122,7 @@ pub struct Node {
   center_label : Bool
   wrapping_width : Double?
   description : Array[String]
+  spread_ports : Bool
   mut label_style : String
   mut width : Double?
   mut height : Double?
@@ -126,7 +133,7 @@ pub struct Node {
   mut intersect : ((Point) -> Point)?
 }
 pub fn Node::leaves_at(Self, Point) -> Point?
-pub fn Node::new(id~ : String, label~ : String, label_type? : String, parent_id? : String, padding~ : Double, css_styles? : Array[String], css_compiled_styles? : Array[String], css_classes? : String, dir? : String, dom_id? : String, look~ : String, is_group? : Bool, shape~ : String, min_width? : Double, color_index? : Int, link? : String, link_target? : String, tooltip? : String, have_callback? : Bool, data? : NodeData, rx? : Double, ry? : Double, center_label? : Bool, wrapping_width? : Double, description? : Array[String]) -> Self
+pub fn Node::new(id~ : String, label~ : String, label_type? : String, parent_id? : String, padding~ : Double, css_styles? : Array[String], css_compiled_styles? : Array[String], css_classes? : String, dir? : String, dom_id? : String, look~ : String, is_group? : Bool, shape~ : String, min_width? : Double, color_index? : Int, link? : String, link_target? : String, tooltip? : String, have_callback? : Bool, data? : NodeData, rx? : Double, ry? : Double, center_label? : Bool, wrapping_width? : Double, description? : Array[String], spread_ports? : Bool) -> Self
 pub fn Node::placed(Self, x~ : Double, y~ : Double, width? : Double, height? : Double, label_style~ : String) -> Self
 pub fn Node::with_styles(Self, css_styles~ : Array[String], css_compiled_styles~ : Array[String], css_classes~ : String) -> Self
 
@@ -138,12 +145,16 @@ pub(all) enum NodeData {
   ClassBox(text~ : String, annotations~ : Array[String], members~ : Array[ClassBoxMember], methods~ : Array[ClassBoxMember])
   Block(positioned~ : Bool, directions~ : Array[String], width_in_columns~ : Double, style~ : String, class_rules~ : Array[String])
   C4(stereotype~ : String, font_family~ : String, font_size~ : Double, bold~ : Bool)
+  KanbanItem(ticket~ : String, ticket_text~ : String, assigned~ : String, priority~ : String?, icon~ : Bool)
+  Container(metadata~ : Map[String, Json])
+  Usecase(font~ : UsecaseFont?, business~ : Bool, stereotype~ : String?, icon~ : String?, rows~ : Array[(String, String)], boundary_type~ : String)
 }
 
 pub struct Painter {
   // private fields
 }
 pub fn Painter::draw_shape(Self, @dom.Element, Node) -> @dom.Element raise LayoutError
+pub fn Painter::insert_cluster(Self, @dom.Element, Node) -> @dom.Element raise LayoutError
 pub fn Painter::insert_edge(Self, @dom.Element, Edge, Array[Point], points_json? : String) -> @dom.Element raise LayoutError
 pub fn Painter::insert_edge_label(Self, @dom.Element, Edge) -> @dom.Element
 pub fn Painter::insert_look_defs(Self, @dom.Element) -> Unit
@@ -154,6 +165,12 @@ pub(all) struct Point {
   x : Double
   y : Double
 } derive(Eq, @debug.Debug)
+
+pub(all) struct UsecaseFont {
+  family : String
+  size : Double
+  bold : Bool
+}
 
 // Type aliases
 

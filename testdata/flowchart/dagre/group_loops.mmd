@@ -1,0 +1,15 @@
+---
+config:
+  handDrawnSeed: 7
+  layout: elk.layered
+  flowchart:
+    curve: monotoneX
+---
+flowchart TD
+  subgraph S [A group with a loop]
+    x --> y
+  end
+  S --> S
+  S -->|out| z
+  z --> z
+  y -- back --> x

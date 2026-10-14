@@ -1,0 +1,20 @@
+kanban
+  a[Scalars]
+    s1[int]@{ ticket: 2037, assigned: 007 }
+    s2[float]@{ ticket: 1.50, assigned: 1e3 }
+    s3[hex]@{ ticket: 0x1F, assigned: 0o17 }
+    s4[bin]@{ ticket: 0b101, assigned: +12 }
+    s5[neg]@{ ticket: -5, assigned: -0.5 }
+    s6[bool]@{ ticket: true, assigned: True }
+    s7[false]@{ ticket: false, assigned: no }
+    s8[null]@{ ticket: ~, assigned: Null }
+    s9[quoted]@{ ticket: '123', assigned: "true" }
+    s10[dot]@{ ticket: .5, assigned: 5. }
+    s11[inf]@{ ticket: .inf, assigned: .nan }
+    s12[big]@{ ticket: 12345678901234567890, assigned: 1e21 }
+    s13[list]@{ ticket: [1, 2, null, x], assigned: [a, [b, c]] }
+    s14[yes]@{ ticket: yes, assigned: 1_000 }
+    s15[exp]@{ ticket: 1e-7, assigned: 0.000001 }
+    s16[label]@{ label: 'Other label', assigned: z }
+    s17[label2]@{ label: 42 }
+    s18[label3]@{ label: "**bold** label and _italic_" }

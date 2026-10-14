@@ -1,6 +1,7 @@
 import {
   "bobzhang/mermaid/config",
   "bobzhang/mermaid/diagram",
+  "bobzhang/mermaid/diagrams/agentflow",
   "bobzhang/mermaid/diagrams/c4",
   "bobzhang/mermaid/diagrams/block",
   "bobzhang/mermaid/diagrams/classdiagram",
@@ -13,6 +14,7 @@ import {
   "bobzhang/mermaid/diagrams/info",
   "bobzhang/mermaid/diagrams/ishikawa",
   "bobzhang/mermaid/diagrams/journey",
+  "bobzhang/mermaid/diagrams/kanban",
   "bobzhang/mermaid/diagrams/packet",
   "bobzhang/mermaid/diagrams/pie",
   "bobzhang/mermaid/diagrams/radar",
@@ -22,6 +24,7 @@ import {
   "bobzhang/mermaid/diagrams/requirement",
   "bobzhang/mermaid/diagrams/state",
   "bobzhang/mermaid/diagrams/swimlanes",
+  "bobzhang/mermaid/diagrams/usecase",
   "bobzhang/mermaid/diagrams/timeline",
   "bobzhang/mermaid/diagrams/treeview",
   "bobzhang/mermaid/diagrams/sequence",

@@ -1,6 +1,7 @@
 ///|
-/// A node of the flowchart.
-pub struct Vertex {
+/// A node of the flowchart. Agentflow diagrams build on the same database,
+/// hence the open fields.
+pub(all) struct Vertex {
   id : String
   /// The id of the node's SVG element, without the diagram prefix.
   dom_id : String
@@ -56,12 +57,12 @@ pub struct StyleClass {
 
 ///|
 /// A `subgraph`.
-pub struct SubGraph {
+pub(all) struct SubGraph {
   id : String
   nodes : Array[String]
-  title : String
+  mut title : String
   classes : Array[String]
-  dir : String?
+  mut dir : String?
   label_type : String
   metadata : Map[String, Json]
 }
@@ -77,7 +78,7 @@ pub struct FlowDb {
   priv mut default_style : Array[String]?
   classes : Map[String, StyleClass]
   sub_graphs : Array[SubGraph]
-  priv sub_graph_lookup : Map[String, SubGraph]
+  sub_graph_lookup : Map[String, SubGraph]
   tooltips : Map[String, String]
   priv mut sub_count : Int32
   priv mut first_graph_flag : Bool
@@ -94,7 +95,8 @@ pub(all) suberror FlowError {
 } derive(Eq, Debug)
 
 ///|
-fn FlowDb::new(config : @config.Config) -> FlowDb {
+/// An empty database.
+pub fn FlowDb::new(config : @config.Config) -> FlowDb {
   {
     config,
     vertex_counter: 0,
@@ -134,13 +136,14 @@ pub fn FlowDb::default_style(self : FlowDb) -> Array[String]? {
 ///|
 /// mermaid's `sanitizeText` for text without markup. Text carrying HTML is
 /// passed through for now; upstream runs it through DOMPurify.
-fn FlowDb::sanitize_text(self : FlowDb, text : String) -> String {
+pub fn FlowDb::sanitize_text(self : FlowDb, text : String) -> String {
   ignore(self)
   text
 }
 
 ///|
-fn sanitize_label_type(label_type : String?) -> String {
+/// mermaid's `sanitizeNodeLabelType`: an unknown kind of label is markdown.
+pub fn sanitize_label_type(label_type : String?) -> String {
   match label_type {
     Some("markdown" | "string" | "text" as known) => known
     _ => "markdown"
@@ -148,7 +151,8 @@ fn sanitize_label_type(label_type : String?) -> String {
 }
 
 ///|
-fn unquote(text : String) -> String {
+/// The text without the quotes around it, if it has them.
+pub fn unquote(text : String) -> String {
   if text.length() >= 2 && text.has_prefix("\"") && text.has_suffix("\"") {
     text[1:text.length() - 1].to_owned()
   } else if text == "\"" {
@@ -161,7 +165,7 @@ fn unquote(text : String) -> String {
 
 ///|
 /// The fields of a text object `{ text, type }` built by the grammar.
-fn text_object(value : Json) -> (String, String)? {
+pub fn text_object(value : Json) -> (String, String)? {
   match value {
     Object({ "text": String(text), "type": String(kind), .. }) =>
       Some((text, kind))
@@ -172,7 +176,7 @@ fn text_object(value : Json) -> (String, String)? {
 
 ///|
 /// Parse the body of a `@{ ... }` shape data block as YAML.
-fn parse_metadata(metadata : String) -> Json raise {
+pub fn parse_metadata(metadata : String) -> Json raise {
   let source = if metadata.contains("\n") {
     metadata + "\n"
   } else {
@@ -186,7 +190,7 @@ fn parse_metadata(metadata : String) -> Json raise {
 
 ///|
 /// JavaScript truthiness of a metadata field.
-fn truthy(value : Json?) -> Bool {
+pub fn truthy(value : Json?) -> Bool {
   match value {
     None | Some(Null | False) => false
     Some(String(s)) => s != ""
@@ -196,13 +200,133 @@ fn truthy(value : Json?) -> Bool {
 }
 
 ///|
-fn metadata_string(doc : Map[String, Json], key : String) -> String? {
+/// A truthy metadata field as text.
+pub fn metadata_string(doc : Map[String, Json], key : String) -> String? {
   match doc.get(key) {
     Some(String(s)) if s != "" => Some(s)
     Some(Number(n, ..)) if n != 0.0 => Some(n.to_string())
     Some(True) => Some("true")
     _ => None
   }
+}
+
+///|
+/// Attach `@{ ... }` metadata to the subgraph called `id`: the same syntax
+/// serves nodes, subgraphs and edges. Whether there was such a subgraph
+/// and metadata for it.
+pub fn FlowDb::annotate_sub_graph(
+  self : FlowDb,
+  id : String,
+  doc : Map[String, Json]?,
+) -> Bool {
+  guard self.sub_graph_lookup.get(id) is Some(sub_graph) && doc is Some(doc) else {
+    return false
+  }
+  for key, value in doc {
+    sub_graph.metadata[key] = value
+  }
+  true
+}
+
+///|
+/// Attach `@{ ... }` metadata to the edge with the id `id`. Whether there
+/// is such an edge.
+pub fn FlowDb::annotate_edge(
+  self : FlowDb,
+  id : String,
+  doc : Map[String, Json]?,
+) -> Bool {
+  for edge in self.edges {
+    if edge.id == id {
+      if doc is Some(doc) {
+        match doc.get("animate") {
+          Some(True) => edge.animate = Some(true)
+          Some(False) => edge.animate = Some(false)
+          _ => ()
+        }
+        if doc.get("animation") is Some(String(animation)) {
+          edge.animation = Some(animation)
+        }
+        if doc.get("curve") is Some(String(curve)) {
+          edge.interpolate = Some(curve)
+        }
+      }
+      return true
+    }
+  }
+  false
+}
+
+///|
+/// The number the next new vertex takes in its element id.
+pub fn FlowDb::vertex_counter(self : FlowDb) -> Int32 {
+  self.vertex_counter
+}
+
+///|
+/// Count a vertex declared apart from `declare_vertex`.
+pub fn FlowDb::count_vertex(self : FlowDb) -> Unit {
+  self.vertex_counter += 1
+}
+
+///|
+/// A vertex with nothing but its ids.
+pub fn Vertex::new(id : String, dom_id : String) -> Vertex {
+  {
+    id,
+    dom_id,
+    text: None,
+    label_type: "text",
+    shape: None,
+    styles: [],
+    classes: [],
+    link: None,
+    link_target: None,
+    have_callback: false,
+    icon: None,
+    form: None,
+    pos: None,
+    img: None,
+    constraint: None,
+    asset_width: None,
+    asset_height: None,
+  }
+}
+
+///|
+/// Add a node, or add to one that exists: its label, shape and styles.
+/// `dom_prefix` starts the ids of the elements of new nodes.
+pub fn FlowDb::declare_vertex(
+  self : FlowDb,
+  id : String,
+  text? : (String, String),
+  shape? : String,
+  style? : Array[String],
+  dom_prefix~ : String = "flowchart-",
+) -> Vertex {
+  let vertex = match self.vertices.get(id) {
+    Some(vertex) => vertex
+    None => {
+      let vertex = Vertex::new(id, "\{dom_prefix}\{id}-\{self.vertex_counter}")
+      self.vertices[id] = vertex
+      vertex
+    }
+  }
+  self.vertex_counter += 1
+  match text {
+    Some((text, label_type)) => {
+      vertex.label_type = label_type
+      vertex.text = Some(unquote(self.sanitize_text(text.trim().to_owned())))
+    }
+    None => if vertex.text is None { vertex.text = Some(id) }
+  }
+  if shape is Some(shape) {
+    vertex.shape = Some(shape)
+  }
+  if style is Some(style) {
+    vertex.styles.append(style)
+  }
+  vertex
 }
 
 ///|
@@ -228,70 +352,10 @@ fn FlowDb::add_vertex(
     None => None
   }
   // The same syntax attaches metadata to subgraphs and to edges by id.
-  if self.sub_graph_lookup.get(id) is Some(sub_graph) && doc is Some(doc) {
-    for key, value in doc {
-      sub_graph.metadata[key] = value
-    }
+  if self.annotate_sub_graph(id, doc) || self.annotate_edge(id, doc) {
     return
   }
-  for edge in self.edges {
-    if edge.id == id {
-      if doc is Some(doc) {
-        match doc.get("animate") {
-          Some(True) => edge.animate = Some(true)
-          Some(False) => edge.animate = Some(false)
-          _ => ()
-        }
-        if doc.get("animation") is Some(String(animation)) {
-          edge.animation = Some(animation)
-        }
-        if doc.get("curve") is Some(String(curve)) {
-          edge.interpolate = Some(curve)
-        }
-      }
-      return
-    }
-  }
-  let vertex = match self.vertices.get(id) {
-    Some(vertex) => vertex
-    None => {
-      let vertex : Vertex = {
-        id,
-        dom_id: "flowchart-\{id}-\{self.vertex_counter}",
-        text: None,
-        label_type: "text",
-        shape: None,
-        styles: [],
-        classes: [],
-        link: None,
-        link_target: None,
-        have_callback: false,
-        icon: None,
-        form: None,
-        pos: None,
-        img: None,
-        constraint: None,
-        asset_width: None,
-        asset_height: None,
-      }
-      self.vertices[id] = vertex
-      vertex
-    }
-  }
-  self.vertex_counter += 1
-  match text {
-    Some((text, label_type)) => {
-      vertex.label_type = label_type
-      vertex.text = Some(unquote(self.sanitize_text(text.trim().to_owned())))
-    }
-    None => if vertex.text is None { vertex.text = Some(id) }
-  }
-  if shape is Some(shape) {
-    vertex.shape = Some(shape)
-  }
-  if style is Some(style) {
-    vertex.styles.append(style)
-  }
+  let vertex = self.declare_vertex(id, text?, shape?, style?)
   guard doc is Some(doc) else { return }
   if doc.get("shape") is Some(String(shape)) && shape != "" {
     if shape != shape.to_lower() || shape.contains("_") {
@@ -421,7 +485,7 @@ fn FlowDb::add_single_link(
 ///|
 /// Link every start node to every end node. A user-defined id names the
 /// link between the last start and the first end.
-fn FlowDb::add_link(
+pub fn FlowDb::add_link(
   self : FlowDb,
   starts : Array[String],
   ends : Array[String],
@@ -451,7 +515,7 @@ fn FlowDb::add_link(
 
 ///|
 /// A position in a `linkStyle` statement: a link number or `default`.
-fn link_positions(value : Json) -> Array[Int32?] {
+pub fn link_positions(value : Json) -> Array[Int32?] {
   let position = (item : Json) => {
     match item {
       Number(n, ..) => Some(n.to_int())
@@ -477,24 +541,32 @@ fn link_positions(value : Json) -> Array[Int32?] {
 }
 
 ///|
-fn FlowDb::update_link_interpolate(
+/// `linkStyle ... interpolate ...`: the curve of some links, or of all
+/// that name none.
+pub fn FlowDb::update_link_interpolate(
   self : FlowDb,
   positions : Array[Int32?],
   interpolate : String,
-) -> Unit {
+) -> Unit raise FlowError {
   for position in positions {
     match position {
       None => self.default_interpolate = Some(interpolate)
-      Some(index) =>
-        if self.edges.get(index) is Some(edge) {
-          edge.interpolate = Some(interpolate)
+      Some(index) => {
+        // Upstream assigns to a link that does not exist and fails.
+        guard self.edges.get(index) is Some(edge) else {
+          raise FlowError(
+            "Cannot set properties of undefined (setting 'interpolate')",
+          )
         }
+        edge.interpolate = Some(interpolate)
+      }
     }
   }
 }
 
 ///|
-fn FlowDb::update_link(
+/// `linkStyle`: the styles of some links, or of all that have none.
+pub fn FlowDb::update_link(
   self : FlowDb,
   positions : Array[Int32?],
   style : Array[String],
@@ -521,7 +593,7 @@ fn FlowDb::update_link(
 
 ///|
 /// `classDef ids styles`.
-fn FlowDb::add_class(
+pub fn FlowDb::add_class(
   self : FlowDb,
   ids : String,
   style : Array[String],
@@ -555,7 +627,8 @@ fn FlowDb::add_class(
 }
 
 ///|
-fn FlowDb::set_direction(self : FlowDb, direction : String) -> Unit {
+/// The direction after the diagram keyword, in any of its spellings.
+pub fn FlowDb::set_direction(self : FlowDb, direction : String) -> Unit {
   let mut direction = direction.trim().to_owned()
   if direction.contains("<") {
     direction = "RL"
@@ -577,7 +650,11 @@ fn FlowDb::set_direction(self : FlowDb, direction : String) -> Unit {
 
 ///|
 /// Add a class to nodes, links and subgraphs by id.
-fn FlowDb::set_class(self : FlowDb, ids : String, class_name : String) -> Unit {
+pub fn FlowDb::set_class(
+  self : FlowDb,
+  ids : String,
+  class_name : String,
+) -> Unit {
   for id in ids.split(",") {
     let id = id.to_owned()
     if self.vertices.get(id) is Some(vertex) {
@@ -596,7 +673,12 @@ fn FlowDb::set_class(self : FlowDb, ids : String, class_name : String) -> Unit {
 }
 
 ///|
-fn FlowDb::set_tooltip(self : FlowDb, ids : String, tooltip : String) -> Unit {
+/// The tooltip of some nodes.
+pub fn FlowDb::set_tooltip(
+  self : FlowDb,
+  ids : String,
+  tooltip : String,
+) -> Unit {
   let tooltip = self.sanitize_text(tooltip)
   for id in ids.split(",") {
     self.tooltips[id.to_owned()] = tooltip
@@ -605,7 +687,7 @@ fn FlowDb::set_tooltip(self : FlowDb, ids : String, tooltip : String) -> Unit {
 
 ///|
 /// `click id href "url" target`.
-fn FlowDb::set_link(
+pub fn FlowDb::set_link(
   self : FlowDb,
   ids : String,
   link : String,
@@ -623,7 +705,7 @@ fn FlowDb::set_link(
 ///|
 /// `click id callback`: only the `clickable` class shows in the output;
 /// the callback itself is wired up at run time upstream.
-fn FlowDb::set_click_event(self : FlowDb, ids : String) -> Unit {
+pub fn FlowDb::set_click_event(self : FlowDb, ids : String) -> Unit {
   if self.config.text("securityLevel") is Some("loose") {
     for id in ids.split(",") {
       if self.vertices.get(id.to_owned()) is Some(vertex) {

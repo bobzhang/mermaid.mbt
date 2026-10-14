@@ -19,9 +19,13 @@ let usage : String =
   #|  c4-db <file.mmd>...    print each C4 diagram's parsed database as JSON
   #|  bbox <cases.json>      print getBBox() of an <svg> around each markup string
   #|  state-db <file.mmd>... print each state diagram's layout data as JSON
+  #|  usecase-db <file.mmd>...
+  #|                         print each use case diagram's layout data as JSON
   #|  elk-graph <file.mmd> [--config site.json]
   #|                         print the graph a diagram hands to ELK and the
   #|                         layout that came back, one JSON document a line
+  #|  dagre <graphs.json>... lay out graphs with the port of dagre, one JSON
+  #|                         document a line (see scripts/dagre_oracle.js)
   #|  dates <cases.json>     evaluate Date operations in the emulated time zone
   #|  time <cases.json>      evaluate dayjs and d3 time operations
   #|  format <cases.json>    format numbers; cases are {specifier, value}
@@ -368,6 +372,32 @@ fn elk_graph(path : String, options : ArrayView[String]) -> Unit raise CliError 
 }
 
 ///|
+/// Print the layout data of each use case diagram as one line of JSON.
+fn usecase_db(paths : ArrayView[String]) -> Unit raise CliError {
+  for path in paths {
+    let source = read_text(path)
+    let line = try {
+      let processed = @preprocess.preprocess(source)
+      let config = @config.Config::new(
+        directive=processed.config,
+        diagram_type="usecase",
+      )
+      @usecase.parse(@preprocess.encode_entities(processed.code) + "\n", config)
+      .dump()
+      .stringify()
+    } catch {
+      error => {
+        let report : Json = { "error": Repr(error).to_string() }
+        report.stringify()
+      }
+    } noraise {
+      text => text
+    }
+    println(line)
+  }
+}
+
+///|
 fn state_db(paths : ArrayView[String]) -> Unit raise CliError {
   for path in paths {
     let source = read_text(path)
@@ -443,8 +473,10 @@ fn main {
       ["c4-db", .. paths] => c4_db(paths)
       ["bbox", path] => bboxes(path)
       ["state-db", .. paths] => state_db(paths)
+      ["usecase-db", .. paths] => usecase_db(paths)
       ["elk-graph", path, .. options] => elk_graph(path, options)
       ["path-length", path] => path_lengths(path)
+      ["dagre", .. paths] => dagre(paths)
       ["dates", path] => dates(path)
       ["time", path] => time_cases(path)
       ["format", path] => formats(path)

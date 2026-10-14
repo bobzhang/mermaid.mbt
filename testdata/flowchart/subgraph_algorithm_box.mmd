@@ -1,0 +1,13 @@
+flowchart LR
+  subgraph one["One"]
+    a --> b
+    c
+  end
+  subgraph two
+    d
+    e
+  end
+  one@{ algorithm: elk.box }
+  two@{ algorithm: elk.layered }
+  x --> one
+  e --> x

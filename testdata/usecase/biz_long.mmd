@@ -1,0 +1,12 @@
+---
+config:
+  theme: redux-dark-color
+---
+usecase-beta
+direction TB
+actor B@{ type: hollow, business: true } <<Partner>>
+U("A business use case with a long label that wraps over lines")@{ business: true }
+V("Short")@{ business: true } <<A stereotype that is quite long indeed>>
+B --> U
+B --> V
+U --|> V

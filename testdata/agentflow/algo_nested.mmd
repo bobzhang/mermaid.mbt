@@ -1,0 +1,12 @@
+agentflow-beta LR
+  flow outer["Outer"]
+    flow tools["Tools"]
+      a["a"]@{ shape: tool }
+      b["b"]@{ shape: tool }
+      c["c"]@{ shape: tool }
+    end
+    y["y"]
+  end
+  tools@{ algorithm: "elk.rectpacking" }
+  outer@{ algorithm: "elk.box" }
+  x["Start"] --> outer

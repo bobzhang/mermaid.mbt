@@ -1,6 +1,6 @@
-// The shapes only the swimlane layout uses: lanes
-// (`rendering-elements/clusters/swimlane.js`) and the nodes that carry the
-// labels of edges (`rendering-elements/shapes/labelRect.ts`).
+// The lanes of the swimlane layout: `rendering-elements/clusters/swimlane.js`.
+// (The nodes that carry the labels of edges are `labelRect` nodes,
+// `shape_label_rect.mbt`.)
 
 ///|
 /// A lane: a title band and a body, side by side when the diagram runs
@@ -22,7 +22,13 @@ fn swimlane_cluster(
   let styles = node_styles(node)
   let shape_svg = parent
     .append("g")
-    .attr("class", "cluster swimlane " + node.css_classes)
+    // `node.cssClasses || ""`: the class diagram's namespaces have none,
+    // which the port spells "undefined".
+    .attr(
+      "class",
+      "cluster swimlane " +
+      (if node.css_classes == "undefined" { "" } else { node.css_classes }),
+    )
     .attr("id", node.dom_id)
     .attr("data-id", node.id)
     .attr("data-et", "cluster")
@@ -170,44 +176,4 @@ fn swimlane_cluster(
   }
   node.width = Some(width)
   node.height = Some(height)
-}
-
-///|
-/// The label of an edge, drawn as a node of its own: mermaid's `labelRect`.
-/// A tiny rectangle stands for the node's outline.
-fn label_rect(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
-  // The group is no `.node`: the stylesheet does not centre SVG text in
-  // it, so the text starts at its anchor.
-  let labelled = label_helper(parent, node, "label", {
-    ..env,
-    node_text_centred: false,
-  })
-  // The node's label style is the first style of its edge, absent when
-  // the edge has none.
-  if node.label_style == "" {
-    labelled.label.remove_attr("style") |> ignore
-  }
-  let rect = labelled.shape_svg
-    .insert_first("rect")
-    .attr("width", "0.1")
-    .attr("height", "0.1")
-  labelled.shape_svg.attr("class", "label edgeLabel") |> ignore
-  let n = @dom.number
-  let bbox = labelled.bbox
-  labelled.label.attr(
-    "transform",
-    "translate(\{n(-(bbox.width / 2.0) - labelled.offset_x)}, \{n(-(bbox.height / 2.0) - labelled.offset_y)})",
-  )
-  |> ignore
-  update_node_bounds(node, rect)
-  node.intersect = Some(point => {
-    intersect_rect(
-      node.x,
-      node.y,
-      node.width.unwrap_or(0.0),
-      node.height.unwrap_or(0.0),
-      point,
-    )
-  })
-  labelled.shape_svg
 }

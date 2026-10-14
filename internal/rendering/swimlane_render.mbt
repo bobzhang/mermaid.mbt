@@ -42,12 +42,21 @@ fn swimlane_model_node(node : Node) -> @swimlane_model.Node {
 }
 
 ///|
-/// The edge's label style as the label node gets it: the first of the
-/// edge's styles (flowchart edges keep their label styles in an array).
-fn first_label_style(edge : Edge) -> String {
-  match edge.style {
-    [first, ..] => first
-    [] => ""
+/// The style the label node of an edge gets: `edge.labelStyle`, whose
+/// first entry when the diagram keeps it in an array. Flowcharts (and the
+/// diagrams built on them) keep the edge's styles there, so an edge
+/// without styles gives no style at all (`None`); the class diagram's
+/// relations carry `["display: inline-block"]`; the other diagrams a
+/// string, empty.
+fn label_node_style(edge : Edge, diagram_type : String) -> String? {
+  match diagram_type {
+    "flowchart-v2" | "flowchart-elk" | "swimlane" | "agentflow" =>
+      match edge.style {
+        [first, ..] => Some(first)
+        [] => None
+      }
+    "classDiagram" => Some("display: inline-block")
+    _ => Some("")
   }
 }
 
@@ -132,7 +141,7 @@ fn render_swimlane(
       start=edge.start,
       end=edge.end,
       label=edge.label,
-      label_style=first_label_style(edge),
+      label_style=label_node_style(edge, data.diagram_type).unwrap_or(""),
       curve?=if edge.curve == "" { None } else { Some(edge.curve) },
       arrow_type_start=edge.arrow_type_start,
       arrow_type_end=edge.arrow_type_end,
@@ -140,13 +149,32 @@ fn render_swimlane(
     model_edges.push(model)
   }
   let config = data.config
+  // The layout reads `flowchart.nodeSpacing` and `rankSpacing`, which the
+  // ER renderer overwrites with its own (`er.nodeSpacing || 140`, ...).
+  let (node_spacing, rank_spacing) = if data.diagram_type == "er" {
+    let truthy = (value : Double?) => {
+      match value {
+        Some(v) if v != 0.0 && !v.is_nan() => Some(v)
+        _ => None
+      }
+    }
+    (
+      Some(truthy(config.number("er.nodeSpacing")).unwrap_or(140.0)),
+      Some(truthy(config.number("er.rankSpacing")).unwrap_or(80.0)),
+    )
+  } else {
+    (
+      config.number("flowchart.nodeSpacing"),
+      config.number("flowchart.rankSpacing"),
+    )
+  }
   let layout : @swimlane_model.Layout = {
     nodes: data.nodes.map(swimlane_model_node),
     edges: model_edges,
     direction: Some(data.direction),
     options: {
-      node_spacing: config.number("flowchart.nodeSpacing"),
-      rank_spacing: config.number("flowchart.rankSpacing"),
+      node_spacing,
+      rank_spacing,
       ignore_cross_lane_edges: !(config.get("swimlane.ignoreCrossLaneEdges")
       is False),
       optimize_ranks_by_crossings: !(config.get(
@@ -193,17 +221,22 @@ fn render_swimlane(
       }
     }
   })
+  let unstyled_labels : Set[String] = Set([])
   for edge in layout.edges {
     if rendering_edges.get(edge.id) is Some(rendering) && edge.label is None {
       // The label is drawn by its node.
       rendering.label = ""
+      if label_node_style(rendering, data.diagram_type) is None &&
+        edge.label_node_id is Some(id) {
+        unstyled_labels.add(id)
+      }
     }
   }
   // Measure: every node is drawn once to learn its size.
   let root = element.append("g").attr("class", "root")
   let clusters = root.append("g").attr("class", "clusters")
   let edge_paths = root.append("g").attr("class", "edges edgePaths")
-  root.append("g").attr("class", "edgeLabels") |> ignore
+  let edge_labels = root.append("g").attr("class", "edgeLabels")
   let nodes_group = root.append("g").attr("class", "nodes")
   for node in nodes {
     if node.is_group {
@@ -214,9 +247,37 @@ fn render_swimlane(
       if node.look == "" {
         element.remove_attr("data-look") |> ignore
       }
+      // Without a style, the label group of a label node has no `style`.
+      if node.shape == "labelRect" && unstyled_labels.contains(node.id) {
+        for child in element.child_elements() {
+          if child.get_attr("class") == Some("label") {
+            child.remove_attr("style") |> ignore
+          }
+        }
+      }
       let box = element.bbox()
       node.width = Some(box.width)
       node.height = Some(box.height)
+    }
+  }
+  // The labels left on edges: only terminal labels, as the centre labels
+  // became nodes.
+  let label_env = {
+    ..env,
+    font_size: edge_label_font_size(data.diagram_type, env.font_size),
+  }
+  let label_elements : Map[String, @dom.Element] = Map([])
+  for model in layout.edges {
+    guard rendering_edges.get(model.id) is Some(edge) else { continue }
+    edge.label = normalize_breaks(edge.label)
+    if has_edge_label(edge) {
+      label_elements[edge.id] = insert_edge_labels(
+        edge_labels,
+        edge,
+        env,
+        label_env,
+        data.diagram_type,
+      )
     }
   }
   for model in layout.nodes {
@@ -242,7 +303,12 @@ fn render_swimlane(
       if node.shape == "swimlane" {
         swimlane_cluster(clusters, node, model, env)
       } else {
-        insert_cluster_shape(clusters, node, env)
+        insert_cluster_shape(clusters, node, env) |> ignore
+      }
+      // Edges to a group meet its frame: the cluster shapes clip by their
+      // rectangle.
+      if node.intersect is None {
+        node.intersect = Some(node_intersect_rect(node))
       }
     } else if node.element is Some(element) {
       element.attr("transform", "translate(\{n(node.x)}, \{n(node.y)})")
@@ -284,9 +350,62 @@ fn render_swimlane(
         },
       )
     }
-    let path = insert_edge(edge_paths, edge, data, path?)
+    let element = insert_edge(edge_paths, edge, data, path?)
     if !paths.contains(edge.id) {
-      paths[edge.id] = path
+      paths[edge.id] = element
+    }
+    if has_edge_label(edge) {
+      if !label_elements.contains(edge.id) {
+        label_elements[edge.id] = insert_edge_labels(
+          edge_labels,
+          edge,
+          env,
+          label_env,
+          data.diagram_type,
+        )
+      }
+      // `positionRenderedEdgeLabel`: terminal labels go along the drawn
+      // route when its middle does not show in the path, else along the
+      // layout's route.
+      let original : Array[Point] = points.map(p => { x: p.x, y: p.y, })
+      let clipped = edge.points
+      let changed = match clipped.get(clipped.length() / 2) {
+        Some(middle) =>
+          !is_label_coordinate_in_path(
+            middle,
+            element.get_attr("d").unwrap_or(""),
+          )
+        None => false
+      }
+      let route = if changed { clipped } else { original }
+      for terminal in edge.terminals {
+        let at_start = terminal.key.has_prefix("start")
+        let arrow_type = if at_start {
+          edge.arrow_type_start
+        } else {
+          edge.arrow_type_end
+        }
+        let side = match terminal.key {
+          "startLeft" => "start_left"
+          "startRight" => "start_right"
+          "endLeft" => "end_left"
+          _ => "end_right"
+        }
+        let position = calc_terminal_label_position(
+          if arrow_type != "" {
+            10.0
+          } else {
+            0.0
+          },
+          side,
+          route,
+        )
+        terminal.element.attr(
+          "transform",
+          "translate(\{n(position.x)}, \{n(position.y)})",
+        )
+        |> ignore
+      }
     }
     drawn.push(edge)
   }

@@ -1,0 +1,16 @@
+---
+config:
+  htmlLabels: false
+---
+usecase-beta
+actor SalesAgent("Sales agent")@{ business: true } <<Employee>>
+actor Broker@{ type: hollow, business: true }
+Quote("Prepare quote")@{ business: true } <<Core>>
+Plain("Plain quote")@{ business: true }
+Archive[Archive quote] <<Record>>
+Check("Check") <<Rule>>
+SalesAgent --> Quote
+Broker --> Quote
+Quote --> Archive
+Broker --> Plain
+Plain --> Check

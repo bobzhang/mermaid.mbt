@@ -1,0 +1,18 @@
+---
+config:
+  layout: dagre
+  fontSize: 20
+  fontFamily: Verdana
+  themeVariables:
+    flowContainerStroke: "#ff0000"
+    borderColorArray: ["#111111", "#222222", "#333333"]
+---
+agentflow-beta TB
+  a["A"]@{ shape: tool } --> b["B"]@{ shape: decision }
+  flow f["Flow"]
+    b
+  end
+  flow g["G"]
+    c
+  end
+  g@{ view: collapsed }

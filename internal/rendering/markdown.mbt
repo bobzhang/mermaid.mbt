@@ -32,6 +32,9 @@ fn starts_other_block(line : Array[Char], in_paragraph~ : Bool = false) -> Bool 
   if i >= n {
     return false
   }
+  if line[i] == '<' {
+    return starts_html_block(line[i:].to_owned(), in_paragraph~)
+  }
   match line[i] {
     '#' => {
       let mut j = i
@@ -69,6 +72,78 @@ fn starts_other_block(line : Array[Char], in_paragraph~ : Bool = false) -> Bool 
     }
     _ => false
   }
+}
+
+///|
+/// The names of the elements whose tags start an HTML block wherever they
+/// stand: CommonMark's sixth kind.
+let html_block_names : Array[String] = [
+  "address", "article", "aside", "base", "basefont", "blockquote", "body", "caption",
+  "center", "col", "colgroup", "dd", "details", "dialog", "dir", "div", "dl", "dt",
+  "fieldset", "figcaption", "figure", "footer", "form", "frame", "frameset", "h1",
+  "h2", "h3", "h4", "h5", "h6", "head", "header", "hr", "html", "iframe", "legend",
+  "li", "link", "main", "menu", "menuitem", "meta", "nav", "noframes", "ol", "optgroup",
+  "option", "p", "param", "search", "section", "summary", "table", "tbody", "td",
+  "tfoot", "th", "thead", "title", "tr", "track", "ul",
+]
+
+///|
+/// Whether a line that starts with `<` starts an HTML block: a tag of a
+/// block element, or (not inside a paragraph) any other complete tag
+/// alone on its line, as `<br>` is. Other kinds (comments, `<script>`,
+/// ...) count too, being refused or rare in labels.
+fn starts_html_block(line : Array[Char], in_paragraph~ : Bool) -> Bool {
+  let n = line.length()
+  let mut i = 1
+  let closing = i < n && line[i] == '/'
+  if closing {
+    i += 1
+  }
+  guard i < n && line[i] is ('a'..<='z' | 'A'..<='Z') else {
+    // Comments, declarations and the like.
+    return i < n && line[i] is ('!' | '?')
+  }
+  let start = i
+  while i < n && line[i] is ('a'..<='z' | 'A'..<='Z' | '0'..<='9' | '-') {
+    i += 1
+  }
+  let name = String::from_array(line[start:i]).to_lower()
+  if name is ("script" | "style" | "pre" | "textarea") {
+    return true
+  }
+  if html_block_names.contains(name) {
+    return i == n ||
+      line[i] is (' ' | '\t' | '>') ||
+      (i + 1 < n && line[i] == '/' && line[i + 1] == '>')
+  }
+  if in_paragraph {
+    return false
+  }
+  // A complete tag, then nothing but white space.
+  let mut j = i
+  if !closing {
+    // Attributes, as far as labels have them: anything up to the `>`
+    // outside quotes.
+    let mut quote : Char? = None
+    while j < n {
+      match (quote, line[j]) {
+        (None, '>') => break
+        (None, '"' | '\'' as q) => quote = Some(q)
+        (Some(q), c) if c == q => quote = None
+        _ => ()
+      }
+      j += 1
+    }
+    if j > i && !(line[i] is (' ' | '\t' | '/' | '>')) {
+      return false
+    }
+  } else {
+    while j < n && line[j] is (' ' | '\t') {
+      j += 1
+    }
+  }
+  guard j < n && line[j] == '>' else { return false }
+  line[j + 1:].iter().all(c => c is (' ' | '\t'))
 }
 
 ///|

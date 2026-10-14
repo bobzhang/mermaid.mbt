@@ -9,7 +9,9 @@ pub fn draw(
   let config = context.config
   // What the port cannot draw yet is refused rather than drawn differently.
   let layout = config.text("layout").unwrap_or("elk")
-  if layout != "elk" && layout != "swimlane" {
+  if layout != "elk" &&
+    layout != "swimlane" &&
+    !@rendering.is_dagre_layout(layout) {
     raise @rendering.LayoutError("The \{layout} layout is not supported yet.")
   }
   if config.text("look") == Some("handDrawn") {
@@ -38,15 +40,22 @@ pub fn draw(
 }
 
 ///|
-/// The diagram title, centred above the chart: mermaid's `insertTitle`.
-fn insert_title(title : String, context : @diagram.Context) -> Unit {
+/// The diagram title, centred above the chart: mermaid's `insertTitle`
+/// for a diagram whose stylesheet sets the title's class at 18px.
+/// `section` names the configuration section with the top margin.
+pub fn insert_title(
+  title : String,
+  context : @diagram.Context,
+  css_class~ : String = "flowchartTitleText",
+  section~ : String = "flowchart",
+) -> Unit {
   if title == "" {
     return
   }
   let config = context.config
   let svg = context.svg
   let bounds = svg.bbox()
-  let margin = match config.number("flowchart.titleTopMargin") {
+  let margin = match config.number(section + ".titleTopMargin") {
     Some(margin) => margin
     None => 0.0
   }
@@ -58,7 +67,7 @@ fn insert_title(title : String, context : @diagram.Context) -> Unit {
     .attr("text-anchor", "middle")
     .attr_number("x", x)
     .attr_number("y", y)
-    .attr("class", "flowchartTitleText")
+    .attr("class", css_class)
   // The stylesheet sets titles at 18px in the diagram's font.
   let font = @font.Stack::for_family(config.theme().text("fontFamily"))
   let size = 18.0
