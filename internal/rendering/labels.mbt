@@ -149,9 +149,10 @@ fn label_helper(
     .append("g")
     .attr("class", "label")
     .attr("style", node.label_style)
-  let wrapping_width = env.config
-    .number("flowchart.wrappingWidth")
-    .unwrap_or(200.0)
+  let wrapping_width = match node.wrapping_width {
+    Some(width) if width != 0.0 => width
+    _ => env.config.number("flowchart.wrappingWidth").unwrap_or(200.0)
+  }
   let min_label_width = if node.label != "" &&
     node.width is None &&
     !unlimited &&
@@ -194,7 +195,7 @@ fn label_helper(
     |> ignore
     box
   } else {
-    // Text is centred by its anchor; only the height needs a shift.
+    // Text centred by its anchor needs only its height shifted.
     let text = create_svg_label(
       label,
       node.label,
@@ -202,7 +203,7 @@ fn label_helper(
       width?=label_width,
       style=node.label_style,
       markdown~,
-      anchor_middle=true,
+      anchor_middle=env.node_text_middle,
     )
     let box : LabelBox = {
       width: text.text_box.width.max(min_label_width),
@@ -217,6 +218,13 @@ fn label_helper(
     offset_y = text.text_box.y
     label.attr("transform", "translate(0, \{n(-box.height / 2.0)})") |> ignore
     box
+  }
+  if node.center_label {
+    label.attr(
+      "transform",
+      "translate(\{n(-box.width / 2.0)}, \{n(-box.height / 2.0)})",
+    )
+    |> ignore
   }
   label.insert_first("rect") |> ignore
   { shape_svg, label, bbox: box, offset_x, offset_y, }

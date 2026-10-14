@@ -8,7 +8,7 @@ import {
 }
 
 // Values
-pub fn insert_markers(@dom.Element, Array[String], String, String) -> Unit
+pub fn insert_markers(@dom.Element, Array[String], String, String, config? : @config.Config) -> Unit
 
 pub fn is_valid_shape(String) -> Bool
 
@@ -79,6 +79,11 @@ pub struct Node {
   link_target : String?
   tooltip : String?
   have_callback : Bool
+  rx : Double?
+  ry : Double?
+  center_label : Bool
+  wrapping_width : Double?
+  description : Array[String]
   mut label_style : String
   mut width : Double?
   mut height : Double?
@@ -88,7 +93,7 @@ pub struct Node {
   mut element : @dom.Element?
   mut intersect : ((Point) -> Point)?
 }
-pub fn Node::new(id~ : String, label~ : String, label_type? : String, parent_id? : String, padding~ : Double, css_styles? : Array[String], css_compiled_styles? : Array[String], css_classes? : String, dir? : String, dom_id? : String, look~ : String, is_group? : Bool, shape~ : String, min_width? : Double, color_index? : Int, link? : String, link_target? : String, tooltip? : String, have_callback? : Bool) -> Self
+pub fn Node::new(id~ : String, label~ : String, label_type? : String, parent_id? : String, padding~ : Double, css_styles? : Array[String], css_compiled_styles? : Array[String], css_classes? : String, dir? : String, dom_id? : String, look~ : String, is_group? : Bool, shape~ : String, min_width? : Double, color_index? : Int, link? : String, link_target? : String, tooltip? : String, have_callback? : Bool, rx? : Double, ry? : Double, center_label? : Bool, wrapping_width? : Double, description? : Array[String]) -> Self
 pub fn Node::with_styles(Self, css_styles~ : Array[String], css_compiled_styles~ : Array[String], css_classes~ : String) -> Self
 
 pub(all) struct Point {

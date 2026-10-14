@@ -268,8 +268,13 @@ pub fn insert_markers(
   kinds : Array[String],
   diagram_type : String,
   diagram_id : String,
+  config? : @config.Config,
 ) -> Unit {
   for kind in kinds {
+    if config is Some(config) &&
+      insert_state_markers(parent, kind, diagram_type, diagram_id, config) {
+      continue
+    }
     guard marker_defs.get(kind) is Some(defs) else { continue }
     for def in defs {
       let variant = if def.variant == "" { "" } else { def.variant + " " }

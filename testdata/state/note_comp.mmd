@@ -1,0 +1,14 @@
+---
+config:
+  handDrawnSeed: 7
+
+---
+stateDiagram-v2
+    [*] --> Comp
+    state Comp {
+        [*] --> inner
+        inner --> other
+        note right of inner : inside note
+    }
+    note left of Comp : about the composite
+    Comp --> [*]

@@ -33,6 +33,7 @@ fn parse_diagram(
   code : String,
   config : @config.Config,
   title : String?,
+  id : String,
 ) -> Parsed raise MermaidError {
   match diagram_type {
     "pie" => {
@@ -108,6 +109,35 @@ fn parse_diagram(
         },
       }
     }
+    "stateDiagram" => {
+      let db = @state.parse(code, config) catch {
+        @jison.ParseError(message~, ..) => raise Syntax(message)
+        @state.StateError(message) => raise Syntax(message)
+        error => raise Syntax(error.to_string())
+      }
+      if title is Some(title) {
+        db.set_title(title)
+      }
+      {
+        styles: @state.styles(
+          config.theme(),
+          config.text("theme").unwrap_or(""),
+          config.text("look").unwrap_or(""),
+          "#" + id,
+        ),
+        acc_title: db.acc_title,
+        acc_description: db.acc_description,
+        classes: db.classes
+        .values()
+        .map(c => { id: c.id, styles: c.styles, text_styles: c.text_styles, })
+        .collect(),
+        draw: context => {
+          @state.draw(db, context) catch {
+            @rendering.LayoutError(message) => raise Unsupported(message)
+          }
+        },
+      }
+    }
     other => raise Unsupported(other)
   }
 }
@@ -158,6 +188,7 @@ pub fn render(
     @preprocess.encode_entities(processed.code) + "\n",
     config,
     processed.title,
+    id,
   )
   let style = @dom.Element::new("style").text(
     compiled_styles(id, parsed.styles, config, parsed.classes),

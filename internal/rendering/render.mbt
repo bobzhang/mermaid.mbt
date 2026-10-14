@@ -123,8 +123,19 @@ pub fn render(data : LayoutData, svg : @dom.Element) -> Unit raise LayoutError {
   guard svg.child_elements().filter(child => child.tag == "g") is [element, ..] else {
     raise LayoutError("the svg element has no group to draw into")
   }
-  insert_markers(element, data.markers, data.diagram_type, data.diagram_id)
-  let env = Env::new(data.config, data.diagram_id)
+  insert_markers(
+    element,
+    data.markers,
+    data.diagram_type,
+    data.diagram_id,
+    config=data.config,
+  )
+  let env = Env::new(
+    data.config,
+    data.diagram_id,
+    // State diagrams leave the text of node labels anchored at its start.
+    node_text_middle=data.diagram_type != "stateDiagram",
+  )
   // Measure: every node is drawn once to learn its size.
   let root = element.append("g").attr("class", "root")
   let clusters = root.append("g").attr("class", "clusters")
@@ -168,7 +179,7 @@ pub fn render(data : LayoutData, svg : @dom.Element) -> Unit raise LayoutError {
   let n = @dom.number
   for node in data.nodes {
     if node.is_group {
-      insert_cluster(clusters, node, env)
+      insert_cluster_shape(clusters, node, env)
     } else if node.element is Some(element) {
       element.attr("transform", "translate(\{n(node.x)}, \{n(node.y)})")
       |> ignore

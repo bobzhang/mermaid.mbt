@@ -20,6 +20,8 @@ pub struct Lexer {
   /// Zero-based line of the end of the last match.
   priv mut yylineno : Int32
   priv states : Array[String]
+  /// An error a hook asked for, raised once the hook returns.
+  priv mut failure : String?
 }
 
 ///|
@@ -56,6 +58,28 @@ pub fn Lexer::pop_state(self : Lexer) -> Unit {
   if self.states.length() > 1 {
     ignore(self.states.pop())
   }
+}
+
+///|
+/// Give the last `count` characters of the current token back to the
+/// input, as jison's `unput` does with the text they spell.
+pub fn Lexer::unput(self : Lexer, count : Int32) -> Unit {
+  let text = self.yytext
+  let kept = text.length() - count
+  guard count > 0 && kept >= 0 else { return }
+  for c in text[kept:] {
+    if c == '\n' {
+      self.yylineno -= 1
+    }
+  }
+  self.position -= count
+  self.yytext = text[:kept].to_owned()
+}
+
+///|
+/// Make the parse fail with `message`: a rule whose code throws.
+pub fn Lexer::fail(self : Lexer, message : String) -> Unit {
+  self.failure = Some(message)
 }
 
 ///|
@@ -153,6 +177,9 @@ fn Lexer::next(
         }
     }
     index += 1
+  }
+  if self.failure is Some(message) {
+    raise ParseError(message~, line=self.line())
   }
   if self.done && self.position < self.input.length() {
     self.done = false

@@ -38,6 +38,7 @@ pub fn[V] Grammar::parse(
     yytext: "",
     yylineno: 0,
     states: ["INITIAL"],
+    failure: None,
   }
   let states = [0]
   let values : Array[V] = [empty]
