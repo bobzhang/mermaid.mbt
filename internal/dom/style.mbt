@@ -39,7 +39,8 @@ fn normalize_value(name : String, value : String) -> String {
     }
     parts.join(", ")
   } else {
-    value.trim().to_owned()
+    let value = value.trim().to_owned()
+    css_length(value).unwrap_or(value)
   }
 }
 

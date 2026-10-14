@@ -150,6 +150,43 @@ fn RectF::union(self : RectF, other : RectF) -> RectF {
 }
 
 ///|
+/// `text` with the ligatures its faces form: a pair of characters from one
+/// face that has a ligature for them becomes the ligature's character.
+fn Stack::ligated(self : Stack, text : StringView) -> Array[Char] {
+  let chars = text.to_array()
+  if self.faces.iter().all(face => face.ligatures.is_empty()) {
+    return chars
+  }
+  let out = []
+  let mut i = 0
+  while i < chars.length() {
+    let c = chars[i]
+    if i + 1 < chars.length() {
+      let face = self.face_for(c)
+      if physical_equal(face, self.face_for(chars[i + 1])) &&
+        face.ligatures.get(c.to_int() * 65536 + chars[i + 1].to_int())
+        is Some(ligature) {
+        out.push(ligature)
+        i += 2
+        continue
+      }
+    }
+    out.push(c)
+    i += 1
+  }
+  out
+}
+
+///|
+/// The stack of the font a page falls back to when a style names no
+/// family the browser accepts: Times on the reference system. Its line
+/// metrics are those of the font file; the reference browser raises the
+/// ascent of this family by 15% of the line, which nothing here reads.
+pub fn Stack::page_default() -> Stack {
+  { faces: [times_regular], }
+}
+
+///|
 /// The result of shaping: the advance width before rounding, and the ink
 /// bounds around the baseline origin, y down.
 priv struct Shaped {
@@ -164,7 +201,7 @@ fn Stack::shape(self : Stack, text : StringView, size : Double) -> Shaped {
   let size = effective_size(size)
   let shaped = { pen: 0.0, ink: { x: 0.0, y: 0.0, width: 0.0, height: 0.0, }, }
   let mut previous : (Face, Glyph)? = None
-  for c in text {
+  for c in self.ligated(text) {
     let face = self.face_for(c)
     guard face.glyphs.get(c.to_int()) is Some(glyph) else {
       // No embedded face has this character. The reference browser would

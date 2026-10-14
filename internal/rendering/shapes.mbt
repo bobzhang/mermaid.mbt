@@ -392,6 +392,11 @@ fn draw_shape(
 ) -> @dom.Element raise LayoutError {
   let neo = node.look == "neo"
   let padding = node.padding
+  // Shapes that belong to one diagram type are not in the shape table.
+  match node.shape {
+    "erBox" => return er_box(parent, node, env)
+    _ => ()
+  }
   guard shape_handler(node.shape) is Some(handler) else {
     raise LayoutError("No such shape: \{node.shape}. Please check your syntax.")
   }

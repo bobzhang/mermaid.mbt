@@ -1,6 +1,7 @@
 import {
   "bobzhang/mermaid/config",
   "bobzhang/mermaid/diagram",
+  "bobzhang/mermaid/diagrams/er",
   "bobzhang/mermaid/diagrams/flowchart",
   "bobzhang/mermaid/diagrams/info",
   "bobzhang/mermaid/diagrams/packet",

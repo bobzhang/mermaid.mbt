@@ -1,0 +1,81 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/diagrams/er"
+
+import {
+  "bobzhang/mermaid/config",
+  "bobzhang/mermaid/diagram",
+  "bobzhang/mermaid/internal/rendering",
+  "bobzhang/mermaid/theme",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn draw(ErDb, @diagram.Context) -> Unit raise @rendering.LayoutError
+
+pub fn parse(String, @config.Config) -> ErDb raise
+
+pub fn styles(@theme.Theme, String, String) -> String
+
+// Errors
+pub(all) suberror ErError {
+  ErError(String)
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+pub struct Attribute {
+  type_ : String
+  name : String
+  keys : Array[String]
+  comment : String
+}
+
+pub struct Entity {
+  id : String
+  label : String
+  attributes : Array[Attribute]
+  mut alias_name : String
+  mut css_classes : String
+  css_styles : Array[String]
+}
+
+pub struct EntityClass {
+  id : String
+  styles : Array[String]
+  text_styles : Array[String]
+}
+
+pub struct ErDb {
+  entities : Map[String, Entity]
+  relationships : Array[Relationship]
+  classes : Map[String, EntityClass]
+  sub_graphs : Array[SubGraph]
+  mut acc_title : String
+  mut acc_description : String
+  mut title : String
+  // private fields
+}
+pub fn ErDb::direction(Self) -> String
+pub fn ErDb::set_title(Self, String) -> Unit
+
+pub struct Relationship {
+  entity_a : String
+  role_a : String
+  entity_b : String
+  card_a : String
+  card_b : String
+  rel_type : String
+}
+
+pub struct SubGraph {
+  id : String
+  nodes : Array[String]
+  title : String
+  classes : Array[String]
+  css_styles : Array[String]
+  dir : String?
+  label_type : String
+}
+
+// Type aliases
+
+// Traits

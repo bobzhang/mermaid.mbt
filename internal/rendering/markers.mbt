@@ -268,9 +268,17 @@ pub fn insert_markers(
   kinds : Array[String],
   diagram_type : String,
   diagram_id : String,
+  config? : @config.Config,
 ) -> Unit {
   for kind in kinds {
-    guard marker_defs.get(kind) is Some(defs) else { continue }
+    guard marker_defs.get(kind) is Some(defs) else {
+      // The other kinds take colours and widths from the theme.
+      if config is Some(config) {
+        insert_themed_marker(parent, kind, diagram_type, diagram_id, config)
+        |> ignore
+      }
+      continue
+    }
     for def in defs {
       let variant = if def.variant == "" { "" } else { def.variant + " " }
       let marker = parent

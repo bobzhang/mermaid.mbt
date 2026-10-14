@@ -24,6 +24,8 @@ pub struct Node {
   link_target : String?
   tooltip : String?
   have_callback : Bool
+  /// What shapes of one diagram type draw besides the label.
+  data : NodeData
   // Filled in while measuring and laying out.
   mut label_style : String
   mut width : Double?
@@ -59,6 +61,7 @@ pub fn Node::new(
   link_target? : String,
   tooltip? : String,
   have_callback~ : Bool = false,
+  data~ : NodeData = Plain,
 ) -> Node {
   {
     id,
@@ -80,6 +83,7 @@ pub fn Node::new(
     link_target,
     tooltip,
     have_callback,
+    data,
     label_style: "",
     width: None,
     height: None,
