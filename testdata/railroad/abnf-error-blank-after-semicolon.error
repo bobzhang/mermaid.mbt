@@ -1,0 +1,2 @@
+Parsing failed:  Parse error on line 3, column 3: Expecting token of type ';' but found `=`.
+Parse error on line 3, column 7: Expecting token of type '=' but found `;`.

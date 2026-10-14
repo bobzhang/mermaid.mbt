@@ -1,0 +1,3 @@
+Parsing failed: Lexer error on line 2, column 2: unexpected character: ->_<- at offset: 20, skipped 1 characters. Parse error on line 2, column 3: Expecting token of type '=' but found `b`.
+Parse error on line 2, column 5: Expecting token of type ';' but found `=`.
+Parse error on line 2, column 9: Expecting token of type '=' but found `;`.

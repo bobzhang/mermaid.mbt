@@ -1,0 +1,48 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/diagrams/railroad"
+
+import {
+  "bobzhang/mermaid/config",
+  "bobzhang/mermaid/diagram",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn draw(Railroad, @diagram.Context) -> Unit raise Unsupported
+
+pub fn parse(String, String) -> Railroad raise
+
+pub fn styles(@config.Config) -> String
+
+// Errors
+pub(all) suberror Unsupported {
+  Unsupported(String)
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+pub(all) enum Node {
+  Terminal(String)
+  NonTerminal(String)
+  Sequence(Array[Node])
+  Choice(Array[Node])
+  Optional(Node)
+  Repetition(Node, min~ : Double, max~ : Double)
+  Special(String)
+} derive(Eq, @debug.Debug)
+
+pub struct Railroad {
+  title : String
+  acc_title : String
+  acc_description : String
+  rules : Array[Rule]
+  entities : Bool
+}
+
+pub(all) struct Rule {
+  name : String
+  definition : Node
+} derive(Eq, @debug.Debug)
+
+// Type aliases
+
+// Traits

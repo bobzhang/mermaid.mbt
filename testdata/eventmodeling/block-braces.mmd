@@ -1,0 +1,24 @@
+eventmodeling
+tf 1 ui F1 [[D1]]
+tf 2 cmd F2 [[D2]]
+tf 3 evt F3 [[D3]]
+tf 4 rmo F4 [[D4]]
+
+data D1 {
+  a: {
+    b: 1
+  }
+}
+
+data D2 `json`{
+  "name": "foo"
+}
+
+data D3 `json` {
+  "name": "foo"
+}
+
+data D4 {
+  a: }
+  b: 2
+}

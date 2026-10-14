@@ -1,0 +1,2 @@
+Parsing failed:  Parse error on line 2, column 14: Expecting token of type 'RR_STRING' but found `x`.
+Parse error on line 2, column 15: Expecting token of type '=' but found `)`.

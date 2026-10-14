@@ -1,0 +1,3 @@
+%%{init: {"railroad": {"padding": 6}, "theme": "forest"}}%%
+railroad-beta
+rule = sequence(terminal("lit"), choice(nonterminal("name"), special("any")), optional(terminal("x")), zeroOrMore(nonterminal("y"))) ;
