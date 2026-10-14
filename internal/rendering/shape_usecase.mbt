@@ -37,18 +37,6 @@ fn usecase_label_env(node : Node, env : Env) -> Env {
 }
 
 ///|
-/// The environment SVG text is measured in when its group carries a class
-/// the stylesheet gives a font: family and size come from the rule; the
-/// weight does not, every word naming its own.
-fn usecase_svg_env(node : Node, env : Env) -> Env {
-  match node.data {
-    Usecase(font=Some(font), ..) =>
-      { ..env, font_family: font.family, font_size: font.size, bold: false, }
-    _ => env
-  }
-}
-
-///|
 /// A label inserted into a shape: its group, its box, and where the box
 /// starts (`bbox.x - bbox.left`, zero for HTML labels).
 priv struct InsertedLabel {
@@ -65,7 +53,6 @@ fn insert_label(
   parent : @dom.Element,
   text : String,
   env : Env,
-  svg_env : Env,
   width? : Double,
   style~ : String = "",
   center_label~ : Bool = false,
@@ -97,7 +84,7 @@ fn insert_label(
     let text = create_svg_label(
       label,
       text,
-      svg_env,
+      env,
       width~,
       style~,
       markdown=true,
@@ -244,13 +231,13 @@ fn usecase_actor(
     raise LayoutError("An actor without its data.")
   }
   let styles = shape_styles(node)
-  let html = node_html_labels(env)
-  let label_env = if html { env } else { usecase_svg_env(node, env) }
+  // SVG text is measured before its group gets the class the stylesheet
+  // sets the actor's type for: in the diagram's type.
   let labelled = label_helper(
     parent,
     node,
     node_classes(node) + "usecase-actor-variant usecase-actor-\{variant}",
-    label_env,
+    env,
   )
   let shape_svg = labelled.shape_svg
   if node.label != "" {
@@ -259,15 +246,14 @@ fn usecase_actor(
   labelled.label.attr("class", "label actor-label usecase-actor-label")
   |> ignore
   stamp_color_slot(shape_svg, node.color_index, env)
-  // The stereotype is HTML inside the actor, set in the actor's type; as
-  // SVG text it has no rule of its own and takes the diagram's.
+  // The stereotype is measured in the actor's type as HTML, and in the
+  // diagram's as SVG text.
   let stereotype_label = match stereotype {
     Some(text) => {
       let inserted = insert_label(
         shape_svg,
         "«\{text}»",
         env,
-        env.styled("", faces=false),
         width?=node.wrapping_width,
         style=styles.label_styles,
         center_label=true,
@@ -398,13 +384,11 @@ fn usecase_business(
     _ => None
   }
   let styles = shape_styles(node)
-  let html = node_html_labels(env)
-  let label_env = if html { env } else { usecase_svg_env(node, env) }
   let labelled = label_helper(
     parent,
     node,
     node_classes(node) + "usecase-business-shape",
-    label_env,
+    env,
   )
   labelled.label.attr("class", "label usecase-label") |> ignore
   let shape_svg = labelled.shape_svg
@@ -415,7 +399,6 @@ fn usecase_business(
         shape_svg,
         "«\{text}»",
         env,
-        env.styled("", faces=false),
         width?=node.wrapping_width,
         style=styles.label_styles,
         center_label=true,
@@ -520,13 +503,11 @@ fn usecase_json_table(
   let table_group = shape_svg
     .append("g")
     .attr("class", "usecase-json-table-grid")
-  let svg_env = env.styled("", faces=false)
   let measured = rows.map(row => {
     let key = insert_label(
       table_group,
       row.0,
       env,
-      svg_env,
       style=styles.label_styles,
       center_label=true,
     )
@@ -534,7 +515,6 @@ fn usecase_json_table(
       table_group,
       row.1,
       env,
-      svg_env,
       style=styles.label_styles,
       center_label=true,
     )

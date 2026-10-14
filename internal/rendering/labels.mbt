@@ -31,6 +31,7 @@ fn create_html_label(
   is_node~ : Bool = true,
   add_background~ : Bool = false,
   markdown~ : Bool = false,
+  padding_x~ : Double = 0.0,
 ) -> (@dom.Element, LabelBox) {
   let html = if markdown {
     markdown_to_html(text, !(env.config.get("markdownAutoWrap") is False))
@@ -103,14 +104,17 @@ fn create_html_label(
   // A label wider than its limit is as wide as the limit, which the
   // browser holds in layout units: a single precision number of pixels
   // cut to a 64th.
+  // The box measured is the border box: `padding_x` is the horizontal
+  // padding the stylesheet gives the `div`, around its text.
   let mut box : LabelBox = {
-    width: match width {
+    width: padding_x +
+    (match width {
       Some(width) =>
         natural.min(
           (Float::from_double(width) * 64.0).to_double().floor() / 64.0,
         )
       None => natural
-    },
+    }),
     height: if empty {
       0.0
     } else {

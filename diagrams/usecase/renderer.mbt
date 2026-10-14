@@ -160,15 +160,12 @@ fn annotate(
           }
         }
         [] =>
-          // SVG text: the first word of the label.
+          // SVG text: `.label tspan tspan, .label tspan` finds the first
+          // of either in document order, which is the line.
           match element.descendants(["tspan"]) {
-            [outer, ..] => {
-              let target = match outer.descendants(["tspan"]) {
-                [inner, ..] => inner
-                [] => outer
-              }
-              let classes = target.get_attr("class").unwrap_or("")
-              target.attr("class", "\{classes} usecase-stereotype") |> ignore
+            [line, ..] => {
+              let classes = line.get_attr("class").unwrap_or("")
+              line.attr("class", "\{classes} usecase-stereotype") |> ignore
             }
             [] => ()
           }
@@ -317,7 +314,6 @@ pub fn draw(
     dom_ids[node.id] = node.dom_id
   }
   annotate(svg, context.id, nodes, dom_ids, edges)
-  @rendering.insert_title(svg, db.title, "usecaseDiagramTitleText", 0.0, config)
   @rendering.setup_viewport(
     svg,
     config.number("usecase.diagramPadding").unwrap_or(20.0),

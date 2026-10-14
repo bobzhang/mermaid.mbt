@@ -460,9 +460,8 @@ fn parse_diagram(
         @usecase.Invalid(message) => raise Syntax(message)
         @usecase.Unsupported(message) => raise Unsupported(message)
       }
-      if title is Some(title) {
-        db.set_title(title)
-      }
+      // A frontmatter title is not shown: parsing clears the title the
+      // database was given before.
       {
         styles: @usecase.styles(config),
         acc_title: db.acc_title,

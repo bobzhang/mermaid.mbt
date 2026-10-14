@@ -116,7 +116,6 @@ pub struct UsecaseDb {
   priv json_nodes : Map[String, JsonNode]
   priv class_defs : Map[String, Array[String]]
   priv mut direction : String
-  mut title : String
   mut acc_title : String
   mut acc_description : String
 }
@@ -133,14 +132,7 @@ fn UsecaseDb::new(config : @config.Config) -> UsecaseDb {
     json_nodes: Map([]),
     class_defs: Map([]),
     direction: "LR",
-    title: "",
     acc_title: "",
     acc_description: "",
   }
-}
-
-///|
-/// Set the title shown above the diagram.
-pub fn UsecaseDb::set_title(self : UsecaseDb, title : String) -> Unit {
-  self.title = title
 }

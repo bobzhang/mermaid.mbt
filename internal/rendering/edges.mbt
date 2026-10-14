@@ -444,9 +444,8 @@ fn insert_edge_label(
     is_node=false,
     add_background=true,
     markdown~,
+    padding_x~,
   )
-  // The background's padding widens the label around its text.
-  let box = { ..box, width: box.width + padding_x, }
   fo.attr_number("width", box.width).attr_number("height", box.height) |> ignore
   label.attr(
     "transform",
