@@ -183,3 +183,15 @@ test "a directive cannot set a key whose default is an array" {
   })
   json_inspect(config.get("journey.sectionColours"), content=["#fff", "pink"])
 }
+
+///|
+test "a site-wide fontFamily becomes the theme's" {
+  let config = @config.Config::new(site={ "fontFamily": "arial" })
+  inspect(config.theme().text("fontFamily"), content="arial")
+  // A theme variable of that name wins.
+  let config = @config.Config::new(site={
+    "fontFamily": "arial",
+    "themeVariables": { "fontFamily": "verdana" },
+  })
+  inspect(config.theme().text("fontFamily"), content="verdana")
+}
