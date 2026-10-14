@@ -51,6 +51,9 @@ Work in progress.
 | Radar | byte-identical |
 | Treemap | byte-identical; depends on the page like Gantt charts |
 | Block | byte-identical: grid layout, block arrows, all edge curves |
+| C4 | byte-identical: all five kinds, boundaries, relationships, style updates |
+| Quadrant chart | byte-identical |
+| XY chart | byte-identical, both orientations; depends on the page like Gantt charts |
 | everything else | not ported yet — `render` raises `Unsupported` |
 
 Git graphs name commits at random upstream (`Math.random`), so a graph
