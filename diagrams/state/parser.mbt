@@ -88,7 +88,7 @@ fn lexer_hook(hook : Int32, lexer : @jison.Lexer) -> @jison.HookResult {
 fn StateDb::reduce(
   self : StateDb,
   reduction : @jison.Reduction[Value],
-) -> Value? {
+) -> Value? raise StateError {
   let values = reduction.values
   let n = values.length()
   // `$$[$0 - k]`
@@ -230,13 +230,17 @@ fn StateDb::reduce(
       )
     29 => {
       let title = trim(v(0).text())
-      self.acc_title = title.trim_start(chars=" \t\n\r").to_owned()
+      self.acc_title = sanitize_text(title)
+        .trim_start(chars=" \t\n\r")
+        .to_owned()
       Some(Text(title))
     }
     30 | 31 => {
       let description = trim(v(0).text())
       let indent = try! @jsregex.Regex::compile("\\n\\s+")
-      self.acc_description = indent.replace_all(description, _ => "\n")
+      self.acc_description = indent.replace_all(sanitize_text(description), _ => {
+        "\n"
+      })
       Some(Text(description))
     }
     32 =>
