@@ -9,6 +9,7 @@ let usage : String =
   #|  measure <cases.json>   measure text; cases are {text, size, bold, italic}
   #|  regex <cases.json>     match prefixes; cases are {source, flags, input}
   #|  flow-db <file.mmd>...  print each flowchart's parsed database as JSON
+  #|  dates <cases.json>     evaluate Date operations in the emulated time zone
   #|
 
 ///|
@@ -197,6 +198,7 @@ fn main {
       ["regex", path] => regex(path)
       ["flow-db", .. paths] => flow_db(paths)
       ["path-length", path] => path_lengths(path)
+      ["dates", path] => dates(path)
       _ => println(usage)
     }
   } catch {

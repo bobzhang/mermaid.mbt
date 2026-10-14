@@ -1,0 +1,43 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/internal/jsdate"
+
+// Values
+pub fn time_clip(Double) -> Double
+
+pub fn utc(Double, Double, date? : Double, hours? : Double, minutes? : Double, seconds? : Double, ms? : Double) -> Double
+
+pub fn utc_seconds(Double) -> Double
+
+// Errors
+
+// Types and methods
+pub struct Zone {
+  name : String
+  starts : Array[Double]
+  offsets : Array[Double]
+}
+pub fn Zone::date(Self, Double) -> Double
+pub fn Zone::day(Self, Double) -> Double
+pub fn Zone::full_year(Self, Double) -> Double
+pub fn Zone::hours(Self, Double) -> Double
+pub fn Zone::make(Self, Double, Double, date? : Double, hours? : Double, minutes? : Double, seconds? : Double, ms? : Double) -> Double
+pub fn Zone::milliseconds(Self, Double) -> Double
+pub fn Zone::minutes(Self, Double) -> Double
+pub fn Zone::month(Self, Double) -> Double
+pub fn Zone::name(Self) -> String
+pub fn Zone::offset_at(Self, Double) -> Double
+pub fn Zone::parse(Self, String) -> Double
+pub fn Zone::seconds(Self, Double) -> Double
+pub fn Zone::set_date(Self, Double, Double) -> Double
+pub fn Zone::set_full_year(Self, Double, Double, month? : Double, date? : Double) -> Double
+pub fn Zone::set_hours(Self, Double, Double, minutes? : Double, seconds? : Double, ms? : Double) -> Double
+pub fn Zone::set_month(Self, Double, Double, date? : Double) -> Double
+pub fn Zone::shanghai() -> Self
+pub fn Zone::system() -> Self
+pub fn Zone::timezone_offset(Self, Double) -> Double
+pub fn Zone::to_utc(Self, Double) -> Double
+pub fn Zone::utc() -> Self
+
+// Type aliases
+
+// Traits
