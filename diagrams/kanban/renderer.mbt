@@ -77,6 +77,9 @@ fn check_text(
   html : Bool,
   stacks : Array[@font.Stack],
 ) -> Unit raise KanbanError {
+  if !plain_emphasis(text) {
+    raise Unsupported("emphasis the port's markdown does not read: \{text}")
+  }
   // The text as it is shown: references resolved, markup apart.
   let holder = @dom.Element::new("div")
   holder.set_inner_html(@dom.placeholders_to_references(text))
@@ -184,11 +187,118 @@ fn check_markdown_text(text : String) -> Unit raise KanbanError {
   }
   // Text labels take such a block as one word, which the port neither
   // ends where marked does nor breaks where mermaid does.
-  for line in text.split("\n") {
-    if starts_block(line.to_owned()) {
+  let lines = text.split("\n").map(line => line.to_owned()).collect()
+  for line in lines {
+    if starts_block(line) {
       raise refuse()
     }
   }
+  // A blank line inside the text is a token of its own for marked, which
+  // text labels show as a word; the port's markdown has no such token. An
+  // empty line at either end goes before marked sees the text.
+  let inner = match lines {
+    ["", .. rest] => rest
+    lines => lines[:]
+  }
+  let inner = match inner {
+    [.. rest, ""] => rest
+    inner => inner
+  }
+  if inner.iter().any(line => line.trim().is_empty()) {
+    raise refuse()
+  }
+}
+
+///|
+/// Whether the emphasis of a markdown text is plain enough for the port's
+/// markdown to read it as marked does: `*` and `_` delimiters in pairs of
+/// one or two, opened before a word and closed after one, neither nested
+/// nor crossed. A `_` inside a word delimits nothing.
+fn plain_emphasis(text : String) -> Bool {
+  let chars = text.to_array()
+  let n = chars.length()
+  let is_word = (i : Int32) => {
+    i >= 0 &&
+    i < n &&
+    !(chars[i] is (' ' | '\t' | '\n')) &&
+    !is_punctuation(chars[i])
+  }
+  let is_space = (i : Int32) => {
+    i < 0 || i >= n || chars[i] is (' ' | '\t' | '\n')
+  }
+  // The delimiter runs, in order: the character, the length, where.
+  let runs : Array[(Char, Int32, Int32)] = []
+  let mut i = 0
+  while i < n {
+    let c = chars[i]
+    // An escaped character is text.
+    if c == '\\' && i + 1 < n && is_punctuation(chars[i + 1]) {
+      i += 2
+      continue
+    }
+    // A code span is text, when it is closed.
+    if c == '`' {
+      let mut j = i
+      while j < n && chars[j] == '`' {
+        j += 1
+      }
+      let ticks = j - i
+      let mut k = j
+      let mut closed = -1
+      while k < n && closed < 0 {
+        if chars[k] == '`' {
+          let mut end = k
+          while end < n && chars[end] == '`' {
+            end += 1
+          }
+          if end - k == ticks {
+            closed = end
+          }
+          k = end
+        } else {
+          k += 1
+        }
+      }
+      i = if closed >= 0 { closed } else { j }
+      continue
+    }
+    guard c is ('*' | '_') else {
+      i += 1
+      continue
+    }
+    let mut j = i
+    while j < n && chars[j] == c {
+      j += 1
+    }
+    // An underscore between two word characters is text.
+    if !(c == '_' && is_word(i - 1) && is_word(j)) {
+      runs.push((c, j - i, i))
+    }
+    i = j
+  }
+  if runs.length() % 2 != 0 {
+    return false
+  }
+  let mut k = 0
+  while k < runs.length() {
+    let (open, open_length, open_at) = runs[k]
+    let (close, close_length, close_at) = runs[k + 1]
+    if open != close ||
+      open_length != close_length ||
+      open_length > 2 ||
+      is_space(open_at + open_length) ||
+      is_space(close_at - 1) {
+      return false
+    }
+    k += 2
+  }
+  true
+}
+
+///|
+/// ASCII punctuation and symbols, as marked's emphasis rules see them.
+fn is_punctuation(c : Char) -> Bool {
+  c is ('!'..<='/' | ':'..<='@' | '['..<='`' | '{'..<='~')
 }
 
 ///|
