@@ -1,0 +1,18 @@
+---
+config:
+  handDrawnSeed: 7
+  htmlLabels: false
+---
+classDiagram
+    class A {
+      a &gt b
+      x &amp;gt; y &amp;lt; z
+      +  spaced &amp;gt; out
+      +m(a &gt b) &amp;gt; r
+      -&gt
+    }
+    class `B &gt C`
+    class `D&amp;gt;E` {
+      <<an &amp;gt; annotation>>
+    }
+    A --> `B &gt C` : rel &amp;gt; label

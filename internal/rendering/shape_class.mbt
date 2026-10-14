@@ -70,7 +70,15 @@ fn class_add_text(
       sanitize=false,
     )
     let element = svg_label.element
+    let mut lines = svg_label.lines
     let mut box = svg_label.text_box
+    let restyle = (_ : Int32, run : Run) => {
+      if bold {
+        { ..run, bold: true, }
+      } else {
+        run
+      }
+    }
     if bold {
       // The title is bold through its group once its spans stop saying
       // otherwise. A member in italics stays upright: its spans keep
@@ -78,13 +86,45 @@ fn class_add_text(
       for tspan in element.descendants(["tspan"]) {
         tspan.attr("font-weight", "") |> ignore
       }
-      box = text_box(svg_label.lines, env, false, restyle=(_, run) => {
-        ..run,
-        bold: true,
-      })
+      box = text_box(lines, env, false, restyle~)
       element.set_text_box(box)
     }
-    (box.height, svg_label.lines.length())
+    // Upstream's repair for text that came out empty or with an entity
+    // still spelled out: the first line is set to the source text again.
+    let content = element.text_content()
+    if (content == "" || content.contains("&gt")) &&
+      element.child_elements() is [first, ..] {
+      let repaired = if text == "" {
+        // An empty source reads as `undefined`, which is then cleared.
+        ""
+      } else {
+        let rest = text[1:]
+          .to_owned()
+          .replace_all(old="&gt;", new=">")
+          .replace_all(old="&lt;", new="<")
+          .trim(chars=" \t\n\r\u{b}\u{c}\u{a0}\u{feff}\u{2028}\u{2029}")
+          .to_owned()
+        text[:1].to_owned() +
+        (if text.length() > 1 && text[1] == ' ' { " " } else { "" }) +
+        rest
+      }
+      first.text(repaired) |> ignore
+      // White space collapses when the text is laid out, and no entity
+      // in it is read as one any more.
+      let words : Array[Word] = []
+      for word in repaired.split(" ") {
+        if !word.is_empty() {
+          words.push({
+            content: word.to_owned().replace_all(old="&", new="&amp;"),
+            kind: "normal",
+          })
+        }
+      }
+      lines = lines.mapi((index, line) => if index == 0 { words } else { line })
+      box = text_box(lines, env, false, restyle~)
+      element.set_text_box(box)
+    }
+    (box.height, lines.length())
   }
   label.attr(
     "transform",
