@@ -1,0 +1,31 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/internal/swimlane"
+
+import {
+  "bobzhang/mermaid/internal/swimlane/model",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn layout_capture(Json, after_step? : (String, @model.Layout) -> Unit) -> @model.Layout
+
+pub fn layout_direction(@model.Layout) -> String
+
+pub fn post_process(@model.Layout, String, after_step? : (String) -> Unit) -> Unit
+
+pub fn prepare(@model.Layout) -> Unit
+
+pub fn run_core(@model.Layout, after_step? : (String) -> Unit) -> String
+
+pub fn run_step(@model.Layout, String, String) -> Unit raise UnknownStep
+
+// Errors
+pub(all) suberror UnknownStep {
+  UnknownStep(String)
+} derive(@debug.Debug)
+
+// Types and methods
+
+// Type aliases
+
+// Traits

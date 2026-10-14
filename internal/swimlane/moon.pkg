@@ -1,0 +1,8 @@
+import {
+  "bobzhang/mermaid/internal/swimlane/model",
+  "bobzhang/mermaid/internal/swimlane/post",
+  "bobzhang/mermaid/internal/swimlane/rendered",
+  "bobzhang/mermaid/internal/swimlane/router",
+}
+
+warnings = "-implicit_impl_as_method"
