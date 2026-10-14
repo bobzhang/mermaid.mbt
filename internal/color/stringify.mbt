@@ -64,8 +64,11 @@ fn Channels::to_hex_string(self : Channels) -> String {
 
 ///|
 /// The 8-bit sRGB channels a browser resolves this color to. An HSL color
-/// is converted in 32-bit floats with the CSS Color 4 formula, as Blink
-/// does, which decides the rounding of channels that land on a half.
+/// is converted with the CSS Color 4 formula in double precision and its
+/// channels stored as 32-bit floats, as Blink does, which decides the
+/// rounding of channels that land on a half: of nine theme colors
+/// measured in the reference browser, no mix of precisions but this one
+/// gives them all.
 pub fn Channels::to_css_rgb(self : Channels) -> (Int32, Int32, Int32) {
   let round = (value : Float) => {
     let scaled = value * 255.0
@@ -92,30 +95,31 @@ pub fn Channels::to_css_rgb(self : Channels) -> (Int32, Int32, Int32) {
     )
   }
   let (h, s, l) = self.hsl_data()
-  let h = Float::from_double(h)
-  // Percentages become floats before they are scaled down.
-  let hundred : Float = 100.0
-  let s = Float::from_double(s) / hundred
-  let l = Float::from_double(l) / hundred
+  // The formula runs in double precision; a channel becomes a float
+  // only when the color is stored.
+  let s = s / 100.0
+  let l = l / 100.0
   if s == 0.0 {
-    return (round(l), round(l), round(l))
+    let gray = Float::from_double(l)
+    return (round(gray), round(gray), round(gray))
   }
-  let channel = (n : Float) => {
-    let k = Float::from_double((n + h / 30.0).to_double() % 12.0)
+  let channel = (n : Double) => {
+    let mut k = (n + h / 30.0) % 12.0
+    if k < 0.0 {
+      k += 12.0
+    }
     let a = s * (if l < 1.0 - l { l } else { 1.0 - l })
-    let nine : Float = 9.0
-    let one : Float = 1.0
-    let mut m : Float = k - 3.0
-    if nine - k < m {
-      m = nine - k
+    let mut m = k - 3.0
+    if 9.0 - k < m {
+      m = 9.0 - k
     }
-    if m > one {
-      m = one
+    if m > 1.0 {
+      m = 1.0
     }
-    if m < -one {
-      m = -one
+    if m < -1.0 {
+      m = -1.0
     }
-    l - a * m
+    Float::from_double(l - a * m)
   }
   (round(channel(0.0)), round(channel(8.0)), round(channel(4.0)))
 }
