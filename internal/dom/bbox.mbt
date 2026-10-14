@@ -407,6 +407,21 @@ fn Transform::map(self : Transform, bounds : Bounds) -> Bounds {
 }
 
 ///|
+/// The length in pixels an inline style declares for a property; nothing
+/// when there is no such declaration or it is not in pixels.
+fn pixel_declaration(element : Element, name : String) -> Float? {
+  for declaration in element.declarations {
+    if declaration.0 == name && declaration.1.strip_suffix("px") is Some(number) {
+      let value = @string.parse_double(number.trim().to_owned()) catch {
+        _ => return None
+      }
+      return Some(Float::from_double(value))
+    }
+  }
+  None
+}
+
+///|
 /// `gfx::SizeF::kTrivial`: `8 * std::numeric_limits<float>::epsilon()`.
 const TRIVIAL_SIZE : Float = 9.5367431640625e-7
 
@@ -417,8 +432,10 @@ fn Element::local_bounds(self : Element) -> Bounds? {
   let attr = (name : String) => number_attr(self, name).unwrap_or(0)
   match self.tag {
     "rect" | "foreignObject" | "image" => {
-      let width = attr("width")
-      let height = attr("height")
+      // The size is a CSS property too, and a declaration wins over the
+      // attribute.
+      let width = pixel_declaration(self, "width").unwrap_or(attr("width"))
+      let height = pixel_declaration(self, "height").unwrap_or(attr("height"))
       if width <= 0 || height <= 0 {
         return None
       }

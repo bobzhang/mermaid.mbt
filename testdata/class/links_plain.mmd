@@ -1,0 +1,13 @@
+---
+config:
+  handDrawnSeed: 7
+---
+classDiagram
+    class A
+    class B
+    class C
+    link A "https://example.com"
+    click B href "https://example.com/x?y=1&z=2" _top
+    callback C "fn"
+    link A "javascript:alert(1)" "evil"
+    A --> B

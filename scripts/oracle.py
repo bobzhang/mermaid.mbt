@@ -125,10 +125,11 @@ def pin_random_ids(svg):
 
 # Diagram types whose renderer keeps state for as long as the page lives: the
 # sequence diagram numbers the participants of everything it has drawn
-# (`actor0`, `actor1`, ... never restart), and Sankey the nodes and gradients
-# (`node-1`, `linearGradient-5`, ...). Each such diagram gets a page of its
-# own, so its reference does not depend on what was rendered before it.
-STATEFUL = re.compile(r"^\s*(?:sequenceDiagram|sankey(?:-beta)?)\b", re.M)
+# (`actor0`, `actor1`, ... never restart), Sankey the nodes and gradients
+# (`node-1`, `linearGradient-5`, ...), and the class diagram its classes
+# (`classId-Animal-0`, ...). Each such diagram gets a page of its own, so
+# its reference does not depend on what was rendered before it.
+STATEFUL = re.compile(r"^\s*(?:sequenceDiagram|sankey(?:-beta)?|classDiagram(?:-v2)?)\b", re.M)
 
 
 def run(jobs, config, expression=None, now=None):

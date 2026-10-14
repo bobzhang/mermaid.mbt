@@ -1,0 +1,21 @@
+---
+config:
+  handDrawnSeed: 7
+---
+classDiagram
+    namespace Outer {
+        namespace Inner {
+            class Deep
+            class Deeper
+        }
+        class Shallow
+    }
+    namespace A.B.C {
+        class Leaf
+    }
+    namespace A.B {
+        class Mid
+    }
+    Deep --> Shallow
+    Leaf --> Mid
+    Mid --> Deep

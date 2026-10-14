@@ -412,6 +412,7 @@ fn draw_shape(
   match node.shape {
     "erBox" => return er_box(parent, node, env)
     "requirementBox" => return requirement_box(parent, node, env)
+    "classBox" => return class_box(parent, node, env)
     "block_arrow" => return block_arrow(parent, node, env)
     _ => ()
   }
@@ -604,8 +605,11 @@ fn insert_node(
   let (outer, inner) = match node.link {
     Some(link) => {
       // Upstream also sets `target`, which the final sanitizing pass strips
-      // from SVG anchors again.
-      let anchor = parent.append("a").attr("xlink:href", link)
+      // from SVG anchors again, as it does an address it does not allow.
+      let anchor = parent.append("a")
+      if allowed_uri(link) {
+        anchor.attr("xlink:href", link) |> ignore
+      }
       (anchor, draw_shape(anchor, node, env, dir))
     }
     None => {

@@ -1,0 +1,19 @@
+---
+config:
+  htmlLabels: false
+  handDrawnSeed: 7
+---
+classDiagram
+  class Animal
+  class Mineral
+  class Plant:::someclass
+  class Rock:::other {
+    +int weight
+    +roll()
+  }
+  style Animal fill:#f9f,stroke:#333,stroke-width:4px
+  style Mineral fill:#bbf,stroke:#f66,stroke-width:2px,color:#fff,stroke-dasharray: 5 5
+  cssClass "Animal,Mineral" extra
+  classDef someclass fill:#f96
+  classDef other fill:#9f6,color:red,font-weight:bold
+  Animal --> Plant

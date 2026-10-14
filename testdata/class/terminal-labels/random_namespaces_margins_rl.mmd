@@ -1,0 +1,36 @@
+---
+config:
+  handDrawnSeed: 3
+---
+classDiagram
+  direction RL
+  namespace N0["A label"] {
+    class Cat
+    class Item
+    class Order
+  }
+  namespace N1 {
+    class Wheel {
+      +int id
+    }
+    class Stop
+    note "ns note"
+  }
+  namespace Fleet {
+    class Bus {
+      +int id
+    }
+    class Customer
+    class Ticket
+  }
+  Ticket "1" *-- "n" Wheel : uses
+  Route "many" ..> "many" Item : owns many
+  Customer --o "exactly one" Route
+  Route *-- Cat
+  Route --o "0..1" Dog : x
+  Customer "1" --|> Item
+  Route "0..1" ..> "0..1" Dog
+  Stop "zero or more" --|> "0..1" Item
+  Item --> "many" Dog : uses
+  Wheel "1..*" o-- "exactly one" Ticket : has
+  note for Ticket "a note"

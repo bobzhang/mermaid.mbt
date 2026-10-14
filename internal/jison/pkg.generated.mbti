@@ -38,6 +38,7 @@ pub struct Lexer {
   // private fields
 }
 pub fn Lexer::fail(Self, String) -> Unit
+pub fn Lexer::less(Self, Int) -> Unit
 pub fn Lexer::line(Self) -> Int
 pub fn Lexer::pop_state(Self) -> Unit
 pub fn Lexer::push_state(Self, String) -> Unit

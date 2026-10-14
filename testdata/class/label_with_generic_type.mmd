@@ -1,0 +1,10 @@
+---
+config:
+  handDrawnSeed: 7
+---
+classDiagram
+    class Shape~T~["A shape"]
+    class Box~K, V~["Boxed"] {
+      +K key
+    }
+    Shape~T~ --> Box~K, V~

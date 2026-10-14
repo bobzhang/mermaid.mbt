@@ -1,0 +1,27 @@
+---
+title: Themed
+config:
+  handDrawnSeed: 5
+  theme: redux-dark-color
+  look: neo
+  htmlLabels: false
+---
+classDiagram
+    class Animal {
+      <<abstract>>
+      +String name
+      -int age$
+      +eat(food) bool
+      +sleep()*
+    }
+    class Dog
+    namespace Farm {
+      class Cow
+    }
+    Animal <|-- Dog : extends
+    Animal "1" *-- "many" Cow : owns
+    Dog ..> Cow
+    Dog --() Pet
+    note for Dog "barks **loudly**"
+    note "free note"
+    style Dog fill:#f9f,stroke:#333,color:#00f

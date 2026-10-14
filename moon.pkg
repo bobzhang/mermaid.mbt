@@ -2,6 +2,7 @@ import {
   "bobzhang/mermaid/config",
   "bobzhang/mermaid/diagram",
   "bobzhang/mermaid/diagrams/block",
+  "bobzhang/mermaid/diagrams/classdiagram",
   "bobzhang/mermaid/diagrams/er",
   "bobzhang/mermaid/diagrams/flowchart",
   "bobzhang/mermaid/diagrams/gitgraph",

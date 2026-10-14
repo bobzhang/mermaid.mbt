@@ -3,7 +3,7 @@
 ///|
 /// mermaid's `parseGenericTypes`: pairs of tildes become angle brackets,
 /// outermost first, within each stretch between commas.
-fn parse_generic_types(input : String) -> String {
+pub fn parse_generic_types(input : String) -> String {
   // `input.split(/(,)/)`: the commas are pieces of their own.
   let sets = []
   for index, piece in input.split(",").collect() {

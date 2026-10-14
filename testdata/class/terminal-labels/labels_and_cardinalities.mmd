@@ -1,0 +1,14 @@
+---
+config:
+  handDrawnSeed: 3
+---
+classDiagram
+    class Animal {
+      +String name
+      -int age
+      +eat(food) bool
+      +sleep()*
+    }
+    class Dog
+    Animal <|-- Dog : extends
+    Animal "1" --> "*" Leg : has
