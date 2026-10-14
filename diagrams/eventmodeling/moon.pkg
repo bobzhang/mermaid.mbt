@@ -1,0 +1,11 @@
+import {
+  "bobzhang/mermaid/diagram",
+  "bobzhang/mermaid/internal/dom",
+  "bobzhang/mermaid/internal/font",
+  "bobzhang/mermaid/internal/journeycommon",
+  "bobzhang/mermaid/internal/jsregex",
+  "bobzhang/mermaid/internal/langium",
+  "bobzhang/mermaid/theme",
+}
+
+warnings = "-implicit_impl_as_method"

@@ -3,6 +3,7 @@ import {
   "bobzhang/mermaid/diagram",
   "bobzhang/mermaid/diagrams/block",
   "bobzhang/mermaid/diagrams/er",
+  "bobzhang/mermaid/diagrams/eventmodeling",
   "bobzhang/mermaid/diagrams/flowchart",
   "bobzhang/mermaid/diagrams/gitgraph",
   "bobzhang/mermaid/diagrams/gantt",

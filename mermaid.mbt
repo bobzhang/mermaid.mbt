@@ -420,6 +420,28 @@ fn parse_diagram(
         },
       }
     }
+    "eventmodeling" => {
+      let model = @eventmodeling.parse(code) catch {
+        @langium.ParseError(message~, ..) => raise Syntax(message)
+        @eventmodeling.Invalid(message) => raise Syntax(message)
+        @eventmodeling.Unsupported(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      // The diagram has no styles of its own, and nothing draws a title.
+      {
+        styles: "",
+        acc_title: model.acc_title,
+        acc_description: model.acc_description,
+        classes: [],
+        draw: context => {
+          @eventmodeling.draw(model, context) catch {
+            @eventmodeling.Invalid(message) => raise Syntax(message)
+            @eventmodeling.Unsupported(message) => raise Unsupported(message)
+            error => raise Unsupported(error.to_string())
+          }
+        },
+      }
+    }
     other => raise Unsupported(other)
   }
 }
@@ -474,10 +496,18 @@ pub fn render(
     .attr("width", "100%")
     .attr("xmlns", "http://www.w3.org/2000/svg")
   let first_child = svg.append("g")
+  // The event modeling database asks for the text with its comments
+  // (`preserveCommentsWhenParsing`), as long as that is not too long.
+  let source = if diagram_type == "eventmodeling" &&
+    processed.with_comments.length().to_double() <= max_length {
+    processed.with_comments
+  } else {
+    processed.code
+  }
   // Entity codes are shielded from the grammars, as in Diagram.fromText.
   let parsed = parse_diagram(
     diagram_type,
-    @preprocess.encode_entities(processed.code) + "\n",
+    @preprocess.encode_entities(source) + "\n",
     config,
     processed.title,
     id,
