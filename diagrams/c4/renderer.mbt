@@ -285,10 +285,6 @@ pub fn draw(db : C4Db, context : @diagram.Context) -> Unit raise {
   )
   // Rows wrap at the width of the screen.
   screen.width_limit = context.page.screen_width
-  // The unified shapes are not drawn by hand yet.
-  if config.text("look") == Some("handDrawn") {
-    raise Unsupported("The hand-drawn look is not supported yet.")
-  }
   let renderer = {
     db,
     config,

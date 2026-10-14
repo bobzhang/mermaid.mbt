@@ -26,24 +26,30 @@ fn person(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
   let group = labelled.shape_svg
     .insert_first("g")
     .attr("class", "basic label-container")
-  // The body first, the head on top of it so that the whole circle shows.
-  group
-  .append("rect")
-  .attr_number("x", -w / 2.0)
-  .attr_number("y", body_top)
-  .attr_number("width", w)
-  .attr_number("height", body_height)
-  .attr_number("rx", body_radius)
-  .attr_number("ry", body_radius)
-  .attr("style", styles.node_styles)
-  |> ignore
-  group
-  .append("circle")
-  .attr("cx", "0")
-  .attr_number("cy", top + head_radius)
-  .attr_number("r", head_radius)
-  .attr("style", styles.node_styles)
-  |> ignore
+  if hand_drawn(node) {
+    sketch_person(
+      group, node, env, w, body_top, body_height, body_radius, top, head_radius,
+    )
+  } else {
+    // The body first, the head on top of it so that the whole circle shows.
+    group
+    .append("rect")
+    .attr_number("x", -w / 2.0)
+    .attr_number("y", body_top)
+    .attr_number("width", w)
+    .attr_number("height", body_height)
+    .attr_number("rx", body_radius)
+    .attr_number("ry", body_radius)
+    .attr("style", styles.node_styles)
+    |> ignore
+    group
+    .append("circle")
+    .attr("cx", "0")
+    .attr_number("cy", top + head_radius)
+    .attr_number("r", head_radius)
+    .attr("style", styles.node_styles)
+    |> ignore
+  }
   update_node_bounds(node, group)
   let body_centre = body_top + body_height / 2.0
   place_label(labelled, -(box.width / 2.0), body_centre - box.height / 2.0)

@@ -396,3 +396,29 @@ fn sketched_rect_with_title(
   prepend(shape_svg, frame)
   frame
 }
+
+///|
+/// A person in the hand-drawn look: a sketched body with rounded corners
+/// and a sketched head, both put first in the group (the body before the
+/// head), which takes the node's own styles.
+fn sketch_person(
+  group : @dom.Element,
+  node : Node,
+  env : Env,
+  w : Double,
+  body_top : Double,
+  body_height : Double,
+  body_radius : Double,
+  top : Double,
+  head_radius : Double,
+) -> Unit {
+  let options = rough_options(node, env)
+  let body = @rough.path(
+    rounded_rect_path(-w / 2.0, body_top, w, body_height, body_radius),
+    options,
+  )
+  let head = @rough.circle(0.0, top + head_radius, head_radius * 2.0, options)
+  prepend(group, head)
+  prepend(group, body)
+  group.attr("style", css_styles_text(node)) |> ignore
+}
