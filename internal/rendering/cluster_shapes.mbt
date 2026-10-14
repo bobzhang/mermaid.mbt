@@ -143,6 +143,7 @@ fn insert_cluster_shape(
     "roundedWithTitle" => rounded_with_title(parent, node, env)
     "noteGroup" => note_group(parent, node)
     "divider" => divider(parent, node, env)
+    "usecaseSystemBoundary" => usecase_system_boundary(parent, node, env)
     other =>
       raise LayoutError("The \{other} cluster shape is not supported yet.")
   }

@@ -53,6 +53,7 @@ pub fn Element::remove_attr(Self, String) -> Self
 pub fn Element::set_inner_html(Self, String) -> Unit
 pub fn Element::set_text_box(Self, Rect) -> Unit
 pub fn Element::style(Self, String, String) -> Self
+pub fn Element::take_first_text(Self) -> String?
 pub fn Element::text(Self, String) -> Self
 pub fn Element::text_content(Self) -> String
 pub fn Element::to_html(Self) -> String

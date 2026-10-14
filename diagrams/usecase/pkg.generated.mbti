@@ -1,0 +1,35 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/diagrams/usecase"
+
+import {
+  "bobzhang/mermaid/config",
+  "bobzhang/mermaid/diagram",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn draw(UsecaseDb, @diagram.Context) -> Unit raise UsecaseError
+
+pub fn parse(String, @config.Config) -> UsecaseDb raise UsecaseError
+
+pub fn styles(@config.Config) -> String
+
+// Errors
+pub(all) suberror UsecaseError {
+  Invalid(String)
+  Unsupported(String)
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+pub struct UsecaseDb {
+  mut title : String
+  mut acc_title : String
+  mut acc_description : String
+  // private fields
+}
+pub fn UsecaseDb::dump(Self) -> Json raise UsecaseError
+pub fn UsecaseDb::set_title(Self, String) -> Unit
+
+// Type aliases
+
+// Traits

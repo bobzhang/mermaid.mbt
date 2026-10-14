@@ -391,6 +391,7 @@ fn insert_edge_label(
   edge : Edge,
   base_env : Env,
   env : Env,
+  padding_x~ : Double = 0.0,
 ) -> @dom.Element {
   let split = split_styles([..edge.css_compiled_styles, ..edge.style])
   edge.label_style = split.label_styles
@@ -444,6 +445,8 @@ fn insert_edge_label(
     add_background=true,
     markdown~,
   )
+  // The background's padding widens the label around its text.
+  let box = { ..box, width: box.width + padding_x, }
   fo.attr_number("width", box.width).attr_number("height", box.height) |> ignore
   label.attr(
     "transform",

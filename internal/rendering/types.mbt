@@ -35,6 +35,8 @@ pub struct Node {
   wrapping_width : Double?
   /// The lines under the title of a state with a description.
   description : Array[String]
+  /// Whether ELK spreads the ports of the node around its centre.
+  spread_ports : Bool
   // Filled in while measuring and laying out.
   mut label_style : String
   mut width : Double?
@@ -76,6 +78,7 @@ pub fn Node::new(
   center_label~ : Bool = false,
   wrapping_width? : Double,
   description~ : Array[String] = [],
+  spread_ports~ : Bool = false,
 ) -> Node {
   {
     id,
@@ -103,6 +106,7 @@ pub fn Node::new(
     center_label,
     wrapping_width,
     description,
+    spread_ports,
     label_style: "",
     width: None,
     height: None,

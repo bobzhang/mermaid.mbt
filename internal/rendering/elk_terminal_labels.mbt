@@ -64,7 +64,13 @@ fn insert_edge_labels(
   let edge_label = if edge.label == "" && !env.html_labels {
     insert_empty_text_label(group, edge)
   } else {
-    insert_edge_label(group, edge, base_env, env)
+    insert_edge_label(
+      group,
+      edge,
+      base_env,
+      env,
+      padding_x=label_background_padding(diagram_type),
+    )
   }
   insert_terminal_labels(group, edge, {
     ..base_env,

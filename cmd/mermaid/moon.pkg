@@ -7,6 +7,7 @@ import {
   "bobzhang/mermaid/diagrams/gitgraph",
   "bobzhang/mermaid/internal/d3",
   "bobzhang/mermaid/diagrams/state",
+  "bobzhang/mermaid/diagrams/usecase",
   "bobzhang/mermaid/diagrams/gantt",
   "bobzhang/mermaid/internal/dayjs",
   "bobzhang/mermaid/diagrams/sequence",
