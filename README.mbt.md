@@ -37,7 +37,7 @@ Work in progress.
 | Pie | byte-identical |
 | Packet | byte-identical |
 | Info | byte-identical |
-| Flowchart | byte-identical for the fixtures in `testdata/flowchart`; see below |
+| Flowchart | byte-identical with the ELK and dagre layouts; see below |
 | Git graph | byte-identical, all orientations and options; upstream's documentation examples match |
 | Entity relationship | byte-identical with the ELK and dagre layouts |
 | Requirement | byte-identical with the ELK and dagre layouts |
@@ -60,6 +60,7 @@ Work in progress.
 | Railroad | byte-identical, all four front ends (railroad, EBNF, ABNF, PEG) |
 | Event modeling | byte-identical |
 | Wardley map | byte-identical |
+| Agentflow | byte-identical with the ELK and dagre layouts, including collapsed containers |
 | Venn | byte-identical, including the hand-drawn look; the layout optimiser of venn.js is transcribed step by step |
 | everything else | not ported yet — `render` raises `Unsupported` |
 
