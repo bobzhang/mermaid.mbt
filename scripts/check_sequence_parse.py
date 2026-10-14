@@ -6,6 +6,10 @@ Takes sequence diagram sources from the given `.mmd` files and from the
 (through the oracle page) and with `cmd/mermaid sequence-db`, and reports
 every database that differs.
 
+Upstream is asked through `getDiagramFromText`, which does not apply a
+diagram's own configuration: a diagram that turns on `wrap` in its
+frontmatter or directives is reported as differing in `wrap` only.
+
 Usage: scripts/check_sequence_parse.py [file.mmd | docs.md | directory] ...
 """
 

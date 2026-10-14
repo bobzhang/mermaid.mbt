@@ -269,7 +269,14 @@ fn Renderer::draw_text(
     } else {
       element.text(text) |> ignore
     }
-    let (_, height) = line_box(drawn.0, text, drawn.1)
+    // Half the x-height of a shift can make the box 1/64 pixel taller.
+    let baseline : @font.Baseline = if data.anchor is Some(_) &&
+      data.dominant_baseline == Some("middle") {
+      Middle
+    } else {
+      Alphabetic
+    }
+    let (_, height) = line_box(drawn.0, text, drawn.1, baseline~)
     if measures {
       text_height += height
       prev_text_height = text_height

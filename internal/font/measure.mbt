@@ -326,22 +326,79 @@ pub fn Stack::line_metrics(self : Stack, size : Double) -> (Double, Double) {
 }
 
 ///|
+/// The baseline SVG text sits on: `dominant-baseline`.
+pub(all) enum Baseline {
+  /// The default.
+  Alphabetic
+  /// `middle`: half the x-height above the alphabetic baseline.
+  Middle
+} derive(Eq)
+
+///|
+/// Blink's `LayoutUnit::FromFloatRound`, in pixels.
+fn round_layout_unit(value : Float) -> Float {
+  (value * 64.0 + 0.5).floor() / 64.0
+}
+
+///|
+/// The x-height in pixels. On macOS Blink measures the glyph of `x`
+/// rather than trusting the font's own figure.
+fn Face::x_height(self : Face, size : Double) -> Float {
+  match self.glyphs.get('x'.to_int()) {
+    Some(glyph) =>
+      Float::from_double(
+        (glyph.y_max - glyph.y_min).to_double() *
+        size /
+        self.units_per_em.to_double(),
+      )
+    None => 0.0
+  }
+}
+
+///|
 /// The bounding box of `text` at `size` pixels: what `getBBox()` reports
 /// for an SVG text element positioned at the origin. It is the cell
 /// (advance by ascent plus descent) united with the ink of the glyphs,
 /// which can overhang the cell.
-pub fn Stack::bbox(self : Stack, text : StringView, size : Double) -> Rect {
+///
+/// On the `Middle` baseline the glyphs move down by half the x-height.
+/// The cell's ascent and descent are each rounded to a layout unit after
+/// that, so the cell can come out 1/64 pixel taller than on the
+/// alphabetic baseline.
+pub fn Stack::bbox(
+  self : Stack,
+  text : StringView,
+  size : Double,
+  baseline~ : Baseline = Alphabetic,
+) -> Rect {
   let shaped = self.shape(text, size)
   let primary = self.faces[0]
-  let ascent = Float::from_double(primary.ascent(size))
-  let descent = Float::from_double(primary.descent(size))
+  let font_ascent = Float::from_double(primary.ascent(size))
+  let font_descent = Float::from_double(primary.descent(size))
+  let (ascent, descent) = match baseline {
+    Alphabetic => (font_ascent, font_descent)
+    Middle => {
+      let half = primary.x_height(size) / 2.0
+      (
+        round_layout_unit(font_ascent - half),
+        round_layout_unit(font_descent + half),
+      )
+    }
+  }
+  // How far below the reference line the glyphs' own baseline is.
+  let shift = font_ascent - ascent
   let cell : RectF = {
     x: 0.0,
     y: -ascent,
     width: Float::from_double(ceil_layout_unit(shaped.pen)),
     height: ascent + descent,
   }
-  let box = shaped.ink.union(cell)
+  let ink = if shaped.ink.is_empty() {
+    shaped.ink
+  } else {
+    { ..shaped.ink, y: shaped.ink.y + shift, }
+  }
+  let box = ink.union(cell)
   {
     x: box.x.to_double(),
     y: box.y.to_double(),

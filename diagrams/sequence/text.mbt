@@ -127,12 +127,13 @@ fn line_box(
   stack : @font.Stack,
   line : String,
   size : Double,
+  baseline~ : @font.Baseline = Alphabetic,
 ) -> (Double, Double) {
   let text = collapse_spaces(line)
   if text == "" {
     return (0.0, 0.0)
   }
-  let box = stack.bbox(text, size)
+  let box = stack.bbox(text, size, baseline~)
   (box.width, box.height)
 }
 

@@ -10,6 +10,11 @@ import {
 // Errors
 
 // Types and methods
+pub(all) enum Baseline {
+  Alphabetic
+  Middle
+} derive(Eq)
+
 pub struct Face {
   // private fields
 }
@@ -28,7 +33,7 @@ pub struct Stack {
   // private fields
 }
 pub fn Stack::advance(Self, StringView, Double) -> Double
-pub fn Stack::bbox(Self, StringView, Double) -> Rect
+pub fn Stack::bbox(Self, StringView, Double, baseline? : Baseline) -> Rect
 pub fn Stack::default(bold? : Bool, italic? : Bool) -> Self
 pub fn Stack::for_css(String, bold? : Bool) -> Self
 pub fn Stack::for_family(String, bold? : Bool, italic? : Bool) -> Self
