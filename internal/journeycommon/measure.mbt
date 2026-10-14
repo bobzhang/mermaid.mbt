@@ -39,33 +39,49 @@ pub fn theme_font(
 }
 
 ///|
+/// The font size of the page the reference browser renders into, which
+/// relative sizes scale and an invalid size falls back to.
+const PAGE_FONT_SIZE : Double = 16.0
+
+///|
 /// The size the diagram's text inherits from the root rule
-/// `font-size: <theme fontSize>`: a length in pixels. A bare number is
-/// not a valid length in a stylesheet, which leaves the page's default of
-/// 16px in force. Relative sizes depend on the page around the diagram.
+/// `font-size: <theme fontSize>`, in pixels. A bare number is not a valid
+/// length in a stylesheet, which leaves the page's size in force; `em`,
+/// `rem` and `%` scale it. Other units and keywords are refused.
 pub fn theme_font_size(theme : @theme.Theme) -> Double raise MeasureError {
   let text = match theme.get("fontSize") {
     Number(n, ..) => @dom.number(n)
     String(text) => text.trim(chars=" \t\n").to_owned()
     _ => raise MeasureError("the theme has no font size")
   }
-  let (number, unit) = match text.strip_suffix("px") {
-    Some(number) => (number.to_owned(), true)
-    None => (text, false)
+  let mut number = text
+  let mut scale = 0.0
+  for
+    unit in [
+      ("px", 1.0),
+      ("rem", PAGE_FONT_SIZE),
+      ("em", PAGE_FONT_SIZE),
+      ("%", PAGE_FONT_SIZE / 100.0),
+    ] {
+    if text.strip_suffix(unit.0) is Some(prefix) {
+      number = prefix.to_owned()
+      scale = unit.1
+      break
+    }
   }
   let plain = number != "" &&
     number.iter().all(c => c is ('0'..<='9' | '.')) &&
     number.iter().filter(c => c == '.').count() <= 1 &&
     !number.has_suffix(".") &&
     !number.has_prefix(".")
-  guard plain else { raise MeasureError("font size \{text} is not in pixels") }
+  guard plain else { raise MeasureError("font size \{text} is not understood") }
   let value = @string.parse_double(number) catch {
-    _ => raise MeasureError("font size \{text} is not in pixels")
+    _ => raise MeasureError("font size \{text} is not understood")
   }
-  if unit || value == 0.0 {
-    value
+  if scale == 0.0 && value != 0.0 {
+    PAGE_FONT_SIZE
   } else {
-    16.0
+    value * scale
   }
 }
 

@@ -48,6 +48,35 @@ test "font size is truncated to two decimals" {
 }
 
 ///|
+test "the truncation is done in single precision" {
+  // 18.4 and 19.99 times a hundred fall just short of a whole number in
+  // double precision, but not in the browser's floats. Values measured in
+  // Chrome.
+  let font = @font.Stack::for_family("trebuchet ms")
+  let text = "A reasonably long actor name, Tj fi WAVE. Another actor that is long enough to wrap"
+  inspect(font.advance(text, 18.4), content="697.21875")
+  inspect(font.advance(text, 18.39), content="696.828125")
+  inspect(font.advance(text, 18.39996), content="696.828125")
+  inspect(font.advance(text, 19.99), content="757.453125")
+  inspect(font.advance(text, 19.999), content="757.453125")
+  inspect(font.advance(text, 4.35), content="164.828125")
+  inspect(font.advance(text, 16.4), content="621.421875")
+}
+
+///|
+test "x-height and glyph coverage" {
+  // Four x-heights of Trebuchet at 16px is what `font-size: 4ex` computes
+  // to there: 33.4688px.
+  inspect(@font.Stack::default().x_height(16.0) * 4.0, content="33.46875")
+  inspect(
+    @font.Stack::for_family("verdana", bold=true).x_height(32.0),
+    content="17.546875",
+  )
+  inspect(@font.Stack::default().covers("naïve — text"), content="true")
+  inspect(@font.Stack::default().covers("日本"), content="false")
+}
+
+///|
 test "bold and italic faces" {
   inspect(
     @font.Stack::default(bold=true).advance("Dogs", 16.0),
