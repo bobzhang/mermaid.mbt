@@ -24,6 +24,8 @@ pub fn node_palette_rules(@config.Config) -> String
 
 pub fn parse_generic_types(String) -> String
 
+pub fn place_background_nodes(@dom.Element) -> Unit
+
 pub fn render(LayoutData, @dom.Element) -> Unit raise LayoutError
 
 pub fn safe_look(String) -> String

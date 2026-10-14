@@ -86,3 +86,29 @@ fn solid_options(options : @rough.Options) -> @rough.Options {
   copy.fill_style = "solid"
   copy
 }
+
+///|
+/// Move every element whose id holds `-background` to where the element
+/// of the id without it went: what the ER renderer does after the layout
+/// for the background copies the hand-drawn look draws behind entities.
+pub fn place_background_nodes(svg : @dom.Element) -> Unit {
+  let found = []
+  fn visit(element : @dom.Element) {
+    for child in element.child_elements() {
+      if child.get_attr("id") is Some(id) && id.contains("-background") {
+        found.push(child)
+      }
+      visit(child)
+    }
+  }
+
+  visit(svg)
+  for element in found {
+    guard element.get_attr("id") is Some(id) else { continue }
+    let original = id.replace(old="-background", new="")
+    if svg.find_by_id(original) is Some(target) &&
+      target.get_attr("transform") is Some(transform) {
+      element.attr("transform", transform) |> ignore
+    }
+  }
+}

@@ -348,3 +348,19 @@ fn style_sketched_class_box(
     }
   }
 }
+
+///|
+/// The copy of an entity that the hand-drawn look draws behind it in the
+/// background colour, so that the hachure does not show what is under the
+/// entity: drawn in the default look, with an id ending in `-background`.
+/// The ER renderer moves it under the entity once the layout is done.
+fn er_background_node(node : Node, env : Env) -> Node {
+  let background = env.config.theme().text("background")
+  {
+    ..node,
+    id: node.id + "-background",
+    dom_id: node.dom_id + "-background",
+    look: "default",
+    css_styles: ["stroke: none", "fill: \{background}"],
+  }
+}

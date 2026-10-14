@@ -13,9 +13,6 @@ pub fn draw(
   if layout != "elk" && !@rendering.is_dagre_layout(layout) {
     raise @rendering.LayoutError("The \{layout} layout is not supported yet.")
   }
-  if config.text("look") == Some("handDrawn") {
-    raise @rendering.LayoutError("The hand-drawn look is not supported yet.")
-  }
   let (nodes, edges) = db.layout_data(dagre=layout != "elk")
   let markers = if config.text("look") == Some("neo") {
     ["only_one_neo", "zero_or_one_neo", "one_or_more_neo", "zero_or_more_neo"]
@@ -32,6 +29,10 @@ pub fn draw(
     markers,
   }
   @rendering.render(data, context.svg)
+  if config.text("look") == Some("handDrawn") {
+    @rendering.place_background_nodes(context.svg)
+    order_hand_drawn_entities(context.svg)
+  }
   @rendering.insert_title(
     context.svg,
     db.title,

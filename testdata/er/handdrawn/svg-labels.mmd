@@ -1,0 +1,35 @@
+---
+config:
+  look: handDrawn
+  htmlLabels: false
+  handDrawnSeed: 3
+---
+erDiagram
+  A {
+    int a1 PK, FK "a comment"
+    int a2
+  }
+  B {
+    string b1 "c"
+    int b2
+  }
+  C {
+    int c1
+    int c2
+  }
+  D["Alias D"] {
+    List~int~ d1
+    int d2
+  }
+  E {
+    int e1 PK
+  }
+  F {
+    int f1
+  }
+  G["Alias **bold**"]
+  H
+  A ||--o{ B : x
+  C ||--o{ D : y
+  E ||--o{ F : y
+  G ||--o{ H : y
