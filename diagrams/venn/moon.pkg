@@ -6,6 +6,7 @@ import {
   "bobzhang/mermaid/internal/dom",
   "bobzhang/mermaid/internal/jison",
   "bobzhang/mermaid/internal/jsmath",
+  "bobzhang/mermaid/internal/rough",
   "bobzhang/mermaid/theme",
   "moonbitlang/core/double",
 }

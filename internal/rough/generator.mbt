@@ -58,6 +58,12 @@ fn draw(sets : Array[OpSet], o : Options, even_odd : Bool) -> @dom.Element {
           path.attr("fill-rule", "evenodd") |> ignore
         }
       }
+      FillSketch =>
+        path
+        .attr("stroke", o.fill)
+        .attr("stroke-width", fill_weight(o))
+        .attr("fill", "none")
+        |> ignore
     }
   }
   group
@@ -74,8 +80,9 @@ fn has_stroke(o : Options) -> Bool {
 }
 
 ///|
-/// Only plain fills are ported; the sketchy fill styles belong to the
-/// hand-drawn look.
+/// Whether the fill is a plain one. Of the sketchy fill styles of the
+/// hand-drawn look, ellipses and paths have `hachure` and `cross-hatch`
+/// (see `hachure.mbt`).
 fn solid(o : Options) -> Bool {
   o.fill_style == "solid"
 }
@@ -110,6 +117,8 @@ pub fn path(d : String, options : Options) -> @dom.Element {
     } else {
       sets.push({ kind: FillPath, ops: solid_fill_polygon(polygons, o), })
     }
+  } else if filled && pattern_fill_polygons(polygons, o) is Some(ops) {
+    sets.push({ kind: FillSketch, ops, })
   }
   if has_stroke(o) {
     sets.push({ kind: Stroke, ops: shape, })
@@ -187,9 +196,12 @@ pub fn ellipse(
   let o = options.fresh()
   let sets = []
   let params = ellipse_params(width, height, o)
-  let outline = ellipse_ops(x, y, o, params)
+  let (outline, estimated_points) = ellipse_with_estimate(x, y, o, params)
   if has_fill(o) && solid(o) {
     sets.push({ kind: FillPath, ops: ellipse_ops(x, y, o, params), })
+  } else if has_fill(o) &&
+    pattern_fill_polygons([estimated_points], o) is Some(ops) {
+    sets.push({ kind: FillSketch, ops, })
   }
   if has_stroke(o) {
     sets.push({ kind: Stroke, ops: outline, })

@@ -194,6 +194,24 @@ fn style_color(
 }
 
 ///|
+/// The options every sketched shape of the hand-drawn look starts from.
+fn rough_options(config : @config.Config) -> @rough.Options {
+  let options = @rough.Options::new()
+  options.roughness = 0.7
+  options.seed = config.number("handDrawnSeed").unwrap_or(0.0).to_int()
+  options.fill_weight = 2.0
+  options
+}
+
+///|
+/// khroma's `transparentize`.
+fn transparentize(color : String, amount : Double) -> String raise VennError {
+  @color.transparentize(color, amount) catch {
+    _ => raise Invalid("Unsupported color format: \"\{color}\"")
+  }
+}
+
+///|
 /// The size of the diagram and the padding around its circles, from the
 /// `venn` section of the configuration.
 priv struct Settings {
@@ -241,9 +259,7 @@ pub fn draw(venn : Venn, context : @diagram.Context) -> Unit raise VennError {
   if venn.title.contains("<") {
     raise Unsupported("markup in the title of a Venn diagram: \{venn.title}")
   }
-  if config.text("look") == Some("handDrawn") {
-    raise Unsupported("the hand-drawn look of a Venn diagram")
-  }
+  let hand_drawn = config.text("look") == Some("handDrawn")
   for subset in venn.subsets {
     for set in subset.sets {
       if inherited_names.contains(set) {
@@ -347,17 +363,40 @@ pub fn draw(venn : Venn, context : @diagram.Context) -> Unit raise VennError {
       _ => "0.1"
     }
     let stroke_color = style_color(custom, "stroke").unwrap_or(base_color)
-    let stroke_width = match custom.map(styles => styles.get("stroke-width")) {
-      Some(Some(value)) if value != "" => checked_number(value, "stroke-width")
-      _ => @dom.css_number_text(5.0 * scale)
+    let (stroke_width, stroke_width_number) = match
+      custom.map(styles => styles.get("stroke-width")) {
+      Some(Some(value)) if value != "" =>
+        (checked_number(value, "stroke-width"), @diagram.parse_float(value))
+      _ => (@dom.css_number_text(5.0 * scale), 5.0 * scale)
     }
-    node.path
-    .style("fill", base_color)
-    .style("fill-opacity", fill_opacity)
-    .style("stroke", stroke_color)
-    .style("stroke-width", stroke_width)
-    .style("stroke-opacity", "0.95")
-    |> ignore
+    if hand_drawn {
+      // A sketched circle, where the second layout puts it, in place of
+      // the path of the chart.
+      let circle = circle_of(layout.circles, node.area.sets[0])
+      let options = rough_options(config)
+      options.fill = transparentize(base_color, 0.7)
+      options.fill_style = "hachure"
+      options.hachure_gap = 8.0
+      options.hachure_angle = -41.0 + i.to_double() * 60.0
+      options.stroke = stroke_color
+      options.stroke_width = n(stroke_width_number)
+      let sketch = @rough.circle(
+        circle.x,
+        circle.y,
+        circle.radius * 2.0,
+        options,
+      )
+      node.path.remove()
+      node.group.insert_before(sketch, node.text)
+    } else {
+      node.path
+      .style("fill", base_color)
+      .style("fill-opacity", fill_opacity)
+      .style("stroke", stroke_color)
+      .style("stroke-width", stroke_width)
+      .style("stroke-opacity", "0.95")
+      |> ignore
+    }
     // The label in the color of the set, blended towards black on a
     // light background and towards white on a dark one.
     let text_color = match style_color(custom, "color") {
@@ -402,14 +441,25 @@ pub fn draw(venn : Venn, context : @diagram.Context) -> Unit raise VennError {
         if value == "" {
           raise Unsupported("an empty fill in a style statement")
         }
-        node.path
-        .style("fill-opacity", "1")
-        .style("fill", checked_color(value, "fill"))
-        |> ignore
+        let fill = checked_color(value, "fill")
+        if hand_drawn {
+          // Upstream cross-hatches the outline of the overlap with
+          // rough.js, which turns its arcs into curves with `Math.tan`
+          // and `Math.asin`; `internal/rough` draws arcs as lines.
+          raise Unsupported(
+            "a filled overlap in the hand-drawn look of a Venn diagram",
+          )
+        } else {
+          node.path.style("fill-opacity", "1").style("fill", fill) |> ignore
+        }
       }
       _ =>
-        node.path.style("fill-opacity", "0").style("fill", "transparent")
-        |> ignore
+        if hand_drawn {
+          node.path.style("fill-opacity", "0") |> ignore
+        } else {
+          node.path.style("fill-opacity", "0").style("fill", "transparent")
+          |> ignore
+        }
     }
   }
   // The contents of the chart move into the diagram, below the title.
