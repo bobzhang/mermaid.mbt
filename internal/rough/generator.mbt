@@ -86,15 +86,11 @@ fn has_stroke(o : Options) -> Bool {
 }
 
 ///|
-/// Of the sketchy fill styles only the default one, `hachure`, is ported,
-/// and only for paths and rectangles.
+/// Whether the fill is a plain one. Of the sketchy fill styles of the
+/// hand-drawn look, ellipses, paths and rectangles have `hachure` and
+/// `cross-hatch` (see `hachure.mbt`).
 fn solid(o : Options) -> Bool {
   o.fill_style == "solid"
-}
-
-///|
-fn hachure(o : Options) -> Bool {
-  o.fill_style == "hachure"
 }
 
 ///|
@@ -127,8 +123,8 @@ pub fn path(d : String, options : Options) -> @dom.Element {
     } else {
       sets.push({ kind: FillPath, ops: solid_fill_polygon(polygons, o), })
     }
-  } else if filled && hachure(o) {
-    sets.push({ kind: FillSketch, ops: hachure_fill(polygons, o), })
+  } else if filled && pattern_fill_polygons(polygons, o) is Some(ops) {
+    sets.push({ kind: FillSketch, ops, })
   }
   if has_stroke(o) {
     sets.push({ kind: Stroke, ops: shape, })
@@ -156,8 +152,8 @@ pub fn rectangle(
   let outline = linear_path(points, true, o)
   if has_fill(o) && solid(o) {
     sets.push({ kind: FillPath, ops: solid_fill_polygon([points], o), })
-  } else if has_fill(o) && hachure(o) {
-    sets.push({ kind: FillSketch, ops: hachure_fill([points], o), })
+  } else if has_fill(o) && pattern_fill_polygons([points], o) is Some(ops) {
+    sets.push({ kind: FillSketch, ops, })
   }
   if has_stroke(o) {
     sets.push({ kind: Stroke, ops: outline, })
@@ -208,9 +204,12 @@ pub fn ellipse(
   let o = options.fresh()
   let sets = []
   let params = ellipse_params(width, height, o)
-  let outline = ellipse_ops(x, y, o, params)
+  let (outline, estimated_points) = ellipse_with_estimate(x, y, o, params)
   if has_fill(o) && solid(o) {
     sets.push({ kind: FillPath, ops: ellipse_ops(x, y, o, params), })
+  } else if has_fill(o) &&
+    pattern_fill_polygons([estimated_points], o) is Some(ops) {
+    sets.push({ kind: FillSketch, ops, })
   }
   if has_stroke(o) {
     sets.push({ kind: Stroke, ops: outline, })

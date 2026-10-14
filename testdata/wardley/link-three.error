@@ -1,0 +1,10 @@
+Parsing failed:  Parse error on line 4, column 8: Expecting: one of these possible Token sequences:
+  1. [NEWLINE]
+  2. [EOF]
+but found: '->'
+Parse error on line 4, column 12: Expecting: one of these possible Token sequences:
+  1. [STRING]
+  2. [ID]
+  3. [NAME_WITH_SPACES]
+but found: '
+'

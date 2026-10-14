@@ -1,0 +1,16 @@
+---
+config:
+  venn:
+    padding: 0
+---
+venn-beta
+  set A["Frontend"]
+    text A1["React"]
+    text A2["Design Systems"]
+  set B["Backend"]
+    text B1["API"]
+    text B2["Database"]
+    text B3["Queues and workers"]
+  union A,B["Shared"]
+    text AB1["OpenAPI"]
+  style A fill:#ff6b6b

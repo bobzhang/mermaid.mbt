@@ -127,7 +127,8 @@ def main():
     binary = build()
     failures = 0
     for path in inputs:
-        name = path.relative_to(ROOT) if path.is_absolute() else path
+        # Inputs outside the checkout (scratch files) keep their full path.
+        name = path.relative_to(ROOT) if path.is_absolute() and path.is_relative_to(ROOT) else path
         actual, error = render(binary, path)
         expected_path = path.with_suffix(".svg")
         if not expected_path.exists():

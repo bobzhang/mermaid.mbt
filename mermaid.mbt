@@ -604,6 +604,56 @@ fn parse_diagram(
         },
       }
     }
+    "wardley" => {
+      let map = @wardley.parse(code) catch {
+        @langium.ParseError(message~, ..) => raise Syntax(message)
+        @wardley.Invalid(message) => raise Syntax(message)
+        @wardley.Unsupported(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      // A frontmatter title applies unless the diagram body has its own.
+      if title is Some(title) && map.title == "" {
+        map.set_title(title)
+      }
+      {
+        // The renderer empties the `<svg>` before drawing, stylesheet
+        // included, so the diagram's styles never reach the output.
+        styles: "",
+        acc_title: map.acc_title,
+        acc_description: map.acc_description,
+        classes: [],
+        draw: context => {
+          @wardley.draw(map, context) catch {
+            @wardley.Invalid(message) => raise Syntax(message)
+            @wardley.Unsupported(message) => raise Unsupported(message)
+          }
+        },
+      }
+    }
+    "venn" => {
+      let venn = @venn.parse(code) catch {
+        @jison.ParseError(message~, ..) => raise Syntax(message)
+        @venn.Invalid(message) => raise Syntax(message)
+        @venn.Unsupported(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      // A frontmatter title applies unless the diagram body has its own.
+      if title is Some(title) && venn.title == "" {
+        venn.set_title(title)
+      }
+      {
+        styles: @venn.styles(config.theme()),
+        acc_title: venn.acc_title,
+        acc_description: venn.acc_description,
+        classes: [],
+        draw: context => {
+          @venn.draw(venn, context) catch {
+            @venn.Invalid(message) => raise Syntax(message)
+            @venn.Unsupported(message) => raise Unsupported(message)
+          }
+        },
+      }
+    }
     other => raise Unsupported(other)
   }
 }
