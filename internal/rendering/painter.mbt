@@ -302,26 +302,23 @@ pub fn Painter::insert_edge(
 ) -> @dom.Element raise LayoutError {
   edge.points = points
   let mut line_data = points.filter(p => !p.y.is_nan())
+  if line_data.is_empty() {
+    // Upstream then draws a path without data.
+    raise LayoutError("An edge without a point to draw is not supported.")
+  }
   let curve = self.data.config.text("flowchart.curve").unwrap_or("basis")
   if curve != "rounded" {
     line_data = fix_corners(line_data)
   }
-  let path = match curve {
-    "rounded" => rounded_path(apply_marker_offsets(line_data, edge), 5.0)
-    "linear" =>
-      @d3.line_linear(offset_line_points(line_data, edge)).unwrap_or("")
-    "cardinal"
-    | "bumpX"
-    | "bumpY"
-    | "catmullRom"
-    | "monotoneX"
-    | "monotoneY"
-    | "natural"
-    | "step"
-    | "stepAfter"
-    | "stepBefore" =>
-      raise LayoutError("The \{curve} curve is not supported yet.")
-    _ => @d3.line_basis(offset_line_points(line_data, edge)).unwrap_or("")
+  let path = if curve == "rounded" {
+    rounded_path(apply_marker_offsets(line_data, edge), 5.0)
+  } else {
+    // An unknown curve is drawn as a basis curve.
+    let points = offset_line_points(line_data, edge)
+    match @d3.line(curve, points) {
+      Some(path) => path
+      None => @d3.line("basis", points).unwrap_or("")
+    }
   }
   insert_edge(parent, edge, self.data, path~, points_text?=points_json)
 }

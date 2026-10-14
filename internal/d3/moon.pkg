@@ -1,4 +1,5 @@
 import {
+  "moonbitlang/core/double",
   "bobzhang/mermaid/internal/jsmath",
 }
 

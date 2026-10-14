@@ -12,6 +12,8 @@ pub fn arc_path(inner_radius~ : Double, outer_radius~ : Double, start_angle~ : D
 
 pub fn js_round(Double) -> Double
 
+pub fn line(String, Array[(Double, Double)]) -> String?
+
 pub fn line_basis(Array[(Double, Double)]) -> String?
 
 pub fn line_linear(Array[(Double, Double)]) -> String?
