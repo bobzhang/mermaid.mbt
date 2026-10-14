@@ -337,3 +337,17 @@ fn arial(bold : Bool, italic : Bool) -> Face {
     (true, true) => arial_bold_italic
   }
 }
+
+///|
+/// Whether every character of `text` has a glyph in one of the stack's
+/// faces. Any other character is drawn from a system fallback font in the
+/// reference browser, and measured here only roughly; a caller that needs
+/// exact measurements can refuse such text.
+pub fn Stack::covers(self : Stack, text : StringView) -> Bool {
+  for c in text {
+    if !self.faces.iter().any(face => face.covers(c)) {
+      return false
+    }
+  }
+  true
+}

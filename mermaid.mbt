@@ -125,6 +125,8 @@ fn parse_diagram(
         draw: context => {
           @journey.draw(journey, context) catch {
             @journey.JourneyError(message) => raise Unsupported(message)
+            @journeycommon.MeasureError(message) => raise Unsupported(message)
+            error => raise Unsupported(error.to_string())
           }
         },
       }

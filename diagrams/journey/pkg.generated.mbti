@@ -8,7 +8,7 @@ import {
 }
 
 // Values
-pub fn draw(Journey, @diagram.Context) -> Unit raise JourneyError
+pub fn draw(Journey, @diagram.Context) -> Unit raise
 
 pub fn parse(String) -> Journey raise
 

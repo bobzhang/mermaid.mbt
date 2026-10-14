@@ -389,26 +389,8 @@ fn draw_tasks(
 }
 
 ///|
-/// The size text is measured at: the theme's font size, in pixels.
-fn theme_font_size(theme : @theme.Theme) -> Double raise JourneyError {
-  let text = theme.text("fontSize")
-  let number = match text.strip_suffix("px") {
-    Some(number) => number.to_owned()
-    None => text
-  }
-  let value = js_number(number)
-  if value != value || js_trim(number) == "" {
-    raise JourneyError("font size \{text} is not in pixels")
-  }
-  value
-}
-
-///|
 /// Draw the journey into the context's `<svg>` element.
-pub fn draw(
-  journey : Journey,
-  context : @diagram.Context,
-) -> Unit raise JourneyError {
+pub fn draw(journey : Journey, context : @diagram.Context) -> Unit raise {
   let n = @dom.number
   let conf = Conf::new(context.config)
   let theme = context.theme()
@@ -427,14 +409,14 @@ pub fn draw(
   .attr("d", "M 0,0 V 4 L6,2 Z")
   |> ignore
   let actors = legend_order(journey.actors(), conf)
-  let font = @font.Stack::for_family(theme.text("fontFamily"))
-  let max_width = draw_actor_legend(
-    svg,
-    actors,
-    conf,
-    font,
-    theme_font_size(theme),
-  )
+  // Only the legend is measured: the actors' names, in the font the
+  // diagram inherits.
+  let font = @journeycommon.theme_font(theme)
+  let font_size = @journeycommon.theme_font_size(theme)
+  for actor in actors {
+    @journeycommon.require_glyphs(font, actor.name)
+  }
+  let max_width = draw_actor_legend(svg, actors, conf, font, font_size)
   let left_margin = conf.left_margin + max_width
   let bounds : Bounds = {
     start_x: 0.0,
