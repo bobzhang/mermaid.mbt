@@ -1,0 +1,17 @@
+---
+config:
+  theme: neo
+---
+gitGraph
+   commit id: "Initial"
+   commit id: "b" tag: "v1"
+   branch develop
+   commit id: "c" type: REVERSE
+   branch feature
+   commit id: "d" type: HIGHLIGHT
+   checkout main
+   merge develop id: "e"
+   checkout feature
+   commit id: "f"
+   checkout main
+   merge feature id: "g" type: HIGHLIGHT tag: "release"

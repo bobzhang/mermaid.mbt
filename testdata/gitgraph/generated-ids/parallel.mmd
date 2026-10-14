@@ -1,0 +1,19 @@
+---
+config:
+  gitGraph:
+    parallelCommits: true
+---
+gitGraph BT:
+   commit
+   commit
+   branch develop
+   commit
+   commit
+   checkout main
+   commit
+   merge develop
+   branch feature
+   commit
+   checkout develop
+   commit
+   cherry-pick id: "0-4032789"

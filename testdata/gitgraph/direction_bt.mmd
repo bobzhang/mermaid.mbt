@@ -1,0 +1,12 @@
+gitGraph BT:
+   commit id: "ZERO"
+   branch develop
+   commit id: "A" tag: "v1" tag: "stable"
+   commit id: "B" type: REVERSE
+   checkout main
+   commit id: "C" type: HIGHLIGHT
+   merge develop id: "MERGE" tag: "release"
+   branch feature/long-branch-name
+   commit id: "D"
+   checkout main
+   commit id: "E"

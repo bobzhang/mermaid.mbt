@@ -3,11 +3,16 @@ package "bobzhang/mermaid/diagrams/gitgraph"
 
 import {
   "bobzhang/mermaid/config",
+  "bobzhang/mermaid/diagram",
   "moonbitlang/core/debug",
 }
 
 // Values
+pub fn draw(GitGraph, @diagram.Context) -> Unit raise
+
 pub fn parse(String, @config.Config) -> GitGraph raise
+
+pub fn styles(@config.Config, String) -> String
 
 // Errors
 pub(all) suberror GitError {
