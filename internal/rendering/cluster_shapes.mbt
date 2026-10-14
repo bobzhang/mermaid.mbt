@@ -23,12 +23,13 @@ fn rounded_with_title(parent : @dom.Element, node : Node, env : Env) -> Unit {
   let outer_group = shape_svg.insert_first("g")
   let label = shape_svg.append("g").attr("class", "cluster-label")
   let inner = shape_svg.append("rect")
-  // The title is plain text on one line, whatever the label type.
+  // The title is plain text on one line, whatever the label type. The
+  // rules of the group's classes reach the `span` of an HTML title.
   let box : LabelBox = if env.html_labels {
     let (fo, box) = create_html_label(
       label,
       node.label,
-      env,
+      env.styled(node.css_compiled_styles.join(";")),
       style=node.label_style,
     )
     fo.attr_number("width", box.width).attr_number("height", box.height)

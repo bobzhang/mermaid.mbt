@@ -10,6 +10,23 @@ fn StateDb::layout_data(
   let min_width = config.number("state.minNodeWidth")
   let nodes = self.nodes.map(node => {
     let radius : Double? = if node.rounded { Some(10.0) } else { None }
+    // A group draws nothing with its styles; they only tell how the rules
+    // of its classes set its title, where the class defined last wins.
+    let compiled = if node.is_group {
+      let names = node.css_classes
+        .split(" ")
+        .map(name => name.to_owned())
+        .collect()
+      let styles = []
+      for id, style_class in self.classes {
+        if names.contains(id) {
+          styles.append(style_class.styles)
+        }
+      }
+      styles
+    } else {
+      node.css_compiled_styles
+    }
     @rendering.Node::new(
       id=node.id,
       label=match node.label {
@@ -20,7 +37,7 @@ fn StateDb::layout_data(
       parent_id?=node.parent_id,
       padding=node.padding.unwrap_or(0.0),
       css_styles=node.css_styles,
-      css_compiled_styles=node.css_compiled_styles,
+      css_compiled_styles=compiled,
       css_classes=node.css_classes,
       dir?=node.dir,
       dom_id=node.dom_id,
