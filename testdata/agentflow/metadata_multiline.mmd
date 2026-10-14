@@ -1,0 +1,9 @@
+agentflow-beta TB
+  fetch@{
+    shape: tool,
+    label: "Fetch weather",
+    params: "city :: String",
+    retry: 2,
+  }
+  report["Report"]@{ shape: task, label: "Overridden" }
+  fetch --> report

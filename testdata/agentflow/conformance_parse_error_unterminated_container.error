@@ -1,0 +1,4 @@
+Parse error on line 9:
+...Beta"]    a --> b
+--------------------^
+Expecting 'COMMENT', 'SEMI', 'NEWLINE', 'SPACE', 'EOF', 'flow', 'end', 'global', 'connector', 'acc_title', 'acc_descr', 'acc_descr_multiline_value', 'AMP', 'COLON', 'STYLE', 'LINKSTYLE', 'CLASSDEF', 'CLASS', 'CLICK', 'DOWN', 'DEFAULT', 'NUM', 'COMMA', 'NODE_STRING', 'BRKT', 'MINUS', 'MULT', 'UNICODE_TEXT', 'direction_tb', 'direction_bt', 'direction_rl', 'direction_lr', 'direction_td', got '1'

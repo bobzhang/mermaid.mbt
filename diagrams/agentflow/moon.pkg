@@ -1,0 +1,11 @@
+import {
+  "bobzhang/mermaid/config",
+  "bobzhang/mermaid/diagram",
+  "bobzhang/mermaid/diagrams/flowchart",
+  "bobzhang/mermaid/theme",
+  "bobzhang/mermaid/internal/jison",
+  "bobzhang/mermaid/internal/jsregex",
+  "bobzhang/mermaid/internal/rendering",
+}
+
+warnings = "-implicit_impl_as_method"

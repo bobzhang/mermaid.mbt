@@ -278,6 +278,9 @@ pub fn insert_markers(
     if insert_class_marker(parent, kind, diagram_type, diagram_id) {
       continue
     }
+    if insert_hierarchy_marker(parent, kind, diagram_type, diagram_id) {
+      continue
+    }
     guard marker_defs.get(kind) is Some(defs) else {
       // The other kinds take colours and widths from the theme.
       if config is Some(config) {

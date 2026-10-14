@@ -1,6 +1,6 @@
 ///|
 /// The styles of several classes, in order: mermaid's `getCompiledStyles`.
-fn FlowDb::compiled_styles(
+pub fn FlowDb::compiled_styles(
   self : FlowDb,
   class_names : Array[String],
 ) -> Array[String] {
@@ -41,7 +41,7 @@ fn vertex_shape(vertex : Vertex) -> String {
 
 ///|
 /// The markers at the two ends of an edge type.
-fn arrow_types(kind : String?) -> (String, String) {
+pub fn arrow_types(kind : String?) -> (String, String) {
   match kind {
     Some("arrow_point" | "arrow_circle" | "arrow_cross" as kind) =>
       ("none", kind)
@@ -168,6 +168,9 @@ fn FlowDb::layout_data(
         is_group=!collapsed,
         look~,
         color_index?=declaration_index.get(sg.id),
+        // An expanded subgraph hands its metadata to the layout, which may
+        // read an `algorithm` of its own from it.
+        data=if collapsed { Plain } else { Container(metadata=sg.metadata) },
       ),
     )
   }

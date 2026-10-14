@@ -1,0 +1,9 @@
+agentflow-beta LR
+  flow f["Flow"]
+    connector api["API"]
+    t["call"]@{ shape: tool, connectorRef: "api" }
+  end
+  connector db
+  t --> api
+  t --> db
+  api@{ protocol: http }

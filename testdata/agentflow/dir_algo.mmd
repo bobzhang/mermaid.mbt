@@ -1,0 +1,11 @@
+agentflow-beta TB
+  flow a["A"]
+    direction LR
+    x --> y
+  end
+  flow b["B"]
+    direction BT
+    p --> q
+  end
+  a@{ algorithm: elk.box }
+  b --> a

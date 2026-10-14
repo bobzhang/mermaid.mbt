@@ -1,0 +1,17 @@
+---
+config:
+  layout: dagre
+---
+agentflow-beta LR
+  a["A"]:::hot --> b["B"]
+  c["C"]
+  classDef hot fill:#f96,stroke:#333,stroke-width:4px
+  classDef cool fill:#9cf,color:#00f
+  class b,c cool
+  style c stroke:#f00,stroke-width:3px
+  linkStyle 0 stroke:#0f0,stroke-width:2px
+  b --> c
+  flow g["Group"]
+    d["D"]
+  end
+  class g hot

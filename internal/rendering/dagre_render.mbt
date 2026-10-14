@@ -64,6 +64,11 @@ fn dagre_spacing(data : LayoutData) -> (Double?, Double?) {
         own("state.nodeSpacing", 50.0, false),
         own("state.rankSpacing", 50.0, false),
       )
+    "agentflow" =>
+      (
+        own("agentflow.nodeSpacing", 50.0, false),
+        own("agentflow.rankSpacing", 50.0, false),
+      )
     "requirement" =>
       (
         own("state.nodeSpacing", 50.0, true),

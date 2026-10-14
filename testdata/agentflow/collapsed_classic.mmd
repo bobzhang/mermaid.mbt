@@ -1,0 +1,16 @@
+---
+config:
+  look: classic
+  theme: default
+---
+agentflow-beta LR
+  flow p["`**Processing** step`"]
+    a --> b
+  end
+  p@{ view: collapsed }
+  flow q
+    c
+  end
+  q@{ view: collapsed }
+  x --> a
+  b --> c
