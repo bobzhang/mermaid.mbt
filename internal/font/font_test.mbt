@@ -127,3 +127,31 @@ test "kerning from a kern table is shared between the two glyphs" {
     content="[7.8125, 12.546875]",
   )
 }
+
+///|
+test "ink at a size that is not a float" {
+  // 9.6px: the tail of `j` ends 2.02500008 below the baseline, and its
+  // box, grown to hold that, ends at 2.0250015. `p` ends on a float.
+  let font = @font.Stack::for_family("Helvetica")
+  debug_inspect(
+    font.bbox("j", 9.6),
+    content=(
+      #|{
+      #|  x: -0.17812500894069672,
+      #|  y: -8,
+      #|  width: 2.3187499046325684,
+      #|  height: 10.025001525878906,
+      #|}
+    ),
+  )
+  debug_inspect(
+    font.bbox("p", 9.6),
+    content="{ x: 0, y: -8, width: 5.34375, height: 10.00156307220459 }",
+  )
+  // Anchor points, contours of one point, are not ink: `g` is not as
+  // tall as its header box says.
+  debug_inspect(
+    font.ink("g", 2048.0),
+    content="{ x: 61, y: -1090, width: 939, height: 1543 }",
+  )
+}
