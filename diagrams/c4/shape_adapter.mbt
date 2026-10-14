@@ -215,10 +215,14 @@ fn build_node(
     _ => []
   }
   let stereotype = stereotype_text(props, kind)
-  // The label helper sanitizes each text; make sure it can.
+  // The label helper sanitizes and measures each text; make sure it can.
+  let stack = @font.Stack::for_family(element_font(config, kind).family)
   for text in [label, stereotype, ..description] {
-    sanitize_text(@dom.placeholders_to_references(text), config, "a label")
-    |> ignore
+    let text = @dom.placeholders_to_references(text)
+    sanitize_text(text, config, "a label") |> ignore
+    guard stack.covers(collapse_spaces(text)) else {
+      raise Unsupported("C4: text the embedded fonts do not cover: \{text}")
+    }
   }
   @rendering.Node::new(
     id=shape.name,

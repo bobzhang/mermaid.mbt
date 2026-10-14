@@ -79,6 +79,9 @@ fn text_dimensions(text : String, font : Font) -> (Double, Double) raise {
         // Nothing but spaces has no box at all.
         raise C4Error("svg element not in render tree")
       }
+      guard stack.covers(collapsed) else {
+        raise Unsupported("C4: text the embedded fonts do not cover: \{line}")
+      }
       let box = stack.bbox(collapsed, font.size)
       width = js_round(width.max(box.width))
       let rounded = js_round(box.height)

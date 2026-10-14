@@ -29,6 +29,7 @@ pub struct Stack {
 }
 pub fn Stack::advance(Self, StringView, Double) -> Double
 pub fn Stack::bbox(Self, StringView, Double) -> Rect
+pub fn Stack::covers(Self, StringView) -> Bool
 pub fn Stack::default(bold? : Bool, italic? : Bool) -> Self
 pub fn Stack::for_family(String, bold? : Bool, italic? : Bool) -> Self
 pub fn Stack::ink(Self, StringView, Double) -> Rect

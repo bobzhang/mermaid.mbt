@@ -109,6 +109,19 @@ fn Stack::face_for(self : Stack, code : Char) -> Face {
 }
 
 ///|
+/// Whether every character of `text` has a glyph in one of the stack's
+/// faces. Text that does not is measured approximately: the reference
+/// browser draws the rest from system fonts that are not embedded.
+pub fn Stack::covers(self : Stack, text : StringView) -> Bool {
+  for c in text {
+    if !self.faces.iter().any(face => face.covers(c)) {
+      return false
+    }
+  }
+  true
+}
+
+///|
 /// A rectangle in 32-bit floats, stored as origin and size like Blink's
 /// `gfx::RectF`. Its edges are recomputed from origin plus size on every
 /// union, and that rounding is part of what the browser reports.
