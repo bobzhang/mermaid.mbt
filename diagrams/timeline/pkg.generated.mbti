@@ -1,0 +1,39 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/diagrams/timeline"
+
+import {
+  "bobzhang/mermaid/diagram",
+  "bobzhang/mermaid/theme",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn draw(Timeline, @diagram.Context) -> Unit raise
+
+pub fn parse(String) -> Timeline raise
+
+pub fn styles(@theme.Theme, String, String) -> String
+
+// Errors
+pub(all) suberror TimelineError {
+  TimelineError(String)
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+pub struct Task {
+  section : String
+  task : String
+  events : Array[String]
+}
+
+pub struct Timeline {
+  mut title : String
+  mut direction : String
+  sections : Array[String]
+  tasks : Array[Task]
+  // private fields
+}
+
+// Type aliases
+
+// Traits

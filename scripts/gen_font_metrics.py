@@ -158,11 +158,33 @@ class Font:
             _, length, coverage = struct.unpack(">HHH", table[position:position + 6])
             if coverage >> 8 == 0 and coverage & 1:
                 n = struct.unpack(">H", table[position + 6:position + 8])[0]
-                for i in range(n):
-                    left, right, value = struct.unpack(">HHh", table[position + 14 + 6 * i:position + 20 + 6 * i])
-                    pairs[(left, right)] = pairs.get((left, right), 0) + value
+                rows = [struct.unpack(">HHh", table[position + 14 + 6 * i:position + 20 + 6 * i]) for i in range(n)]
+                for left, right in {(left, right) for left, right, _ in rows}:
+                    value = self.search_pair(rows, left, right)
+                    if value is not None:
+                        pairs[(left, right)] = pairs.get((left, right), 0) + value
             position += length
         return pairs
+
+    @staticmethod
+    def search_pair(rows, left, right):
+        """Look a pair up the way HarfBuzz does: by binary search.
+
+        The pairs are meant to be sorted. Where a font has one out of
+        order (`v.` in Trebuchet MS Bold), the search never reaches it and
+        the pair does not kern.
+        """
+        low, high = 0, len(rows) - 1
+        while low <= high:
+            middle = (low + high) // 2
+            key = rows[middle][:2]
+            if key < (left, right):
+                low = middle + 1
+            elif key > (left, right):
+                high = middle - 1
+            else:
+                return rows[middle][2]
+        return None
 
 
     def gpos_kerning(self):

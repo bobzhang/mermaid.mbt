@@ -137,6 +137,29 @@ fn parse_diagram(
         },
       }
     }
+    "journey" => {
+      let journey = @journey.parse(code) catch {
+        @jison.ParseError(message~, ..) => raise Syntax(message)
+        @journeycommon.SanitizeError(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      if title is Some(title) && journey.title == "" {
+        journey.set_title(title)
+      }
+      {
+        styles: @journey.styles(config.theme()),
+        acc_title: journey.acc_title,
+        acc_description: journey.acc_description,
+        classes: [],
+        draw: context => {
+          @journey.draw(journey, context) catch {
+            @journey.JourneyError(message) => raise Unsupported(message)
+            @journeycommon.MeasureError(message) => raise Unsupported(message)
+            error => raise Unsupported(error.to_string())
+          }
+        },
+      }
+    }
     "er" => {
       let db = @er.parse(code, config) catch {
         @jison.ParseError(message~, ..) => raise Syntax(message)
@@ -206,6 +229,34 @@ fn parse_diagram(
         draw: context => {
           @state.draw(db, context) catch {
             @rendering.LayoutError(message) => raise Unsupported(message)
+          }
+        },
+      }
+    }
+    "timeline" => {
+      let timeline = @timeline.parse(code) catch {
+        @jison.ParseError(message~, ..) => raise Syntax(message)
+        @journeycommon.SanitizeError(message) => raise Unsupported(message)
+        @timeline.TimelineError(message) => raise Syntax(message)
+        error => raise Syntax(error.to_string())
+      }
+      // The timeline's database exposes neither `setDiagramTitle` nor the
+      // accessibility getters to the renderer, so a frontmatter title and
+      // `accTitle`/`accDescr` leave no trace in the output.
+      {
+        styles: @timeline.styles(
+          config.theme(),
+          config.text("theme").unwrap_or(""),
+          id,
+        ),
+        acc_title: "",
+        acc_description: "",
+        classes: [],
+        draw: context => {
+          @timeline.draw(timeline, context) catch {
+            @timeline.TimelineError(message) => raise Unsupported(message)
+            @journeycommon.MeasureError(message) => raise Unsupported(message)
+            error => raise Unsupported(error.to_string())
           }
         },
       }

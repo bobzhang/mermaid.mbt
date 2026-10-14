@@ -29,6 +29,7 @@ pub struct Stack {
 }
 pub fn Stack::advance(Self, StringView, Double) -> Double
 pub fn Stack::bbox(Self, StringView, Double) -> Rect
+pub fn Stack::covers(Self, StringView) -> Bool
 pub fn Stack::default(bold? : Bool, italic? : Bool) -> Self
 pub fn Stack::for_family(String, bold? : Bool, italic? : Bool) -> Self
 pub fn Stack::ink(Self, StringView, Double) -> Rect
@@ -36,6 +37,7 @@ pub fn Stack::item_advances(Self, Array[String], Double) -> Array[Double]
 pub fn Stack::line_metrics(Self, Double) -> (Double, Double)
 pub fn Stack::page_default() -> Self
 pub fn Stack::sans_serif() -> Self
+pub fn Stack::x_height(Self, Double) -> Double
 
 // Type aliases
 
