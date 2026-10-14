@@ -22,6 +22,8 @@ let usage : String =
   #|  elk-graph <file.mmd> [--config site.json]
   #|                         print the graph a diagram hands to ELK and the
   #|                         layout that came back, one JSON document a line
+  #|  cose <graph.json>...   lay out each graph with cose-bilkent and print the
+  #|                         positions of the nodes and the points of the edges
   #|  dates <cases.json>     evaluate Date operations in the emulated time zone
   #|  time <cases.json>      evaluate dayjs and d3 time operations
   #|  format <cases.json>    format numbers; cases are {specifier, value}
@@ -440,6 +442,7 @@ fn main {
       ["bbox", path] => bboxes(path)
       ["state-db", .. paths] => state_db(paths)
       ["elk-graph", path, .. options] => elk_graph(path, options)
+      ["cose", .. paths] => cose(paths)
       ["path-length", path] => path_lengths(path)
       ["dates", path] => dates(path)
       ["time", path] => time_cases(path)

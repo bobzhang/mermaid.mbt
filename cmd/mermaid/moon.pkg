@@ -5,6 +5,7 @@ import {
   "bobzhang/mermaid/diagram",
   "bobzhang/mermaid/diagrams/flowchart",
   "bobzhang/mermaid/diagrams/gitgraph",
+  "bobzhang/mermaid/internal/cose",
   "bobzhang/mermaid/internal/d3",
   "bobzhang/mermaid/diagrams/state",
   "bobzhang/mermaid/diagrams/gantt",
