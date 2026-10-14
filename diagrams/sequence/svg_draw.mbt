@@ -400,6 +400,18 @@ fn Renderer::draw_popup(
     // used as configured here, a bare number included.
     let x = rect.x + 10.0
     let y = rect.height + link_y
+    if conf.text_placement == "old" {
+      link
+      .append("text")
+      .attr_number("x", x)
+      .attr_number("y", y)
+      .style("text-anchor", "start")
+      .text(key)
+      .attr("class", "actor")
+      |> ignore
+      link_y += 30.0
+      continue
+    }
     let lines = split_breaks(key)
     // The size as JavaScript coerces it in arithmetic, and as the style
     // takes it: a bare number is pixels there, an SVG quirk.

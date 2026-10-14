@@ -105,6 +105,22 @@ pub fn Config::new(
   diagram_type? : String,
 ) -> Config raise ConfigError {
   let defaults = Json::object(default_data)
+  // `mermaid.initialize` carries a top-level font family over to the theme
+  // variables, unless they name one themselves.
+  let site = match site {
+    Object(fields) if truthy(field(site, "fontFamily")) &&
+      !truthy(field(field(site, "themeVariables"), "fontFamily")) => {
+      let fields = fields.copy()
+      let variables = match fields.get("themeVariables") {
+        Some(Object(variables)) => variables.copy()
+        _ => Map([])
+      }
+      variables["fontFamily"] = field(site, "fontFamily")
+      fields["themeVariables"] = Json::object(variables)
+      Json::object(fields)
+    }
+    _ => site
+  }
   let mut site_config = assign_with_depth(clone(defaults), site)
   if field(site, "theme") is String(name) &&
     theme_variables(name, field(site, "themeVariables")) is Some(variables) &&

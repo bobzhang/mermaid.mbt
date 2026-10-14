@@ -63,6 +63,11 @@ fn Conf::new(config : @config.Config) -> Conf raise SequenceError {
     }
   }
   let flag = (key : String) => truthy(value(key))
+  if config.text("securityLevel") is Some("loose" | "sandbox" as level) {
+    // The output is then not sanitized, or lives in a frame: handlers,
+    // link targets and untrimmed attributes would all show.
+    raise SequenceError("Unsupported: securityLevel '\{level}'")
+  }
   if flag("arrowMarkerAbsolute") {
     // Marker references would carry the address of the page.
     raise SequenceError("Unsupported: arrowMarkerAbsolute")
