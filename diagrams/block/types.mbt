@@ -55,8 +55,9 @@ priv struct Block {
   pattern : String
   /// Filled in by measuring and layout.
   mut size : Size?
-  /// Where a line from the block's centre towards a point leaves it.
-  mut intersect : ((@rendering.Point) -> @rendering.Point)?
+  /// The node the block was drawn as in its place, which knows where a
+  /// line from its centre leaves its outline.
+  mut node : @rendering.Node?
   /// The palette slot of a composite, in declaration order.
   mut color_index : Int32?
 }
@@ -102,7 +103,7 @@ fn Block::new(
     thickness,
     pattern,
     size: None,
-    intersect: None,
+    node: None,
     color_index: None,
   }
 }

@@ -109,6 +109,7 @@ pub struct Node {
   mut element : @dom.Element?
   mut intersect : ((Point) -> Point)?
 }
+pub fn Node::leaves_at(Self, Point) -> Point?
 pub fn Node::new(id~ : String, label~ : String, label_type? : String, parent_id? : String, padding~ : Double, css_styles? : Array[String], css_compiled_styles? : Array[String], css_classes? : String, dir? : String, dom_id? : String, look~ : String, is_group? : Bool, shape~ : String, min_width? : Double, color_index? : Int, link? : String, link_target? : String, tooltip? : String, have_callback? : Bool, data? : NodeData, rx? : Double, ry? : Double, center_label? : Bool, wrapping_width? : Double, description? : Array[String]) -> Self
 pub fn Node::placed(Self, x~ : Double, y~ : Double, width? : Double, height? : Double, label_style~ : String) -> Self
 pub fn Node::with_styles(Self, css_styles~ : Array[String], css_compiled_styles~ : Array[String], css_classes~ : String) -> Self
@@ -124,7 +125,7 @@ pub(all) enum NodeData {
 pub struct Painter {
   // private fields
 }
-pub fn Painter::insert_edge(Self, @dom.Element, Edge, Array[Point], tail? : (Point) -> Point, head? : (Point) -> Point) -> @dom.Element raise LayoutError
+pub fn Painter::insert_edge(Self, @dom.Element, Edge, Array[Point], points_json? : String) -> @dom.Element raise LayoutError
 pub fn Painter::insert_edge_label(Self, @dom.Element, Edge) -> @dom.Element
 pub fn Painter::insert_look_defs(Self, @dom.Element) -> Unit
 pub fn Painter::insert_node(Self, @dom.Element, Node) -> @dom.Element raise LayoutError

@@ -265,25 +265,41 @@ fn offset_line_points(
 }
 
 ///|
-/// Draw `edge` through `points`, clipped at the outlines of the nodes it
-/// joins when both know theirs: mermaid's `insertEdge` for a route in the
-/// curve the configuration names (`flowchart.curve`).
+/// Whether the last `intersect_polygon` found no crossing and answered
+/// with the centre of its node. Upstream answers with the node itself,
+/// which callers that write the route out have to tell from a crossing
+/// that happens to lie at the centre (as on the long side of a
+/// triangle).
+let polygon_missed : Ref[Bool] = Ref(false)
+
+///|
+/// Where the line from the centre of a drawn node towards `point` leaves
+/// its outline. `None` when the node clips by a polygon the line does not
+/// cross, as for a point inside it: mermaid's `intersect.polygon` then
+/// hands back the node itself, which stands at its centre and is written
+/// out whole wherever the route is.
+pub fn Node::leaves_at(self : Node, point : Point) -> Point? {
+  guard self.intersect is Some(intersect) else { return Some(point) }
+  polygon_missed.val = false
+  let found = intersect(point)
+  if polygon_missed.val {
+    None
+  } else {
+    Some(found)
+  }
+}
+
+///|
+/// Draw `edge` through `points`: mermaid's `insertEdge` for a route in
+/// the curve the configuration names (`flowchart.curve`). `points_json`
+/// is `JSON.stringify` of the route when it is not one of plain points.
 pub fn Painter::insert_edge(
   self : Painter,
   parent : @dom.Element,
   edge : Edge,
   points : Array[Point],
-  tail? : (Point) -> Point,
-  head? : (Point) -> Point,
+  points_json? : String,
 ) -> @dom.Element raise LayoutError {
-  let mut points = points
-  if tail is Some(tail) && head is Some(head) {
-    // The ends give way to where the route leaves and enters the nodes.
-    let inner = [..points[1:points.length() - 1]]
-    inner.insert(0, tail(inner[0]))
-    inner.push(head(inner[inner.length() - 1]))
-    points = inner
-  }
   edge.points = points
   let mut line_data = points.filter(p => !p.y.is_nan())
   let curve = self.data.config.text("flowchart.curve").unwrap_or("basis")
@@ -307,7 +323,7 @@ pub fn Painter::insert_edge(
       raise LayoutError("The \{curve} curve is not supported yet.")
     _ => @d3.line_basis(offset_line_points(line_data, edge)).unwrap_or("")
   }
-  insert_edge(parent, edge, self.data, path~)
+  insert_edge(parent, edge, self.data, path~, points_text?=points_json)
 }
 
 ///|

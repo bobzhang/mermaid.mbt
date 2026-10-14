@@ -137,7 +137,14 @@ fn base64(text : String) -> String {
 ///|
 /// `JSON.stringify` of a route.
 fn points_json(points : Array[Point]) -> String {
-  let n = @dom.number
+  // A number that is not finite is `null` in JSON.
+  let n = (value : Double) => {
+    if value.is_nan() || value.is_inf() {
+      "null"
+    } else {
+      @dom.number(value)
+    }
+  }
   let parts = points.map(p => "{\"x\":\{n(p.x)},\"y\":\{n(p.y)}}")
   "[" + parts.join(",") + "]"
 }
@@ -272,9 +279,11 @@ fn insert_edge(
   edge : Edge,
   data : LayoutData,
   path? : String,
+  points_text? : String,
 ) -> @dom.Element {
   let points = edge.points
-  let points_attr = base64(points_json(points))
+  // What is written of the route, unless the caller wrote it out itself.
+  let points_attr = base64(points_text.unwrap_or(points_json(points)))
   let line_data = points.filter(p => !p.y.is_nan())
   let n = @dom.number
   let line_path = if path is Some(path) {

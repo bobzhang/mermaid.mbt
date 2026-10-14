@@ -485,7 +485,7 @@ fn composite(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
   } else {
     classes
   }
-  let labelled = label_helper(parent, node, classes, env)
+  let labelled = label_helper(parent, node, classes, class_styled(env, node))
   let box = labelled.bbox
   let half_padding = node.padding / 2.0
   let rect = labelled.shape_svg
