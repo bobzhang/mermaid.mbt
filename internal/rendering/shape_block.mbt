@@ -167,15 +167,17 @@ fn arrow_points(
 /// The environment the label of a block is measured in when its shape
 /// does not write the styles of the node's classes on the label: the
 /// stylesheet rules of those classes reach an HTML label all the same
-/// (`.name > *` and `.name span`), font and all.
+/// (`.name > *` and `.name span`), font and all. Where two classes
+/// disagree, the rule written later wins, whichever class the block was
+/// given last.
 fn class_styled(env : Env, node : Node) -> Env {
   // Node labels follow the root `htmlLabels` setting alone.
   let html_labels = match env.config.get("htmlLabels") {
     Null => true
     value => @config.evaluate(value)
   }
-  if html_labels && node.data is Block(..) {
-    env.styled(node.css_compiled_styles.join(";"))
+  if html_labels && node.data is Block(class_rules~, ..) {
+    env.styled(class_rules.join(";"))
   } else {
     env
   }
@@ -186,7 +188,7 @@ fn class_styled(env : Env, node : Node) -> Env {
 /// `block_arrow`.
 fn block_arrow(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
   let (positioned, directions, width_in_columns, style) = match node.data {
-    Block(positioned~, directions~, width_in_columns~, style~) =>
+    Block(positioned~, directions~, width_in_columns~, style~, ..) =>
       (positioned, directions, width_in_columns, Some(style))
     _ => (false, [], 1.0, None)
   }

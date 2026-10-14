@@ -39,6 +39,14 @@ fn BlockDb::node_of(
       compiled.append(found.styles)
     }
   }
+  // The same declarations as the stylesheet has them: class by class in
+  // the order the classes were defined.
+  let class_rules = []
+  for name, found in self.classes {
+    if block.classes.contains(name) {
+      class_rules.append(found.styles)
+    }
+  }
   let block_padding = config.number("block.padding").unwrap_or(0.0)
   let (shape, radius, padding) = match block.type_ {
     Some("round") => ("rect", 5.0, block_padding)
@@ -88,6 +96,7 @@ fn BlockDb::node_of(
       directions=block.directions.unwrap_or([]),
       width_in_columns=block.width_in_columns.unwrap_or(1.0),
       style~,
+      class_rules~,
     ),
     rx=radius,
     ry=radius,

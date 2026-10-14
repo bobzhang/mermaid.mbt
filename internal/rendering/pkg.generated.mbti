@@ -119,7 +119,7 @@ pub(all) enum NodeData {
   Entity(alias_name~ : String, attributes~ : Array[EntityAttribute])
   Requirement(name~ : String, type_~ : String, requirement_id~ : String, text~ : String, risk~ : String, verify_method~ : String)
   RequirementElement(name~ : String, type_~ : String, doc_ref~ : String)
-  Block(positioned~ : Bool, directions~ : Array[String], width_in_columns~ : Double, style~ : String)
+  Block(positioned~ : Bool, directions~ : Array[String], width_in_columns~ : Double, style~ : String, class_rules~ : Array[String])
 }
 
 pub struct Painter {
