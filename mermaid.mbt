@@ -137,6 +137,26 @@ fn parse_diagram(
         },
       }
     }
+    "sankey" => {
+      let sankey = @sankey.parse(code, config) catch {
+        @jison.ParseError(message~, ..) => raise Syntax(message)
+        @sankey.Invalid(message) => raise Syntax(message)
+        @sankey.Unsupported(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      {
+        styles: @sankey.styles(config.theme()),
+        acc_title: "",
+        acc_description: "",
+        classes: [],
+        draw: context => {
+          @sankey.draw(sankey, context) catch {
+            @sankey.Invalid(message) => raise Syntax(message)
+            @sankey.Unsupported(message) => raise Unsupported(message)
+          }
+        },
+      }
+    }
     other => raise Unsupported(other)
   }
 }
