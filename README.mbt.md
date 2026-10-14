@@ -41,12 +41,16 @@ Work in progress.
 | Git graph | byte-identical, all orientations and options; upstream's documentation examples match |
 | Entity relationship | byte-identical with the default ELK layout |
 | Requirement | byte-identical with the default ELK layout |
+| State | byte-identical with the default ELK layout, `stateDiagram` and `stateDiagram-v2` |
 | everything else | not ported yet — `render` raises `Unsupported` |
 
 Git graphs name commits at random upstream (`Math.random`), so a graph
 whose commits have no explicit `id:` differs from render to render there;
 the fixtures seed the generator (`testdata/gitgraph/oracle-prelude.js`) and
-the port draws the same sequence.
+the port draws the same sequence. State diagrams have one such name too:
+the last region of a composite state split by `--` is called
+`id-<random>-<count>` upstream. The port writes `id-i-<count>`, and
+`scripts/oracle.py` renames the reference's regions the same way.
 
 Shared infrastructure that is in place: all eleven themes, configuration
 resolution, frontmatter and directives, diagram type detection, the
@@ -57,7 +61,7 @@ from mermaid's own build by `scripts/extract_jison.js` and
 
 ### Flowcharts
 
-Flowcharts, entity relationship and requirement diagrams go through a port
+Flowcharts, entity relationship, requirement and state diagrams go through a port
 of mermaid's unified renderer (`internal/rendering`): HTML labels, node
 shapes, subgraph frames, edge routing with rounded corners and line hops,
 class and link styling. The layout is ELK's, as upstream, computed by
