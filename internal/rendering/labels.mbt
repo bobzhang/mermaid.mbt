@@ -152,6 +152,7 @@ fn label_helper(
   env : Env,
   unlimited~ : Bool = false,
   ignore_min_width~ : Bool = false,
+  html_labels? : Bool,
 ) -> Labelled {
   let shape_svg = parent
     .append("g")
@@ -181,7 +182,14 @@ fn label_helper(
   let n = @dom.number
   let mut offset_x = 0.0
   let mut offset_y = 0.0
-  let box = if env.html_labels {
+  // Node labels follow the root `htmlLabels` setting alone, whatever the
+  // deprecated flowchart one says, unless the shape decides for itself.
+  let html_labels = match (html_labels, env.config.get("htmlLabels")) {
+    (Some(html_labels), _) => html_labels
+    (None, Null) => true
+    (None, value) => @config.evaluate(value)
+  }
+  let box = if html_labels {
     let (fo, box) = create_html_label(
       label,
       node.label,

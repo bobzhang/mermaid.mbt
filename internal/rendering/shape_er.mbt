@@ -272,9 +272,11 @@ fn er_box(
     let shape_svg = draw_rect(
       parent,
       node,
-      { ..env, html_labels: labels.html || labels.measured_as_html, },
+      env,
       label_padding_x=padding,
       label_padding_y=padding * 1.5,
+      // `node.useHtmlLabels || evaluate(config.htmlLabels)`
+      html_labels=!labels.unset_or_off || labels.measured_as_html,
     )
     er_color_slot(shape_svg, node, env)
     if !labels.measured_as_html && shape_svg.descendants(["text"]) is [text, ..] {

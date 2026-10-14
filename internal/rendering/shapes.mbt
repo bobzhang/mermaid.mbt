@@ -25,9 +25,16 @@ fn draw_rect(
   label_padding_x~ : Double,
   label_padding_y~ : Double,
   radius? : Double,
+  html_labels? : Bool,
 ) -> @dom.Element {
   let styles = shape_styles(node)
-  let labelled = label_helper(parent, node, node_classes(node), env)
+  let labelled = label_helper(
+    parent,
+    node,
+    node_classes(node),
+    env,
+    html_labels?,
+  )
   let total_width = (labelled.bbox.width + label_padding_x * 2.0).max(
     node.width.unwrap_or(0.0),
   )
