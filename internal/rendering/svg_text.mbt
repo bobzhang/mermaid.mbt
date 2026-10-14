@@ -287,6 +287,10 @@ fn text_box(
 priv struct SvgLabel {
   /// The group holding the background rectangle and the text.
   group : @dom.Element
+  /// The text element.
+  text : @dom.Element
+  /// The lines of the text as they were broken.
+  lines : Array[Array[Word]]
   /// The box of the text element.
   text_box : @dom.Rect
 }
@@ -391,7 +395,7 @@ fn create_svg_label(
   for tspan in element.child_elements() {
     tspan.attr("class", "text-outer-tspan row") |> ignore
   }
-  { group, text_box: box, }
+  { group, text: element, lines, text_box: box, }
 }
 
 ///|

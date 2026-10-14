@@ -24,6 +24,10 @@ pub struct Node {
   link_target : String?
   tooltip : String?
   have_callback : Bool
+  /// The type line of a C4 element, such as `[Container: Node.js]`. A node
+  /// with one has a label of stacked sections: name, type, descriptions.
+  stereotype : String?
+  description : Array[String]
   // Filled in while measuring and laying out.
   mut label_style : String
   mut width : Double?
@@ -59,6 +63,9 @@ pub fn Node::new(
   link_target? : String,
   tooltip? : String,
   have_callback~ : Bool = false,
+  stereotype? : String,
+  description~ : Array[String] = [],
+  width? : Double,
 ) -> Node {
   {
     id,
@@ -80,8 +87,10 @@ pub fn Node::new(
     link_target,
     tooltip,
     have_callback,
+    stereotype,
+    description,
     label_style: "",
-    width: None,
+    width,
     height: None,
     x: 0.0,
     y: 0.0,
@@ -206,6 +215,8 @@ priv struct Env {
   font_size : Double
   /// Whether labels are HTML in a `foreignObject` or SVG text.
   html_labels : Bool
+  /// Whether the stylesheet makes label text bold.
+  bold : Bool
 }
 
 ///|
@@ -241,6 +252,7 @@ fn Env::new(config : @config.Config, diagram_id : String) -> Env {
     font_family: theme.text("fontFamily"),
     font_size: size,
     html_labels,
+    bold: false,
   }
 }
 
@@ -251,5 +263,5 @@ fn Env::font(
   bold~ : Bool = false,
   italic~ : Bool = false,
 ) -> @font.Stack {
-  @font.Stack::for_family(self.font_family, bold~, italic~)
+  @font.Stack::for_family(self.font_family, bold=bold || self.bold, italic~)
 }

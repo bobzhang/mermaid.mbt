@@ -1,0 +1,118 @@
+// The label of a C4 element: mermaid's `c4LabelHelper`.
+
+///|
+/// The gap between two sections of the label.
+const SECTION_GAP : Double = 3.0
+
+///|
+/// A label never wraps narrower than this.
+const MIN_WRAP_WIDTH : Double = 32.0
+
+///|
+/// The environment one section of a C4 label is measured in: the diagram's
+/// stylesheet makes the name bold and sets the type and description lines
+/// in smaller text.
+fn section_env(env : Env, css_class : String) -> Env {
+  match css_class {
+    "c4-name" => { ..env, bold: true, }
+    "c4-type" => { ..env, font_size: env.font_size * 0.75, }
+    _ => { ..env, font_size: env.font_size * 0.82, }
+  }
+}
+
+///|
+/// mermaid's `c4LabelHelper`: a label of stacked sections (name, type,
+/// description lines), each SVG text of its own so that the stylesheet
+/// can set each in its own type. Stands in for `label_helper` on nodes
+/// that carry a stereotype.
+fn c4_label_helper(
+  parent : @dom.Element,
+  node : Node,
+  classes : String,
+  env : Env,
+) -> Labelled {
+  let shape_svg = parent
+    .append("g")
+    .attr("class", classes)
+    .attr("id", node.dom_id)
+  let label = shape_svg
+    .append("g")
+    .attr("class", "label")
+    .attr("style", node.label_style)
+  let sections : Array[(String, String)] = [(node.label, "c4-name")]
+  if node.stereotype is Some(stereotype) {
+    sections.push((stereotype, "c4-type"))
+  }
+  for line in node.description {
+    sections.push((line, "c4-descr"))
+  }
+  let wrap_width = match node.width {
+    Some(width) if width != 0.0 && !width.is_nan() =>
+      (width - 2.0 * node.padding).max(MIN_WRAP_WIDTH)
+    _ => env.config.number("flowchart.wrappingWidth").unwrap_or(200.0)
+  }
+  // `c4.wrap` is the diagram's own switch, on unless configured off.
+  let width = match env.config.get("c4.wrap") {
+    False => None
+    _ => Some(wrap_width)
+  }
+  let rendered : Array[(@dom.Element, @dom.Rect)] = []
+  for section in sections {
+    guard section.0 != "" else { continue }
+    let element = label.append("g").attr("class", section.1)
+    let section_env = section_env(env, section.1)
+    // Lines are broken while every word still carries the weight
+    // attribute `createText` writes, which overrides the bold of a name:
+    // the breaks are those of regular text.
+    let text = create_svg_label(
+      element,
+      section.0,
+      { ..section_env, bold: env.bold, },
+      width?,
+      style=node.label_style,
+      anchor_middle=true,
+    )
+    // Each line is centred in its section; the lines sit at x = 0.
+    for tspan in text.text.child_elements() {
+      tspan.attr("text-anchor", "middle") |> ignore
+      // Without the presentation attributes, weight and style come from
+      // the stylesheet.
+      for word in tspan.child_elements() {
+        word.remove_attr("font-weight").remove_attr("font-style") |> ignore
+      }
+    }
+    text.text.set_text_box(text_box(text.lines, section_env, true))
+    rendered.push((element, element.bbox()))
+  }
+  let total_width = rendered.fold(init=0.0, (widest, section) => {
+    widest.max(section.1.width)
+  })
+  let n = @dom.number
+  let mut y = 0.0
+  for section in rendered {
+    let (element, box) = section
+    element.attr(
+      "transform",
+      "translate(\{n(total_width / 2.0 - box.x - box.width / 2.0)}, \{n(y - box.y)})",
+    )
+    |> ignore
+    y += box.height + SECTION_GAP
+  }
+  let total_height = if rendered.is_empty() { 0.0 } else { y - SECTION_GAP }
+  label.insert_first("rect") |> ignore
+  label.attr(
+    "transform",
+    "translate(\{n(-total_width / 2.0)}, \{n(-total_height / 2.0)})",
+  )
+  |> ignore
+  let box = label.bbox()
+  // The box comes with `left` and `top`, so shapes shift the label by
+  // nothing more than its size.
+  {
+    shape_svg,
+    label,
+    bbox: { width: box.width, height: box.height, },
+    offset_x: 0.0,
+    offset_y: 0.0,
+  }
+}

@@ -39,6 +39,16 @@ fn cylinder(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
   let styles = shape_styles(node)
   let neo = node.look == "neo"
   let label_padding = if neo { 24.0 } else { node.padding }
+  // A node of a given size leaves room for the padding and the caps.
+  let original_width = node.width.unwrap_or(0.0)
+  if original_width != 0.0 {
+    node.width = Some((original_width - label_padding).max(8.0))
+  }
+  if node.height is Some(height) && height != 0.0 {
+    let rx = original_width / 2.0
+    let ry = rx / (2.5 + original_width / 50.0)
+    node.height = Some((height - label_padding - ry * 3.0).max(8.0))
+  }
   let labelled = label_helper(parent, node, node_classes(node), env)
   let box = labelled.bbox
   let w = node.width.unwrap_or(0.0).max(box.width) + label_padding
