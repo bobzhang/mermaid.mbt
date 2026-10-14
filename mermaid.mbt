@@ -400,6 +400,26 @@ fn parse_diagram(
         },
       }
     }
+    "railroad" | "railroadEbnf" | "railroadAbnf" | "railroadPeg" => {
+      let railroad = @railroad.parse(diagram_type, code) catch {
+        @langium.ParseError(message~, ..) => raise Syntax(message)
+        @railroad.Unsupported(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      // Nothing draws a title, the frontmatter's no more than the
+      // diagram's own.
+      {
+        styles: @railroad.styles(config),
+        acc_title: railroad.acc_title,
+        acc_description: railroad.acc_description,
+        classes: [],
+        draw: context => {
+          @railroad.draw(railroad, context) catch {
+            @railroad.Unsupported(message) => raise Unsupported(message)
+          }
+        },
+      }
+    }
     other => raise Unsupported(other)
   }
 }

@@ -1,0 +1,5 @@
+---
+config: {"railroad": {"terminalFill": "red", "terminalStroke": "#123", "terminalTextColor": "#12345678", "nonTerminalFill": "rgb(1, 2, 3)", "nonTerminalStroke": "hsl(10, 20%, 30%)", "nonTerminalTextColor": " blue ", "lineColor": "#abcdef", "markerFill": "oklch(0.5 0.2 30)", "specialFill": "url(#x)", "specialStroke": "not a color", "ruleNameColor": "#12", "commentFill": "green", "commentStroke": "RGBA(1,2,3,0.5)", "commentTextColor": "var(--x)"}}
+---
+railroad-beta
+rule = sequence(terminal("lit"), choice(nonterminal("name"), special("any")), optional(terminal("x")), zeroOrMore(nonterminal("y"))) ;

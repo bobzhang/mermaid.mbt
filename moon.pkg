@@ -11,6 +11,7 @@ import {
   "bobzhang/mermaid/diagrams/packet",
   "bobzhang/mermaid/diagrams/pie",
   "bobzhang/mermaid/diagrams/radar",
+  "bobzhang/mermaid/diagrams/railroad",
   "bobzhang/mermaid/diagrams/sankey",
   "bobzhang/mermaid/diagrams/treemap",
   "bobzhang/mermaid/diagrams/requirement",

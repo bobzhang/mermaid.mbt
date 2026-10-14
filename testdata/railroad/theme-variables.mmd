@@ -1,0 +1,5 @@
+---
+config: {"themeVariables": {"fontSize": "20px", "fontFamily": "verdana", "secondBkg": "#aaf", "lineColor": "purple", "primaryTextColor": "#00f", "titleColor": "green", "tertiaryColor": "#fed", "mainBkg": "calc(1)"}}
+---
+railroad-beta
+rule = sequence(terminal("lit"), choice(nonterminal("name"), special("any")), optional(terminal("x")), zeroOrMore(nonterminal("y"))) ;
