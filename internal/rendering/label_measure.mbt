@@ -318,9 +318,12 @@ fn wrapped_rows(
   let mut widest = 0.0
   let mut current = 0.0
   let mut empty = true
+  // The line breaker lets content overflow by one layout unit
+  // (`AvailableWidthToFit` adds an epsilon to the available width).
+  let fit = width + 1.0 / 64.0
   for unit in unbreakable_widths(line, env) {
     widest = widest.max(unit)
-    if !empty && current + unit > width {
+    if !empty && current + unit > fit {
       rows += 1
       current = unit
     } else {

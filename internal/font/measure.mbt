@@ -274,18 +274,30 @@ fn script_of(c : Char) -> Script? {
 /// has a ligature for (`fi` and `fl` in Times and Helvetica) become one
 /// glyph.
 fn Stack::glyphs(self : Stack, text : StringView) -> Array[Drawn] {
+  self.glyphs_after(text, Ref(None))
+}
+
+///|
+/// `glyphs` of a piece of text that continues the script run `run` of
+/// the pieces before it, as the `<tspan>`s of a line do: the script of a
+/// character without one of its own (a space) is that of the run it is
+/// in. `run` is left at the script the piece ends in.
+fn Stack::glyphs_after(
+  self : Stack,
+  text : StringView,
+  run : Ref[Script?],
+) -> Array[Drawn] {
   let drawn : Array[Drawn] = []
-  let mut run : Script? = None
   for c in text {
     if is_default_ignorable(c) {
       drawn.push(Ignorable)
       continue
     }
     if script_of(c) is Some(script) {
-      if run is Some(current) && current != script {
+      if run.val is Some(current) && current != script {
         drawn.push(ScriptChange)
       }
-      run = Some(script)
+      run.val = Some(script)
     }
     let face = self.face_for(c)
     guard face.glyphs.get(c.to_int()) is Some(glyph) else {
@@ -465,6 +477,7 @@ fn Stack::shape_after(
   text : StringView,
   size : Double,
   before : (Face, Glyph)?,
+  run~ : Ref[Script?] = Ref(None),
 ) -> (Shaped, (Face, Glyph)?) {
   let shaped = { pen: 0.0, ink: { x: 0.0, y: 0.0, width: 0.0, height: 0.0, }, }
   // A finished run adds its width, as a float, and its box.
@@ -478,7 +491,7 @@ fn Stack::shape_after(
   // The glyph of the piece before, until anything is shaped.
   let mut carried = before
   let mut last : (Face, Glyph)? = None
-  for drawn in self.glyphs(text) {
+  for drawn in self.glyphs_after(text, run) {
     let (face, glyph) = match drawn {
       Glyph(face, glyph) => (face, glyph)
       Missing(c) => {
@@ -584,8 +597,10 @@ pub fn Stack::item_advances(
   // Exact sums in 16.16 fixed point, like the advances of a run.
   let sums : Array[Int64] = items.map(_ => 0L)
   let mut previous : (Face, Glyph, Int32)? = None
+  // The script run goes on from one piece to the next.
+  let run = Ref(None)
   for index, item in items {
-    for drawn in self.glyphs(item) {
+    for drawn in self.glyphs_after(item, run) {
       let (face, glyph) = match drawn {
         Glyph(face, glyph) => (face, glyph)
         Missing(c) => {
@@ -629,8 +644,9 @@ pub fn Stack::item_inks(
   let size = effective_size(size)
   let inks : Array[Rect] = []
   let mut previous : (Face, Glyph)? = None
+  let run = Ref(None)
   for item in items {
-    let (shaped, last) = self.shape_after(item, size, previous)
+    let (shaped, last) = self.shape_after(item, size, previous, run~)
     previous = last
     inks.push({
       x: shaped.ink.x.to_double(),
