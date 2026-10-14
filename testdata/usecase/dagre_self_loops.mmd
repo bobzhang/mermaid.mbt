@@ -1,0 +1,26 @@
+---
+config:
+  handDrawnSeed: 2
+  layout: dagre
+  usecase:
+    colorScheme: rotate
+    wrappingWidth: 80
+---
+usecase-beta
+direction BT
+systemBoundary B0["Payment service"]
+  U2("A much longer use case label that wraps")
+end
+U0("a < b")
+U1("Sign out")@{ business: true } <<Core>>
+U3("Checkout")@{ business: true }
+U4("Pay") <<Rule>>
+U5[Browse catalogue]
+U4 --|> U5
+U4 --x U3
+U2 -- U2
+U5 ..> : include U1
+U3 --> U5
+U0 ..> : extend U0
+U1 o-- U5
+U2 x-- U1

@@ -115,6 +115,20 @@ fn element_kind(node : LayoutNode) -> String {
 }
 
 ///|
+/// How many layout roots (`g.root`) an element is drawn in.
+fn root_depth(element : @dom.Element) -> Int32 {
+  let mut depth = 0
+  let mut current = element.parent()
+  while current is Some(ancestor) {
+    if ancestor.get_attr("class").unwrap_or("").split(" ").any(c => c == "root") {
+      depth += 1
+    }
+    current = ancestor.parent()
+  }
+  depth
+}
+
+///|
 /// Mark the drawn elements with their model ids and accessible names:
 /// `annotateUsecaseElements`.
 fn annotate(
@@ -123,6 +137,7 @@ fn annotate(
   nodes : Array[LayoutNode],
   dom_ids : Map[String, String],
   edges : Array[LayoutEdge],
+  dagre~ : Bool,
 ) -> Unit {
   for node in nodes {
     let dom_id = dom_ids.get(node.id).unwrap_or(node.id)
@@ -137,10 +152,12 @@ fn annotate(
     if !@dom.is_safe_for_xml(node.accessible_name) {
       element.remove_attr("aria-label") |> ignore
     }
-    // The first line of the label is the stereotype. Drawing renamed the
-    // shape of a rectangle to `squareRect`, which upstream does not look
-    // for here: only ellipses get the stereotype marked.
-    if node.folded_stereotype && node.shape == "usecaseEllipse" {
+    // The first line of the label is the stereotype. Drawing with ELK
+    // renamed the shape of a rectangle to `squareRect`, which upstream
+    // does not look for here: then only ellipses get the stereotype
+    // marked. Dagre draws copies of the nodes and leaves the shape alone.
+    if node.folded_stereotype &&
+      (node.shape == "usecaseEllipse" || (dagre && node.shape == "rect")) {
       match
         element
         .descendants(["span"])
@@ -183,7 +200,25 @@ fn annotate(
   }
   for path in svg.descendants(["path"]) {
     guard path.get_attr("data-et") == Some("edge") else { continue }
-    guard by_id.get(path.get_attr("data-id").unwrap_or("")) is Some(edge) else {
+    // Edges dagre drew inside a group it laid out on its own are not
+    // among the diagram's edges once it is done: those are the edges of
+    // the outermost graph.
+    if root_depth(path) > 1 {
+      continue
+    }
+    let id = path.get_attr("data-id").unwrap_or("")
+    // Dagre draws a self loop as three edges it adds to the diagram's,
+    // which are annotated too, with their ids for names.
+    guard by_id.get(id) is Some(edge) else {
+      if id.contains("-cyclic-special-") {
+        path
+        .attr("id", "usecase-\{safe_id(diagram_id)}-\{safe_id(id)}")
+        .attr("data-usecase-id", id)
+        .attr("data-usecase-kind", "relationship")
+        .attr("role", "img")
+        .attr("aria-label", id)
+        |> ignore
+      }
       continue
     }
     path
@@ -253,7 +288,7 @@ pub fn draw(
   // Only `elk` names the layered ELK layout; every other name, known or
   // not, ends in another engine upstream.
   let layout = config.text("layout").unwrap_or("elk")
-  if layout != "elk" {
+  if layout != "elk" && !@rendering.is_dagre_layout(layout) {
     raise Unsupported("The \{layout} layout is not supported yet.")
   }
   let look = config.text("look").unwrap_or("neo")
@@ -353,6 +388,8 @@ pub fn draw(
       look~,
       animate=edge.animate,
       animation?=edge.animation,
+      minlen=edge.minlen.to_double(),
+      labelpos="c",
     )
   })
   let data : @rendering.LayoutData = {
@@ -365,13 +402,24 @@ pub fn draw(
     markers: ["point", "circle", "cross", "extension"],
   }
   @rendering.render(data, svg) catch {
+    // Upstream fails the same way: under dagre an empty boundary is drawn
+    // as a node, and no node shape draws a boundary.
+    @rendering.LayoutError(message) if message.has_prefix("No such shape") =>
+      raise Invalid(message)
     @rendering.LayoutError(message) => raise Unsupported(message)
   }
   let dom_ids : Map[String, String] = Map([])
   for node in layout_nodes {
     dom_ids[node.id] = node.dom_id
   }
-  annotate(svg, context.id, nodes, dom_ids, edges)
+  annotate(
+    svg,
+    context.id,
+    nodes,
+    dom_ids,
+    edges,
+    dagre=@rendering.is_dagre_layout(layout),
+  )
   @rendering.setup_viewport(
     svg,
     config.number("usecase.diagramPadding").unwrap_or(20.0),

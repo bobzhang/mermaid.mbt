@@ -1,0 +1,27 @@
+---
+config:
+  handDrawnSeed: 7
+  layout: dagre
+  usecase:
+    colorScheme: rotate
+    minNodeWidth: 0
+    nodeSpacing: 20
+---
+usecase-beta
+direction BT
+systemBoundary B0["Payment service"]
+end
+systemBoundary B1["A boundary with a long title"]@{ type: package }
+  U2(Track delivery)
+end
+U0[x]
+U1("a < b") <<Ext>>
+U3("Login")
+U4("Pay")
+U5("Review order")
+U4 ---> U2
+U4 <-- U2
+json J@{ "k": "v", "n": 1, "list": [1, 2], "o": { "p": true } }
+U2 --> J
+classDef hot stroke:#c33,stroke-width:3px
+class U2 hot

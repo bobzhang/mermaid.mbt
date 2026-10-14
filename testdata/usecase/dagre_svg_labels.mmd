@@ -1,0 +1,28 @@
+---
+config:
+  handDrawnSeed: 2
+  layout: dagre
+  theme: redux
+  htmlLabels: false
+  look: classic
+---
+usecase-beta
+direction RL
+systemBoundary B0["Shop"]@{ type: package }
+  actor A0 <<VIP>>
+end
+actor A1("Support agent")
+actor A2("Bank") <<System>>
+U0("Review order") <<Rule>>
+U1("Track delivery")@{ business: true }
+U2(Track delivery)
+U3("Reset password")@{ business: true }
+U4("R & D")
+U5("Pay") <<Core>>
+A2 o-- "back" -- U1
+U5 --|> U5
+U0 --> U2
+U3 o-- U4
+json J@{ "k": "v", "n": 1, "list": [1, 2], "o": { "p": true } }
+U5 --> J
+style U3 fill:#eef,color:#333

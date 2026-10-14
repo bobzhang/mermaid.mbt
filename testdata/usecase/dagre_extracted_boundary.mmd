@@ -1,0 +1,30 @@
+---
+config:
+  handDrawnSeed: 5
+  layout: dagre
+---
+usecase-beta
+direction RL
+systemBoundary B0["A boundary with a long title"]
+  U9(Browse catalogue)
+end
+systemBoundary B1["Shop"]
+  U2[Login] <<Core>>
+  U7[Review order]
+  actor A1@{ business: true }
+end
+actor A0("Bank")@{ business: true } <<System>>
+U0("R & D")
+U1(a lt b)
+U3(x)
+U4(Browse catalogue)
+U5("Sign out")
+U6("a < b")
+U8[Checkout]
+U10("A much longer use case label that wraps")
+U8 --|> U3
+U5 ..> : include U1
+A1 --o U7
+U1 -- "calls the service" --> U4
+classDef hot stroke:#c33,stroke-width:3px
+class U3 hot
