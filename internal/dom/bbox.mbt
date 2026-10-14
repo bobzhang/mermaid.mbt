@@ -502,9 +502,37 @@ fn Element::local_bounds(self : Element) -> Bounds? {
 }
 
 ///|
+/// Whether the element's inline style hides it: with `display: none` it
+/// has no box at all, and its parent's box ignores it.
+fn Element::is_display_none(self : Element) -> Bool {
+  for declaration in self.declarations {
+    if declaration.0 == "display" {
+      return declaration.1 == "none"
+    }
+  }
+  guard self.get_attr("style") is Some(text) else { return false }
+  let mut hidden = false
+  for part in text.split(";") {
+    guard part.find(":") is Some(colon) else { continue }
+    if part[:colon].trim().to_owned().to_lower() == "display" {
+      let value = part[colon + 1:].trim().to_owned().to_lower()
+      let value = match value.strip_suffix("!important") {
+        Some(base) => base.trim().to_owned()
+        None => value
+      }
+      hidden = value == "none"
+    }
+  }
+  hidden
+}
+
+///|
 /// The element's box in its parent's coordinate system: its own box
 /// mapped through its `transform`.
 fn Element::bounds(self : Element) -> Bounds? {
+  if self.is_display_none() {
+    return None
+  }
   guard self.local_bounds() is Some(bounds) else { return None }
   Some(element_transform(self).map(bounds))
 }
