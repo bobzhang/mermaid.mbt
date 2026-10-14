@@ -42,7 +42,9 @@ fn Env::styled(self : Env, style : String, faces~ : Bool = true) -> Env {
           "normal" | "lighter" => false
           other =>
             match css_length(other) {
-              Some((weight, "")) => weight >= 600.0
+              // With a regular and a bold face to choose from, font
+              // matching takes the bold one for any weight above 500.
+              Some((weight, "")) => weight > 500.0
               _ => env.bold
             }
         }
