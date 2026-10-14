@@ -80,7 +80,7 @@ pub fn draw(
     // Upstream's ELK layout fails on what the mindmap hands it.
     raise Invalid("Cannot read properties of null (reading 're')")
   }
-  if layout != "cose-bilkent" {
+  if !(layout is ("cose-bilkent" | "dagre")) {
     raise Unsupported("The \{layout} layout is not supported yet.")
   }
   if config.text("look") == Some("handDrawn") {
@@ -97,7 +97,12 @@ pub fn draw(
     direction: "TB",
     markers: ["point"],
   }
-  @rendering.render_cose(data, context.svg) catch {
+  let render = if layout == "dagre" {
+    @rendering.render
+  } else {
+    @rendering.render_cose
+  }
+  render(data, context.svg) catch {
     @rendering.LayoutError(message) => raise Unsupported(message)
   }
   let theme = config.theme()

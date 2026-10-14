@@ -45,7 +45,7 @@ test "mindmaps the port refuses rather than draw differently" {
     content="Unsupported: The hand-drawn look is not supported yet.",
   )
   inspect(
-    refusal("---\nconfig:\n  layout: dagre\n---\nmindmap\n  root\n"),
-    content="Unsupported: The dagre layout is not supported yet.",
+    refusal("---\nconfig:\n  layout: swimlane\n---\nmindmap\n  root\n"),
+    content="Unsupported: The swimlane layout is not supported yet.",
   )
 }
