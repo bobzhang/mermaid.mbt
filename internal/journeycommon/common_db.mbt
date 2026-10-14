@@ -51,8 +51,15 @@ pub fn sanitize_text(text : String) -> String raise SanitizeError {
       continue
     }
     if unit != '<' {
-      out.write_view(text[i:i + 1])
-      i += 1
+      // Both halves of a character outside the basic plane go together.
+      let code = unit.to_int()
+      let width = if code >= 0xD800 && code < 0xDC00 && i + 1 < n {
+        2
+      } else {
+        1
+      }
+      out.write_view(text[i:i + width])
+      i += width
       continue
     }
     let closing = i + 1 < n && text[i + 1] == '/'

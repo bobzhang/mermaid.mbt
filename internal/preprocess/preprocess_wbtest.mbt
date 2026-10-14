@@ -173,3 +173,14 @@ test "preprocess merges frontmatter config with the init directive" {
     "pie": { "textPosition": 0.5, "donutHole": 0.3 },
   })
 }
+
+///|
+test "cleanup_text keeps characters outside the basic plane" {
+  inspect(
+    cleanup_text("A[\"🐶 <b class=\"x🐕\">y</b>\"]\r\n"),
+    content=(
+      #|A["🐶 <b class='x🐕'>y</b>"]
+      #|
+    ),
+  )
+}
