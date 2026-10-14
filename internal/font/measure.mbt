@@ -583,6 +583,18 @@ pub fn Stack::advance(self : Stack, text : StringView, size : Double) -> Double 
 }
 
 ///|
+/// The advance width of `text` at `size` pixels before it is rounded to
+/// layout units: the position, in single precision, that the browser's
+/// line breaker measures text to.
+pub fn Stack::advance_unrounded(
+  self : Stack,
+  text : StringView,
+  size : Double,
+) -> Double {
+  self.shape(text, size).pen.to_double()
+}
+
+///|
 /// The widths of consecutive pieces of text shaped as one run, as SVG
 /// text lays out the `<tspan>`s of a line: kerning reaches across the
 /// pieces, and every piece takes whole layout units. An adjustment from

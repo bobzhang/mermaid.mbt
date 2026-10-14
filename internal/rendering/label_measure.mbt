@@ -213,6 +213,7 @@ priv struct Item {
   italic : Bool
   heavy : Bool
   positions : Map[Int32, Double]
+  unrounded : Map[Int32, Double]
 }
 
 ///|
@@ -230,6 +231,28 @@ fn Item::position(self : Item, offset : Int32, env : Env) -> Double {
     .advance(String::from_array(self.chars[:offset]), env.font_size)
   self.positions[offset] = position
   position
+}
+
+///|
+/// The width of the item's text between two character offsets before it
+/// is rounded to layout units. The text is shaped on its own: a row that
+/// starts inside an item is shaped anew from there where the break is not
+/// safe (a kerning pair across it), and measures the same otherwise.
+fn Item::unrounded_width(
+  self : Item,
+  start : Int32,
+  end : Int32,
+  env : Env,
+) -> Double {
+  let key = start * 65536 + end
+  if self.unrounded.get(key) is Some(width) {
+    return width
+  }
+  let width = env
+    .font(bold=self.bold, italic=self.italic)
+    .advance_unrounded(String::from_array(self.chars[start:end]), env.font_size)
+  self.unrounded[key] = width
+  width
 }
 
 ///|
@@ -252,6 +275,7 @@ fn line_items(line : Array[Run]) -> Array[Item] {
           heavy: run.heavy,
           italic: run.italic,
           positions: Map([]),
+          unrounded: Map([]),
         })
     }
   }
@@ -259,11 +283,27 @@ fn line_items(line : Array[Run]) -> Array[Item] {
 }
 
 ///|
-/// The widths of the pieces of a line that cannot be broken with
-/// `white-space: break-spaces`: a line may break after every space and
-/// wherever `breaks_between` allows.
-fn unbreakable_widths(line : Array[Run], env : Env) -> Array[Double] {
-  let items = line_items(line)
+/// A stretch of one item inside a piece of a line: the item and the
+/// character offsets it runs between.
+priv struct Segment {
+  item : Int32
+  start : Int32
+  end : Int32
+}
+
+///|
+/// A piece of a line that cannot be broken: its width in whole layout
+/// units, and the stretches of items it is made of.
+priv struct Piece {
+  width : Double
+  segments : Array[Segment]
+}
+
+///|
+/// The pieces of a line that cannot be broken with `white-space:
+/// break-spaces`: a line may break after every space and wherever
+/// `breaks_between` allows.
+fn unbreakable_pieces(items : Array[Item], env : Env) -> Array[Piece] {
   // Every character with the item it is in.
   let flat : Array[(Int32, Int32, Char)] = []
   for index, item in items {
@@ -271,8 +311,9 @@ fn unbreakable_widths(line : Array[Run], env : Env) -> Array[Double] {
       flat.push((index, offset, c))
     }
   }
-  let widths = []
+  let pieces = []
   let mut width = 0.0
+  let mut segments = []
   // Where the current piece starts within the current item.
   let mut start = 0
   for k, entry in flat {
@@ -295,41 +336,98 @@ fn unbreakable_widths(line : Array[Run], env : Env) -> Array[Double] {
     }
     if break_after || last_of_item {
       width += item.position(offset + 1, env) - item.position(start, env)
+      segments.push({ item: index, start, end: offset + 1, })
       start = if last_of_item { 0 } else { offset + 1 }
     }
     if break_after {
-      widths.push(width)
+      pieces.push({ width, segments, })
       width = 0.0
+      segments = []
     }
   }
-  widths
+  pieces
 }
 
 ///|
 /// How a line is laid out in a box `width` wide with `white-space:
 /// break-spaces`: the number of rows, and the width of the widest piece,
 /// which the box grows to when it is wider.
+///
+/// Whether a piece still fits on a row is decided as the line breaker
+/// decides it: the text of the row is measured from its start, shaped
+/// from there and not rounded (an item that ends before the row does
+/// takes whole layout units), and may overflow the box by one layout unit
+/// (`AvailableWidthToFit` adds an epsilon).
 fn wrapped_rows(
   line : Array[Run],
   width : Double,
   env : Env,
 ) -> (Int32, Double) {
+  let items = line_items(line)
+  let fit = width + 1.0 / 64.0
   let mut rows = 1
   let mut widest = 0.0
-  let mut current = 0.0
   let mut empty = true
-  // The line breaker lets content overflow by one layout unit
-  // (`AvailableWidthToFit` adds an epsilon to the available width).
-  let fit = width + 1.0 / 64.0
-  for unit in unbreakable_widths(line, env) {
-    widest = widest.max(unit)
-    if !empty && current + unit > fit {
+  // The items the row has finished, and where the row's part of the
+  // item it is in started.
+  let mut finished = 0.0
+  let mut open : (Int32, Int32)? = None
+  // The width of the row up to the end of `segment`, from the state of
+  // the row before it.
+  let measure = (
+    finished : Double,
+    open : (Int32, Int32)?,
+    segments : Array[Segment],
+  ) => {
+    let mut finished = finished
+    let mut open = open
+    let mut width = 0.0
+    for segment in segments {
+      let item = items[segment.item]
+      let from = match open {
+        Some((index, from)) if index == segment.item => from
+        Some((index, from)) => {
+          // The row moves on to another item.
+          let done = items[index]
+          finished += done
+            .unrounded_width(from, done.chars.length(), env)
+            .ceil_to_unit()
+          segment.start
+        }
+        None => segment.start
+      }
+      open = Some((segment.item, from))
+      width = finished + item.unrounded_width(from, segment.end, env)
+    }
+    (width, finished, open)
+  }
+  for piece in unbreakable_pieces(items, env) {
+    widest = widest.max(piece.width)
+    let (row_width, next_finished, next_open) = measure(
+      finished,
+      open,
+      piece.segments,
+    )
+    if !empty && row_width > fit {
       rows += 1
-      current = unit
+      let (_, restart_finished, restart_open) = measure(
+        0.0,
+        None,
+        piece.segments,
+      )
+      finished = restart_finished
+      open = restart_open
     } else {
-      current += unit
+      finished = next_finished
+      open = next_open
       empty = false
     }
   }
   (rows, widest)
+}
+
+///|
+/// A width rounded up to whole layout units.
+fn Double::ceil_to_unit(self : Double) -> Double {
+  (self * 64.0).ceil() / 64.0
 }
