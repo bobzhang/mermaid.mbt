@@ -1,0 +1,9 @@
+import {
+  "bobzhang/mermaid/diagram",
+  "bobzhang/mermaid/internal/dom",
+  "bobzhang/mermaid/internal/jison",
+  "bobzhang/mermaid/internal/journeycommon",
+  "bobzhang/mermaid/internal/jsregex",
+}
+
+warnings = "-implicit_impl_as_method"

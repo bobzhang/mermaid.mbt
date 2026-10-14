@@ -283,6 +283,22 @@ fn parse_diagram(
         },
       }
     }
+    "quadrantChart" => {
+      let chart = @quadrant.parse(code, title?) catch {
+        @jison.ParseError(message~, ..) => raise Syntax(message)
+        @quadrant.QuadrantError(message) => raise Syntax(message)
+        @journeycommon.SanitizeError(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      {
+        // The chart has no styles of its own.
+        styles: "",
+        acc_title: chart.acc_title,
+        acc_description: chart.acc_description,
+        classes: [],
+        draw: context => @quadrant.draw(chart, context),
+      }
+    }
     other => raise Unsupported(other)
   }
 }
