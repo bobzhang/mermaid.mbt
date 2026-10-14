@@ -1,0 +1,31 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/diagrams/c4"
+
+import {
+  "bobzhang/mermaid/config",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn parse(String, @config.Config) -> C4Db raise
+
+// Errors
+pub(all) suberror C4Error {
+  C4Error(String)
+} derive(Eq, @debug.Debug)
+
+pub(all) suberror Unsupported {
+  Unsupported(String)
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+pub struct C4Db {
+  mut title : String
+  mut acc_description : String
+  // private fields
+}
+pub fn C4Db::dump(Self) -> Json
+
+// Type aliases
+
+// Traits
