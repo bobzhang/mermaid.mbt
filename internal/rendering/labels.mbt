@@ -65,11 +65,14 @@ fn create_html_label(
   .style("line-height", "1.5")
   |> ignore
   if width is Some(width) {
-    div
-    .style("max-width", @dom.number(width) + "px")
-    .style("text-align", "center")
-    |> ignore
+    // A negative length is no value for `max-width`, and is dropped.
+    if width >= 0.0 {
+      div.style("max-width", @dom.number(width) + "px") |> ignore
+    }
+    div.style("text-align", "center") |> ignore
   }
+  // Without the declaration nothing limits the label.
+  let width = width.filter(width => width >= 0.0)
   div.attr("xmlns", "http://www.w3.org/1999/xhtml") |> ignore
   if add_background {
     div.attr("class", "labelBkg") |> ignore
