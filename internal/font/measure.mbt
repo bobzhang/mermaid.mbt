@@ -58,10 +58,13 @@ pub fn Face::descent(self : Face, size : Double) -> Double {
 }
 
 ///|
-/// The size glyphs are actually scaled to: the reference browser drops
-/// everything past the second decimal of a font size.
+/// The size glyphs are actually scaled to: Blink keys its fonts by the
+/// size in hundredths of a pixel, cut off in single precision, so
+/// everything past the second decimal is dropped (and `0.82em` of 14px,
+/// a hair under 11.48, is 11.48).
 fn effective_size(size : Double) -> Double {
-  (size * 100.0).floor() / 100.0
+  let hundredths = (Float::from_double(size) * 100.0).to_int()
+  hundredths.to_double() / 100.0
 }
 
 ///|
