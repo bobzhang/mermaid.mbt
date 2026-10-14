@@ -278,7 +278,9 @@ fn solid_state_fill(color : String, env : Env) -> @rough.Options {
 
 ///|
 /// The frame of a collapsed container in the hand-drawn look: a sketched
-/// rounded rectangle, plainly filled unless it has no fill.
+/// rounded rectangle, plainly filled unless it has no fill. Only a
+/// flowchart's collapsed subgraph has styles (none) to write on it; an
+/// agentflow container has none at all.
 fn sketched_collapsed_frame(
   shape_svg : @dom.Element,
   node : Node,
@@ -292,6 +294,7 @@ fn sketched_collapsed_frame(
   stroke : String,
   stroke_width : String?,
   css_class : String,
+  styled~ : Bool,
 ) -> @dom.Element {
   let options = rough_options(node, env)
   options.fill = fill
@@ -309,9 +312,11 @@ fn sketched_collapsed_frame(
     options,
   )
   prepend(shape_svg, frame)
+  frame.attr("class", "basic label-container " + css_class) |> ignore
+  if styled {
+    frame.attr("style", css_styles_text(node)) |> ignore
+  }
   frame
-  .attr("class", "basic label-container " + css_class)
-  .attr("style", css_styles_text(node))
 }
 
 ///|

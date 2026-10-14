@@ -123,3 +123,31 @@ fn sketched_divider(
   prepend(shape_svg, frame)
   frame.attr("class", "divider")
 }
+
+///|
+/// An agentflow container in the hand-drawn look: an unfilled sketched
+/// frame with rounded corners. Its second path, which an unfilled frame
+/// does not have, would take the border styles.
+fn sketched_flow_group(
+  shape_svg : @dom.Element,
+  node : Node,
+  env : Env,
+  x : Double,
+  y : Double,
+  width : Double,
+  height : Double,
+  stroke : String,
+) -> @dom.Element {
+  let options = rough_options(node, env)
+  options.roughness = 0.7
+  options.fill = "none"
+  options.stroke = stroke
+  options.stroke_width = "0.75"
+  options.fill_weight = 0.0
+  let frame = @rough.path(rounded_rect_path(x, y, width, height, 10.0), options)
+  prepend(shape_svg, frame)
+  if frame.child_elements().get(1) is Some(path) {
+    path.attr("style", border_and_background(node).0) |> ignore
+  }
+  frame
+}

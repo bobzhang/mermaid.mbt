@@ -11,9 +11,6 @@ pub fn draw(
   if layout != "elk" && !@rendering.is_dagre_layout(layout) {
     raise @rendering.LayoutError("The \{layout} layout is not supported yet.")
   }
-  if config.text("look") == Some("handDrawn") {
-    raise @rendering.LayoutError("The hand-drawn look is not supported yet.")
-  }
   let (nodes, edges) = db.layout_data()
   let data : @rendering.LayoutData = {
     nodes,
