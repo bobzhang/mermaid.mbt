@@ -247,10 +247,32 @@ fn actor_rect(actor : Actor, actor_y : Double, is_footer : Bool) -> RectSpec {
 }
 
 ///|
-/// Icons are images or references to symbols of the host page.
-fn reject_icon(actor : Actor) -> Unit raise SequenceError {
-  if actor.properties.get("icon") is Some(icon) && truthy(icon) {
-    raise SequenceError("Unsupported: participant icons")
+/// The icon a participant's `properties` ask for, in the corner of its
+/// box. `@name` refers to one of the symbols every diagram defines, but
+/// the `<use>` element that would show it does not survive the output
+/// sanitizer; anything else is the address of an image.
+fn draw_icon(
+  group : @dom.Element,
+  rect : RectSpec,
+  actor : Actor,
+) -> Unit raise SequenceError {
+  guard actor.properties.get("icon") is Some(icon) && truthy(icon) else {
+    return
+  }
+  guard icon is String(icon) else {
+    raise SequenceError("actor.properties.icon.trim is not a function")
+  }
+  let source = js_trim(icon)
+  if source.has_prefix("@") {
+    return
+  }
+  let image = group
+    .append("image")
+    .attr_number("x", rect.x + rect.width - 20.0)
+    .attr_number("y", rect.y + 10.0)
+  let link = sanitize_url(source)
+  if @dom.is_allowed_uri(link) {
+    image.attr("xlink:href", link) |> ignore
   }
 }
 
@@ -280,7 +302,7 @@ fn Renderer::draw_participant(
     rect_element.attr("filter", self.drop_shadow()) |> ignore
   }
   actor.rect_data = Some(rect.data())
-  reject_icon(actor)
+  draw_icon(group, rect, actor)
   if !is_footer {
     mark_participant(group, "participant", actor)
   }
@@ -334,7 +356,7 @@ fn Renderer::draw_collections(
     self.paint(rect_element, Some(actor.name))
     self.paint(stacked, Some(actor.name))
   }
-  reject_icon(actor)
+  draw_icon(group, rect, actor)
   self.draw_actor_text(
     actor.description,
     group,
@@ -403,7 +425,7 @@ fn Renderer::draw_queue(
     self.paint(cylinder, Some(actor.name))
     self.paint(arc, Some(actor.name))
   }
-  reject_icon(actor)
+  draw_icon(group, rect, actor)
   self.draw_actor_text(
     actor.description,
     group,

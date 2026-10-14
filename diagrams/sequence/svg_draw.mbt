@@ -401,8 +401,20 @@ fn Renderer::draw_popup(
     let x = rect.x + 10.0
     let y = rect.height + link_y
     let lines = split_breaks(key)
-    let size = match font.size {
-      Number(size, ..) => size
+    // The size as JavaScript coerces it in arithmetic, and as the style
+    // takes it: a bare number is pixels there, an SVG quirk.
+    let (size, css_size) = match font.size {
+      Number(size, ..) => (size, @dom.number(size) + "px")
+      String(text) => {
+        let number = @string.parse_double(js_trim(text)) catch {
+          _ => @double.not_a_number
+        }
+        if number == number {
+          (number, @dom.number(number) + "px")
+        } else {
+          (number, @dom.number(css_pixels(Some(text))) + "px")
+        }
+      }
       _ => raise SequenceError("Unsupported font size in a popup menu")
     }
     for i, line in lines {
@@ -413,9 +425,7 @@ fn Renderer::draw_popup(
         .attr_number("x", x)
         .attr_number("y", y)
         .style("text-anchor", "start")
-      // A bare number is not a length outside SVG's own attributes, but
-      // the SVG style quirk takes it as pixels.
-      text.style("font-size", @dom.number(size) + "px") |> ignore
+      text.style("font-size", css_size) |> ignore
       if serialize_font_weight(font.weight) is Some(weight) {
         text.style("font-weight", weight) |> ignore
       }

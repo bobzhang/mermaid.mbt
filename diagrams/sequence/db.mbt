@@ -119,13 +119,12 @@ pub fn SequenceDb::set_title(self : SequenceDb, title : String) -> Unit {
 }
 
 ///|
-/// Whether text wraps when it does not say so itself: the top-level `wrap`
-/// setting, else the diagram's own.
+/// Whether text wraps when it does not say so itself: the diagram's own
+/// `wrap` setting, which a truthy top-level `wrap` overrides. (A top-level
+/// `wrap: false` does not: upstream reads it into the database and then
+/// clears the database.)
 fn SequenceDb::auto_wrap(self : SequenceDb) -> Bool {
-  match self.config.get("wrap") {
-    Null => self.config.flag("sequence.wrap")
-    _ => self.config.flag("wrap")
-  }
+  self.config.flag("wrap") || self.config.flag("sequence.wrap")
 }
 
 ///|
@@ -171,22 +170,32 @@ fn parse_message(text : String) -> Json {
 ///|
 /// mermaid's `sanitizeText`. The HTML sanitizer hands text without a `<`
 /// back untouched. With one, the text is parsed as HTML and written out
-/// again; only text whose `<` cannot start a tag is handled here.
+/// again; only line breaks are understood here, and text whose `<` cannot
+/// start a tag.
 fn sanitize_text(text : String) -> String raise SequenceError {
   guard text.contains("<") else { return text }
+  // Every spelling of a line break is written back as `<br>`.
+  let breaks = try! @jsregex.Regex::compile("<\\/?br\\s*\\/?>", flags="gi")
+  let pieces = breaks.split(text)
   let markup = try! @jsregex.Regex::compile("<[/!?a-zA-Z]")
-  if markup.exec(text) is Some(_) {
-    raise SequenceError("Unsupported: HTML markup in sequence diagram text")
-  }
-  // Character references are resolved, and the three characters HTML
-  // cannot write literally come back as references.
   let amp = try! @jsregex.Regex::compile("&(?![a-zA-Z0-9#]+;)", flags="g")
-  @dom.sanitized_text(
-    amp
-    .replace_all(text, _ => "&amp;")
-    .replace_all(old="<", new="&lt;")
-    .replace_all(old=">", new="&gt;"),
-  )
+  let sanitized = []
+  for piece in pieces {
+    if markup.exec(piece) is Some(_) {
+      raise SequenceError("Unsupported: HTML markup in sequence diagram text")
+    }
+    // Character references are resolved, and the three characters HTML
+    // cannot write literally come back as references.
+    sanitized.push(
+      @dom.sanitized_text(
+        amp
+        .replace_all(piece, _ => "&amp;")
+        .replace_all(old="<", new="&lt;")
+        .replace_all(old=">", new="&gt;"),
+      ),
+    )
+  }
+  sanitized.join("<br>")
 }
 
 ///|
