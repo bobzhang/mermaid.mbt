@@ -123,7 +123,9 @@ fn GitGraph::commit(
     Some(id) => self.sanitize(id)
     None => ""
   }
-  let message = self.sanitize(message)
+  // The message is never drawn, so one the port cannot sanitize exactly
+  // is no reason to refuse the diagram.
+  let message = self.sanitize(message) catch { Unsupported(_) => message }
   let tags = tags.map(tag => self.sanitize(tag))
   // A repeated id replaces the earlier commit, as upstream's map does.
   self.record({

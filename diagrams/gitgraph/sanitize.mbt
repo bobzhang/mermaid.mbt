@@ -12,15 +12,6 @@ let line_break : @jsregex.Regex = try! @jsregex.Regex::compile(
 )
 
 ///|
-/// Text between the tags of serialized HTML.
-fn escape_html_text(text : String) -> String {
-  text
-  .replace_all(old="<", new="&lt;")
-  .replace_all(old=">", new="&gt;")
-  .replace_all(old="\u{a0}", new="&nbsp;")
-}
-
-///|
 /// mermaid's `sanitizeText` as the git graph database calls it, with its
 /// own configuration section: that section has no `securityLevel`, so
 /// angle brackets and equal signs are always written as entities, and the
@@ -51,17 +42,70 @@ fn sanitize_text(text : String, html_labels : Bool) -> String raise Unsupported 
       .replace_all(old=">", new="&gt;")
       .replace_all(old="=", new="&equals;")
   }
-  // The HTML parser would resolve whatever follows an ampersand against
-  // the full table of character references.
-  if text.contains("&") {
-    raise Unsupported(
-      "git graph text with both a line break and an ampersand: \{text}",
-    )
+  // The pieces between the breaks are text for the HTML parser.
+  let pieces = []
+  for piece in marked.split("#br#") {
+    pieces.push(reserialize(piece.to_owned()))
   }
-  marked
-  .split("#br#")
-  .map(piece => escape_html_text(piece.to_owned()))
-  .join("<br>")
+  pieces.join("<br>")
+}
+
+///|
+/// The character references the sanitizer itself writes, and what the
+/// HTML serializer makes of the characters they stand for.
+let known_references : Array[(String, String)] = [
+  ("&amp;", "&amp;"),
+  ("&lt;", "&lt;"),
+  ("&gt;", "&gt;"),
+  ("&nbsp;", "&nbsp;"),
+  ("&equals;", "="),
+]
+
+///|
+/// Text as it comes back from the HTML parser and serializer: character
+/// references are resolved, and `&`, `<`, `>` and the no-break space are
+/// written as references. Only the references in `known_references` are
+/// resolved here; any other candidate is refused, since the parser
+/// matches against the whole table of names.
+fn reserialize(text : String) -> String raise Unsupported {
+  let out = StringBuilder()
+  let mut rest = text[:]
+  while !rest.is_empty() {
+    guard rest.find("&") is Some(at) else { break }
+    out.write_string(escape_text(rest[:at].to_owned()))
+    rest = rest[at:]
+    let mut resolved = false
+    for reference in known_references {
+      if rest.has_prefix(reference.0) {
+        out.write_string(reference.1)
+        rest = rest[reference.0.length():]
+        resolved = true
+        break
+      }
+    }
+    if resolved {
+      continue
+    }
+    if rest.length() > 1 &&
+      rest[1] is ('a'..<='z' | 'A'..<='Z' | '0'..<='9' | '#') {
+      raise Unsupported(
+        "git graph text with a line break and a character reference: \{text}",
+      )
+    }
+    out.write_string("&amp;")
+    rest = rest[1:]
+  }
+  out.write_string(escape_text(rest.to_owned()))
+  out.to_string()
+}
+
+///|
+/// Text without ampersands, as the HTML serializer writes it.
+fn escape_text(text : String) -> String {
+  text
+  .replace_all(old="<", new="&lt;")
+  .replace_all(old=">", new="&gt;")
+  .replace_all(old="\u{a0}", new="&nbsp;")
 }
 
 ///|
