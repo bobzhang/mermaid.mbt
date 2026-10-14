@@ -15,9 +15,12 @@ diagrams whose output upstream leaves to `Math.random()`.
 Diagrams that show the present (the today marker of a Gantt chart) need
 both sides to agree on what time it is: `--now` stops both clocks.
 
+`--config JSON` is site configuration for both sides, merged over the
+seed: `--config '{"layout":"dagre"}'` runs every example with dagre.
+
 Usage: scripts/check_examples.py [docs.md ...] [--keywords flowchart graph]
                                  [--seed 1] [--now MS] [--cache DIR]
-                                 [--prelude FILE] [-v]
+                                 [--prelude FILE] [--config JSON] [-v]
 """
 
 import argparse
@@ -58,10 +61,11 @@ def main():
     parser.add_argument("--cache", type=pathlib.Path, default=ROOT / ".repos" / "oracle" / "examples")
     parser.add_argument("--prelude", type=pathlib.Path,
                         help="JavaScript evaluated in the oracle page before rendering (see compare.py)")
+    parser.add_argument("--config", default="{}", help="site configuration (JSON) for both sides")
     parser.add_argument("-v", "--verbose", action="store_true", help="show the first difference of each example")
     args = parser.parse_args()
 
-    config = json.dumps({"handDrawnSeed": args.seed})
+    config = json.dumps({"handDrawnSeed": args.seed, **json.loads(args.config)})
     prelude = args.prelude.read_text() if args.prelude else ""
     sources = examples(args.docs, args.keywords)
     args.cache.mkdir(parents=True, exist_ok=True)

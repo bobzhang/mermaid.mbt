@@ -1,0 +1,77 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/internal/graphlib"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn compare_strings(String, String) -> Int
+
+// Errors
+pub(all) suberror GraphError {
+  GraphError(String)
+} derive(@debug.Debug)
+
+// Types and methods
+pub(all) struct Edge {
+  v : String
+  w : String
+  name : String?
+} derive(Eq, Hash, @debug.Debug)
+
+pub struct Graph[G, N, E] {
+  // private fields
+}
+pub fn[G, N, E] Graph::children(Self[G, N, E], String) -> Array[String]
+pub fn[G, N, E] Graph::edge(Self[G, N, E], Edge) -> E?
+pub fn[G, N, E] Graph::edge_between(Self[G, N, E], String, String, name? : String) -> E?
+pub fn[G, N, E] Graph::edge_count(Self[G, N, E]) -> Int
+pub fn[G, N, E] Graph::edges(Self[G, N, E]) -> Array[Edge]
+pub fn[G, N, E] Graph::ensure_edge(Self[G, N, E], String, String, () -> E, name? : String) -> Unit raise GraphError
+pub fn[G, N, E] Graph::ensure_node(Self[G, N, E], String) -> Unit
+pub fn[G, N, E] Graph::graph(Self[G, N, E]) -> G
+pub fn[G, N, E] Graph::has_edge(Self[G, N, E], String, String, name? : String) -> Bool
+pub fn[G, N, E] Graph::has_node(Self[G, N, E], String) -> Bool
+pub fn[G, N, E] Graph::in_edges(Self[G, N, E], String, u? : String) -> Array[Edge]
+pub fn[G, N, E] Graph::is_compound(Self[G, N, E]) -> Bool
+pub fn[G, N, E] Graph::is_directed(Self[G, N, E]) -> Bool
+pub fn[G, N, E] Graph::is_multigraph(Self[G, N, E]) -> Bool
+pub fn[G, N, E] Graph::neighbors(Self[G, N, E], String) -> Array[String]
+pub fn[G, N, E] Graph::new(G, default_node~ : (String) -> N, directed? : Bool, multigraph? : Bool, compound? : Bool) -> Self[G, N, E]
+pub fn[G, N, E] Graph::node(Self[G, N, E], String) -> N?
+pub fn[G, N, E] Graph::node_count(Self[G, N, E]) -> Int
+pub fn[G, N, E] Graph::node_edges(Self[G, N, E], String, w? : String) -> Array[Edge]
+pub fn[G, N, E] Graph::nodes(Self[G, N, E]) -> Array[String]
+pub fn[G, N, E] Graph::out_edges(Self[G, N, E], String, w? : String) -> Array[Edge]
+pub fn[G, N, E] Graph::parent(Self[G, N, E], String) -> String?
+pub fn[G, N, E] Graph::predecessors(Self[G, N, E], String) -> Array[String]
+pub fn[G, N, E] Graph::remove_edge(Self[G, N, E], Edge) -> Unit
+pub fn[G, N, E] Graph::remove_edge_between(Self[G, N, E], String, String, name? : String) -> Unit
+pub fn[G, N, E] Graph::remove_node(Self[G, N, E], String) -> Unit
+pub fn[G, N, E] Graph::set_edge(Self[G, N, E], String, String, E, name? : String) -> Unit raise GraphError
+pub fn[G, N, E] Graph::set_edge_obj(Self[G, N, E], Edge, E) -> Unit raise GraphError
+pub fn[G, N, E] Graph::set_graph(Self[G, N, E], G) -> Unit
+pub fn[G, N, E] Graph::set_node(Self[G, N, E], String, N) -> Unit
+pub fn[G, N, E] Graph::set_parent(Self[G, N, E], String, parent? : String) -> Unit raise GraphError
+pub fn[G, N, E] Graph::sinks(Self[G, N, E]) -> Array[String]
+pub fn[G, N, E] Graph::sources(Self[G, N, E]) -> Array[String]
+pub fn[G, N, E] Graph::successors(Self[G, N, E], String) -> Array[String]
+pub fn[G, N, E] Graph::top_children(Self[G, N, E]) -> Array[String]
+
+pub struct JsObject[V] {
+  // private fields
+}
+pub fn[V] JsObject::contains(Self[V], String) -> Bool
+pub fn[V] JsObject::get(Self[V], String) -> V?
+pub fn[V] JsObject::is_empty(Self[V]) -> Bool
+pub fn[V] JsObject::keys(Self[V]) -> Array[String]
+pub fn[V] JsObject::length(Self[V]) -> Int
+pub fn[V] JsObject::new() -> Self[V]
+pub fn[V] JsObject::remove(Self[V], String) -> Unit
+pub fn[V] JsObject::set(Self[V], String, V) -> Unit
+pub fn[V] JsObject::values(Self[V]) -> Array[V]
+
+// Type aliases
+
+// Traits

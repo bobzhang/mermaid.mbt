@@ -1,0 +1,24 @@
+---
+config:
+  layout: dagre
+  handDrawnSeed: 7
+---
+classDiagram
+  direction RL
+  class Animal {
+    +String name
+    +eat() void
+  }
+  class Duck {
+    +swim()
+  }
+  class Zoo~T~ {
+    -List~T~ animals
+  }
+  Animal <|-- Duck
+  Zoo "1" o-- "many" Animal : holds
+  Duck "2" --> "1" Duck : follows
+  Zoo ..> Keeper : employs
+  Keeper --() Feeding
+  note for Duck "can fly\nsometimes"
+  note "A general note"

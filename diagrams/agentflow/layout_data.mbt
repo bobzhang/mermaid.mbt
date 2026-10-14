@@ -220,6 +220,22 @@ fn AgentDb::layout_data(
         look~,
         animate=raw.animate == Some(true),
         animation?=raw.animation,
+        // `minlen: rawEdge.length`, which is set even when undefined.
+        minlen=match raw.length {
+          Some(length) => length.to_double()
+          None => 0.0 / 0.0
+        },
+        labelpos="c",
+        // The curve the dagre layout draws the edge in.
+        curve=[
+            raw.interpolate,
+            flow.default_interpolate(),
+            config.text("flowchart.curve"),
+          ]
+          .iter()
+          .filter_map(curve => curve)
+          .find_first(curve => curve != "")
+          .unwrap_or(""),
       ),
     )
   }

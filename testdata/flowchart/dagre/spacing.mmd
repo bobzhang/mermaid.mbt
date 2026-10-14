@@ -1,0 +1,15 @@
+---
+config:
+  handDrawnSeed: 7
+  layout: dagre
+  flowchart:
+    nodeSpacing: 20
+    rankSpacing: 90
+    curve: rounded
+---
+flowchart LR
+  a --> b & c & d
+  b --> e
+  c --> e
+  d ----> e
+  e --> f

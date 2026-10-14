@@ -15,7 +15,7 @@ fn flow_container_stroke(env : Env) -> String {
 ///|
 /// An expanded agentflow container: an unfilled rounded frame with its
 /// title at the top.
-fn flow_group(parent : @dom.Element, node : Node, env : Env) -> Unit {
+fn flow_group(parent : @dom.Element, node : Node, env : Env) -> ClusterFrame {
   let styles = node_styles(node)
   let shape_svg = parent
     .append("g")
@@ -62,19 +62,24 @@ fn flow_group(parent : @dom.Element, node : Node, env : Env) -> Unit {
     node_width
   }
   let stroke = flow_container_stroke(env)
-  shape_svg
-  .insert_first("rect")
-  .attr("rx", "10")
-  .attr("ry", "10")
-  .attr_number("x", node.x - width / 2.0)
-  .attr_number("y", node.y - height / 2.0)
-  .attr_number("width", width)
-  .attr_number("height", height)
-  .attr("fill", "none")
-  .attr("stroke", stroke)
-  .attr("stroke-width", "0.75px")
-  |> ignore
-  guard has_label else { return }
+  let outline = shape_svg
+    .insert_first("rect")
+    .attr("rx", "10")
+    .attr("ry", "10")
+    .attr_number("x", node.x - width / 2.0)
+    .attr_number("y", node.y - height / 2.0)
+    .attr_number("width", width)
+    .attr_number("height", height)
+    .attr("fill", "none")
+    .attr("stroke", stroke)
+    .attr("stroke-width", "0.75px")
+  let diff = if node_width <= box.width + node.padding {
+    (width - node_width) / 2.0 - node.padding
+  } else {
+    -node.padding
+  }
+  let frame = { outline, diff: Some(diff), width: None, }
+  guard has_label else { return frame }
   let title_top = env.config
     .number("flowchart.subGraphTitleMargin.top")
     .unwrap_or(0.0)
@@ -93,4 +98,5 @@ fn flow_group(parent : @dom.Element, node : Node, env : Env) -> Unit {
       }
     }
   }
+  frame
 }

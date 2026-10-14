@@ -4,8 +4,8 @@ pub struct Diagram {
   /// The text handed to the diagram's parser: no frontmatter, directives
   /// or comments.
   code : String
-  /// The same with its `%%` comments, for the parsers that report
-  /// positions in the text as its author wrote it.
+  /// The same text with its comments left in, for the diagrams whose
+  /// grammars read them (mermaid's `withComments`).
   with_comments : String
   /// The frontmatter `title`, if any.
   title : String?

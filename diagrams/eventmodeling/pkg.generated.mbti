@@ -1,0 +1,52 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/diagrams/eventmodeling"
+
+import {
+  "bobzhang/mermaid/diagram",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn draw(EventModel, @diagram.Context) -> Unit raise
+
+pub fn parse(String) -> EventModel raise
+
+// Errors
+pub(all) suberror Invalid {
+  Invalid(String)
+} derive(Eq, @debug.Debug)
+
+pub(all) suberror Unsupported {
+  Unsupported(String)
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+pub(all) enum EntityType {
+  Ui
+  Processor
+  ReadModel
+  Command
+  Event
+} derive(Eq, @debug.Debug)
+
+pub struct EventModel {
+  frames : Array[Frame]
+  data_entities : Array[(String, String)]
+  acc_title : String
+  acc_description : String
+  entities : Bool
+}
+
+pub struct Frame {
+  reset : Bool
+  name : String
+  entity_type : EntityType
+  entity_identifier : String
+  source_frames : Array[String]
+  data_reference : String?
+  data_inline : String?
+} derive(@debug.Debug)
+
+// Type aliases
+
+// Traits

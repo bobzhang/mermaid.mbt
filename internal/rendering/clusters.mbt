@@ -19,8 +19,22 @@ fn stamp_color_slot(
 }
 
 ///|
+/// What drawing a frame tells the layout that drew it (dagre's): the
+/// element whose box is the frame, how much wider than the group the title
+/// made it (`node.diff`), and the width the shape gives the group.
+priv struct ClusterFrame {
+  outline : @dom.Element
+  diff : Double?
+  width : Double?
+}
+
+///|
 /// The frame of a subgraph with its title: the `rect` cluster shape.
-fn insert_cluster(parent : @dom.Element, node : Node, env : Env) -> Unit {
+fn insert_cluster(
+  parent : @dom.Element,
+  node : Node,
+  env : Env,
+) -> ClusterFrame {
   let styles = node_styles(node)
   let shape_svg = parent
     .append("g")
@@ -65,14 +79,13 @@ fn insert_cluster(parent : @dom.Element, node : Node, env : Env) -> Unit {
   } else {
     node_width
   }
-  shape_svg
-  .insert_first("rect")
-  .attr("style", styles.node_styles)
-  .attr_number("x", node.x - width / 2.0)
-  .attr_number("y", node.y - height / 2.0)
-  .attr_number("width", width)
-  .attr_number("height", height)
-  |> ignore
+  let outline = shape_svg
+    .insert_first("rect")
+    .attr("style", styles.node_styles)
+    .attr_number("x", node.x - width / 2.0)
+    .attr_number("y", node.y - height / 2.0)
+    .attr_number("width", width)
+    .attr_number("height", height)
   let title_top = env.config
     .number("flowchart.subGraphTitleMargin.top")
     .unwrap_or(0.0)
@@ -91,4 +104,10 @@ fn insert_cluster(parent : @dom.Element, node : Node, env : Env) -> Unit {
       }
     }
   }
+  let diff = if node_width <= box.width + node.padding {
+    (width - node_width) / 2.0 - node.padding
+  } else {
+    -node.padding
+  }
+  { outline, diff: Some(diff), width: None, }
 }

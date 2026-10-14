@@ -132,6 +132,17 @@ test "path length as getTotalLength reports it" {
 }
 
 ///|
+test "path data is measured up to its first error" {
+  // Values from Chrome: a number that is not one ends the path, and the
+  // segment it is in is dropped.
+  let lengths = [
+    "MNaN,NaNL10,10", "M0,0L10,0LNaN,5L20,0", "M0,0L10,0L20,0NaN", "M0,0L10,0 20,0 NaN,1",
+    "M0,0C1,1,2,2,NaN,3L5,5", "M0,0L10,0Nonsense", "M0,0L3,4CNaN,NaN,NaN,NaN,NaN,NaNC1,2,3,4,5,6",
+  ].map(@dom.path_length)
+  json_inspect(lengths, content=[0, 10, 20, 20, 0, 10, 5])
+}
+
+///|
 test "inner HTML" {
   let span = @dom.Element::new("span")
   span.set_inner_html("<p>a &amp; b<br />c</p>")

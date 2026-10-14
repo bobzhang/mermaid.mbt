@@ -1,0 +1,20 @@
+---
+config:
+  handDrawnSeed: 7
+  layout: dagre
+---
+flowchart LR
+  subgraph outer [Outer group]
+    direction TB
+    a1[First] --> a2[Second]
+    subgraph inner [Inner]
+      b1 --> b2
+    end
+    a2 --> b1
+  end
+  subgraph loose [No edges out]
+    c1((circle)) --> c2{decide}
+  end
+  start --> outer
+  outer --> finish
+  start --> c1

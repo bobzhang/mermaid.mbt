@@ -1,0 +1,11 @@
+Parsing failed:  Parse error on line 2, column 11: Expecting: one of these possible Token sequences:
+  1. [STRING]
+  2. [ID]
+  3. [NAME_WITH_SPACES]
+but found: 'note'
+Parse error on line 2, column 15: Expecting token of type 'STRING' but found `book`.
+Parse error on line 2, column 20: Expecting: one of these possible Token sequences:
+  1. [STRING]
+  2. [ID]
+  3. [NAME_WITH_SPACES]
+but found: '['

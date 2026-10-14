@@ -1,0 +1,8 @@
+Parsing failed:  Parse error on line 2, column 6: Expecting: one of these possible Token sequences:
+  1. [EBNF_STRING]
+  2. [EBNF_SPECIAL_SEQUENCE]
+  3. [EBNF_ID]
+  4. [(]
+  5. [[]
+  6. [{]
+but found: '*'

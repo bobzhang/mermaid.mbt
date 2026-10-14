@@ -1,0 +1,11 @@
+eventmodeling
+tf 1 ui A [[D]] { inline: too }
+tf 2 cmd B [[Nope]] { inline: stays }
+tf 3 evt C [[Nope]]
+tf 4 evt C2 [[D]]
+data D {
+  block: wins
+}
+data D {
+  second: ignored
+}

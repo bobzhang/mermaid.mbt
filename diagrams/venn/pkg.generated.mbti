@@ -1,0 +1,54 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/diagrams/venn"
+
+import {
+  "bobzhang/mermaid/diagram",
+  "bobzhang/mermaid/theme",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn draw(Venn, @diagram.Context) -> Unit raise VennError
+
+pub fn parse(String) -> Venn raise
+
+pub fn styles(@theme.Theme) -> String
+
+// Errors
+pub(all) suberror VennError {
+  Invalid(String)
+  Unsupported(String)
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+pub struct StyleEntry {
+  targets : Array[String]
+  styles : Map[String, String]
+} derive(@debug.Debug)
+
+pub struct Subset {
+  sets : Array[String]
+  size : Double
+  label : String?
+} derive(@debug.Debug)
+
+pub struct TextNode {
+  sets : Array[String]
+  id : String
+  label : String?
+} derive(@debug.Debug)
+
+pub struct Venn {
+  subsets : Array[Subset]
+  text_nodes : Array[TextNode]
+  style_entries : Array[StyleEntry]
+  mut title : String
+  acc_title : String
+  acc_description : String
+  // private fields
+}
+pub fn Venn::set_title(Self, String) -> Unit
+
+// Type aliases
+
+// Traits

@@ -591,6 +591,98 @@ fn parse_diagram(
         },
       }
     }
+    "railroad" | "railroadEbnf" | "railroadAbnf" | "railroadPeg" => {
+      let railroad = @railroad.parse(diagram_type, code) catch {
+        @langium.ParseError(message~, ..) => raise Syntax(message)
+        @railroad.Unsupported(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      // Nothing draws a title, the frontmatter's no more than the
+      // diagram's own.
+      {
+        styles: @railroad.styles(config),
+        acc_title: railroad.acc_title,
+        acc_description: railroad.acc_description,
+        classes: [],
+        draw: context => {
+          @railroad.draw(railroad, context) catch {
+            @railroad.Unsupported(message) => raise Unsupported(message)
+          }
+        },
+      }
+    }
+    "eventmodeling" => {
+      let model = @eventmodeling.parse(code) catch {
+        @langium.ParseError(message~, ..) => raise Syntax(message)
+        @eventmodeling.Invalid(message) => raise Syntax(message)
+        @eventmodeling.Unsupported(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      // The diagram has no styles of its own, and nothing draws a title.
+      {
+        styles: "",
+        acc_title: model.acc_title,
+        acc_description: model.acc_description,
+        classes: [],
+        draw: context => {
+          @eventmodeling.draw(model, context) catch {
+            @eventmodeling.Invalid(message) => raise Syntax(message)
+            @eventmodeling.Unsupported(message) => raise Unsupported(message)
+            error => raise Unsupported(error.to_string())
+          }
+        },
+      }
+    }
+    "wardley" => {
+      let map = @wardley.parse(code) catch {
+        @langium.ParseError(message~, ..) => raise Syntax(message)
+        @wardley.Invalid(message) => raise Syntax(message)
+        @wardley.Unsupported(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      // A frontmatter title applies unless the diagram body has its own.
+      if title is Some(title) && map.title == "" {
+        map.set_title(title)
+      }
+      {
+        // The renderer empties the `<svg>` before drawing, stylesheet
+        // included, so the diagram's styles never reach the output.
+        styles: "",
+        acc_title: map.acc_title,
+        acc_description: map.acc_description,
+        classes: [],
+        draw: context => {
+          @wardley.draw(map, context) catch {
+            @wardley.Invalid(message) => raise Syntax(message)
+            @wardley.Unsupported(message) => raise Unsupported(message)
+          }
+        },
+      }
+    }
+    "venn" => {
+      let venn = @venn.parse(code) catch {
+        @jison.ParseError(message~, ..) => raise Syntax(message)
+        @venn.Invalid(message) => raise Syntax(message)
+        @venn.Unsupported(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      // A frontmatter title applies unless the diagram body has its own.
+      if title is Some(title) && venn.title == "" {
+        venn.set_title(title)
+      }
+      {
+        styles: @venn.styles(config.theme()),
+        acc_title: venn.acc_title,
+        acc_description: venn.acc_description,
+        classes: [],
+        draw: context => {
+          @venn.draw(venn, context) catch {
+            @venn.Invalid(message) => raise Syntax(message)
+            @venn.Unsupported(message) => raise Unsupported(message)
+          }
+        },
+      }
+    }
     other => raise Unsupported(other)
   }
 }
@@ -645,9 +737,10 @@ pub fn render(
     .attr("width", "100%")
     .attr("xmlns", "http://www.w3.org/2000/svg")
   let first_child = svg.append("g")
-  // Agentflow reports positions in the text as written, so its parser
-  // sees the comments, unless that text is too long.
-  let code = if diagram_type == "agentflow" &&
+  // The event modeling and agentflow databases ask for the text with its
+  // comments (`preserveCommentsWhenParsing`), as long as that is not too
+  // long.
+  let source = if diagram_type is ("eventmodeling" | "agentflow") &&
     processed.with_comments.length().to_double() <= max_length {
     processed.with_comments
   } else {
@@ -656,7 +749,7 @@ pub fn render(
   // Entity codes are shielded from the grammars, as in Diagram.fromText.
   let parsed = parse_diagram(
     diagram_type,
-    @preprocess.encode_entities(code) + "\n",
+    @preprocess.encode_entities(source) + "\n",
     config,
     processed.title,
     id,
