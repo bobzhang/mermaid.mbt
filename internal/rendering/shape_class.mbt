@@ -170,9 +170,6 @@ fn class_box(
   guard node.data is ClassBox(text~, annotations~, members~, methods~) else {
     raise LayoutError("A class box needs a class to draw.")
   }
-  if node.look == "handDrawn" {
-    raise LayoutError("The hand-drawn look is not supported yet.")
-  }
   let config = env.config
   let theme = config.theme()
   let padding = config.number("class.padding").unwrap_or(12.0)
@@ -372,8 +369,12 @@ fn class_box(
       padding
     divider(if taller { methods_area.max(second) } else { second })
   }
-  for path in shape_svg.descendants(["path"]) {
-    path.attr("style", styles) |> ignore
+  if hand_drawn(node) {
+    style_sketched_class_box(shape_svg, rect, styles)
+  } else {
+    for path in shape_svg.descendants(["path"]) {
+      path.attr("style", styles) |> ignore
+    }
   }
   for span in shape_svg.descendants(["span"]) {
     span.attr("style", styles) |> ignore

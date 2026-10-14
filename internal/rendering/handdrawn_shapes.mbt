@@ -329,3 +329,22 @@ fn sketched_outline(
   .attr("class", "basic label-container")
   .attr("style", css_styles_text(node))
 }
+
+///|
+/// The styles of a class in the hand-drawn look: only the stroke of its
+/// box and its dividers take them, the hachure keeps its colour.
+fn style_sketched_class_box(
+  shape_svg : @dom.Element,
+  rect : @dom.Element,
+  styles : String,
+) -> Unit {
+  if rect.child_elements().get(1) is Some(stroke) {
+    stroke.attr("style", styles) |> ignore
+  }
+  for child in shape_svg.child_elements() {
+    if child.get_attr("class").unwrap_or("").split(" ").any(c => c == "divider") &&
+      child.descendants(["path"]) is [path, ..] {
+      path.attr("style", styles) |> ignore
+    }
+  }
+}

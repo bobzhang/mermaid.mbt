@@ -1,0 +1,36 @@
+---
+config:
+  look: handDrawn
+  handDrawnSeed: 6
+---
+classDiagram
+  note "From Duck till Zebra"
+  Animal <|-- Duck
+  note for Duck "can fly\ncan swim"
+  Animal <|-- Fish
+  Animal <|-- Zebra
+  Animal : +int age
+  Animal : +String gender
+  Animal: +isMammal()
+  Animal: +mate()
+  class Duck{
+    +String beakColor
+    +swim()
+    +quack()
+  }
+  class Fish{
+    -int sizeInFeet
+    -canEat()
+  }
+  class Zebra{
+    +bool is_wild
+    +run()
+  }
+  class Empty
+  <<interface>> Empty
+  namespace Pond {
+    class Lily
+    class Frog
+  }
+  Lily ..> Frog
+  style Zebra fill:#f9f,stroke:#333,stroke-width:4px
