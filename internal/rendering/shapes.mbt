@@ -473,6 +473,7 @@ fn draw_shape(
     "crossedCircle" => crossed_circle(parent, node, env)
     "anchor" => anchor(parent, node, env)
     "choice" => choice(parent, node, env)
+    "rectWithTitle" => rect_with_title(parent, node, env)
     "subroutine" =>
       polygon_shape(parent, node, env, box => {
         let label_padding_x = if neo { 28.0 } else { padding }
@@ -575,7 +576,11 @@ fn insert_node(
   dir : String,
 ) -> @dom.Element raise LayoutError {
   if node.shape == "rect" {
-    node.shape = "squareRect"
+    // With or without rounded corners.
+    node.shape = match (node.rx, node.ry) {
+      (Some(rx), Some(ry)) if rx != 0.0 && ry != 0.0 => "roundedRect"
+      _ => "squareRect"
+    }
   }
   let (outer, inner) = match node.link {
     Some(link) => {

@@ -37,6 +37,7 @@ pub(all) enum LexOp {
 pub struct Lexer {
   // private fields
 }
+pub fn Lexer::fail(Self, String) -> Unit
 pub fn Lexer::line(Self) -> Int
 pub fn Lexer::pop_state(Self) -> Unit
 pub fn Lexer::push_state(Self, String) -> Unit
@@ -44,6 +45,7 @@ pub fn Lexer::remaining(Self) -> StringView
 pub fn Lexer::set_text(Self, String) -> Unit
 pub fn Lexer::state(Self) -> String
 pub fn Lexer::text(Self) -> String
+pub fn Lexer::unput(Self, Int) -> Unit
 
 pub struct Reduction[V] {
   production : Int

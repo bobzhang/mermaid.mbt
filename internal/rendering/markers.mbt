@@ -271,6 +271,10 @@ pub fn insert_markers(
   config? : @config.Config,
 ) -> Unit {
   for kind in kinds {
+    if config is Some(config) &&
+      insert_state_markers(parent, kind, diagram_type, diagram_id, config) {
+      continue
+    }
     guard marker_defs.get(kind) is Some(defs) else {
       // The other kinds take colours and widths from the theme.
       if config is Some(config) {

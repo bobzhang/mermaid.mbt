@@ -83,6 +83,27 @@ const encode = (value) => {
 """
 
 
+RANDOM_STATE_ID = re.compile(r"(?<=state-)id-[0-9a-z]{1,12}-(\d+)")
+
+
+def pin_random_ids(svg):
+    """Name the randomly named regions of a state diagram as the port does.
+
+    The last region of a composite state split by `--` has no name in the
+    diagram text; mermaid calls it `id-<Math.random() in base 36>-<count>`,
+    counting over the lifetime of the page. The port takes every draw to be
+    0.5 (`i` in base 36) and counts per diagram, which is what a fresh page
+    with that draw prints; the reference is rewritten to the same names.
+    """
+    if 'aria-roledescription="stateDiagram"' not in svg:
+        return svg
+    counts = sorted({int(match.group(1)) for match in RANDOM_STATE_ID.finditer(svg)})
+    names = {}
+    for match in RANDOM_STATE_ID.finditer(svg):
+        names[match.group(0)] = f"id-i-{counts.index(int(match.group(1))) + 1}"
+    return RANDOM_STATE_ID.sub(lambda match: names[match.group(0)], svg)
+
+
 def run(jobs, config, expression=None):
     """Render `jobs` (dicts with `id` and `text`) and return one result each."""
     if not BUNDLE.exists():
@@ -115,7 +136,11 @@ def run(jobs, config, expression=None):
     match = re.search(r'<pre id="oracle-output">([^<]*)</pre>', dom)
     if not match:
         sys.exit("oracle page produced no output:\n" + dom[:2000])
-    return json.loads(base64.b64decode(match.group(1)).decode("utf-8"))
+    results = json.loads(base64.b64decode(match.group(1)).decode("utf-8"))
+    for result in results:
+        if isinstance(result.get("svg"), str):
+            result["svg"] = pin_random_ids(result["svg"])
+    return results
 
 
 def main():

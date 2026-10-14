@@ -22,6 +22,10 @@ pub fn setup_viewport(@dom.Element, Double, String, Bool) -> Unit
 
 pub fn shape_handler(String) -> String?
 
+pub fn trace_elk_graphs() -> Unit
+
+pub fn traced_elk_graphs() -> Array[(String, Json)]
+
 // Errors
 pub(all) suberror LayoutError {
   LayoutError(String)
@@ -91,6 +95,11 @@ pub struct Node {
   tooltip : String?
   have_callback : Bool
   data : NodeData
+  rx : Double?
+  ry : Double?
+  center_label : Bool
+  wrapping_width : Double?
+  description : Array[String]
   mut label_style : String
   mut width : Double?
   mut height : Double?
@@ -100,7 +109,7 @@ pub struct Node {
   mut element : @dom.Element?
   mut intersect : ((Point) -> Point)?
 }
-pub fn Node::new(id~ : String, label~ : String, label_type? : String, parent_id? : String, padding~ : Double, css_styles? : Array[String], css_compiled_styles? : Array[String], css_classes? : String, dir? : String, dom_id? : String, look~ : String, is_group? : Bool, shape~ : String, min_width? : Double, color_index? : Int, link? : String, link_target? : String, tooltip? : String, have_callback? : Bool, data? : NodeData) -> Self
+pub fn Node::new(id~ : String, label~ : String, label_type? : String, parent_id? : String, padding~ : Double, css_styles? : Array[String], css_compiled_styles? : Array[String], css_classes? : String, dir? : String, dom_id? : String, look~ : String, is_group? : Bool, shape~ : String, min_width? : Double, color_index? : Int, link? : String, link_target? : String, tooltip? : String, have_callback? : Bool, data? : NodeData, rx? : Double, ry? : Double, center_label? : Bool, wrapping_width? : Double, description? : Array[String]) -> Self
 pub fn Node::with_styles(Self, css_styles~ : Array[String], css_compiled_styles~ : Array[String], css_classes~ : String) -> Self
 
 pub(all) enum NodeData {

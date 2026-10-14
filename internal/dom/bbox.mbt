@@ -460,6 +460,10 @@ fn Element::local_bounds(self : Element) -> Bounds? {
       let mut bounds : Bounds? = None
       for node in self.children {
         guard node is Element(child) else { continue }
+        // A link directly inside a link is not rendered.
+        if self.tag == "a" && child.tag == "a" {
+          continue
+        }
         guard child.bounds() is Some(child_bounds) else { continue }
         bounds = match bounds {
           Some(bounds) => Some(bounds.unite(child_bounds))

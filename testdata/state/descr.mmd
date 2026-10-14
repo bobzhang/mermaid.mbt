@@ -1,0 +1,15 @@
+---
+config:
+  handDrawnSeed: 7
+
+---
+stateDiagram-v2
+    state "This is a state description" as s2
+    s1 : another description
+    s3 : first line
+    s3 : second line
+    s3 : third line that is quite a bit longer than others
+    s1 --> s2
+    s2 --> s3 : with a label
+    state "Title: here" as s4: and text
+    s3 --> s4

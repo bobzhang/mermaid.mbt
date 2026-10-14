@@ -1,0 +1,1 @@
+moon_elk seeds a random number generator for every connected component of a graph laid out on its own (a composite state); ELK seeds one for the graph. See the report of the state diagram port.

@@ -312,7 +312,10 @@ fn create_svg_label(
   markdown~ : Bool = false,
   anchor_middle~ : Bool = !is_node,
   sanitize~ : Bool = true,
+  is_title~ : Bool = false,
 ) -> SvgLabel {
+  // The style is written on the text, which is laid out with it.
+  let env = env.styled(style, faces=false)
   // Node labels are sanitized on their way here, which resolves the
   // character references of text that has markup in it: the sanitizer
   // hands back text without a tag as it is. Edge labels are not
@@ -401,8 +404,9 @@ fn create_svg_label(
     |> ignore
     element.attr("style", text_style) |> ignore
   }
+  let row = if is_title { "title-row" } else { "row" }
   for tspan in element.child_elements() {
-    tspan.attr("class", "text-outer-tspan row") |> ignore
+    tspan.attr("class", "text-outer-tspan \{row}") |> ignore
   }
   { group, text_box: box, element, lines, }
 }

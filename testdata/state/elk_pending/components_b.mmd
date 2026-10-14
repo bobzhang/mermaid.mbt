@@ -1,0 +1,12 @@
+---
+config:
+  handDrawnSeed: 3
+---
+stateDiagram-v2
+    state Idle16 {
+        Active17 --> Draft19
+        Draft20 --> Error18 : x
+        Draft20 --> [*]
+        --
+        Draft21 --> [*]
+    }

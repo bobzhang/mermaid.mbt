@@ -1,0 +1,18 @@
+---
+config:
+  handDrawnSeed: 7
+---
+stateDiagram-v2
+    classDef b font-weight:normal,font-size:12px
+    classDef a font-weight:bold,font-size:20px
+    state "A composite title" as Comp {
+       x --> y
+    }
+    state "Another composite" as Other {
+       z --> w
+    }
+    class Comp a
+    class Comp b
+    class Other b
+    class Other a
+    Comp --> Other

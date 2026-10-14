@@ -49,6 +49,8 @@ fn create_html_label(
   let span = div.append("span")
   span.set_inner_html(html)
   let label_style = style.replace(old="fill:", new="color:")
+  // The style is written on the label, so its text is laid out with it.
+  let env = env.styled(label_style)
   if label_style != "" {
     span.attr("style", label_style) |> ignore
   }
@@ -162,9 +164,10 @@ fn label_helper(
     .append("g")
     .attr("class", "label")
     .attr("style", node.label_style)
-  let wrapping_width = env.config
-    .number("flowchart.wrappingWidth")
-    .unwrap_or(200.0)
+  let wrapping_width = match node.wrapping_width {
+    Some(width) if width != 0.0 => width
+    _ => env.config.number("flowchart.wrappingWidth").unwrap_or(200.0)
+  }
   let min_label_width = if node.label != "" &&
     node.width is None &&
     !unlimited &&
@@ -214,11 +217,11 @@ fn label_helper(
     |> ignore
     box
   } else {
-    // Text is centred by its anchor; only the height needs a shift.
+    // Text centred by its anchor needs only its height shifted.
     let text = create_svg_label(
       label,
       node.label,
-      env.styled(node.label_style),
+      env.styled(node.label_style, faces=false),
       width?=label_width,
       style=node.label_style,
       markdown~,
@@ -237,6 +240,13 @@ fn label_helper(
     offset_y = text.text_box.y
     label.attr("transform", "translate(0, \{n(-box.height / 2.0)})") |> ignore
     box
+  }
+  if node.center_label {
+    label.attr(
+      "transform",
+      "translate(\{n(-box.width / 2.0)}, \{n(-box.height / 2.0)})",
+    )
+    |> ignore
   }
   label.insert_first("rect") |> ignore
   { shape_svg, label, bbox: box, offset_x, offset_y, }

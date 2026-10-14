@@ -1,0 +1,20 @@
+---
+config:
+  handDrawnSeed: 7
+  themeVariables:
+    fontSize: 20px
+  state:
+    titleTopMargin: 40
+---
+---
+title: Sized
+---
+stateDiagram-v2
+    [*] --> A
+    A --> B : go there
+    state B {
+      c --> d
+    }
+    note right of A : hello note
+    A : described
+    A : twice

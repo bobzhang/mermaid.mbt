@@ -1,0 +1,17 @@
+---
+config:
+  handDrawnSeed: 7
+
+---
+stateDiagram-v2
+    hide empty description
+    scale 350 width
+    %% a comment
+    [*] --> A %% trailing
+    A --> B%%glued
+    state "Long name" as B
+    B : with a description
+    state C
+    A --> C
+    note right of C : a **bold** note<br/>second line
+    C --> [*]

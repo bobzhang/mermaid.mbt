@@ -1,0 +1,22 @@
+---
+config:
+  handDrawnSeed: 7
+
+---
+stateDiagram-v2
+    direction LR
+    state f <<fork>>
+    state j <<join>>
+    [*] --> f
+    f --> A
+    f --> B
+    A --> j
+    B --> j
+    j --> [*]
+    state Comp {
+      direction TB
+      state f2 <<fork>>
+      f2 --> x
+      f2 --> y
+    }
+    j --> Comp

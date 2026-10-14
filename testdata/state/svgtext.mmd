@@ -1,0 +1,18 @@
+---
+config:
+  handDrawnSeed: 7
+  htmlLabels: false
+---
+stateDiagram-v2
+    [*] --> A
+    A --> B : go
+    state B {
+      [*] --> c
+      c --> d
+    }
+    note right of A : a note
+    state f1 <<fork>>
+    state ch <<choice>>
+    B --> f1
+    f1 --> ch
+    ch --> [*]
