@@ -406,13 +406,17 @@ pub fn draw(journey : Journey, context : @diagram.Context) -> Unit raise {
   |> ignore
   let actors = legend_order(journey.actors(), conf)
   // Only the legend is measured: the actors' names, in the font the
-  // diagram inherits.
-  let font = @journeycommon.theme_font(theme)
-  let font_size = @journeycommon.theme_font_size(theme)
-  for actor in actors {
-    @journeycommon.require_glyphs(font, actor.name)
+  // diagram inherits. Without actors no font is needed.
+  let max_width = if actors.is_empty() {
+    0.0
+  } else {
+    let font = @journeycommon.theme_font(theme)
+    let font_size = @journeycommon.theme_font_size(theme)
+    for actor in actors {
+      @journeycommon.require_glyphs(font, actor.name)
+    }
+    draw_actor_legend(svg, actors, conf, font, font_size)
   }
-  let max_width = draw_actor_legend(svg, actors, conf, font, font_size)
   let left_margin = conf.left_margin + max_width
   let bounds : Bounds = {
     start_x: 0.0,

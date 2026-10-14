@@ -1,7 +1,7 @@
 ///|
 /// Whether JavaScript's `trim` and `Number` treat `c` as blank: white
 /// space and line terminators.
-pub fn is_js_space(c : Char) -> Bool {
+fn is_js_space(c : Char) -> Bool {
   c
   is ('\t'
   | '\n'

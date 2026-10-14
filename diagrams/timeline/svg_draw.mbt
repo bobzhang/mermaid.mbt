@@ -112,15 +112,13 @@ fn Env::init_graphics(self : Env) -> Unit {
 ///|
 /// The text of a node: a `<text>` centred on x = 0 with its wrapped
 /// lines, and the box the browser would report for it.
-fn Env::append_text(
-  self : Env,
+fn append_text(
   parent : @dom.Element,
   description : String,
   width : Double,
   style : TextStyle,
 ) -> @dom.Rect raise @journeycommon.MeasureError {
   @journeycommon.require_glyphs(style.font, description)
-  ignore(self)
   let text = parent
     .append("text")
     .attr("dy", "1em")
@@ -151,7 +149,7 @@ fn Env::virtual_node_height(
   padding~ : Double,
 ) -> Double raise @journeycommon.MeasureError {
   let scratch = @dom.Element::new("g")
-  let box = self.append_text(scratch, description, width, self.plain)
+  let box = append_text(scratch, description, width, self.plain)
   box.height + self.font_size * 1.1 * 0.5 + padding
 }
 
@@ -193,7 +191,7 @@ fn Env::draw_node(
     .attr("class", "timeline-node section-\{section}")
   let background = node.append("g")
   let text_group = node.append("g")
-  let box = self.append_text(text_group, description, width, self.node)
+  let box = append_text(text_group, description, width, self.node)
   let height = box.height + self.font_size * 1.1 * 0.5 + padding
   let height = if height != height || max_height != max_height {
     @journeycommon.js_number("NaN")
