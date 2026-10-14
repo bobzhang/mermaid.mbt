@@ -3,9 +3,9 @@
 
 Takes git graph sources from the given `.mmd` files, from the ```mermaid
 blocks of the given Markdown files, and from JSON files holding an array of
-sources; parses each with upstream (through the oracle page) and with
-`cmd/mermaid git-db`, and reports every database that differs. A source
-upstream rejects must be rejected by the port too.
+sources; renders each with upstream (through the oracle page) and reads its
+database, parses it with `cmd/mermaid git-db`, and reports every database
+that differs. A source upstream rejects must be rejected by the port too.
 
 Generated commit ids come from the same generator on both sides (see
 testdata/gitgraph/generated-ids/oracle-prelude.js).
@@ -31,14 +31,17 @@ DUMP = """(async () => {
   %s;
   const sources = %s;
   const plain = (value) => JSON.parse(JSON.stringify(value));
+  // The database is one object for all git graphs. Rendering, unlike
+  // getDiagramFromText, applies the diagram's own configuration first,
+  // which decides the name and order of the main branch.
+  const db = (await mermaid.mermaidAPI.getDiagramFromText('gitGraph')).db;
   const out = [];
   for (const source of sources) {
     try {
-      window.restartCommitIds();
-      const diagram = await mermaid.mermaidAPI.getDiagramFromText(source);
-      const db = diagram.db;
+      await mermaid.render('probe', source);
       out.push(plain({
-        commits: [...db.getCommits().values()],
+        // The renderer reverses every commit's tags in place.
+        commits: [...db.getCommits().values()].map((commit) => ({ ...commit, tags: [...commit.tags].reverse() })),
         branches: Object.fromEntries(db.getBranches()),
         branchOrder: db.getBranchesAsObjArray().map((branch) => branch.name),
         currentBranch: db.getCurrentBranch(),

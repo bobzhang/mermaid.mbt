@@ -198,12 +198,15 @@ fn git_db(paths : ArrayView[String]) -> Unit raise CliError {
         directive=processed.config,
         diagram_type="gitGraph",
       )
-      @gitgraph.parse(
+      let graph = @gitgraph.parse(
         @preprocess.encode_entities(processed.code) + "\n",
         config,
       )
-      .dump()
-      .stringify()
+      // A frontmatter title applies unless the text has its own.
+      if processed.title is Some(title) && graph.title == "" {
+        graph.set_title(title)
+      }
+      graph.dump().stringify()
     } catch {
       error => {
         let report : Json = { "error": Repr(error).to_string() }
