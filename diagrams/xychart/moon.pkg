@@ -9,6 +9,7 @@ import {
   "bobzhang/mermaid/internal/jsmath",
   "bobzhang/mermaid/theme",
   "moonbitlang/core/double",
+  "moonbitlang/core/string",
 }
 
 warnings = "-implicit_impl_as_method"

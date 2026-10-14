@@ -1,0 +1,4 @@
+Parse error on line 2:
+...hart-beta    line 1, 2, 3
+----------------------^
+Expecting 'SQUARE_BRACES_START', got 'COMMA'

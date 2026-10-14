@@ -62,6 +62,9 @@ priv struct Measurer {
   font : @font.Stack
   /// Where the chart's user space is on the page.
   placement : @diagram.Placement
+  /// The font size of the diagram, which text is measured at when the
+  /// size asked for is not one: the theme's `fontSize`, if in pixels.
+  inherited_size : Double?
   /// The font sizes text has been laid out at so far, by the key the
   /// browser's font cache files them under.
   sizes : Map[Int32, Double]
@@ -71,8 +74,20 @@ priv struct Measurer {
 fn Measurer::new(
   font : @font.Stack,
   placement : @diagram.Placement,
+  font_size~ : String = "16px",
 ) -> Measurer {
-  { font, placement, sizes: Map([]), }
+  let inherited_size = match font_size.strip_suffix("px") {
+    Some(number) if number.iter().all(c => c is ('0'..<='9' | '.')) => {
+      let size = @string.parse_double(number.to_owned()) catch { _ => 0.0 }
+      if size > 0.0 {
+        Some(size)
+      } else {
+        None
+      }
+    }
+    _ => None
+  }
+  { font, placement, inherited_size, sizes: Map([]), }
 }
 
 ///|
@@ -144,11 +159,19 @@ fn Measurer::dimension(
     .replace_all(old="&gt;", new=">")
     .replace_all(old="&amp;", new="&"),
   )
-  if text == "" {
+  // Text of no size has an empty box.
+  if text == "" || size == 0.0 {
     return (0.0, 0.0)
   }
-  if !(size > 0.0) {
-    raise Unsupported("text at the font size \{@dom.number(size)}")
+  // A negative `font-size` attribute is not valid, which leaves the
+  // text at the size of the diagram.
+  let size = if size > 0.0 {
+    size
+  } else {
+    guard self.inherited_size is Some(inherited) else {
+      raise Unsupported("text at the font size \{@dom.number(size)}")
+    }
+    inherited
   }
   if !self.font.covers(text) {
     raise Unsupported("measuring text outside the embedded fonts: \{text}")

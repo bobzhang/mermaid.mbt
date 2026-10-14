@@ -168,6 +168,7 @@ pub fn draw(chart : XYChart, context : @diagram.Context) -> Unit raise {
   let measure = Measurer::new(
     context.font(),
     context.placement(config.width, config.height, max_width=config.width),
+    font_size=context.theme().text("fontSize"),
   )
   let shapes = Orchestrator::new(chart, config, theme, measure).drawable_elements()
   // Groups by the classes leading to them, joined.

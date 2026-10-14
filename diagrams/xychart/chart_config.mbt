@@ -114,7 +114,8 @@ priv struct AxisTheme {
 }
 
 ///|
-/// The `xyChart` theme variables.
+/// The `xyChart` theme variables, as the chart's database merges them:
+/// those of the theme in effect over those of the default theme.
 priv struct ChartTheme {
   background_color : String
   title_color : String
@@ -128,9 +129,14 @@ priv struct ChartTheme {
 
 ///|
 fn ChartTheme::new(theme : @theme.Theme) -> ChartTheme raise Unsupported {
+  // What the theme in effect leaves out — the redux themes have no color
+  // for data labels — is taken from the default theme.
+  let default = (@theme.Theme::new("default") catch { _ => None }).unwrap_or(
+    theme,
+  )
   let color = (name : String) => {
-    match theme.nested("xyChart", name) {
-      String(color) => color
+    match (theme.nested("xyChart", name), default.nested("xyChart", name)) {
+      (String(color), _) | (Null, String(color)) => color
       _ => raise Unsupported("themeVariables.xyChart.\{name} is not text")
     }
   }
