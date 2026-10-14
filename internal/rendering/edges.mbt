@@ -387,8 +387,12 @@ fn insert_edge_label(
   edge : Edge,
   base_env : Env,
   env : Env,
+  padding_x~ : Double = 0.0,
+  own_styles~ : Bool = true,
 ) -> @dom.Element {
-  let split = split_styles([..edge.css_compiled_styles, ..edge.style])
+  let split = split_styles(
+    [..edge.css_compiled_styles, ..if own_styles { edge.style } else { [] }],
+  )
   edge.label_style = split.label_styles
   let edge_label = group.append("g").attr("class", "edgeLabel")
   let label = edge_label
@@ -439,6 +443,7 @@ fn insert_edge_label(
     is_node=false,
     add_background=true,
     markdown~,
+    padding_x~,
   )
   fo.attr_number("width", box.width).attr_number("height", box.height) |> ignore
   label.attr(

@@ -555,6 +555,12 @@ fn Element::bounds(self : Element) -> Bounds? {
     return None
   }
   guard self.local_bounds() is Some(bounds) else { return None }
+  // A nested `<svg>` places its content in its viewport.
+  let bounds = if self.tag == "svg" {
+    self.viewport_transform().map(bounds)
+  } else {
+    bounds
+  }
   Some(element_transform(self).map(bounds))
 }
 

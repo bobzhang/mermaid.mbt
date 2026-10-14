@@ -1,0 +1,20 @@
+---
+config:
+  handDrawnSeed: 3
+  theme: dark
+  htmlLabels: false
+  usecase:
+    actorFontSize: 18
+    wrappingWidth: 150
+    nodeSpacing: 20
+---
+usecase-beta
+direction TB
+actor A0("Customer")@{ type: hollow }
+U0(A much longer use case label that wraps)
+A0 -- lbl -- U0
+U0 o-- "back" -- U0
+U0 --o U0
+U0 --> U0
+json J@{ "k": "v", "n": 1, "list": [1, 2], "o": { "p": true } }
+A0 --> J

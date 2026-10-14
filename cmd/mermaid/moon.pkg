@@ -8,6 +8,7 @@ import {
   "bobzhang/mermaid/internal/d3",
   "bobzhang/mermaid/internal/dagre",
   "bobzhang/mermaid/diagrams/state",
+  "bobzhang/mermaid/diagrams/usecase",
   "bobzhang/mermaid/diagrams/gantt",
   "bobzhang/mermaid/internal/dayjs",
   "bobzhang/mermaid/diagrams/sequence",

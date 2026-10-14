@@ -1,0 +1,12 @@
+usecase-beta
+direction BT
+actor Customer
+actor Admin
+systemBoundary S["Shop"]
+  Browse("Browse products")
+  Checkout("Checkout")
+end
+Customer --> Browse
+Customer --> Checkout
+Admin --> Checkout
+Checkout ..> : include Browse

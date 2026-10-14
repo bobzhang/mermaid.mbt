@@ -1,0 +1,15 @@
+---
+config:
+  handDrawnSeed: 5
+---
+usecase-beta
+direction TB
+systemBoundary S["Shop"]
+  actor Clerk
+  Sell("Sell")
+end
+note for Clerk "A clerk"
+note for Sell "`**Sells** things
+on two lines`"
+note for Sell "Second note"
+Clerk --> Sell

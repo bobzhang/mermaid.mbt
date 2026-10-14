@@ -301,7 +301,11 @@ fn add_vertices(
       elk_origin: None,
       label_data: None,
       configured: false,
-      layout_options: {},
+      layout_options: if node.spread_ports && !node.is_group {
+        { "elk.portAlignment.default": "CENTER" }
+      } else {
+        {}
+      },
     }
     into.push(child)
     node_db[node.id] = child

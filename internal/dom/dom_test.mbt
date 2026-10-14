@@ -426,3 +426,30 @@ test "alpha of a color in an inline style" {
     ),
   )
 }
+
+///|
+test "SVG markup parsed into the page keeps the case of SVG names" {
+  let group = @dom.Element::new("svg").append("g")
+  group.set_inner_html(
+    "<svg viewBox=\"0 0 8 8\" preserveAspectRatio=\"none\"><clipPath clipPathUnits=\"userSpaceOnUse\"></clipPath><foreignObject><div viewBox=\"x\"></div></foreignObject></svg>",
+  )
+  inspect(
+    group.to_html(),
+    content="<g><svg viewBox=\"0 0 8 8\" preserveAspectRatio=\"none\"><clipPath clipPathUnits=\"userSpaceOnUse\"></clipPath><foreignObject><div viewbox=\"x\"></div></foreignObject></svg></g>",
+  )
+  // HTML elements are left alone.
+  let div = @dom.Element::new("div")
+  div.set_inner_html("<p viewBox=\"1\">x</p>")
+  inspect(div.to_html(), content="<div><p viewbox=\"1\">x</p></div>")
+}
+
+///|
+test "a nested svg parsed from markup fits its viewBox" {
+  // Chrome: `getBBox()` of the group is 42 pixels square.
+  inspect(
+    box_of(
+      "<g transform=\"translate(-21,-23)\"><g><svg width=\"42\" height=\"42\" viewBox=\"0 0 80 80\"><rect width=\"80\" height=\"80\"></rect></svg></g></g>",
+    ),
+    content="-21 -23 42 42",
+  )
+}

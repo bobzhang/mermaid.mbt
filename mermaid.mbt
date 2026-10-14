@@ -484,6 +484,26 @@ fn parse_diagram(
         },
       }
     }
+    "usecase" => {
+      let db = @usecase.parse(code, config) catch {
+        @usecase.Invalid(message) => raise Syntax(message)
+        @usecase.Unsupported(message) => raise Unsupported(message)
+      }
+      // A frontmatter title is not shown: parsing clears the title the
+      // database was given before.
+      {
+        styles: @usecase.styles(config),
+        acc_title: db.acc_title,
+        acc_description: db.acc_description,
+        classes: [],
+        draw: context => {
+          @usecase.draw(db, context) catch {
+            @usecase.Invalid(message) => raise Syntax(message)
+            @usecase.Unsupported(message) => raise Unsupported(message)
+          }
+        },
+      }
+    }
     "quadrantChart" => {
       let chart = @quadrant.parse(code, title?) catch {
         @jison.ParseError(message~, ..) => raise Syntax(message)

@@ -74,6 +74,12 @@ fn dagre_spacing(data : LayoutData) -> (Double?, Double?) {
         own("state.nodeSpacing", 50.0, true),
         own("state.rankSpacing", 50.0, true),
       )
+    // The use case renderer passes its own setting, which has a default.
+    "usecase" =>
+      (
+        own("usecase.nodeSpacing", 50.0, false),
+        own("usecase.rankSpacing", 50.0, false),
+      )
     _ => (None, None)
   }
   // The ER renderer writes its spacing into the flowchart's settings.
@@ -389,7 +395,14 @@ fn DagreState::insert_centre_label(
   let element = if edge.label == "" && !self.label_env.html_labels {
     insert_empty_text_label(group, edge)
   } else {
-    insert_edge_label(group, edge, self.env, self.label_env)
+    insert_edge_label(
+      group,
+      edge,
+      self.env,
+      self.label_env,
+      padding_x=label_background_padding(self.data.diagram_type),
+      own_styles=edge_label_uses_own_styles(self.data.diagram_type),
+    )
   }
   self.edge_labels[edge.id] = element
 }

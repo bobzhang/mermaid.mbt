@@ -80,4 +80,16 @@ pub(all) enum NodeData {
   /// `@{ ... }` metadata: `algorithm` picks the layout of its children,
   /// `containerType` the look of the collapsed node.
   Container(metadata~ : Map[String, Json])
+  /// An element of a use case diagram: the type the stylesheet sets its
+  /// label in, if it sets one, and what its shape draws besides the
+  /// label: the slash of a business element, a stereotype, an icon, the
+  /// rows of a JSON table (key and value) or the kind of a boundary.
+  Usecase(
+    font~ : UsecaseFont?,
+    business~ : Bool,
+    stereotype~ : String?,
+    icon~ : String?,
+    rows~ : Array[(String, String)],
+    boundary_type~ : String
+  )
 }

@@ -1,0 +1,18 @@
+---
+config:
+  htmlLabels: false
+---
+usecase-beta
+Inspect("Inspect payload")
+json Payload@{
+  "2": "second in source",
+  "enabled": true,
+  "count": 3,
+  "missing": null,
+  "colors": ["Red", "Green"],
+  "address": { "city": "Oslo" },
+  "emptyObject": {},
+  "emptyArray": []
+}:::data
+Inspect --> Payload
+classDef data stroke:#3572a5

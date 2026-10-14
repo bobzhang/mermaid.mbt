@@ -48,6 +48,10 @@ FACES = [
     ("helvetica_bold", SYSTEM_DIR / "Helvetica.ttc", 1),
     ("helvetica_italic", SYSTEM_DIR / "Helvetica.ttc", 2),
     ("helvetica_bold_italic", SYSTEM_DIR / "Helvetica.ttc", 3),
+    ("georgia_regular", "Georgia.ttf"),
+    ("georgia_bold", "Georgia Bold.ttf"),
+    ("georgia_italic", "Georgia Italic.ttf"),
+    ("georgia_bold_italic", "Georgia Bold Italic.ttf"),
 ]
 
 # Code points kept from each face: Latin with its extensions, IPA, Greek and

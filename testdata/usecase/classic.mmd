@@ -1,0 +1,15 @@
+---
+config:
+  look: classic
+  handDrawnSeed: 2
+---
+usecase-beta
+actor Customer
+actor Staff@{ type: awesome }
+systemBoundary S["Shop"]
+  Browse("Browse products")
+  Review[Review order]
+end
+Customer --> Browse
+Staff --> Review
+Browse ..> : include Review

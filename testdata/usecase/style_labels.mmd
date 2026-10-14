@@ -1,0 +1,15 @@
+usecase-beta
+actor A
+U1("Big text")
+U2[Red rect]
+systemBoundary S
+  U3("in boundary")
+end
+A --> U1
+A --> U2
+A --> U3
+style U1 font-size:20px,color:#c00
+style U2 fill:#fee,stroke:#c00,stroke-width:3px
+style S fill:#f8f8ff,color:#333
+classDef default stroke:#7f8ea3
+style A stroke:#f0f,color:blue

@@ -1,0 +1,8 @@
+usecase-beta
+actor A("Agent") <<*Emph* role>>
+U1("Use [x]") <<_core_>>
+U2("Biz")@{ business: true } <<**Rule**>>
+U3[Rect *x*] <<`tick`>>
+A --> U1
+A --> U2
+A --> U3

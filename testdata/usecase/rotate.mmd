@@ -1,0 +1,20 @@
+---
+config:
+  theme: redux-color
+  usecase:
+    colorScheme: rotate
+---
+usecase-beta
+direction LR
+actor Customer
+actor Auditor@{ type: hollow }
+actor Biz@{ business: true }
+Browse("Browse catalogue")
+Checkout("Checkout")
+Pay("Pay")@{ business: true }
+R[Rect]
+Customer --> Browse
+Browse --> Checkout
+Auditor --> Checkout
+Biz --> Pay
+Pay --> R

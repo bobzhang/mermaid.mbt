@@ -1,0 +1,9 @@
+---
+config:
+  htmlLabels: false
+  theme: neutral
+---
+usecase-beta
+json Cfg@{ "name": "**bold** value", "list": ["a", "b c"], "deep": { "x": { "y": [ { "z": 1.5 } ] } }, "": "empty key" }
+Use("Use config") --> Cfg
+Cfg --> Other
