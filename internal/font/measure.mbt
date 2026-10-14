@@ -364,14 +364,16 @@ fn measured_fallback_em(c : Char) -> Double? {
     0x2665 => Some(0.59375)
     // HEAVY BLACK HEART
     0x2764 => Some(0.91015625)
+    // Emoji, from Apple Color Emoji: 20 pixels at 16.
+    code if code >= 0x1F300 && code <= 0x1FAFF => Some(1.25)
     _ => None
   }
 }
 
 ///|
-/// The first character of `text` the stack cannot measure exactly: one
-/// that no face has and whose fallback advance was not read off the
-/// reference browser.
+/// The first character of `text` the stack cannot measure the advance of
+/// exactly: one that no face has and whose fallback advance was not read
+/// off the reference browser.
 pub fn Stack::first_unmeasured(self : Stack, text : StringView) -> Char? {
   for drawn in self.glyphs(text) {
     if drawn is Missing(c) && measured_fallback_em(c) is None {

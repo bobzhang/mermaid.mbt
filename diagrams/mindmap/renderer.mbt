@@ -22,13 +22,18 @@ fn layout_algorithm(config : @config.Config) -> String {
 ///|
 /// Refuse labels the port cannot measure as the browser does: characters
 /// no embedded face has (the browser draws them from a system fallback
-/// font) and subscripts and superscripts (which change the height of
-/// their line).
+/// font) unless their advances were read off it, and then only in HTML
+/// labels (SVG text takes the height of the fallback font), and subscripts
+/// and superscripts (which change the height of their line).
 fn check_measurable(
   db : MindmapDb,
   config : @config.Config,
 ) -> Unit raise MindmapError {
   let family = config.theme().text("fontFamily")
+  let html_labels = match config.get("htmlLabels") {
+    Null => true
+    value => @config.evaluate(value)
+  }
   let stacks = [
     @font.Stack::for_family(family),
     @font.Stack::for_family(family, bold=true),
@@ -47,7 +52,12 @@ fn check_measurable(
       text.iter().map(c => if c is ('\n' | '\r' | '\t') { ' ' } else { c }),
     )
     for stack in stacks {
-      if stack.first_unmeasured(drawn) is Some(c) {
+      let missing = if html_labels {
+        stack.first_unmeasured(drawn)
+      } else {
+        stack.first_uncovered(drawn)
+      }
+      if missing is Some(c) {
         raise Unsupported(
           "the character \{c} has no embedded font to measure it with: \{node.descr}",
         )

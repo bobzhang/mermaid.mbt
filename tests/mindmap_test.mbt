@@ -22,6 +22,14 @@ test "mindmaps the port refuses rather than draw differently" {
     refusal("mindmap\n  root[東京]\n"),
     content="Unsupported: the character 東 has no embedded font to measure it with: 東京",
   )
+  // An emoji is measured in HTML labels, not in SVG text, which takes the
+  // height of the font it is drawn from.
+  inspect(
+    refusal(
+      "---\nconfig:\n  htmlLabels: false\n---\nmindmap\n  root[a 😀 b]\n",
+    ),
+    content="Unsupported: the character 😀 has no embedded font to measure it with: a 😀 b",
+  )
   // Subscripts and superscripts change the height of their line.
   inspect(
     refusal("mindmap\n  root[H<sub>2</sub>O]\n"),
