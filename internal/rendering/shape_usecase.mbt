@@ -20,12 +20,12 @@ fn node_html_labels(env : Env) -> Bool {
 }
 
 ///|
-/// The environment the label of a use case diagram node is measured in:
-/// the stylesheet sets HTML labels (`.nodeLabel`) of actors and use cases
+/// The environment HTML text of a use case diagram node is measured in:
+/// the stylesheet sets the labels (`.nodeLabel`) of actors and use cases
 /// in a type of their own.
-fn usecase_label_env(node : Node, env : Env) -> Env {
+fn usecase_font_env(node : Node, env : Env) -> Env {
   match node.data {
-    Usecase(font=Some(font), ..) if node_html_labels(env) =>
+    Usecase(font=Some(font), ..) =>
       {
         ..env,
         font_family: font.family,
@@ -33,6 +33,18 @@ fn usecase_label_env(node : Node, env : Env) -> Env {
         bold: font.bold,
       }
     _ => env
+  }
+}
+
+///|
+/// The environment the label `labelHelper` makes for a use case diagram
+/// node is measured in: SVG text has no class the stylesheet sets a type
+/// for while it is measured.
+fn usecase_label_env(node : Node, env : Env) -> Env {
+  if node_html_labels(env) {
+    usecase_font_env(node, env)
+  } else {
+    env
   }
 }
 
@@ -53,6 +65,7 @@ fn insert_label(
   parent : @dom.Element,
   text : String,
   env : Env,
+  html_env : Env,
   width? : Double,
   style~ : String = "",
   center_label~ : Bool = false,
@@ -63,14 +76,17 @@ fn insert_label(
     _ => env.config.number("flowchart.wrappingWidth").unwrap_or(200.0)
   }
   let n = @dom.number
-  let (box, offset_x, offset_y) = if node_html_labels(env) {
+  // `getEffectiveHtmlLabels`, unlike the node labels: the flowchart's
+  // setting counts.
+  let (box, offset_x, offset_y) = if env.html_labels {
     let (fo, box) = create_html_label(
       label,
       text,
-      env,
+      html_env,
       width~,
       style~,
       markdown=true,
+      auto_wrap=true,
     )
     fo.attr_number("width", box.width).attr_number("height", box.height)
     |> ignore
@@ -274,7 +290,7 @@ fn usecase_actor(
     parent,
     node,
     node_classes(node) + "usecase-actor-variant usecase-actor-\{variant}",
-    env,
+    usecase_label_env(node, env),
   )
   let shape_svg = labelled.shape_svg
   if node.label != "" {
@@ -292,6 +308,7 @@ fn usecase_actor(
         shape_svg,
         "«\{text}»",
         env,
+        usecase_font_env(node, env),
         width?=node.wrapping_width,
         style=styles.label_styles,
         center_label=true,
@@ -389,7 +406,12 @@ fn usecase_ellipse(
   env : Env,
 ) -> @dom.Element {
   let styles = shape_styles(node)
-  let labelled = label_helper(parent, node, node_classes(node), env)
+  let labelled = label_helper(
+    parent,
+    node,
+    node_classes(node),
+    usecase_label_env(node, env),
+  )
   stamp_color_slot(labelled.shape_svg, node.color_index, env)
   let padding = node.padding / 2.0
   let radius_x = labelled.bbox.width / 2.0 + padding * 2.0
@@ -426,7 +448,7 @@ fn usecase_business(
     parent,
     node,
     node_classes(node) + "usecase-business-shape",
-    env,
+    usecase_label_env(node, env),
   )
   labelled.label.attr("class", "label usecase-label") |> ignore
   restyle_svg_label(labelled.label, node, env)
@@ -438,6 +460,7 @@ fn usecase_business(
         shape_svg,
         "«\{text}»",
         env,
+        usecase_font_env(node, env),
         width?=node.wrapping_width,
         style=styles.label_styles,
         center_label=true,
@@ -547,12 +570,14 @@ fn usecase_json_table(
       table_group,
       row.0,
       env,
+      env,
       style=styles.label_styles,
       center_label=true,
     )
     let value = insert_label(
       table_group,
       row.1,
+      env,
       env,
       style=styles.label_styles,
       center_label=true,

@@ -32,9 +32,15 @@ fn create_html_label(
   add_background~ : Bool = false,
   markdown~ : Bool = false,
   padding_x~ : Double = 0.0,
+  auto_wrap? : Bool,
 ) -> (@dom.Element, LabelBox) {
+  // Callers that give `createText` no configuration get the default.
+  let auto_wrap = match auto_wrap {
+    Some(auto_wrap) => auto_wrap
+    None => !(env.config.get("markdownAutoWrap") is False)
+  }
   let html = if markdown {
-    markdown_to_html(text, !(env.config.get("markdownAutoWrap") is False))
+    markdown_to_html(text, auto_wrap)
   } else {
     non_markdown_to_html(text)
   }

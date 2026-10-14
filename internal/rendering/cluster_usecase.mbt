@@ -39,6 +39,7 @@ fn usecase_system_boundary(
       width=200.0,
       style=styles.label_styles,
       markdown=true,
+      auto_wrap=true,
     )
     fo.attr_number("width", box.width).attr_number("height", box.height)
     |> ignore

@@ -408,7 +408,6 @@ fn draw_shape(
 ) -> @dom.Element raise LayoutError {
   let neo = node.look == "neo"
   let padding = node.padding
-  let env = usecase_label_env(node, env)
   // Shapes that belong to one diagram type are not in the shape table.
   match node.shape {
     "erBox" => return er_box(parent, node, env)
@@ -432,7 +431,7 @@ fn draw_shape(
       let shape_svg = draw_rect(
         parent,
         node,
-        env,
+        usecase_label_env(node, env),
         label_padding_x=if neo { 16.0 } else { padding * 2.0 },
         label_padding_y=if neo { 12.0 } else { padding },
       )

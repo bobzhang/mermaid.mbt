@@ -1,0 +1,14 @@
+---
+config:
+  htmlLabels: false
+---
+usecase-beta
+actor A("Agent") <<*Emph* role>>
+U1("Use [x]") <<_core_>>
+U2("A business use case with a long label that wraps")@{ business: true } <<**Rule**>>
+U3[Rect *x*] <<`tick`>>
+U4("line1<br>line2")
+A --> U1
+A --> U2
+A --> U3
+A --> U4
