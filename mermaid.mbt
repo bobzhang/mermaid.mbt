@@ -683,6 +683,34 @@ fn parse_diagram(
         },
       }
     }
+    "kanban" => {
+      let convert = (error : Error) => {
+        match error {
+          @jison.ParseError(message~, ..) => Syntax(message)
+          @kanban.Invalid(message) => Syntax(message)
+          @kanban.Unsupported(message) => Unsupported(message)
+          @rendering.LayoutError(message) => Unsupported(message)
+          error => Syntax(error.to_string())
+        }
+      }
+      let db = @kanban.parse(code, config) catch {
+        error => raise convert(error)
+      }
+      // The database keeps neither a title nor accessibility text.
+      {
+        styles: @kanban.styles(config.theme()) catch {
+          error => raise convert(error)
+        },
+        acc_title: "",
+        acc_description: "",
+        classes: [],
+        draw: context => {
+          @kanban.draw(db, context) catch {
+            error => raise convert(error)
+          }
+        },
+      }
+    }
     other => raise Unsupported(other)
   }
 }

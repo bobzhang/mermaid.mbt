@@ -15,6 +15,11 @@ fn parse_declarations(text : String) -> Array[(String, String)] {
       let lower = value.to_lower()
       if lower.has_suffix("!important") {
         let base = value[:value.length() - 10].trim().to_owned()
+        // A `!` left in the value, as in `left !important !important`,
+        // makes the declaration invalid, and it is dropped.
+        if base.contains("!") && !name.has_prefix("--") {
+          continue
+        }
         parsed.push((name, normalize_value(name, base) + " !important", true))
       } else {
         parsed.push((name, normalize_value(name, value), false))

@@ -1,0 +1,4 @@
+Parse error on line 2:
+kanban  a[]
+----------^
+Expecting 'NODE_DESCR', got 'NODE_DEND'

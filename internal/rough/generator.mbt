@@ -69,6 +69,13 @@ fn draw(sets : Array[OpSet], o : Options, even_odd : Bool) -> @dom.Element {
         .attr("stroke-width", @dom.number(weight))
         .attr("fill", "none")
         |> ignore
+        if o.fill_line_dash is Some(dash) {
+          path.attr(
+            "stroke-dasharray",
+            dash.map(@dom.number).join(" ").trim().to_owned(),
+          )
+          |> ignore
+        }
       }
     }
   }

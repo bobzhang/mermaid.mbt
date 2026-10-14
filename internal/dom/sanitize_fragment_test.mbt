@@ -31,6 +31,8 @@ test "character data is escaped once the text is parsed" {
     content="x &lt;= y &amp;&amp; y &gt;= z",
   )
   inspect(sanitized("&amp; <x> &lt; &#35;"), content="&amp;  &lt; #")
+  // An ampersand that starts no reference is text.
+  inspect(sanitized("R&D <x>"), content="R&amp;D ")
 }
 
 ///|
@@ -48,6 +50,7 @@ test "what is not modelled is refused" {
   inspect(sanitized("<b class='x'>bold</b>"), content="unsupported")
   inspect(sanitized("a <!-- comment --> b"), content="unsupported")
   inspect(sanitized("<i><b>crossed</i></b>"), content="unsupported")
-  inspect(sanitized("R&D <x>"), content="unsupported")
+  // A name the parser resolves without its semicolon.
+  inspect(sanitized("&copyx <x>"), content="unsupported")
   inspect(sanitized("&nope; <x>"), content="unsupported")
 }

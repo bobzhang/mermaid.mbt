@@ -142,6 +142,7 @@ pub(all) enum NodeData {
   ClassBox(text~ : String, annotations~ : Array[String], members~ : Array[ClassBoxMember], methods~ : Array[ClassBoxMember])
   Block(positioned~ : Bool, directions~ : Array[String], width_in_columns~ : Double, style~ : String, class_rules~ : Array[String])
   C4(stereotype~ : String, font_family~ : String, font_size~ : Double, bold~ : Bool)
+  KanbanItem(ticket~ : String, ticket_text~ : String, assigned~ : String, priority~ : String?, icon~ : Bool)
   Container(metadata~ : Map[String, Json])
 }
 
@@ -149,6 +150,7 @@ pub struct Painter {
   // private fields
 }
 pub fn Painter::draw_shape(Self, @dom.Element, Node) -> @dom.Element raise LayoutError
+pub fn Painter::insert_cluster(Self, @dom.Element, Node) -> @dom.Element raise LayoutError
 pub fn Painter::insert_edge(Self, @dom.Element, Edge, Array[Point], points_json? : String) -> @dom.Element raise LayoutError
 pub fn Painter::insert_edge_label(Self, @dom.Element, Edge) -> @dom.Element
 pub fn Painter::insert_look_defs(Self, @dom.Element) -> Unit
