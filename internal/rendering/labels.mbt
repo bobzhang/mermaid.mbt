@@ -179,6 +179,10 @@ fn label_helper(
   ignore_min_width~ : Bool = false,
   html_labels? : Bool,
 ) -> Labelled {
+  // Nodes carrying a stereotype have a label of stacked sections.
+  if node.data is C4(..) {
+    return c4_label_helper(parent, node, classes, env)
+  }
   let shape_svg = parent
     .append("g")
     .attr("class", classes)

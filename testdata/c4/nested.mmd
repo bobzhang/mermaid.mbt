@@ -1,0 +1,32 @@
+C4Context
+title Deep nesting
+Enterprise_Boundary(e1, "Level 1") {
+  System_Boundary(s1, "Level 2 a") {
+    Boundary(b1, "Level 3 a", "team") {
+      Person(p1, "P1")
+      Boundary(b2, "Level 4") {
+        System(x1, "X1")
+      }
+    }
+    Boundary(b3, "Level 3 b") {
+      System(x2, "X2")
+    }
+    Boundary(b4, "Level 3 c") {
+      System(x3, "X3")
+    }
+  }
+  System_Boundary(s2, "Level 2 b") {
+    System(x4, "X4")
+    System(x5, "X5")
+    System(x6, "X6")
+  }
+  System_Boundary(s3, "Level 2 c") {
+    System(x7, "X7")
+  }
+}
+Enterprise_Boundary(e2, "Second") {
+  Person(p2, "P2")
+}
+Rel(p1, x7, "far")
+Rel(x1, p2, "farther", "tech")
+BiRel(s2, e2, "boundaries")

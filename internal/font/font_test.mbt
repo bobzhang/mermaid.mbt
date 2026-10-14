@@ -194,3 +194,50 @@ test "ink at sizes that do not scale to whole floats" {
     0, -13.066377639770508, 85.59375, 16.066377639770508,
   ])
 }
+
+///|
+test "kerning from a kern table is shared between the two glyphs" {
+  // What `getComputedTextLength()` reports for `<tspan>A</tspan>` and the
+  // `<tspan>` after it: `A` and the space kern, and each word takes half.
+  let helvetica = @font.Stack::for_family("sans-serif")
+  debug_inspect(
+    helvetica.item_advances(["A", " cat"], 14.0),
+    content="[8.96875, 22.1875]",
+  )
+  debug_inspect(
+    helvetica.item_advances(["xA", " Ax"], 11.48),
+    content="[13.09375, 15.65625]",
+  )
+  let trebuchet = @font.Stack::default()
+  debug_inspect(
+    trebuchet.item_advances(["A", " cat"], 14.0),
+    content="[7.875, 23.671875]",
+  )
+  debug_inspect(
+    trebuchet.item_advances(["L", " x"], 16.0),
+    content="[7.8125, 12.546875]",
+  )
+}
+
+///|
+test "the ink of a piece follows the kerning it shares with the piece before" {
+  // The space of ` A` gives up its half of the adjustment, so the `A`
+  // after it starts that much earlier than in a piece shaped alone.
+  let helvetica = @font.Stack::for_family("sans-serif")
+  let alone = helvetica.ink(" A", 14.0)
+  let after = helvetica.item_inks(["A", " A"], 14.0)[1]
+  debug_inspect(alone.x - after.x, content="0.3828125")
+  debug_inspect(alone.width == after.width, content="true")
+}
+
+///|
+test "Helvetica has oblique faces" {
+  let oblique = @font.Stack::for_family("Helvetica", italic=true)
+  let upright = @font.Stack::for_family("Helvetica")
+  // The advances are the same; the slanted `J` leans out of its cell.
+  debug_inspect(
+    (oblique.advance("J", 11.48), upright.advance("J", 11.48)),
+    content="(5.75, 5.75)",
+  )
+  debug_inspect(oblique.bbox("J", 11.48).width, content="6.664902210235596")
+}

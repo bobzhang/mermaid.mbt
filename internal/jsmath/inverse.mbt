@@ -1,5 +1,5 @@
-// atan2 and acos as V8 computes them. Like sin and cos they come from
-// llvm-libc and are correctly rounded, so they are evaluated here in
+// atan2, acos and asin as V8 computes them. Like sin and cos they come
+// from llvm-libc and are correctly rounded, so they are evaluated here in
 // double-double arithmetic and rounded once. (llvm-libc's atan is not
 // correctly rounded and is not ported.)
 
@@ -119,6 +119,25 @@ pub fn acos(x : Double) -> Double {
   let angle = atan_ratio(sine, DD::from_double(x.abs()))
   let angle = if x < 0.0 { dd_pi.add(angle.neg()) } else { angle }
   angle.to_double()
+}
+
+///|
+/// `Math.asin` as V8 computes it.
+pub fn asin(x : Double) -> Double {
+  if x.is_nan() || x.abs() > 1.0 {
+    return 0x7ff8000000000000L.reinterpret_as_double()
+  }
+  // Zero keeps its sign.
+  if x == 0.0 {
+    return x
+  }
+  let signed = (angle : Double) => if x < 0.0 { -angle } else { angle }
+  if x.abs() == 1.0 {
+    return signed(dd_pio2.to_double())
+  }
+  // sqrt(1 - x^2) from the two exact factors.
+  let cosine = two_sum(1.0, -x).mul(two_sum(1.0, x)).sqrt()
+  signed(atan_ratio(DD::from_double(x.abs()), cosine).to_double())
 }
 
 ///|

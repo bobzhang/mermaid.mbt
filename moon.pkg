@@ -1,6 +1,7 @@
 import {
   "bobzhang/mermaid/config",
   "bobzhang/mermaid/diagram",
+  "bobzhang/mermaid/diagrams/c4",
   "bobzhang/mermaid/diagrams/block",
   "bobzhang/mermaid/diagrams/classdiagram",
   "bobzhang/mermaid/diagrams/er",

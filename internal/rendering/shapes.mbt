@@ -439,6 +439,7 @@ fn draw_shape(
       )
     "question" => question(parent, node, env)
     "cylinder" => cylinder(parent, node, env)
+    "person" => person(parent, node, env)
     "stadium" => stadium(parent, node, env)
     "rect_left_inv_arrow" => rect_left_inv_arrow(parent, node, env)
     "circle" => circle(parent, node, env)

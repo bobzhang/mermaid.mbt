@@ -113,6 +113,30 @@ fn item_widths(items : Array[Run], env : Env) -> Array[Double] {
 }
 
 ///|
+/// The ink of the items of a line, each around the start of its item on
+/// the baseline: like their widths, shaped as one run per face.
+fn item_inks(items : Array[Run], env : Env) -> Array[@font.Rect] {
+  let inks = []
+  let mut index = 0
+  while index < items.length() {
+    let first = items[index]
+    let group = []
+    while index < items.length() &&
+          items[index].bold == first.bold &&
+          items[index].italic == first.italic {
+      group.push(items[index].text)
+      index += 1
+    }
+    inks.append(
+      env
+      .font(bold=first.bold, italic=first.italic)
+      .item_inks(group, env.font_size),
+    )
+  }
+  inks
+}
+
+///|
 /// What `getComputedTextLength()` reports for a line.
 fn text_line_width(line : Array[Word], env : Env) -> Double {
   item_widths(line_items_text(line), env).fold(init=0.0, (a, b) => a + b)
@@ -239,7 +263,7 @@ fn em_to_px(value : Double, size : Double) -> Float {
 /// `create_svg_label`: line `i` has its baseline at
 /// `(1.1 i - 0.1)em + 1.1em`, starts at x = 0 and is centred there when
 /// anchored in the middle. Every item contributes its cell, from the
-/// ascent above the baseline to the descent below, and its ink.
+/// ascent above the baseline to the descent below, united with its ink.
 fn text_box(
   lines : Array[Array[Word]],
   env : Env,
@@ -256,21 +280,26 @@ fn text_box(
     // on its elements would.
     let items = line_items_text(line).map(run => restyle(index, run))
     let widths = item_widths(items, env)
+    let inks = item_inks(items, env)
     let total = widths.fold(init=0.0, (a, b) => a + b)
     let mut x = if anchor_middle { -total / 2.0 } else { 0.0 }
     for k, item in items {
       let font = env.font(bold=item.bold, italic=item.italic)
       let (ascent, descent) = font.line_metrics(size)
-      let cell = BoxF::from_edges(
-        f(x),
-        baseline - f(ascent),
-        f(x + widths[k]),
-        baseline + f(descent),
-      )
-      let ink = font.ink(item.text, size)
+      // The box of the fragment, and its ink moved from the baseline to
+      // the top of that box and then to where the box is: Blink's
+      // `FragmentItem::ObjectBoundingBox`, step by step in single
+      // precision.
+      let cell : BoxF = {
+        x: f(x),
+        y: baseline - f(ascent),
+        width: f(widths[k]),
+        height: f(ascent + descent),
+      }
+      let ink = inks[k]
       let ink_box : BoxF = {
-        x: f(x) + f(ink.x),
-        y: baseline + f(ink.y),
+        x: f(ink.x) + cell.x,
+        y: f(ink.y) + f(ascent) + cell.y,
         width: f(ink.width),
         height: f(ink.height),
       }

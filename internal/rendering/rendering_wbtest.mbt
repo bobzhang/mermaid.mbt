@@ -173,3 +173,86 @@ test "text labels split into lines of words" {
     content="color:blue;",
   )
 }
+
+///|
+test "SVG labels keep the character references of text without markup" {
+  let env = Env::new(@config.Config::new(), "id")
+  let words = (text : String) => {
+    let parent = @dom.Element::new("g")
+    let label = create_svg_label(parent, text, env)
+    label.lines.map(line => line_items_text(line).map(item => item.text))
+  }
+  // The sanitizer returns such text as it is; writing the words resolves
+  // `&amp;`, `&lt;` and `&gt;` and nothing else.
+  debug_inspect(
+    words("5 ﬂ°gt¶ß 3 ﬂ°quot¶ßxﬂ°quot¶ß ﬂ°°35¶ß"),
+    content=(
+      #|[["5", " >", " 3", " &quot;x&quot;", " &#35;"]]
+    ),
+  )
+  // With markup the text goes through the HTML parser, which resolves
+  // every reference.
+  debug_inspect(
+    words("ﬂ°quot¶ßxﬂ°quot¶ß<br/>ﬂ°°35¶ß"),
+    content=(
+      #|[["\"x\""], ["#"]]
+    ),
+  )
+}
+
+///|
+test "a person: a head above a body, sized around the stacked label" {
+  let node = Node::new(
+    id="a",
+    label="Alice",
+    label_type="string",
+    padding=20.0,
+    css_styles=["fill:#08427B", "color:#FFFFFF"],
+    css_classes="c4-shape c4-person",
+    dom_id="id-a",
+    look="classic",
+    shape="person",
+    data=C4(
+      stereotype="[Person]",
+      font_family="\"Open Sans\", sans-serif",
+      font_size=14.0,
+      bold=false,
+    ),
+    description=["A customer of the bank"],
+  ).placed(x=100.0, y=100.0, width=216.0, label_style="")
+  let parent = @dom.Element::new("g")
+  let painter = Painter::new(
+    @config.Config::new(),
+    diagram_type="c4",
+    diagram_id="id",
+  )
+  let element = painter.draw_shape(parent, node)
+  // The head's radius is 0.23 of the width; the body holds the label and
+  // its padding.
+  inspect(
+    element.child_elements()[0].to_html(),
+    content=(
+      #|<g class="basic label-container"><rect x="-108" y="-1.0598810546875068" width="216" height="88.066162109375" rx="38.232" ry="38.232" style="fill:#08427B !important"></rect><circle cx="0" cy="-37.326281054687506" r="49.68" style="fill:#08427B !important"></circle></g>
+    ),
+  )
+  debug_inspect(
+    (node.width, node.height),
+    content=(
+      #|(Some(216), Some(174.0125732421875))
+    ),
+  )
+  // Lines leave the silhouette, not the bounding box: straight up through
+  // the top of the head, sideways through the body.
+  debug_inspect(
+    node.leaves_at({ x: 100.0, y: -500.0, }),
+    content=(
+      #|Some({ x: 100, y: 12.993713378906248 })
+    ),
+  )
+  debug_inspect(
+    node.leaves_at({ x: 900.0, y: 143.0, }),
+    content=(
+      #|Some({ x: 190.60976725860306, y: 104.87027499014991 })
+    ),
+  )
+}

@@ -452,7 +452,20 @@ fn Face::glyph_bounds(self : Face, glyph : Glyph, size : Double) -> RectF? {
 /// and script form a run and kern against each other; a change of either
 /// starts a new run, where the one before ends.
 fn Stack::shape(self : Stack, text : StringView, size : Double) -> Shaped {
-  let size = effective_size(size)
+  self.shape_after(text, effective_size(size), None).0
+}
+
+///|
+/// Shape `text` at the effective size `size` as the continuation of a run
+/// that ended in the glyph `before`: the first glyph kerns against it, and
+/// of an adjustment the two share only this glyph's part shows here.
+/// Returns the glyph the text ends in as well.
+fn Stack::shape_after(
+  self : Stack,
+  text : StringView,
+  size : Double,
+  before : (Face, Glyph)?,
+) -> (Shaped, (Face, Glyph)?) {
   let shaped = { pen: 0.0, ink: { x: 0.0, y: 0.0, width: 0.0, height: 0.0, }, }
   // A finished run adds its width, as a float, and its box.
   let close = (run : Run?) => {
@@ -462,18 +475,25 @@ fn Stack::shape(self : Stack, text : StringView, size : Double) -> Shaped {
     shaped.pen = shaped.pen + fixed_to_float(total)
   }
   let mut current : Run? = None
+  // The glyph of the piece before, until anything is shaped.
+  let mut carried = before
+  let mut last : (Face, Glyph)? = None
   for drawn in self.glyphs(text) {
     let (face, glyph) = match drawn {
       Glyph(face, glyph) => (face, glyph)
       Missing(c) => {
         close(current)
         current = None
+        carried = None
+        last = None
         shaped.pen = shaped.pen + fallback_advance(c, size)
         continue
       }
       ScriptChange => {
         close(current)
         current = None
+        carried = None
+        last = None
         continue
       }
       Ignorable => {
@@ -482,6 +502,8 @@ fn Stack::shape(self : Stack, text : StringView, size : Double) -> Shaped {
         if current is Some(run) {
           run.previous = None
         }
+        carried = None
+        last = None
         continue
       }
     }
@@ -502,20 +524,42 @@ fn Stack::shape(self : Stack, text : StringView, size : Double) -> Shaped {
         run
       }
     }
-    // Kerning is part of the advance of the glyph before.
-    if run.previous is Some(left) &&
+    // Kerning from GPOS is part of the advance of the glyph before. One
+    // from a `kern` table is shared: the glyph before takes the half
+    // rounded down, and this glyph takes the rest, both in its advance
+    // and as an offset it is drawn at.
+    let left = match (run.previous, carried) {
+      (Some(left), _) => Some((left, true))
+      (None, Some((left_face, left))) if physical_equal(left_face, face) =>
+        Some((left, false))
+      _ => None
+    }
+    carried = None
+    let mut offset = 0L
+    if left is Some((left, in_this_piece)) &&
       face.kerning.get(left.id * 65536 + glyph.id) is Some(adjust) {
-      run.total += face.scale_fixed(adjust, size).to_int64()
+      let kern = face.scale_fixed(adjust, size)
+      let earlier = if face.split_kerning { kern >> 1 } else { kern }
+      if in_this_piece {
+        run.total += earlier.to_int64()
+      }
+      offset = (kern - earlier).to_int64()
     }
     if face.glyph_bounds(glyph, size) is Some(bounds) {
       let origin = fixed_to_float(run.origin + run.total)
-      run.edges.unite({ ..bounds, x: bounds.x + origin, })
+      let x = if offset == 0L {
+        bounds.x + origin
+      } else {
+        bounds.x + origin + fixed_to_float(offset)
+      }
+      run.edges.unite({ ..bounds, x, })
     }
-    run.total += face.advance_fixed(glyph.advance, size).to_int64()
+    run.total += face.advance_fixed(glyph.advance, size).to_int64() + offset
     run.previous = Some(glyph)
+    last = Some((face, glyph))
   }
   close(current)
-  shaped
+  (shaped, last)
 }
 
 ///|
@@ -528,8 +572,9 @@ pub fn Stack::advance(self : Stack, text : StringView, size : Double) -> Double 
 ///|
 /// The widths of consecutive pieces of text shaped as one run, as SVG
 /// text lays out the `<tspan>`s of a line: kerning reaches across the
-/// pieces (the adjustment belongs to the earlier glyph), and every piece
-/// takes whole layout units.
+/// pieces, and every piece takes whole layout units. An adjustment from
+/// GPOS belongs to the earlier glyph; one from a `kern` table is shared
+/// between the two, the earlier one taking the half rounded down.
 pub fn Stack::item_advances(
   self : Stack,
   items : Array[String],
@@ -540,23 +585,61 @@ pub fn Stack::item_advances(
   let sums : Array[Int64] = items.map(_ => 0L)
   let mut previous : (Face, Glyph, Int32)? = None
   for index, item in items {
-    for c in item {
-      let face = self.face_for(c)
-      guard face.glyphs.get(c.to_int()) is Some(glyph) else {
-        sums[index] += (fallback_advance(c, size) * HB_ONE).to_int().to_int64()
-        previous = None
-        continue
+    for drawn in self.glyphs(item) {
+      let (face, glyph) = match drawn {
+        Glyph(face, glyph) => (face, glyph)
+        Missing(c) => {
+          sums[index] += (fallback_advance(c, size) * HB_ONE)
+            .to_int()
+            .to_int64()
+          previous = None
+          continue
+        }
+        Ignorable | ScriptChange => {
+          previous = None
+          continue
+        }
       }
       if previous is Some((left_face, left, left_index)) &&
         physical_equal(left_face, face) &&
         face.kerning.get(left.id * 65536 + glyph.id) is Some(adjust) {
-        sums[left_index] += face.scale_fixed(adjust, size).to_int64()
+        let kern = face.scale_fixed(adjust, size)
+        let earlier = if face.split_kerning { kern >> 1 } else { kern }
+        sums[left_index] += earlier.to_int64()
+        sums[index] += (kern - earlier).to_int64()
       }
       sums[index] += face.advance_fixed(glyph.advance, size).to_int64()
       previous = Some((face, glyph, index))
     }
   }
   sums.map(sum => ceil_layout_unit(fixed_to_float(sum)))
+}
+
+///|
+/// The ink of consecutive pieces of text shaped as one run, each around
+/// the start of its piece on the baseline, y down. Where the first glyph
+/// of a piece kerns against the last of the piece before it and the face
+/// shares adjustments between the two glyphs, the piece's glyphs sit that
+/// share closer to its start.
+pub fn Stack::item_inks(
+  self : Stack,
+  items : Array[String],
+  size : Double,
+) -> Array[Rect] {
+  let size = effective_size(size)
+  let inks : Array[Rect] = []
+  let mut previous : (Face, Glyph)? = None
+  for item in items {
+    let (shaped, last) = self.shape_after(item, size, previous)
+    previous = last
+    inks.push({
+      x: shaped.ink.x.to_double(),
+      y: shaped.ink.y.to_double(),
+      width: shaped.ink.width.to_double(),
+      height: shaped.ink.height.to_double(),
+    })
+  }
+  inks
 }
 
 ///|
@@ -729,9 +812,15 @@ fn listed_faces(family : String, bold : Bool, italic : Bool) -> Array[Face] {
         )
       "verdana" => Some(if bold { verdana_bold } else { verdana_regular })
       "arial" => Some(arial(bold, italic))
-      // The obliques are not embedded; the upright faces stand in.
       "helvetica" | "sans-serif" =>
-        Some(if bold { helvetica_bold } else { helvetica_regular })
+        Some(
+          match (bold, italic) {
+            (false, false) => helvetica_regular
+            (true, false) => helvetica_bold
+            (false, true) => helvetica_italic
+            (true, true) => helvetica_bold_italic
+          },
+        )
       "times" | "serif" => Some(if bold { times_bold } else { times_regular })
       _ => None
     }

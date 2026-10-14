@@ -54,4 +54,15 @@ pub(all) enum NodeData {
     style~ : String,
     class_rules~ : Array[String]
   )
+  /// An element of a C4 diagram, whose label is stacked sections: its
+  /// name, the `stereotype` (a type line such as `[Container: Node.js]`)
+  /// and the node's description lines. The diagram's stylesheet sets the
+  /// label in a font of its own: a CSS `font-family` list, a size in
+  /// pixels, and whether the weight is bold.
+  C4(
+    stereotype~ : String,
+    font_family~ : String,
+    font_size~ : Double,
+    bold~ : Bool
+  )
 }

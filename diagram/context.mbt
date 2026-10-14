@@ -30,6 +30,9 @@ pub struct Page {
   margin : Double
   /// The width a vertical scrollbar takes from the page.
   scrollbar : Double
+  /// The width of the screen that is free for windows
+  /// (`screen.availWidth`), which a C4 diagram wraps its rows at.
+  screen_width : Double
 }
 
 ///|
@@ -41,8 +44,9 @@ pub fn Page::new(
   viewport_height~ : Double = 469.0,
   margin~ : Double = 8.0,
   scrollbar~ : Double = 15.0,
+  screen_width~ : Double = 800.0,
 ) -> Page {
-  { viewport_width, viewport_height, margin, scrollbar, }
+  { viewport_width, viewport_height, margin, scrollbar, screen_width, }
 }
 
 ///|

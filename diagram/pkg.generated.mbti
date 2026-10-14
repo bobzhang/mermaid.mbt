@@ -41,8 +41,9 @@ pub struct Page {
   viewport_height : Double
   margin : Double
   scrollbar : Double
+  screen_width : Double
 }
-pub fn Page::new(viewport_width? : Double, viewport_height? : Double, margin? : Double, scrollbar? : Double) -> Self
+pub fn Page::new(viewport_width? : Double, viewport_height? : Double, margin? : Double, scrollbar? : Double, screen_width? : Double) -> Self
 
 pub struct Placement {
   scale : Double

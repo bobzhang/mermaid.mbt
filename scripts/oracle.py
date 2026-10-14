@@ -127,9 +127,13 @@ def pin_random_ids(svg):
 # sequence diagram numbers the participants of everything it has drawn
 # (`actor0`, `actor1`, ... never restart), Sankey the nodes and gradients
 # (`node-1`, `linearGradient-5`, ...), and the class diagram its classes
-# (`classId-Animal-0`, ...). Each such diagram gets a page of its own, so
+# (`classId-Animal-0`, ...). The C4 database does not clear the accessible
+# description of the diagram before it, so a description leaks into the C4
+# diagrams rendered after it. Each such diagram gets a page of its own, so
 # its reference does not depend on what was rendered before it.
-STATEFUL = re.compile(r"^\s*(?:sequenceDiagram|sankey(?:-beta)?|classDiagram(?:-v2)?)\b", re.M)
+STATEFUL = re.compile(
+    r"^\s*(?:sequenceDiagram|sankey(?:-beta)?|classDiagram(?:-v2)?"
+    r"|C4(?:Context|Container|Component|Dynamic|Deployment))\b", re.M)
 
 
 def run(jobs, config, expression=None, now=None):

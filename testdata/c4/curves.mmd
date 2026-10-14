@@ -1,0 +1,11 @@
+C4Component
+Component(a, "A")
+Component(b, "B")
+Component(c, "C")
+Rel(a, b, "1")
+Rel(b, c, "2")
+Rel(c, a, "3")
+Rel(a, c, "4")
+Rel(b, a, "5")
+UpdateRelStyle(a, b, $offsetY="-10")
+UpdateRelStyle(c, a, $offsetX="-40", $offsetY="15")

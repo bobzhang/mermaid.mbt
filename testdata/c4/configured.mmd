@@ -1,0 +1,31 @@
+---
+config:
+  c4:
+    personFontSize: 16
+    personFontFamily: Arial
+    personFontWeight: bold
+    systemFontSize: 12
+    messageFontSize: 14
+    messageFontFamily: "\"trebuchet ms\", verdana, arial, sans-serif"
+    boundaryFontSize: 18
+    boundaryFontWeight: 600
+    person_bg_color: "#123456"
+    system_border_color: red
+    diagramMarginX: 30
+    diagramMarginY: 20
+    c4ShapeMargin: 40
+    c4ShapePadding: 12
+    width: 180
+    nextLinePaddingX: 15
+---
+C4Context
+title Configured
+Person(a, "Alice", "A person in Arial")
+System(s, "System", "Does things in a smaller type")
+System_Boundary(b, "Boundary") {
+  System(t, "Inside")
+  SystemQueue(q, "Queue")
+  SystemDb(d, "Db")
+}
+Rel(a, s, "Uses", "HTTPS")
+Rel(s, t, "Calls")

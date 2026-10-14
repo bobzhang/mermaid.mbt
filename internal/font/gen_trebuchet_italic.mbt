@@ -306,4 +306,5 @@ let trebuchet_italic : Face = Face::new(
     92, 17, -239, 182, 182, -197, 183, 3, -113, 183, 86, -141, 183, 87, -174, 183,
     183, -197,
   ],
+  split_kerning=true,
 )
