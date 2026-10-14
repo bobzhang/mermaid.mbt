@@ -3,10 +3,14 @@ port hands to ELK as head and tail labels. They are byte-identical once
 moon_elk
 
 - writes edge labels back by origin rather than by position: until then
-  every label of such an edge gets the geometry of another one;
+  every label of an edge with a center label and an end label gets the
+  geometry of another one;
 - stacks the labels of a self loop by the direction the graph was given
   (self_loop_lr, random_self_loop): until then a self loop with two labels
-  in a graph laid out to the right or left gets them side by side.
+  in a graph laid out to the right or left gets them side by side;
+- takes node margins the way ELK's NodeMarginCalculator does
+  (svg_nested_namespaces_margins, random_namespaces_margins_rl): until then
+  some graphs with groups come out a last bit off.
 
 Remove this file, and the `#skip` in tests/class_test.mbt, when the layout
-engine in use has both fixes.
+engine in use has the three fixes.
