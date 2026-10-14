@@ -1,0 +1,24 @@
+---
+config:
+  theme: base
+  themeVariables:
+    git0: '#ff0000'
+    git1: '#00ff00'
+    gitBranchLabel0: '#ffffff'
+    gitBranchLabel1: '#000000'
+    gitInv0: '#00ffff'
+    commitLabelColor: '#ff0000'
+    commitLabelBackground: '#00ff00'
+    commitLabelFontSize: '16px'
+    tagLabelColor: '#ff0000'
+    tagLabelBackground: '#00ff00'
+    tagLabelBorder: '#0000ff'
+    tagLabelFontSize: '14px'
+---
+gitGraph
+   commit id: "a"
+   branch develop
+   commit id: "b" tag: "v1.0.0"
+   checkout main
+   commit id: "c" type: HIGHLIGHT
+   merge develop id: "d"

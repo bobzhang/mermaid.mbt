@@ -1,0 +1,28 @@
+---
+config:
+  handDrawnSeed: 7
+---
+erDiagram
+    CUSTOMER ||--o{ ORDER : places
+    CUSTOMER ||--o{ INVOICE : "liable for"
+    CUSTOMER }|..|{ DELIVERY-ADDRESS : uses
+    DELIVERY-ADDRESS ||--o{ ORDER : receives
+    INVOICE ||--|{ ORDER : covers
+    ORDER ||--|{ ORDER-ITEM : includes
+    PRODUCT-CATEGORY ||--|{ PRODUCT : contains
+    PRODUCT ||--o{ ORDER-ITEM : "ordered in"
+    CUSTOMER {
+        int id PK
+        string name
+        string email UK
+    }
+    ORDER {
+        int id PK
+        int customerId FK
+        date created
+    }
+    PRODUCT {
+        int id PK
+        string sku UK "stock keeping unit"
+        float price
+    }

@@ -1,0 +1,21 @@
+---
+config:
+  handDrawnSeed: 7
+  look: classic
+  theme: forest
+---
+requirementDiagram
+    direction LR
+    requirement a {
+    id: 1
+    text: words
+    risk: low
+    }
+    element b {
+    type: t
+    }
+    element c {
+    }
+    b - contains -> a
+    c - verifies -> a
+    a - traces -> a

@@ -176,7 +176,8 @@ test "declarations as the CSSOM serializes them" {
     @dom.serialize_declarations(
       "fill:#f96 !important; stroke-dasharray: 5 5; animation: dash 25s linear infinite",
     ),
-    content="fill: rgb(255, 153, 102) !important; stroke-dasharray: 5, 5; animation: 25s linear 0s infinite normal none running dash;",
+    // Important declarations come last, as `cssText` gives them.
+    content="stroke-dasharray: 5, 5; animation: 25s linear 0s infinite normal none running dash; fill: rgb(255, 153, 102) !important;",
   )
 }
 
@@ -331,4 +332,47 @@ test "what the output sanitizer removes" {
   inspect(@dom.is_allowed_uri("about:blank"), content="false")
   inspect(@dom.is_allowed_uri("java script:alert(1)"), content="false")
   inspect(@dom.is_allowed_uri("my:color"), content="false")
+}
+
+///|
+/// The box of an `<svg>` holding `markup`, as `x y width height`.
+fn box_of(markup : String) -> String {
+  let svg = @dom.Element::new("svg")
+  svg.set_inner_html(markup)
+  let box = svg.bbox()
+  let n = @dom.number
+  "\{n(box.x)} \{n(box.y)} \{n(box.width)} \{n(box.height)}"
+}
+
+///|
+test "boxes of transformed elements" {
+  // Expected values are `getBBox()` of the same markup in Chrome.
+  inspect(
+    box_of(
+      "<g transform=\"rotate(-45, 0, -2)\"><rect x=\"287\" y=\"168\" width=\"132\" height=\"20\"></rect></g>",
+    ),
+    content="323.1477966308594 -178.06959533691406 107.480224609375 107.48023986816406",
+  )
+  // Translations before a rotation add up in single precision: with the
+  // sum in doubles the height would be 18.784637451171875.
+  inspect(
+    box_of(
+      "<g transform=\"translate(12,12) rotate(30, -70.109375,251.3041)\"><rect x=\"195\" y=\"176.2\" width=\"30\" height=\"4.3701\"></rect></g>",
+    ),
+    content="206.8490753173828 330.81671142578125 28.165817260742188 18.78460693359375",
+  )
+  // Quarter turns are exact.
+  inspect(
+    box_of(
+      "<g transform=\"rotate(90, 217.046875, 76.171875)\"><rect x=\"287\" y=\"168\" width=\"132\" height=\"20\"></rect></g>",
+    ),
+    content="105.21875 146.125 20 132",
+  )
+  // The element's own transform counts for its parent, not for itself.
+  inspect(
+    box_of(
+      "<rect x=\"195\" y=\"176.2\" width=\"30\" height=\"4.3701\" transform=\"translate(12,12) rotate(30, -70.109375,251.3041)\"></rect>",
+    ),
+    content="206.8490753173828 330.81671142578125 28.165817260742188 18.78460693359375",
+  )
 }

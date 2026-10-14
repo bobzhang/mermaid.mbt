@@ -196,7 +196,7 @@ fn text_dimensions(
     if is_valid_font_family(family) {
       font_stack(family, bold)
     } else {
-      @font.Stack::standard(bold~)
+      @font.Stack::page_default(bold~)
     },
   ]
   let dims = []

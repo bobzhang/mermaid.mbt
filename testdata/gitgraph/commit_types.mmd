@@ -1,0 +1,19 @@
+gitGraph
+   commit id: "normal" type: NORMAL
+   commit id: "reverse" type: REVERSE msg: "a message"
+   commit id: "highlight" type: HIGHLIGHT tag: "one" tag: "two" tag: "a third, longer tag"
+   branch feature
+   commit id: "f1" "message without msg"
+   commit id: "f2" type: HIGHLIGHT
+   checkout main
+   merge feature id: "m-reverse" type: REVERSE tag: "merged"
+   branch other
+   commit id: "o1" type: REVERSE
+   checkout main
+   commit id: "m2"
+   merge other id: "m-highlight" type: HIGHLIGHT
+   branch third
+   commit id: "t1"
+   switch main
+   commit id: "m3"
+   merge third id: "m-normal" type: NORMAL tag: "a" tag: "b"

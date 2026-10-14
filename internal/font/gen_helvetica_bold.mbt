@@ -6,6 +6,7 @@ let helvetica_bold : Face = Face::new(
   units_per_em=2048,
   ascent=1577,
   descent=471,
+  line_gap=0,
   // code point, glyph id, advance, xMin, yMin, xMax, yMax
   glyphs=[
     32, 3, 569, 0, 0, 0, 0, 33, 4, 682, 225, 0, 538, 1469, 34, 5, 971, 167, 865,
@@ -827,5 +828,5 @@ let helvetica_bold : Face = Face::new(
   composed=[8777, 8814, 8815, 8816, 8817],
   // left glyph id, right glyph id, code point of the ligature
   ligatures=[73, 76, 64257, 73, 79, 64258],
-  legacy_mac_ascent=true,
+  mac_ascent_adjustment=true,
 )

@@ -20,6 +20,9 @@ fn cleanup_text(code : String) -> String {
   let n = code.length()
   let out = StringBuilder()
   let mut i = 0
+  // Text between tags is copied in whole stretches, which keeps the two
+  // halves of a character outside the basic plane together.
+  let mut copied = 0
   while i < n {
     // `<(\w+)([^>]*)>`
     if code[i] == '<' && i + 1 < n && is_word_unit(code[i + 1]) {
@@ -32,16 +35,17 @@ fn cleanup_text(code : String) -> String {
         while name_end < close && is_word_unit(code[name_end]) {
           name_end += 1
         }
-        out.write_view(code[i:name_end])
+        out.write_view(code[copied:name_end])
         out.write_string(requote(code[name_end:close].to_owned()))
         out.write_char('>')
         i = close + 1
+        copied = i
         continue
       }
     }
-    out.write_view(code[i:i + 1])
     i += 1
   }
+  out.write_view(code[copied:n])
   out.to_string()
 }
 
@@ -65,8 +69,10 @@ fn requote(attributes : String) -> String {
         continue
       }
     }
-    out.write_view(attributes[i:i + 1])
-    i += 1
+    let code = attributes[i].to_int()
+    let width = if code >= 0xD800 && code < 0xDC00 && i + 1 < n { 2 } else { 1 }
+    out.write_view(attributes[i:i + width])
+    i += width
   }
   out.to_string()
 }

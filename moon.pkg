@@ -1,17 +1,26 @@
 import {
   "bobzhang/mermaid/config",
   "bobzhang/mermaid/diagram",
+  "bobzhang/mermaid/diagrams/er",
   "bobzhang/mermaid/diagrams/flowchart",
+  "bobzhang/mermaid/diagrams/gitgraph",
+  "bobzhang/mermaid/diagrams/gantt",
   "bobzhang/mermaid/diagrams/info",
+  "bobzhang/mermaid/diagrams/journey",
   "bobzhang/mermaid/diagrams/packet",
   "bobzhang/mermaid/diagrams/pie",
+  "bobzhang/mermaid/diagrams/requirement",
+  "bobzhang/mermaid/diagrams/state",
+  "bobzhang/mermaid/diagrams/timeline",
   "bobzhang/mermaid/diagrams/sequence",
   "bobzhang/mermaid/internal/css",
   "bobzhang/mermaid/internal/dom",
   "bobzhang/mermaid/internal/jison",
+  "bobzhang/mermaid/internal/journeycommon",
   "bobzhang/mermaid/internal/langium",
   "bobzhang/mermaid/internal/preprocess",
   "bobzhang/mermaid/internal/rendering",
+  "moonbitlang/core/env",
 }
 
 warnings = "-implicit_impl_as_method"

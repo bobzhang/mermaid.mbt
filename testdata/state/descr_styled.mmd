@@ -1,0 +1,17 @@
+---
+config:
+  handDrawnSeed: 7
+
+---
+stateDiagram-v2
+    classDef c fill:#f00,color:#fff,font-weight:bold
+    s3 : one
+    s3 : two two two
+    class s3 c
+    s3 --> s4:::c
+    s4 : four
+    style s4 stroke:#0f0,color:#00f
+    s5 : five
+    s5 : six
+    style s5 fill:#ff0,color:#00f
+    s4 --> s5

@@ -1,0 +1,15 @@
+---
+config:
+  handDrawnSeed: 7
+---
+requirementDiagram
+    requirement a {
+    id: 1
+    }
+    requirement b {
+    id: 2
+    }
+    a - traces -> a
+    a - contains -> b
+    b - copies -> a
+    a - derives -> b

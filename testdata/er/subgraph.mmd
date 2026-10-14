@@ -1,0 +1,17 @@
+---
+config:
+  handDrawnSeed: 7
+
+---
+erDiagram
+    subgraph sales [Sales Domain]
+        CUSTOMER ||--o{ ORDER : places
+        ORDER {
+            int id PK
+        }
+    end
+    subgraph stock
+        PRODUCT
+        WAREHOUSE ||--|{ PRODUCT : stores
+    end
+    ORDER ||--|{ PRODUCT : contains

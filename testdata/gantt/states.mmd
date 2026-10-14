@@ -1,0 +1,18 @@
+gantt
+    todayMarker off
+    dateFormat YYYY-MM-DD
+    title States
+    section One
+    Done task :done, d1, 2024-01-01, 5d
+    Active task :active, a1, after d1, 3d
+    Crit task :crit, c1, after a1, 2d
+    Crit done :crit, done, cd1, 2024-01-03, 2d
+    Crit active :crit, active, ca1, after cd1, 4d
+    Done active :done, active, da, 2024-01-02, 1d
+    section Two
+    Milestone :milestone, m1, 2024-01-10, 0d
+    Crit milestone :crit, milestone, m2, 2024-01-12, 1d
+    Vert :vert, v1, 2024-01-08, 0d
+    Plain :2024-01-05, 12h
+    Long label that does not fit inside its bar at all :p2, 2024-01-14, 1d
+    Another long label that will have to go to the left of the bar :p3, 2024-01-15, 2h

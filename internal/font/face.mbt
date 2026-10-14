@@ -15,6 +15,8 @@ pub struct Face {
   priv units_per_em : Int32
   priv ascent : Int32
   priv descent : Int32
+  /// The extra space the font asks for between lines.
+  priv line_gap : Int32
   /// Glyphs by code point.
   priv glyphs : Map[Int32, Glyph]
   /// Pair adjustments, keyed by `left_glyph * 65536 + right_glyph`.
@@ -26,25 +28,25 @@ pub struct Face {
   /// base letter and a combining mark it does have. No other face gets to
   /// draw them, and where the mark lands is not known here.
   priv composed : Map[Int32, Unit]
-  /// Whether Blink raises the ascent by 15% of the line, as it does on
-  /// macOS for Times, Helvetica and Courier to match their Windows
-  /// counterparts.
-  priv legacy_mac_ascent : Bool
+  /// Whether Blink raises the ascent by 15% of the line: its hack for
+  /// Times, Helvetica and Courier on macOS.
+  priv mac_ascent_adjustment : Bool
 }
 
 ///|
 /// Build a face from the flat tables written by
-/// `scripts/gen_font_metrics.py`: seven numbers per glyph and three per
-/// kerning pair or ligature, and one per composed character.
+/// `scripts/gen_font_metrics.py`: seven numbers per glyph, three per
+/// kerning pair and per ligature, and one per composed character.
 fn Face::new(
   units_per_em~ : Int32,
   ascent~ : Int32,
   descent~ : Int32,
+  line_gap~ : Int32,
   glyphs~ : FixedArray[Int32],
   kerning~ : FixedArray[Int32],
   ligatures~ : FixedArray[Int32] = [],
   composed~ : FixedArray[Int32] = [],
-  legacy_mac_ascent~ : Bool = false,
+  mac_ascent_adjustment~ : Bool = false,
 ) -> Face {
   let by_code : Map[Int32, Glyph] = Map([])
   for i = 0; i + 6 < glyphs.length(); i = i + 7 {
@@ -65,21 +67,20 @@ fn Face::new(
   for i = 0; i + 2 < ligatures.length(); i = i + 3 {
     joined[ligatures[i] * 65536 + ligatures[i + 1]] = ligatures[i + 2]
   }
+  let pieces : Map[Int32, Unit] = Map([])
+  for code in composed {
+    pieces[code] = ()
+  }
   {
     units_per_em,
     ascent,
     descent,
+    line_gap,
     glyphs: by_code,
     kerning: pairs,
     ligatures: joined,
-    composed: {
-      let set : Map[Int32, Unit] = Map([])
-      for code in composed {
-        set[code] = ()
-      }
-      set
-    },
-    legacy_mac_ascent,
+    composed: pieces,
+    mac_ascent_adjustment,
   }
 }
 

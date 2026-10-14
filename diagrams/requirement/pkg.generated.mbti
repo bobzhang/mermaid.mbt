@@ -1,0 +1,66 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/diagrams/requirement"
+
+import {
+  "bobzhang/mermaid/config",
+  "bobzhang/mermaid/diagram",
+  "bobzhang/mermaid/internal/rendering",
+}
+
+// Values
+pub fn draw(RequirementDb, @diagram.Context) -> Unit raise @rendering.LayoutError
+
+pub fn parse(String, @config.Config) -> RequirementDb raise
+
+pub fn styles(@config.Config) -> String
+
+// Errors
+
+// Types and methods
+pub struct Element {
+  name : String
+  type_ : String
+  doc_ref : String
+  css_styles : Array[String]
+  classes : Array[String]
+}
+
+pub struct Relation {
+  type_ : String
+  src : String
+  dst : String
+}
+
+pub struct Requirement {
+  name : String
+  type_ : String
+  requirement_id : String
+  text : String
+  risk : String
+  verify_method : String
+  css_styles : Array[String]
+  classes : Array[String]
+}
+
+pub struct RequirementClass {
+  id : String
+  styles : Array[String]
+  text_styles : Array[String]
+}
+
+pub struct RequirementDb {
+  requirements : Map[String, Requirement]
+  elements : Map[String, Element]
+  relations : Array[Relation]
+  classes : Map[String, RequirementClass]
+  mut acc_title : String
+  mut acc_description : String
+  mut title : String
+  // private fields
+}
+pub fn RequirementDb::direction(Self) -> String
+pub fn RequirementDb::set_title(Self, String) -> Unit
+
+// Type aliases
+
+// Traits

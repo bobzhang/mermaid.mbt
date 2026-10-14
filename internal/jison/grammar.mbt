@@ -34,6 +34,9 @@ pub(all) enum HookResult {
   SkipNext
   /// Abandon the rule's remaining operations without producing a token.
   Stop
+  /// `return name` with a name computed from the text. A name the grammar
+  /// does not know is still a token, one no state expects.
+  Token(String)
 }
 
 ///|

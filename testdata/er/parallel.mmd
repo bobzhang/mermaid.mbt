@@ -1,0 +1,11 @@
+---
+config:
+  handDrawnSeed: 7
+---
+erDiagram
+    A ||--o{ B : first
+    A ||--o{ B : second
+    B }|..|| A : back
+    A ||--|| A : loop
+    B u--o{ C : parent
+    C u..|| D : both

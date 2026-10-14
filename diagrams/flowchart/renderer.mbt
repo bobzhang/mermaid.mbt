@@ -9,7 +9,7 @@ pub fn draw(
   let config = context.config
   // What the port cannot draw yet is refused rather than drawn differently.
   let layout = config.text("layout").unwrap_or("elk")
-  if layout != "elk" && layout != "elk.layered" {
+  if layout != "elk" {
     raise @rendering.LayoutError("The \{layout} layout is not supported yet.")
   }
   if config.text("look") == Some("handDrawn") {
@@ -63,10 +63,15 @@ fn insert_title(title : String, context : @diagram.Context) -> Unit {
   let font = @font.Stack::for_family(config.theme().text("fontFamily"))
   let size = 18.0
   let box = font.bbox(title, size)
-  // Anchored in the middle of its advance, which is whole layout units.
+  // Positions are single precision in the browser, and the shift that
+  // centres the text comes from both of its ends.
+  let f = Float::from_double
+  let left = f(x)
+  let right = left + f(font.advance(title, size))
+  let start = left + (left - (left + right) / 2)
   text.set_text_box({
-    x: x - font.advance(title, size) / 2.0 + box.x,
-    y: y + box.y,
+    x: (start + f(box.x)).to_double(),
+    y: (f(y) + f(box.y)).to_double(),
     width: box.width,
     height: box.height,
   })

@@ -1,0 +1,4 @@
+Parse error on line 3:
+...        string    }
+---------------------^
+Expecting 'ATTRIBUTE_WORD', '?', got 'BLOCK_STOP'

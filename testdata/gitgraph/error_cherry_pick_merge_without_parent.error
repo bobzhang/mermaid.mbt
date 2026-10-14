@@ -1,0 +1,1 @@
+Incorrect usage of cherry-pick: If the source commit is a merge commit, an immediate parent commit must be specified.

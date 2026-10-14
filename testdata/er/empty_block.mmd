@@ -1,0 +1,16 @@
+---
+config:
+  handDrawnSeed: 7
+---
+erDiagram
+    A {
+    }
+    B:::cls {
+    }
+    C[Alias]:::cls
+    D[Other] {
+        int x
+    }
+    A ||--|| B : ""
+    C ||--|| D : " "
+    classDef cls fill:#afa

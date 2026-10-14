@@ -1,0 +1,8 @@
+Parsing failed: Lexer error on line 3, column 16: unexpected character: ->-<- at offset: 42, skipped 1 characters. Parse error on line 3, column 10: Expecting: one of these possible Token sequences:
+  1. [REFERENCE]
+  2. [STRING]
+but found: ' title'
+Parse error on line 3, column 10: Expecting: expecting at least one iteration which starts with one of these possible Token sequences::
+  <[ACC_DESCR] ,[ACC_TITLE] ,[TITLE]>
+but found: ' title'
+Parse error on line 3, column 10: Expecting end of file but found ` title`.

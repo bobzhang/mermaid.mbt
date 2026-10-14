@@ -1,0 +1,16 @@
+---
+config:
+  handDrawnSeed: 7
+
+---
+stateDiagram-v2
+    [*] --> First
+    state First {
+        [*] --> second
+        second --> [*]
+    }
+    First --> Third
+    state Third {
+        [*] --> a
+        a --> b
+    }

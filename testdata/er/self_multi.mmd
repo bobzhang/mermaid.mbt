@@ -1,0 +1,13 @@
+---
+config:
+  handDrawnSeed: 7
+
+---
+erDiagram
+    EMPLOYEE ||--o{ EMPLOYEE : manages
+    EMPLOYEE }|--|| DEPARTMENT : "works in"
+    EMPLOYEE }o--|| DEPARTMENT : heads
+    DEPARTMENT {
+        int id PK
+        string name
+    }

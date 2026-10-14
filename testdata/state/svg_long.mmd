@@ -1,0 +1,13 @@
+---
+config:
+  handDrawnSeed: 7
+  htmlLabels: false
+---
+stateDiagram-v2
+    A : This is a rather long description of a state that should wrap around
+    B : short
+    A --> B : and this transition label is also long enough to wrap at two hundred pixels wide
+    B --> VeryLongStateNameWithoutAnySpacesInItAtAll
+    state "A composite with a long title that goes on" as C {
+       x --> y
+    }

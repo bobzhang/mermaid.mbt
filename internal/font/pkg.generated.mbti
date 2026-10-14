@@ -21,6 +21,7 @@ pub struct Face {
 pub fn Face::ascent(Self, Double) -> Double
 pub fn Face::covers(Self, Char) -> Bool
 pub fn Face::descent(Self, Double) -> Double
+pub fn Face::line_descent(Self, Double) -> Double
 
 pub(all) struct Rect {
   x : Double
@@ -34,14 +35,18 @@ pub struct Stack {
 }
 pub fn Stack::advance(Self, StringView, Double) -> Double
 pub fn Stack::bbox(Self, StringView, Double, baseline? : Baseline) -> Rect
+pub fn Stack::covers(Self, StringView) -> Bool
 pub fn Stack::default(bold? : Bool, italic? : Bool) -> Self
 pub fn Stack::first_uncovered(Self, StringView) -> Char?
 pub fn Stack::for_css(String, bold? : Bool) -> Self
 pub fn Stack::for_family(String, bold? : Bool, italic? : Bool) -> Self
 pub fn Stack::ink(Self, StringView, Double) -> Rect
 pub fn Stack::item_advances(Self, Array[String], Double) -> Array[Double]
+pub fn Stack::line_descent(Self, Double) -> Double
 pub fn Stack::line_metrics(Self, Double) -> (Double, Double)
-pub fn Stack::standard(bold? : Bool) -> Self
+pub fn Stack::page_default(bold? : Bool) -> Self
+pub fn Stack::sans_serif(bold? : Bool) -> Self
+pub fn Stack::x_height(Self, Double) -> Double
 
 // Type aliases
 
