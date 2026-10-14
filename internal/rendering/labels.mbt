@@ -99,7 +99,9 @@ fn create_html_label(
   let natural = lines.fold(init=0.0, (widest, line) => {
     widest.max(runs_width(line, env))
   })
-  let empty = lines.all(line => line.is_empty())
+  // A line break makes a line even with nothing on it.
+  let empty = lines.all(line => line.is_empty()) &&
+    span.descendants(["br"]).is_empty()
   // A label wider than its limit is as wide as the limit, which the
   // browser holds in layout units: a single precision number of pixels
   // cut to a 64th.

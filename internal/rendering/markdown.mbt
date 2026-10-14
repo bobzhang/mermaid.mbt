@@ -67,8 +67,127 @@ fn starts_other_block(line : Array[Char], in_paragraph~ : Bool = false) -> Bool 
       line[j] is ('.' | ')') &&
       (j + 1 == n || is_md_space(line[j + 1]))
     }
+    '<' => starts_html_block(line[i:], in_paragraph~)
     _ => false
   }
+}
+
+///|
+/// The names of the elements that start an HTML block wherever they
+/// stand (CommonMark's sixth kind).
+let html_block_tags : Array[String] = [
+  "address", "article", "aside", "base", "basefont", "blockquote", "body", "caption",
+  "center", "col", "colgroup", "dd", "details", "dialog", "dir", "div", "dl", "dt",
+  "fieldset", "figcaption", "figure", "footer", "form", "frame", "frameset", "h1",
+  "h2", "h3", "h4", "h5", "h6", "head", "header", "hr", "html", "iframe", "legend",
+  "li", "link", "main", "menu", "menuitem", "meta", "nav", "noframes", "ol", "optgroup",
+  "option", "p", "param", "search", "section", "summary", "table", "tbody", "td",
+  "tfoot", "th", "thead", "title", "tr", "track", "ul",
+]
+
+///|
+/// Whether a line starting with `<` starts an HTML block, as marked's
+/// `html` rule decides: raw text elements, comments and declarations, a
+/// block-level element, or (where no paragraph is to be continued) any
+/// other complete tag alone on its line.
+fn starts_html_block(line : ArrayView[Char], in_paragraph~ : Bool) -> Bool {
+  let n = line.length()
+  let text = String::from_array(line).to_lower()
+  for prefix in ["<!--", "<?", "<![cdata["] {
+    if text.has_prefix(prefix) {
+      return true
+    }
+  }
+  if n > 2 && line[1] == '!' && line[2] is ('A'..<='Z') {
+    return true
+  }
+  let closing = n > 1 && line[1] == '/'
+  let start = if closing { 2 } else { 1 }
+  let mut end = start
+  while end < n &&
+        line[end] is ('a'..<='z' | 'A'..<='Z' | '0'..<='9' | '-' | '_') {
+    end += 1
+  }
+  guard end > start && line[start] is ('a'..<='z' | 'A'..<='Z') else {
+    return false
+  }
+  let name = text[start:end].to_owned()
+  let after = if end < n { Some(line[end]) } else { None }
+  if !closing &&
+    ["script", "pre", "style", "textarea"].contains(name) &&
+    after is (None | Some(' ' | '\t' | '>')) {
+    return true
+  }
+  if html_block_tags.contains(name) &&
+    (
+      after is (None | Some(' ' | '>')) ||
+      (after == Some('/') && end + 1 < n && line[end + 1] == '>')
+    ) {
+    return true
+  }
+  if in_paragraph || ["script", "pre", "style", "textarea"].contains(name) {
+    return false
+  }
+  // A complete tag, and nothing but white space after it.
+  let mut j = end
+  if !closing {
+    // Attributes: ` +[a-zA-Z:_][\w.:-]*(?: *= *"[^"\n]*"| *= *'[^'\n]*'| *= *[^\s"'=<>`]+)?`
+    while true {
+      let mut k = j
+      while k < n && line[k] == ' ' {
+        k += 1
+      }
+      guard k > j && k < n && line[k] is ('a'..<='z' | 'A'..<='Z' | ':' | '_') else {
+        break
+      }
+      k += 1
+      while k < n &&
+            line[k]
+            is ('a'..<='z' | 'A'..<='Z' | '0'..<='9' | '_' | '.' | ':' | '-') {
+        k += 1
+      }
+      j = k
+      let mut v = k
+      while v < n && line[v] == ' ' {
+        v += 1
+      }
+      guard v < n && line[v] == '=' else { continue }
+      v += 1
+      while v < n && line[v] == ' ' {
+        v += 1
+      }
+      if v < n && line[v] is ('"' | '\'') {
+        let quote = line[v]
+        let mut q = v + 1
+        while q < n && line[q] != quote {
+          q += 1
+        }
+        guard q < n else { break }
+        j = q + 1
+      } else {
+        let mut q = v
+        while q < n &&
+              !(line[q]
+              is (' ' | '\t' | '\n' | '"' | '\'' | '=' | '<' | '>' | '`')) {
+          q += 1
+        }
+        guard q > v else { break }
+        j = q
+      }
+    }
+  }
+  while j < n && line[j] is (' ' | '\t') {
+    j += 1
+  }
+  if !closing && j < n && line[j] == '/' {
+    j += 1
+  }
+  guard j < n && line[j] == '>' else { return false }
+  j += 1
+  while j < n && line[j] is (' ' | '\t') {
+    j += 1
+  }
+  j == n
 }
 
 ///|
@@ -161,6 +280,14 @@ fn inline_tokens(text : Array[Char]) -> Array[MdToken] {
         continue
       }
     }
+    // A strikethrough (GFM's `del`), which labels do not support either:
+    // `^(~~?)(?=[^\s~])((?:\\[\s\S]|[^\\])*?(?:\\[\s\S]|[^\s~\\]))\1(?=[^~]|$)`.
+    if c == '~' && strikethrough_end(text, i) is Some(close) {
+      flush()
+      out.push(MdRaw(String::from_array(text[i:close])))
+      i = close
+      continue
+    }
     if c is ('*' | '_') {
       let mut run_end = i
       while run_end < n && text[run_end] == c {
@@ -233,6 +360,39 @@ fn inline_tokens(text : Array[Char]) -> Array[MdToken] {
   }
   flush()
   out
+}
+
+///|
+/// Where a strikethrough that starts at `start` ends, if one does: one or
+/// two tildes, text that neither starts with a space or a tilde nor ends
+/// with a space, a tilde or a backslash, and as many tildes not followed by
+/// another.
+fn strikethrough_end(text : Array[Char], start : Int32) -> Int32? {
+  let n = text.length()
+  let run = if start + 1 < n && text[start + 1] == '~' { 2 } else { 1 }
+  // `~~?` backtracks to one tilde when two are not followed by text.
+  for run in (if run == 2 { [2, 1] } else { [1] }) {
+    let from = start + run
+    guard from < n && !is_md_space(text[from]) && text[from] != '~' else {
+      continue
+    }
+    let mut j = from
+    while j < n {
+      // The last character of the text, and the tildes after it.
+      let escaped = text[j] == '\\' && j + 1 < n
+      let last = if escaped { j + 1 } else { j }
+      let fits = escaped || !(is_md_space(text[j]) || text[j] is ('~' | '\\'))
+      let close = last + 1
+      if fits &&
+        close + run <= n &&
+        text[close:close + run].iter().all(c => c == '~') &&
+        (close + run == n || text[close + run] != '~') {
+        return Some(close + run)
+      }
+      j = if escaped { j + 2 } else { j + 1 }
+    }
+  }
+  None
 }
 
 ///|

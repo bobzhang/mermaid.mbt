@@ -349,13 +349,36 @@ pub fn Stack::sans_serif(bold~ : Bool = false) -> Stack {
 /// symbols were read off it, the rest is approximated with half an em, or
 /// a full one for the wide scripts.
 fn fallback_em(c : Char) -> Double {
+  match measured_fallback_em(c) {
+    Some(em) => em
+    None => if c.to_int() >= 0x1100 { 1.0 } else { 0.5 }
+  }
+}
+
+///|
+/// The advances in ems read off the reference browser for characters no
+/// embedded face has.
+fn measured_fallback_em(c : Char) -> Double? {
   match c.to_int() {
     // BLACK HEART SUIT
-    0x2665 => 0.59375
+    0x2665 => Some(0.59375)
     // HEAVY BLACK HEART
-    0x2764 => 0.91015625
-    code => if code >= 0x1100 { 1.0 } else { 0.5 }
+    0x2764 => Some(0.91015625)
+    _ => None
   }
+}
+
+///|
+/// The first character of `text` the stack cannot measure exactly: one
+/// that no face has and whose fallback advance was not read off the
+/// reference browser.
+pub fn Stack::first_unmeasured(self : Stack, text : StringView) -> Char? {
+  for drawn in self.glyphs(text) {
+    if drawn is Missing(c) && measured_fallback_em(c) is None {
+      return Some(c)
+    }
+  }
+  None
 }
 
 ///|

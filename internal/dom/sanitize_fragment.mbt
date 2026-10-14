@@ -11,7 +11,7 @@ pub(all) suberror SanitizeError {
 /// they carry no attributes: plain inline formatting.
 let formatting_elements : Array[String] = [
   "b", "i", "u", "s", "em", "strong", "small", "sub", "sup", "code", "mark", "del",
-  "ins",
+  "span", "ins",
 ]
 
 ///|

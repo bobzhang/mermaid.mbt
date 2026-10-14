@@ -20,6 +20,43 @@ fn layout_algorithm(config : @config.Config) -> String {
 }
 
 ///|
+/// Refuse labels the port cannot measure as the browser does: characters
+/// no embedded face has (the browser draws them from a system fallback
+/// font) and subscripts and superscripts (which change the height of
+/// their line).
+fn check_measurable(
+  db : MindmapDb,
+  config : @config.Config,
+) -> Unit raise MindmapError {
+  let family = config.theme().text("fontFamily")
+  let stacks = [
+    @font.Stack::for_family(family),
+    @font.Stack::for_family(family, bold=true),
+  ]
+  for node in db.nodes() {
+    // The text as the browser has it: references resolved.
+    let text = @dom.sanitized_text(@dom.placeholders_to_references(node.descr))
+    let lower = text.to_lower()
+    if lower.contains("<sub") || lower.contains("<sup") {
+      raise Unsupported(
+        "subscripts and superscripts in mindmap labels are not measured: \{node.descr}",
+      )
+    }
+    // Line breaks and tabs are laid out, not drawn.
+    let drawn = String::from_iter(
+      text.iter().map(c => if c is ('\n' | '\r' | '\t') { ' ' } else { c }),
+    )
+    for stack in stacks {
+      if stack.first_unmeasured(drawn) is Some(c) {
+        raise Unsupported(
+          "the character \{c} has no embedded font to measure it with: \{node.descr}",
+        )
+      }
+    }
+  }
+}
+
+///|
 /// Draw the mindmap into the context's `<svg>` element.
 pub fn draw(
   db : MindmapDb,
@@ -39,6 +76,7 @@ pub fn draw(
   if config.text("look") == Some("handDrawn") {
     raise Unsupported("The hand-drawn look is not supported yet.")
   }
+  check_measurable(db, config)
   let (nodes, edges) = db.layout_data()
   let data : @rendering.LayoutData = {
     nodes,

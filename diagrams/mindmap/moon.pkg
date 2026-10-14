@@ -2,6 +2,7 @@ import {
   "bobzhang/mermaid/config",
   "bobzhang/mermaid/diagram",
   "bobzhang/mermaid/internal/dom",
+  "bobzhang/mermaid/internal/font",
   "bobzhang/mermaid/internal/jison",
   "bobzhang/mermaid/internal/rendering",
   "bobzhang/mermaid/theme",
