@@ -282,6 +282,7 @@ fn usecase_actor(
   }
   labelled.label.attr("class", "label actor-label usecase-actor-label")
   |> ignore
+  restyle_svg_label(labelled.label, node, env)
   stamp_color_slot(shape_svg, node.color_index, env)
   // The stereotype is measured in the actor's type as HTML, and in the
   // diagram's as SVG text.
@@ -428,6 +429,7 @@ fn usecase_business(
     env,
   )
   labelled.label.attr("class", "label usecase-label") |> ignore
+  restyle_svg_label(labelled.label, node, env)
   let shape_svg = labelled.shape_svg
   stamp_color_slot(shape_svg, node.color_index, env)
   let stereotype_label = match stereotype {
@@ -718,5 +720,56 @@ fn usecase_shape(
     "usecaseBusiness" => usecase_business(parent, node, env)
     "usecaseJsonTable" => usecase_json_table(parent, node, env)
     _ => usecase_ellipse(parent, node, env)
+  }
+}
+
+///|
+/// Give the SVG text of a label the box it has once its group carries a
+/// class the stylesheet sets a type for: the label was measured, and
+/// placed, in the diagram's type, and the browser now lays it out in
+/// `font` (family and size; every word names its own weight and slant).
+fn restyle_svg_label(label : @dom.Element, node : Node, env : Env) -> Unit {
+  guard !node_html_labels(env) else { return }
+  guard node.data is Usecase(font=Some(font), ..) else { return }
+  let env = {
+    ..env,
+    font_family: font.family,
+    font_size: font.size,
+    bold: false,
+    italic: false,
+  }
+  for text in label.descendants(["text"]) {
+    // The words as `create_svg_label` wrote them, one `<tspan>` per word
+    // in one per line.
+    let lines = text
+      .child_elements()
+      .map(line => {
+        line
+        .child_elements()
+        .mapi((index, word) => {
+          let content = word.text_content()
+          let content = if index > 0 && content.has_prefix(" ") {
+            content[1:].to_owned()
+          } else {
+            content
+          }
+          let kind = if word.get_attr("font-weight") == Some("bold") {
+            "strong"
+          } else if word.get_attr("font-style") == Some("italic") {
+            "em"
+          } else {
+            "normal"
+          }
+          let word : Word = {
+            content: content
+            .replace_all(old="&", new="&amp;")
+            .replace_all(old="<", new="&lt;")
+            .replace_all(old=">", new="&gt;"),
+            kind,
+          }
+          word
+        })
+      })
+    text.set_text_box(text_box(lines, env, false))
   }
 }

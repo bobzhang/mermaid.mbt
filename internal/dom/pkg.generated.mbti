@@ -10,6 +10,8 @@ pub fn is_allowed_uri(String) -> Bool
 
 pub fn is_clobbering_name(String) -> Bool
 
+pub fn is_safe_for_xml(String) -> Bool
+
 pub fn number(Double) -> String
 
 pub fn path_length(String) -> Double

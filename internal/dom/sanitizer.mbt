@@ -69,3 +69,25 @@ pub fn is_allowed_uri(value : String) -> Bool {
   | "xmpp"
   | "matrix")
 }
+
+///|
+/// Whether an attribute value survives the sanitizer's guard against
+/// markup in attributes (`SAFE_FOR_XML`): a value holding the end of a
+/// comment (`-->`, `--!>`), `]>`, or the end tag of an element whose
+/// content is raw text, such as `</style>`, is removed with its attribute.
+pub fn is_safe_for_xml(value : String) -> Bool {
+  let lower = value.to_lower()
+  if lower.contains("-->") || lower.contains("--!>") || lower.contains("]>") {
+    return false
+  }
+  for
+    name in [
+      "style", "script", "title", "xmp", "textarea", "noscript", "iframe", "noembed",
+      "noframes",
+    ] {
+    if lower.contains("</\{name}") {
+      return false
+    }
+  }
+  true
+}

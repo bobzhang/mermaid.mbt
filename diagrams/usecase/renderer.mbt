@@ -132,6 +132,10 @@ fn annotate(
     .attr("role", "img")
     .attr("aria-label", node.accessible_name)
     |> ignore
+    // The sanitizer drops a name that looks like the end of markup.
+    if !@dom.is_safe_for_xml(node.accessible_name) {
+      element.remove_attr("aria-label") |> ignore
+    }
     // The first line of the label is the stereotype. Drawing renamed the
     // shape of a rectangle to `squareRect`, which upstream does not look
     // for here: only ellipses get the stereotype marked.
@@ -198,6 +202,9 @@ fn annotate(
     } else {
       path.attr("role", "img").attr("aria-label", edge.accessible_name)
       |> ignore
+      if !@dom.is_safe_for_xml(edge.accessible_name) {
+        path.remove_attr("aria-label") |> ignore
+      }
     }
   }
 }
