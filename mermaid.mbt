@@ -302,6 +302,30 @@ fn parse_diagram(
         },
       }
     }
+    "cynefin" => {
+      let diagram = @cynefin.parse(code) catch {
+        @cynefin.CynefinError(message) => raise Syntax(message)
+        @cynefin.Unsupported(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      // A frontmatter title applies unless the diagram body has its own.
+      if title is Some(title) && diagram.title == "" {
+        diagram.set_title(title) catch {
+          @cynefin.Unsupported(message) => raise Unsupported(message)
+        }
+      }
+      {
+        styles: @cynefin.styles(config.theme()),
+        acc_title: diagram.acc_title,
+        acc_description: diagram.acc_description,
+        classes: [],
+        draw: context => {
+          @cynefin.draw(diagram, context) catch {
+            @cynefin.Unsupported(message) => raise Unsupported(message)
+          }
+        },
+      }
+    }
     other => raise Unsupported(other)
   }
 }

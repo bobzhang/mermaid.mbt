@@ -142,3 +142,41 @@ test "chunks anchored and aligned" {
     content="{ x: 144.796875, y: -13.945028305053711, width: 36.46875, height: 14 }",
   )
 }
+
+///|
+/// Text measured under a `viewBox` shown smaller than its size: the
+/// widths are whole layout units at the size on screen, scaled back.
+test "chunks under a scale" {
+  let width = (text : String, scale : Double) => {
+    @font.Stack::default().chunks_box(
+      [{ text, x: 0.0, y: 13.0, }],
+      12.0,
+      anchor=Middle,
+      baseline=Central,
+      scale~,
+    )
+  }
+  debug_inspect(
+    width("Market research", 0.8238511085510254),
+    content=(
+      #|{
+      #|  x: -43.242034912109375,
+      #|  y: 6.32403564453125,
+      #|  width: 86.48406982421875,
+      #|  height: 13.351926803588867,
+      #|}
+    ),
+  )
+  debug_inspect(
+    width("Competitive analysis", 0.8238511085510254),
+    content=(
+      #|{
+      #|  x: -55.45601272583008,
+      #|  y: 6.32403564453125,
+      #|  width: 110.91202545166016,
+      #|  height: 13.383695602416992,
+      #|}
+    ),
+  )
+  inspect(width("a", 0.840895414352417).width, content="6.3176703453063965")
+}

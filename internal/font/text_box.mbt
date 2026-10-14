@@ -97,13 +97,24 @@ pub(all) struct Chunk {
 /// stood. Positions are single precision, and both
 /// that move and the far edges of the boxes united are sums that round:
 /// the box depends on where the text is.
+///
+/// `scale` is the factor by which the text is drawn larger or smaller on
+/// screen than its font size says, as under a `viewBox` that does not
+/// match the size of its `<svg>` (see `@diagram.text_scale`). The browser
+/// shapes the text at the size on screen, where advances are whole layout
+/// units and ascent and descent whole pixels, and scales the boxes back.
 pub fn Stack::chunks_box(
   self : Stack,
   chunks : Array[Chunk],
   size : Double,
   anchor~ : Anchor = Start,
   baseline~ : Baseline = Alphabetic,
+  scale~ : Double = 1.0,
 ) -> Rect {
+  // Text under a scaling transform is laid out at the size it has on
+  // screen and its boxes are scaled back.
+  let scale = Float::from_double(scale)
+  let size = (Float::from_double(size) * scale).to_double()
   let ascent = Float::from_double(self.faces[0].ascent(size))
   let (above, below) = self.extents(size, baseline)
   let mut box : RectF = { x: 0.0, y: 0.0, width: 0.0, height: 0.0, }
@@ -112,7 +123,7 @@ pub fn Stack::chunks_box(
   for chunk in chunks {
     let shaped = self.shape(chunk.text, size)
     let width = Float::from_double(ceil_layout_unit(shaped.pen))
-    let x = inline + (Float::from_double(chunk.x) - inline)
+    let x = inline + (Float::from_double(chunk.x) * scale - inline)
     inline = inline + width
     // The anchor shifts the chunk by the position of its ends, not by
     // its advance: the sums round on the way.
@@ -122,7 +133,7 @@ pub fn Stack::chunks_box(
       Middle => x + (x - (x + end) / 2)
       End => x + (x - end)
     }
-    let top = Float::from_double(chunk.y) - above
+    let top = Float::from_double(chunk.y) * scale - above
     let cell : RectF = { x: left, y: top, width, height: above + below, }
     let ink : RectF = {
       x: left + shaped.ink.x,
@@ -132,11 +143,12 @@ pub fn Stack::chunks_box(
     }
     box = box.union(ink.union(cell))
   }
+  let back : Float = 1.0 / scale
   {
-    x: box.x.to_double(),
-    y: box.y.to_double(),
-    width: box.width.to_double(),
-    height: box.height.to_double(),
+    x: (box.x * back).to_double(),
+    y: (box.y * back).to_double(),
+    width: (box.width * back).to_double(),
+    height: (box.height * back).to_double(),
   }
 }
 

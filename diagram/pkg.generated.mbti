@@ -13,6 +13,8 @@ pub fn configure_svg_size(@dom.Element, Double, Double, Bool) -> Unit
 
 pub fn parse_font_size(String) -> Double?
 
+pub fn text_scale(Double, Double, Bool) -> Double?
+
 pub fn to_fixed0(Double) -> String
 
 // Errors
