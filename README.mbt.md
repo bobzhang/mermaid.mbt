@@ -42,6 +42,8 @@ Work in progress.
 | Entity relationship | byte-identical with the default ELK layout |
 | Requirement | byte-identical with the default ELK layout |
 | State | byte-identical with the default ELK layout, `stateDiagram` and `stateDiagram-v2` |
+| User journey | byte-identical, all `journey:` options |
+| Timeline | byte-identical, horizontal and vertical, both looks |
 | everything else | not ported yet — `render` raises `Unsupported` |
 
 Git graphs name commits at random upstream (`Math.random`), so a graph
