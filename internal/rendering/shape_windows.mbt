@@ -36,15 +36,25 @@ fn folder(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
     { x: w / 2.0, y: total_height / 2.0, },
     { x: -w / 2.0, y: total_height / 2.0, },
   ]
-  labelled.shape_svg
-  .insert_first("path")
-  .attr("d", path_from_points(points))
-  .attr("class", "basic label-container")
-  .attr("style", styles.node_styles)
-  |> ignore
-  // The outline is exactly as large as it was made.
-  node.width = Some(w)
-  node.height = Some(total_height)
+  if hand_drawn(node) {
+    let outline = sketched_outline(
+      labelled.shape_svg,
+      node,
+      env,
+      path_from_points(points),
+    )
+    update_node_bounds(node, outline)
+  } else {
+    labelled.shape_svg
+    .insert_first("path")
+    .attr("d", path_from_points(points))
+    .attr("class", "basic label-container")
+    .attr("style", styles.node_styles)
+    |> ignore
+    // The outline is exactly as large as it was made.
+    node.width = Some(w)
+    node.height = Some(total_height)
+  }
   let body_centre = top + tab_height + body_height / 2.0
   place_label(labelled, -(box.width / 2.0), body_centre - box.height / 2.0)
   node.intersect = Some(point => intersect_polygon(node, points, point))
@@ -80,8 +90,12 @@ fn bucket(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
   let group = labelled.shape_svg
     .insert_first("g")
     .attr("class", "basic label-container")
-  group.append("path").attr("d", body).attr("style", styles.node_styles)
-  |> ignore
+  if hand_drawn(node) {
+    sketch_into_group(group, node, env, body)
+  } else {
+    group.append("path").attr("d", body).attr("style", styles.node_styles)
+    |> ignore
+  }
   group
   .append("ellipse")
   .attr("cx", "0")
@@ -122,6 +136,7 @@ fn window_frame(
   node : Node,
   styles : SplitStyles,
   band : Double,
+  env : Env,
 ) -> (@dom.Element, Double, Double) {
   let padding = node.padding
   let radius = 12.0
@@ -134,6 +149,15 @@ fn window_frame(
   let group = labelled.shape_svg
     .insert_first("g")
     .attr("class", "basic label-container")
+  if hand_drawn(node) {
+    sketch_into_group(
+      group,
+      node,
+      env,
+      rounded_rect_path(-w / 2.0, -h / 2.0, w, h, radius),
+    )
+    return (group, w, h)
+  }
   group
   .append("rect")
   .attr_number("x", -w / 2.0)
@@ -174,7 +198,7 @@ fn browser(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
   let labelled = label_helper(parent, node, node_classes(node), env)
   let accent = accent_colour(env)
   let bar_height = 18.0
-  let (group, w, h) = window_frame(labelled, node, styles, bar_height)
+  let (group, w, h) = window_frame(labelled, node, styles, bar_height, env)
   let top = -h / 2.0
   group
   .append("line")
@@ -218,7 +242,7 @@ fn console_window(
   let labelled = label_helper(parent, node, node_classes(node), env)
   let accent = accent_colour(env)
   let glyph_band = 20.0
-  let (group, w, h) = window_frame(labelled, node, styles, glyph_band)
+  let (group, w, h) = window_frame(labelled, node, styles, glyph_band, env)
   // The prompt is not measured: it lies well inside the frame, which is at
   // least 90 wide and taller than the band, so the window's box is the
   // frame's whatever the monospace font is.

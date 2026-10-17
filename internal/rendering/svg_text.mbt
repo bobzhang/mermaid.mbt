@@ -421,7 +421,13 @@ fn create_svg_label(
     old="color:",
     new="fill:",
   )
-  if is_node {
+  // A node label with a background is the group of text and background,
+  // which takes the style and whose box is the background's.
+  let backed = is_node && add_background && text != ""
+  let box = if backed { group.bbox() } else { box }
+  if backed {
+    group.attr("style", text_style) |> ignore
+  } else if is_node {
     element.attr("style", text_style) |> ignore
   } else {
     background.attr(

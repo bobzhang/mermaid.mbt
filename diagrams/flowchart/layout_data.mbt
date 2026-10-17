@@ -213,6 +213,18 @@ fn FlowDb::layout_data(
         have_callback=vertex.have_callback,
         is_group~,
         shape=if is_group { "rect" } else { vertex_shape(vertex) },
+        data=if vertex.icon is Some(_) || vertex.img is Some(_) {
+          Asset(
+            icon=vertex.icon,
+            img=vertex.img,
+            pos=vertex.pos,
+            constraint=vertex.constraint,
+            asset_width=vertex.asset_width,
+            asset_height=vertex.asset_height,
+          )
+        } else {
+          Plain
+        },
         min_width?=if is_group {
           None
         } else {

@@ -33,6 +33,7 @@ fn create_html_label(
   markdown~ : Bool = false,
   padding_x~ : Double = 0.0,
   auto_wrap? : Bool,
+  paragraph_padding~ : Double = 0.0,
 ) -> (@dom.Element, LabelBox) {
   // Callers that do not hand `createText` the configuration wrap
   // markdown whatever it says.
@@ -103,9 +104,19 @@ fn create_html_label(
   }
   let lines = label_lines(span).map(collapse_runs).map(styled)
   let line_height = 1.5 * env.font_size
+  // What the stylesheet pads the paragraphs by on both sides, and how
+  // many paragraphs there are to pad.
+  let pad = 2.0 * paragraph_padding
+  let paragraphs = if pad == 0.0 {
+    0.0
+  } else {
+    span.descendants(["p"]).length().to_double()
+  }
+  let pad = if paragraphs == 0.0 { 0.0 } else { pad }
   let natural = lines.fold(init=0.0, (widest, line) => {
-    widest.max(runs_width(line, env))
-  })
+      widest.max(runs_width(line, env))
+    }) +
+    pad
   // A line break makes a line, even with nothing on it.
   let empty = lines.all(line => line.is_empty()) &&
     span.descendants(["br"]).is_empty()
@@ -126,7 +137,7 @@ fn create_html_label(
     height: if empty {
       0.0
     } else {
-      line_height * lines.length().to_double()
+      line_height * lines.length().to_double() + pad * paragraphs
     },
   }
   if width is Some(width) && box.width == width {
@@ -146,14 +157,19 @@ fn create_html_label(
       box_width = box_width.max(natural)
       rows = lines.length()
     } else {
+      // Padded paragraphs break their lines in the width the padding
+      // leaves.
       for line in lines {
-        box_width = box_width.max(wrapped_rows(line, width, env).1)
+        box_width = box_width.max(wrapped_rows(line, width - pad, env).1 + pad)
       }
       for line in lines {
-        rows += wrapped_rows(line, box_width, env).0
+        rows += wrapped_rows(line, box_width - pad, env).0
       }
     }
-    box = { width: box_width, height: line_height * rows.to_double(), }
+    box = {
+      width: box_width,
+      height: line_height * rows.to_double() + pad * paragraphs,
+    }
   } else if box.width < min_width {
     div
     .style("display", "table")
@@ -190,6 +206,8 @@ fn label_helper(
   unlimited~ : Bool = false,
   ignore_min_width~ : Bool = false,
   html_labels? : Bool,
+  add_background~ : Bool = false,
+  paragraph_padding~ : Double = 0.0,
 ) -> Labelled {
   // Nodes carrying a stereotype have a label of stacked sections.
   if node.data is C4(..) {
@@ -243,6 +261,8 @@ fn label_helper(
       classes=if markdown { "markdown-node-label" } else { "" },
       markdown~,
       style=node.label_style,
+      add_background~,
+      paragraph_padding~,
     )
     let box = if box.width < min_label_width {
       { ..box, width: min_label_width, }
@@ -267,6 +287,7 @@ fn label_helper(
       style=node.label_style,
       markdown~,
       anchor_middle=env.node_text_centred,
+      add_background~,
     )
     let box : LabelBox = {
       width: text.text_box.width.max(min_label_width),

@@ -422,3 +422,16 @@ fn sketch_person(
   prepend(group, body)
   group.attr("style", css_styles_text(node)) |> ignore
 }
+
+///|
+/// The sketch of a bucket's body or a window's frame in the hand-drawn
+/// look, appended to the shape's group, which takes the node's styles.
+fn sketch_into_group(
+  group : @dom.Element,
+  node : Node,
+  env : Env,
+  path : String,
+) -> Unit {
+  group.append_child(@rough.path(path, rough_options(node, env)))
+  group.attr("style", css_styles_text(node)) |> ignore
+}

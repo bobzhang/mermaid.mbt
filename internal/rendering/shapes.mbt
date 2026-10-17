@@ -582,6 +582,9 @@ fn draw_shape(
     "rectWithTitle" => rect_with_title(parent, node, env)
     "collapsedGroup" => collapsed_group(parent, node, env)
     "labelRect" => label_rect(parent, node, env)
+    "icon" | "iconCircle" | "iconRounded" | "iconSquare" =>
+      icon_shape(parent, node, env, handler)
+    "imageSquare" => image_square(parent, node, env)
     "subroutine" if hand_drawn(node) => sketched_subroutine(parent, node, env)
     "subroutine" =>
       polygon_shape(parent, node, env, box => {

@@ -24,6 +24,7 @@ pub fn draw(
     markers: ["point", "circle", "cross"],
   }
   @rendering.render(data, context.svg)
+  @rendering.order_image_nodes(context.svg)
   insert_title(db.title, context)
   let padding = config.number("flowchart.diagramPadding").unwrap_or(8.0)
   @rendering.setup_viewport(
