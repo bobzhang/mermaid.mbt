@@ -1,0 +1,21 @@
+---
+config:
+  handDrawnSeed: 1
+  theme: forest
+---
+swimlane-beta RL
+  subgraph Ops0 [Customer]
+    step1([Collect data])
+    a2_x>Approve]
+    step3[Send]
+    N4[Approve]
+    N5[Create account]
+  end
+  subgraph L1
+    a6_x[Approve]
+  end
+  N5 --- N4
+  N5 -.-> a6_x
+  a6_x ==>|No| N5
+  N4 --> step1
+  a6_x --> N5

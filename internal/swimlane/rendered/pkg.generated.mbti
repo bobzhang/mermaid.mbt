@@ -1,0 +1,33 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/internal/swimlane/rendered"
+
+import {
+  "bobzhang/mermaid/internal/swimlane/model",
+}
+
+// Values
+pub fn collapse_redundant_rectangular_doglegs(Array[@model.Edge], Map[String, @model.Node]) -> Unit
+
+pub fn lift_obstacle_hugging_same_side_rails(Array[@model.Edge], Map[String, @model.Node]) -> Unit
+
+pub fn lift_top_lane_title_bands_above_rails(Array[@model.Edge], Map[String, @model.Node], String) -> Unit
+
+pub fn reassign_crossing_external_rail_channels(Array[@model.Edge], Map[String, @model.Node]) -> Unit
+
+pub fn resolve_rendered_orthogonal_crossings(Array[@model.Edge], Map[String, @model.Node]) -> Unit
+
+pub fn separate_shared_rendered_terminal_lanes(Array[@model.Edge], Map[String, @model.Node]) -> Unit
+
+pub fn shift_left_lane_title_bands_left_of_rails(Array[@model.Edge], Map[String, @model.Node], String) -> Unit
+
+pub fn shortcut_redundant_orthogonal_jogs(Array[@model.Edge], Map[String, @model.Node]) -> Unit
+
+pub fn swap_destination_terminal_tails_to_reduce_crossings(Array[@model.Edge], Map[String, @model.Node]) -> Unit
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits

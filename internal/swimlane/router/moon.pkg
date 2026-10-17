@@ -1,0 +1,8 @@
+import {
+  "bobzhang/mermaid/internal/d3",
+  "bobzhang/mermaid/internal/jsmath",
+  "bobzhang/mermaid/internal/swimlane/model",
+  "moonbitlang/core/double",
+}
+
+warnings = "-implicit_impl_as_method"

@@ -36,6 +36,10 @@ let usage : String =
   #|  time <cases.json>      evaluate dayjs and d3 time operations
   #|  format <cases.json>    format numbers; cases are {specifier, value}
   #|  colors <colors.json>   serialize CSS colors as the CSSOM does
+  #|  swimlane <capture.json> [--stages]
+  #|                         lay out a capture of scripts/swimlane_capture.py
+  #|                         as scripts/swimlane_oracle.js does; with
+  #|                         --from SNAPSHOT --run STEP, run one step
   #|
 
 ///|
@@ -506,6 +510,7 @@ fn main {
       ["time", path] => time_cases(path)
       ["format", path] => formats(path)
       ["colors", path] => colors(path)
+      ["swimlane", .. options] => swimlane(options)
       _ => println(usage)
     }
   } catch {
