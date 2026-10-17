@@ -2,6 +2,7 @@ import {
   "bobzhang/mermaid/config",
   "bobzhang/mermaid/diagram",
   "bobzhang/mermaid/diagrams/agentflow",
+  "bobzhang/mermaid/diagrams/architecture",
   "bobzhang/mermaid/diagrams/c4",
   "bobzhang/mermaid/diagrams/block",
   "bobzhang/mermaid/diagrams/classdiagram",

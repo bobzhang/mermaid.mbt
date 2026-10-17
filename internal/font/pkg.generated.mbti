@@ -47,6 +47,7 @@ pub struct Stack {
 }
 pub fn Stack::advance(Self, StringView, Double) -> Double
 pub fn Stack::advance_unrounded(Self, StringView, Double) -> Double
+pub fn Stack::baseline_extents(Self, Double, Baseline) -> (Float, Float)
 pub fn Stack::bbox(Self, StringView, Double, baseline? : Baseline) -> Rect
 pub fn Stack::chunks_box(Self, Array[Chunk], Double, anchor? : String, baseline? : Baseline, scale? : Double) -> Rect
 pub fn Stack::covers(Self, StringView) -> Bool

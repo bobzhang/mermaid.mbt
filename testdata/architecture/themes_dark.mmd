@@ -1,0 +1,11 @@
+---
+config:
+  theme: dark
+---
+architecture-beta
+    group cloud(cloud)[Cloud]
+    service web(internet)[Web] in cloud
+    service app(server)[App] in cloud
+    service store(database)[Store] in cloud
+    web:R --> L:app
+    app:B --> T:store

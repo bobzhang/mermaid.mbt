@@ -1,0 +1,11 @@
+architecture-beta
+    group g(cloud)[G]
+    service a(server)[A] in g
+    service b(server)[B] in g
+    service c(server)[C] in g
+    service hub(database)[Hub]
+    a:R --> L:hub
+    b:R --> L:hub
+    c:R --> L:hub
+    align column a b c
+    align row b hub

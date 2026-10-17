@@ -1,0 +1,14 @@
+architecture-beta
+    junction j1
+    junction j2
+    junction j3
+    service s1(server)[S1]
+    service s2(server)[S2]
+    service s3(disk)[S3]
+    service s4(disk)[S4]
+    j1:R -- L:j2
+    j2:B -- T:j3
+    s1:R --> L:j1
+    s2:L <-- R:j2
+    s3:T -- B:j3
+    s4:B -- T:j1

@@ -430,6 +430,28 @@ fn parse_diagram(
         },
       }
     }
+    "architecture" => {
+      let db = @architecture.parse(code) catch {
+        @langium.ParseError(message~, ..) => raise Syntax(message)
+        @architecture.Invalid(message) => raise Syntax(message)
+        @architecture.Unsupported(message) => raise Unsupported(message)
+        error => raise Syntax(error.to_string())
+      }
+      // The diagram title is kept but not drawn.
+      ignore(title)
+      {
+        styles: @architecture.styles(config.theme()),
+        acc_title: db.acc_title,
+        acc_description: db.acc_description,
+        classes: [],
+        draw: context => {
+          @architecture.draw(db, context) catch {
+            @architecture.Invalid(message) => raise Syntax(message)
+            @architecture.Unsupported(message) => raise Unsupported(message)
+          }
+        },
+      }
+    }
     "radar" => {
       let radar = @radar.parse(code) catch {
         @langium.ParseError(message~, ..) => raise Syntax(message)

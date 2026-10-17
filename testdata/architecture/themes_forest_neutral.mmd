@@ -1,0 +1,10 @@
+---
+config:
+  theme: forest
+---
+architecture-beta
+    group g1(disk)[Group one]
+    group g2(server)[Group two]
+    service a(server)[A] in g1
+    service b(disk)[B] in g2
+    a{group}:R --> L:b{group}

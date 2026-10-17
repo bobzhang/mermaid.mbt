@@ -3,11 +3,14 @@ package "bobzhang/mermaid/diagrams/architecture"
 
 import {
   "bobzhang/mermaid/config",
+  "bobzhang/mermaid/diagram",
   "bobzhang/mermaid/theme",
   "moonbitlang/core/debug",
 }
 
 // Values
+pub fn draw(Db, @diagram.Context) -> Unit raise ArchitectureError
+
 pub fn layout_report(String, @config.Config, trace? : Bool) -> Json raise
 
 pub fn parse(String) -> Db raise
