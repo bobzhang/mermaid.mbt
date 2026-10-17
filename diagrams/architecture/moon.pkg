@@ -1,0 +1,10 @@
+import {
+  "bobzhang/mermaid/config",
+  "bobzhang/mermaid/internal/dom",
+  "bobzhang/mermaid/internal/fcose",
+  "bobzhang/mermaid/internal/langium",
+  "bobzhang/mermaid/theme",
+  "moonbitlang/core/double",
+}
+
+warnings = "-implicit_impl_as_method"
