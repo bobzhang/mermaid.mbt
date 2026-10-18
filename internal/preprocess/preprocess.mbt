@@ -81,7 +81,10 @@ fn requote(attributes : String) -> String {
 }
 
 ///|
-/// lodash's `merge`: objects merge recursively, everything else is replaced.
+/// lodash's `merge`: objects merge recursively, everything else is
+/// replaced, `null` included (only `undefined`, which JSON lacks, keeps the
+/// previous value). A `null` that clears a frontmatter value is then
+/// dropped by the directive's sanitization.
 fn deep_merge(base : Json, extra : Json) -> Json {
   match (base, extra) {
     (Object(a), Object(b)) => {
@@ -94,7 +97,6 @@ fn deep_merge(base : Json, extra : Json) -> Json {
       }
       Json::object(merged)
     }
-    (_, Null) => base
     _ => extra
   }
 }
@@ -119,8 +121,8 @@ pub fn preprocess(code : String) -> Diagram raise {
     front_config = deep_merge(front_config, { "gantt": gantt })
   }
   let mut directive = detect_init(front.text).unwrap_or(Json::object(Map([])))
-  if has_wrap_directive(front.text) {
-    directive = deep_merge(directive, { "wrap": true })
+  if wrap_directive(front.text) is Some(wrap) {
+    directive = deep_merge(directive, { "wrap": wrap })
   }
   let with_comments = remove_directives(front.text)
   {

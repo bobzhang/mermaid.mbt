@@ -155,9 +155,18 @@ fn detect_init(text : String) -> Json? raise UnknownDiagramError {
 }
 
 ///|
-/// Whether `text` carries a `wrap` directive.
-fn has_wrap_directive(text : String) -> Bool {
-  find_directives(directive_source(text))
-  .iter()
-  .any(directive => directive.kind.contains("wrap"))
+/// The `wrap` setting the directives of `text` make, as
+/// `processDirectives` reads them: `detectDirective(code, "wrap")` finds
+/// those whose type contains `wrap`; a single one turns wrapping on when
+/// its type is exactly `wrap` (`%%{nowrap}%%` does nothing), several set it
+/// to whether any of them is.
+fn wrap_directive(text : String) -> Bool? {
+  let kinds = find_directives(directive_source(text))
+    .filter(directive => directive.kind.contains("wrap"))
+    .map(directive => directive.kind)
+  match kinds {
+    [] => None
+    [kind] => if kind == "wrap" { Some(true) } else { None }
+    kinds => Some(kinds.contains("wrap"))
+  }
 }
