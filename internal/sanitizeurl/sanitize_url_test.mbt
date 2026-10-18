@@ -52,3 +52,28 @@ test "links are sanitized and web addresses normalized" {
     content="mailto:someone@example.com",
   )
 }
+
+///|
+test "character references are read as JavaScript numbers" {
+  // What upstream renders for these click links (checked with the oracle).
+  inspect(@sanitizeurl.sanitize_url("x&#0x41-y"), content="xA-y")
+  inspect(@sanitizeurl.sanitize_url("x&#4295032897-y"), content="xA-y")
+  inspect(@sanitizeurl.sanitize_url("x&#1e2-y"), content="xd-y")
+  inspect(
+    @sanitizeurl.sanitize_url("x&#0b1000001-y&#0o101-z"),
+    content="xA-yA-z",
+  )
+  inspect(@sanitizeurl.sanitize_url("x&#Infinity-y&#1_0-z"), content="x-y-z")
+  // A lone surrogate is not reproduced.
+  let result : Result[String, Error] = Ok(
+    @sanitizeurl.sanitize_url("x&#55357-y"),
+  ) catch {
+    error => Err(error)
+  }
+  debug_inspect(result is Err(@sanitizeurl.Unsupported(_)), content="true")
+}
+
+///|
+test "a host that decodes to a forbidden code point is no address" {
+  inspect(@sanitizeurl.sanitize_url("https://a%3Ab/%ZZ"), content="about:blank")
+}

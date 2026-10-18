@@ -6,6 +6,8 @@ import {
 }
 
 // Values
+pub const BLANK_URL : String = "about:blank"
+
 pub fn sanitize_url(String) -> String raise Unsupported
 
 // Errors

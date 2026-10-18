@@ -741,8 +741,8 @@ fn FlowDb::format_url(self : FlowDb, link : String) -> String {
   if self.config.text("securityLevel") is Some("loose") {
     return url
   }
-  @diagram.sanitize_url(url) catch {
-    UnsupportedUrl(message) => {
+  @sanitizeurl.sanitize_url(url) catch {
+    @sanitizeurl.Unsupported(message) => {
       self.unsupported_link = Some(message)
       url
     }

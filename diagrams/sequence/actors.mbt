@@ -896,3 +896,12 @@ fn Renderer::draw_actor(
     _ => @double.not_a_number
   }
 }
+
+///|
+/// `sanitizeUrl`, with the addresses the port cannot normalize reported as
+/// sequence errors.
+fn sanitize_url(url : String) -> String raise SequenceError {
+  @sanitizeurl.sanitize_url(url) catch {
+    @sanitizeurl.Unsupported(message) => raise SequenceError(message)
+  }
+}
