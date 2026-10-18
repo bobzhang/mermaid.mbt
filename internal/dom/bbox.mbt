@@ -407,16 +407,21 @@ fn Transform::map(self : Transform, bounds : Bounds) -> Bounds {
 }
 
 ///|
-/// The length in pixels an inline style declares for a property; nothing
-/// when there is no such declaration or it is not in pixels.
+/// The length in pixels an inline style declares for a property, important
+/// or not; nothing when there is no such declaration or it is not in
+/// pixels.
 fn pixel_declaration(element : Element, name : String) -> Float? {
   for declaration in element.declarations {
-    if declaration.0 == name && declaration.1.strip_suffix("px") is Some(number) {
-      let value = @string.parse_double(number.trim().to_owned()) catch {
-        _ => return None
-      }
-      return Some(Float::from_double(value))
+    guard declaration.0 == name else { continue }
+    let value = match declaration.1.strip_suffix(" !important") {
+      Some(value) => value
+      None => declaration.1
     }
+    guard value.strip_suffix("px") is Some(number) else { return None }
+    let value = @string.parse_double(number.trim().to_owned()) catch {
+      _ => return None
+    }
+    return Some(Float::from_double(value))
   }
   None
 }
@@ -429,13 +434,21 @@ const TRIVIAL_SIZE : Float = 9.5367431640625e-7
 /// The element's box in its own coordinate system, before its transform.
 /// Nothing for an element that renders no geometry.
 fn Element::local_bounds(self : Element) -> Bounds? {
-  let attr = (name : String) => number_attr(self, name).unwrap_or(0)
+  // The geometry is made of CSS properties (`x`, `width`, `r`, ...), and a
+  // declaration in the inline style wins over the attribute.
+  let attr = (name : String) => {
+    let declared = if name
+      is ("x" | "y" | "width" | "height" | "r" | "rx" | "ry" | "cx" | "cy") {
+      pixel_declaration(self, name)
+    } else {
+      None
+    }
+    declared.unwrap_or(number_attr(self, name).unwrap_or(0))
+  }
   match self.tag {
     "rect" | "foreignObject" | "image" => {
-      // The size is a CSS property too, and a declaration wins over the
-      // attribute.
-      let width = pixel_declaration(self, "width").unwrap_or(attr("width"))
-      let height = pixel_declaration(self, "height").unwrap_or(attr("height"))
+      let width = attr("width")
+      let height = attr("height")
       if width <= 0 || height <= 0 {
         return None
       }
