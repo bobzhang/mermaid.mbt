@@ -16,6 +16,10 @@ pub fn css_font_size(value : Json, parent : Double) -> Double? {
     return Some(parent)
   }
   guard @dom.css_dimension(text) is Some((number, unit)) else { return None }
+  // A negative size is invalid, whatever its unit.
+  if number < 0.0 {
+    return Some(parent)
+  }
   let size = match unit {
     "px" => number
     "em" => number * parent

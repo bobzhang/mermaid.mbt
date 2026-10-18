@@ -288,19 +288,14 @@ fn Env::new(config : @config.Config, diagram_id : String) -> Env {
     // A number without a unit is no CSS length: the stylesheet's
     // `font-size` is dropped and text keeps the browser's size.
     Number(_, ..) => 16.0
-    String(text) => {
+    String(text) =>
       // The leading number as CSS writes one: `15.5px` is 15.5 pixels,
       // `+12px` and `1.2e1px` are 12.
-      let value = match @dom.css_dimension(text) {
-        Some((value, _)) => value
-        None => 0.0
+      match @dom.css_dimension(text) {
+        // A negative size is invalid: the browser's stays.
+        Some((value, _)) if value > 0.0 => value
+        _ => 16.0
       }
-      if value == 0.0 {
-        16.0
-      } else {
-        value
-      }
-    }
     _ => 16.0
   }
   let html_labels = match config.get("htmlLabels") {

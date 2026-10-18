@@ -110,3 +110,29 @@ test "CSS numbers take a sign, a fraction and an exponent" {
   assert_eq(css_length("1e1px"), Some("10px"))
   assert_eq(css_length("+.5e1px"), Some("5px"))
 }
+
+///|
+test "values the CSSOM rejects leave the declaration out" {
+  // `style.setProperty` in the reference browser: sizes that cannot be
+  // negative and weights outside 1 to 1000 are not taken; `+700` is
+  // `700`.
+  let element = Element::new("g")
+  element.style("stroke-width", "-2px").style("font-weight", "1001") |> ignore
+  assert_eq(element.to_html(), "<g></g>")
+  element
+  .style("stroke-width", "2px")
+  .style("stroke-width", "-3px")
+  .style("font-weight", "+700")
+  .style("stroke-dashoffset", "-2px")
+  |> ignore
+  assert_eq(
+    element.to_html(),
+    "<g style=\"stroke-width: 2px; font-weight: 700; stroke-dashoffset: -2px;\"></g>",
+  )
+  assert_eq(
+    serialize_declarations(
+      "font-size:-1px;font-weight:0;opacity:0.5;width:-1px !important",
+    ),
+    "opacity: 0.5;",
+  )
+}

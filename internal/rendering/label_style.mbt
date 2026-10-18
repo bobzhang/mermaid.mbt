@@ -36,7 +36,9 @@ fn Env::styled(self : Env, style : String, faces~ : Bool = true) -> Env {
             match css_length(other) {
               // With a regular and a bold face to choose from, font
               // matching takes the bold one for any weight above 500.
-              Some((weight, "")) => weight > 500.0
+              // A weight outside 1 to 1000 is invalid.
+              Some((weight, "")) if weight >= 1.0 && weight <= 1000.0 =>
+                weight > 500.0
               _ => env.bold
             }
         }

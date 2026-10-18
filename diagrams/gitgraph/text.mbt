@@ -19,6 +19,10 @@ fn css_font_size(
   guard @dom.css_dimension(text) is Some((number, unit)) else {
     raise unsupported
   }
+  // A negative size is invalid, whatever its unit.
+  if number < 0.0 {
+    return parent
+  }
   let size = match unit {
     "px" => number
     "em" => number * parent

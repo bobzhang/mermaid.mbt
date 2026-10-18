@@ -14,7 +14,9 @@ fn text_measure_size(setting : Json) -> Double {
     Number(size, ..) => size
     String(text) => {
       // The number as CSS writes one: `+12px` and `1.2e1px` are 12.
-      guard @dom.css_dimension(text.trim().to_owned()) is Some((value, unit)) else {
+      // A negative size is invalid, and leaves the page's.
+      guard @dom.css_dimension(text.trim().to_owned()) is Some((value, unit)) &&
+        value >= 0.0 else {
         return page
       }
       match unit.trim() {

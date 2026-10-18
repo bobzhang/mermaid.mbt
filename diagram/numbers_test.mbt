@@ -44,4 +44,13 @@ test "css_font_size reads signs and exponents as CSS does" {
     }
   })
   inspect(sizes.join(" "), content="12 10 12 20 24 - 16")
+  // A negative size is invalid: the parent's stays.
+  inspect(
+    @diagram.css_font_size(Json::string("-16px"), 20.0).unwrap_or(0.0),
+    content="20",
+  )
+  inspect(
+    @diagram.css_font_size(Json::string("-1em"), 20.0).unwrap_or(0.0),
+    content="20",
+  )
 }

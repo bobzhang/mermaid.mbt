@@ -57,6 +57,10 @@ test "font sizes" {
   inspect(size(20), content="16")
   inspect(size("20"), content="16")
   inspect(size("large"), content="-1")
+  // CSS numbers; a negative size is invalid, and inherits.
+  inspect(size("+14px"), content="14")
+  inspect(size("-16px"), content="16")
+  inspect(size("-1.4e1px"), content="16")
 }
 
 ///|
