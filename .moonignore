@@ -1,0 +1,15 @@
+# What mooncakes.io gets: the library and the CLI, not the fixtures, tests,
+# scripts or the playground. Overrides .gitignore, so it repeats it.
+.DS_Store
+.repos/
+_build/
+target/
+.mooncakes/
+.moonagent/
+.claude/
+moon.work
+testdata/
+tests/
+scripts/
+playground/
+bench/
