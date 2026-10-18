@@ -5,16 +5,20 @@ import {
   "bobzhang/mermaid/diagram",
   "bobzhang/mermaid/internal/langium",
   "bobzhang/mermaid/theme",
+  "moonbitlang/core/debug",
 }
 
 // Values
-pub fn draw(Pie, @diagram.Context) -> Unit
+pub fn draw(Pie, @diagram.Context) -> Unit raise Unsupported
 
 pub fn parse(String) -> Pie raise @langium.ParseError
 
 pub fn styles(@theme.Theme) -> String
 
 // Errors
+pub(all) suberror Unsupported {
+  Unsupported(String)
+} derive(Eq, @debug.Debug)
 
 // Types and methods
 pub struct Pie {

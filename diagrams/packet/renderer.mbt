@@ -31,10 +31,10 @@ pub fn draw(packet : Packet, context : @diagram.Context) -> Unit {
     let group = svg.append("g")
     let word_y = row_number.to_double() * total_row_height + padding_y
     for block in word {
-      let bits = (block.end - block.start + 1).to_double()
+      let bits = block.end - block.start + 1.0
       // `descending` mirrors the row, so it reads from its highest bit
       // down to its lowest, as hardware registers are drawn.
-      let first_column = (block.start % bits_per_row.to_int()).to_double()
+      let first_column = block.start % bits_per_row
       let column = if descending {
         bits_per_row - first_column - bits
       } else {
@@ -76,7 +76,7 @@ pub fn draw(packet : Packet, context : @diagram.Context) -> Unit {
       .attr("class", "packetByte start")
       .attr("dominant-baseline", "auto")
       .attr("text-anchor", if single { "middle" } else { "start" })
-      .text(leading.to_string())
+      .text(n(leading))
       |> ignore
       if !single {
         group
@@ -86,7 +86,7 @@ pub fn draw(packet : Packet, context : @diagram.Context) -> Unit {
         .attr("class", "packetByte end")
         .attr("dominant-baseline", "auto")
         .attr("text-anchor", "end")
-        .text(trailing.to_string())
+        .text(n(trailing))
         |> ignore
       }
     }
