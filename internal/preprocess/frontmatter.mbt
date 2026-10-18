@@ -170,8 +170,9 @@ fn extract_front_matter(text : String) -> FrontMatter raise {
   // less than YAML 1.2 asks.
   let parsed : Json = match
     @yaml.Yaml::load_from_string(body, lenient_quoted_scalar_indentation=true) {
-    [document, ..] => Json(document)
+    [document] => Json(document)
     [] => Json::null()
+    _ => fail("expected a single document in the stream, but found more")
   }
   let field = (name : String) => {
     match parsed {
