@@ -92,4 +92,14 @@ pub(all) enum NodeData {
     rows~ : Array[(String, String)],
     boundary_type~ : String
   )
+  /// A flowchart node drawn as an icon or an image: what its
+  /// `@{ icon, img, pos, constraint, w, h }` asked for.
+  Asset(
+    icon~ : String?,
+    img~ : String?,
+    pos~ : String?,
+    constraint~ : String?,
+    asset_width~ : Double?,
+    asset_height~ : Double?
+  )
 }

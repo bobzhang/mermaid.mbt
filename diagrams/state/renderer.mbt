@@ -88,9 +88,6 @@ pub fn draw(
     raise @rendering.LayoutError("The \{layout} layout is not supported yet.")
   }
   let look = config.text("look").unwrap_or("classic")
-  if look == "handDrawn" {
-    raise @rendering.LayoutError("The hand-drawn look is not supported yet.")
-  }
   // Relative font sizes compound over the elements of a label.
   for node in db.nodes {
     for style in [..node.css_compiled_styles, ..node.css_styles] {
@@ -148,9 +145,16 @@ fn insert_title(title : String, context : @diagram.Context) -> Unit {
   let size = 18.0
   let box = font.bbox(title, size)
   // Anchored in the middle of its advance, which is whole layout units.
+  // Positions are single precision in the browser (which shows once the
+  // hand-drawn look leaves the chart at an uneven width), and the shift
+  // that centres the text comes from both of its ends.
+  let f = Float::from_double
+  let left = f(x)
+  let right = left + f(font.advance(title, size))
+  let start = left + (left - (left + right) / 2)
   text.set_text_box({
-    x: x - font.advance(title, size) / 2.0 + box.x,
-    y: y + box.y,
+    x: (start + f(box.x)).to_double(),
+    y: (f(y) + f(box.y)).to_double(),
     width: box.width,
     height: box.height,
   })

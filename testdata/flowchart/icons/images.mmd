@@ -1,0 +1,9 @@
+---
+config:
+  handDrawnSeed: 5
+---
+flowchart LR
+  A[Start] --> B@{ img: "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7", label: "Fixed image", w: 80, h: 50 }
+  B --> C@{ img: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAUCAIAAABwJOjsAAAAJElEQVR4nO3NMQ0AAAwEofdvupVxCwk7uy3RrGKxWCwWi8WJB336HQ594lo5AAAAAElFTkSuQmCC", label: "Constrained", h: 30, constraint: "on" }
+  C --> D@{ img: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAUCAIAAABwJOjsAAAAJElEQVR4nO3NMQ0AAAwEofdvupVxCwk7uy3RrGKxWCwWi8WJB336HQ594lo5AAAAAElFTkSuQmCC", label: "Natural" } --> E[End]
+  D --> F@{ img: "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7", w: 20, pos: "t" }

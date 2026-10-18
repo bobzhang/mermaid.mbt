@@ -1,0 +1,19 @@
+---
+config:
+  look: handDrawn
+  handDrawnSeed: 5
+---
+flowchart LR
+  A@{ shape: notch-rect, label: "Card" } --> B@{ shape: lin-rect, label: "Lined" }
+  B --> C@{ shape: div-rect, label: "Divided" } --> D@{ shape: win-pane, label: "Pane" }
+  D --> E@{ shape: st-rect, label: "Stacked" } --> F@{ shape: tag-rect, label: "Tagged" }
+  F --> G@{ shape: das, label: "DAS" } --> H@{ shape: lin-cyl, label: "Disk" }
+  H --> I@{ shape: doc, label: "Doc" } --> J@{ shape: lin-doc, label: "Lined doc" }
+  J --> K@{ shape: docs, label: "Docs" } --> L@{ shape: tag-doc, label: "Tag doc" }
+  L --> M@{ shape: flag, label: "Paper" } --> N@{ shape: bow-rect, label: "Bow" }
+  N --> O@{ shape: curv-trap, label: "Display" } --> P@{ shape: delay, label: "Delay" }
+  P --> Q@{ shape: tri, label: "Tri" } --> R@{ shape: flip-tri, label: "Flip" }
+  R --> S@{ shape: sl-rect, label: "Manual" } --> T@{ shape: trap-t, label: "Manual op" }
+  T --> U@{ shape: odd, label: "Odd" } --> V@{ shape: hex, label: "Prep" }
+  V --> W@{ shape: brace, label: "Comment" } --> X@{ shape: brace-r, label: "Right" }
+  X --> Y@{ shape: braces, label: "Both" } --> Z@{ shape: text, label: "Text" }

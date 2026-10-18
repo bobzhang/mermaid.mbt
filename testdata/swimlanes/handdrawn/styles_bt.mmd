@@ -1,0 +1,19 @@
+---
+config:
+  look: handDrawn
+  handDrawnSeed: 5
+---
+swimlane-beta BT
+  subgraph A
+    a1[One]:::hot
+    a2(Two)
+  end
+  subgraph B
+    b1{Three?}
+  end
+  a1 --> a2
+  a2 -.->|maybe| b1
+  b1 ==> a1
+  classDef hot fill:#f96,stroke:#333
+  style a2 fill:#bbf
+  linkStyle 1 stroke:red,color:blue

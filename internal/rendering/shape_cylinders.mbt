@@ -59,20 +59,26 @@ fn cylinder(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
   let ry = rx / (2.5 + w / 50.0)
   let h = node.height.unwrap_or(0.0).max(box.height) + label_padding + ry
   let n = @dom.number
-  let path_data = [
-    "M0,\{n(ry)}",
-    "a\{n(rx)},\{n(ry)} 0,0,0 \{n(w)},0",
-    "a\{n(rx)},\{n(ry)} 0,0,0 \{n(-w)},0",
-    "l0,\{n(h)}",
-    "a\{n(rx)},\{n(ry)} 0,0,0 \{n(w)},0",
-    "l0,\{n(-h)}",
-  ].join(" ")
-  let element = labelled.shape_svg
+  let element = if hand_drawn(node) {
+    let (outer, inner) = upright_cylinder_paths(w, h, rx, ry)
+    sketched_cylinder(labelled.shape_svg, node, env, outer, inner)
+  } else {
+    let path_data = [
+      "M0,\{n(ry)}",
+      "a\{n(rx)},\{n(ry)} 0,0,0 \{n(w)},0",
+      "a\{n(rx)},\{n(ry)} 0,0,0 \{n(-w)},0",
+      "l0,\{n(h)}",
+      "a\{n(rx)},\{n(ry)} 0,0,0 \{n(w)},0",
+      "l0,\{n(-h)}",
+    ].join(" ")
+    labelled.shape_svg
     .insert_first("path")
     .attr("d", path_data)
     .attr("class", "basic label-container outer-path")
     .attr("style", styles.node_styles)
-    .attr("transform", "translate(\{n(-w / 2.0)}, \{n(-(h / 2.0 + ry))})")
+  }
+  element.attr("transform", "translate(\{n(-w / 2.0)}, \{n(-(h / 2.0 + ry))})")
+  |> ignore
   update_node_bounds(node, element)
   labelled.label.attr(
     "transform",
@@ -112,22 +118,39 @@ fn lined_cylinder(
   let h = size_or(node.height, box.height) + ry + label_padding_y * 2.0
   let outer_offset = h * 0.1
   let n = @dom.number
-  let path_data = [
-    "M0,\{n(ry)}",
-    "a\{n(rx)},\{n(ry)} 0,0,0 \{n(w)},0",
-    "a\{n(rx)},\{n(ry)} 0,0,0 \{n(-w)},0",
-    "l0,\{n(h)}",
-    "a\{n(rx)},\{n(ry)} 0,0,0 \{n(w)},0",
-    "l0,\{n(-h)}",
+  let second_rim = [
     "M0,\{n(ry + outer_offset)}",
     "a\{n(rx)},\{n(ry)} 0,0,0 \{n(w)},0",
-  ].join(" ")
-  let element = labelled.shape_svg
+  ]
+  let element = if hand_drawn(node) {
+    let (outer, inner) = upright_cylinder_paths(w, h, rx, ry, extra=second_rim)
+    sketched_cylinder(
+      labelled.shape_svg,
+      node,
+      env,
+      outer,
+      inner,
+      inner_filled=true,
+      inner_class="line",
+    )
+  } else {
+    let path_data = [
+      "M0,\{n(ry)}",
+      "a\{n(rx)},\{n(ry)} 0,0,0 \{n(w)},0",
+      "a\{n(rx)},\{n(ry)} 0,0,0 \{n(-w)},0",
+      "l0,\{n(h)}",
+      "a\{n(rx)},\{n(ry)} 0,0,0 \{n(w)},0",
+      "l0,\{n(-h)}",
+      ..second_rim,
+    ].join(" ")
+    labelled.shape_svg
     .insert_first("path")
     .attr("d", path_data)
     .attr("class", "basic label-container outer-path")
     .attr("style", styles.node_styles)
-    .attr("transform", "translate(\{n(-w / 2.0)}, \{n(-(h / 2.0 + ry))})")
+  }
+  element.attr("transform", "translate(\{n(-w / 2.0)}, \{n(-(h / 2.0 + ry))})")
+  |> ignore
   update_node_bounds(node, element)
   place_label(labelled, -(box.width / 2.0), -(box.height / 2.0) + ry)
   node.intersect = Some(cylinder_intersect(node, rx, ry))
@@ -172,12 +195,18 @@ fn tilted_cylinder(
     "a\{n(rx)},\{n(ry)} 0,0,0 0,\{n(h)}",
     "l\{n(-w)},0",
   ].join("\n    ")
-  let element = labelled.shape_svg
+  let element = if hand_drawn(node) {
+    let (outer, inner) = tilted_cylinder_paths(w, h, rx, ry)
+    sketched_cylinder(labelled.shape_svg, node, env, outer, inner)
+  } else {
+    labelled.shape_svg
     .insert_first("path")
     .attr("d", path_data)
     .attr("class", "basic label-container outer-path")
     .attr("style", styles.node_styles)
-    .attr("transform", "translate(\{n(-w / 2.0)}, \{n(h / 2.0)} )")
+  }
+  element.attr("transform", "translate(\{n(-w / 2.0)}, \{n(h / 2.0)} )")
+  |> ignore
   place_label(labelled, -(box.width / 2.0) - rx, -(box.height / 2.0))
   update_node_bounds(node, element)
   node.intersect = Some(point => {

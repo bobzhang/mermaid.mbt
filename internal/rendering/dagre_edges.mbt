@@ -356,11 +356,11 @@ fn DagreState::insert_dagre_edge(
       None => @d3.line("basis", offset).unwrap_or("")
     }
   }
-  insert_edge(group, layout_edge, self.data, path~, points_text~) |> ignore
-  // The middle of the route has to show in the path drawn, or the label
-  // follows the drawn path.
+  let drawn = insert_edge(group, layout_edge, self.data, path~, points_text~)
+  // The middle of the route has to show in the path drawn (the sketch of
+  // it in the hand-drawn look), or the label follows the drawn path.
   if points.get(points.length() / 2) is Some(middle) &&
-    !is_label_coordinate_in_path(middle, path) {
+    !is_label_coordinate_in_path(middle, drawn.get_attr("d").unwrap_or(path)) {
     points_has_changed = true
   }
   {

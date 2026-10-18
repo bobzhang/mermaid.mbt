@@ -1,0 +1,13 @@
+---
+config:
+  look: handDrawn
+  handDrawnSeed: 5
+---
+agentflow-beta LR
+  flow f["F"]@{ view: collapsed }
+    a --> b
+  end
+  flow g@{ algorithm: elk.layered }
+    c
+  end
+  b --> c

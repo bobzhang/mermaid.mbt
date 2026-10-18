@@ -1,0 +1,20 @@
+---
+config:
+  look: handDrawn
+  handDrawnSeed: 13
+  layout: dagre
+---
+flowchart LR
+  subgraph TOP[Top]
+    direction TB
+    subgraph B1
+      i1 -->f1
+    end
+    subgraph B2
+      i2 -->f2
+    end
+  end
+  A[Start] --> TOP --> B{{Prep}}
+  B1 --> B2
+  B -.-> C[(Data)] ==> D((End))
+  D --o A

@@ -1,0 +1,20 @@
+---
+config:
+  look: handDrawn
+  handDrawnSeed: 5
+  layout: dagre
+---
+erDiagram
+  direction LR
+  CUSTOMER ||--o{ ORDER : places
+  ORDER ||--|{ LINE-ITEM : contains
+  CUSTOMER }|..|{ DELIVERY-ADDRESS : uses
+  PERSON ||--o| PERSON : "is married to"
+  CUSTOMER {
+    string name PK
+    string email UK "contact"
+  }
+  ORDER {
+    int id PK
+    date placed
+  }

@@ -61,21 +61,28 @@ fn rounded_with_title(
   let x = node.x - width / 2.0
   let y = node.y - height / 2.0
   let inner_y = node.y - node_height / 2.0 + box.height + 2.0
-  let outline = outer_group
-    .insert_first("rect")
-    .attr("class", "outer")
+  let outline = if hand_drawn(node) {
+    sketched_rounded_with_title(
+      shape_svg, node, env, x, y, width, height, inner_y, inner_height,
+    )
+  } else {
+    let outline = outer_group
+      .insert_first("rect")
+      .attr("class", "outer")
+      .attr_number("x", x)
+      .attr_number("y", y)
+      .attr_number("width", width)
+      .attr_number("height", height)
+      .attr("data-look", node.look)
+    inner
+    .attr("class", "inner")
     .attr_number("x", x)
-    .attr_number("y", y)
+    .attr_number("y", inner_y)
     .attr_number("width", width)
-    .attr_number("height", height)
-    .attr("data-look", node.look)
-  inner
-  .attr("class", "inner")
-  .attr_number("x", x)
-  .attr_number("y", inner_y)
-  .attr_number("width", width)
-  .attr_number("height", inner_height)
-  |> ignore
+    .attr_number("height", inner_height)
+    |> ignore
+    outline
+  }
   let n = @dom.number
   let label_y = y + 1.0 - (if env.html_labels { 0.0 } else { 3.0 })
   label.attr(
@@ -129,6 +136,17 @@ fn divider(parent : @dom.Element, node : Node, env : Env) -> ClusterFrame {
   let outer_group = shape_svg.insert_first("g")
   let width = node.width.unwrap_or(0.0)
   let height = node.height.unwrap_or(0.0)
+  if hand_drawn(node) {
+    let outline = sketched_divider(
+      shape_svg,
+      env,
+      node.x - width / 2.0,
+      node.y - height / 2.0,
+      width,
+      height,
+    )
+    return { outline, diff: Some(-node.padding), width: Some(width), }
+  }
   let outline = outer_group
     .insert_first("rect")
     .attr("class", "divider")

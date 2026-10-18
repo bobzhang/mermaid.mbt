@@ -122,7 +122,13 @@ fn AgentDb::layout_data(
     }
     let existing = nodes.search_by(node => node.id == vertex.id)
     if existing is Some(index) {
-      // A container of the same name takes the vertex's styling.
+      // A container of the same name takes the vertex's styling. Upstream
+      // gives it the vertex's `cssStyles`, which a container has none of
+      // otherwise: recorded for the hand-drawn collapsed frame, which
+      // writes them only when there are some, even none.
+      if nodes[index].data is Container(metadata~) {
+        metadata["cssStyles"] = Json::boolean(true)
+      }
       nodes[index] = nodes[index].with_styles(
         css_styles=vertex.styles,
         css_compiled_styles=flow.compiled_styles(vertex.classes),

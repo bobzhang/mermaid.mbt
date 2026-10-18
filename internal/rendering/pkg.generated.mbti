@@ -25,7 +25,11 @@ pub fn markdown_plain_text(String) -> String
 
 pub fn node_palette_rules(@config.Config) -> String
 
+pub fn order_image_nodes(@dom.Element) -> Unit
+
 pub fn parse_generic_types(String) -> String
+
+pub fn place_background_nodes(@dom.Element) -> Unit
 
 pub fn render(LayoutData, @dom.Element) -> Unit raise LayoutError
 
@@ -154,6 +158,7 @@ pub(all) enum NodeData {
   KanbanItem(ticket~ : String, ticket_text~ : String, assigned~ : String, priority~ : String?, icon~ : Bool)
   Container(metadata~ : Map[String, Json])
   Usecase(font~ : UsecaseFont?, business~ : Bool, stereotype~ : String?, icon~ : String?, rows~ : Array[(String, String)], boundary_type~ : String)
+  Asset(icon~ : String?, img~ : String?, pos~ : String?, constraint~ : String?, asset_width~ : Double?, asset_height~ : Double?)
 }
 
 pub struct Painter {

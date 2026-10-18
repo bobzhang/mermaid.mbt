@@ -150,6 +150,14 @@ fn er_add_text(
   // Upstream appends what the label code returned, the text, to the
   // group, which takes it out of the group it was created in.
   label.append_child(element)
+  // An empty text with its empty line, alone in a moved group, still
+  // counts in Chrome as a point at the group's origin: the entity's box
+  // reaches the empty key and comment columns. (Probed: it counts under a
+  // translated group, and not under two untransformed ones, as the empty
+  // edge labels of mindmaps are.)
+  if text == "" && !element.child_elements().is_empty() {
+    element.set_text_box({ x: 0.0, y: 0.0, width: 0.0, height: 0.0, })
+  }
   if flatten && element.child_elements() is [first, ..] {
     // The same assignment turns the first line into a single run of text.
     let content = first.text_content()
@@ -212,11 +220,11 @@ fn er_box(
   guard node.data is Entity(alias_name~, attributes~) else {
     raise LayoutError("An entity box needs an entity to draw.")
   }
-  if node.look == "handDrawn" {
-    raise LayoutError("The hand-drawn look is not supported yet.")
-  }
   if alias_name != "" {
     node.label = alias_name
+  }
+  if hand_drawn(node) {
+    er_box(parent, er_background_node(node, env), env) |> ignore
   }
   let config = env.config
   let theme = config.theme()
@@ -407,7 +415,7 @@ fn er_box(
   }
   divider(x, name_height + y, w + x, name_height + y)
   update_node_bounds(node, outline)
-  if styles.node_styles != "" {
+  if styles.node_styles != "" && !hand_drawn(node) {
     let paths = shape_svg.descendants(["path"])
     if config.text("theme")
       is Some("redux" | "redux-dark" | "redux-color" | "redux-dark-color") {

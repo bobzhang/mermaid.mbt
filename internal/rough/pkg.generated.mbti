@@ -44,6 +44,7 @@ pub(all) struct Options {
   mut fill_line_dash : Array[Double]?
   // private fields
 }
+pub fn Options::copy(Self) -> Self
 pub fn Options::new() -> Self
 
 // Type aliases

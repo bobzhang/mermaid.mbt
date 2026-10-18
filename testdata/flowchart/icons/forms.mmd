@@ -1,0 +1,9 @@
+---
+config:
+  handDrawnSeed: 3
+---
+flowchart LR
+  A@{ icon: "fa:user", form: "square", label: "User", pos: "t", h: 60 } --> B@{ icon: "fa:car", form: "circle", label: "Car" }
+  B --> C@{ icon: "fa:bell", form: "rounded", label: "Bell", pos: "b" } --> D@{ icon: "aws:s3", label: "Plain icon", w: 40 }
+  D --> E@{ icon: "fa:x" } --> F@{ icon: "fa:y", form: "circle" }
+  style C fill:#f9f,stroke:#333

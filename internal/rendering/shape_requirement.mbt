@@ -91,9 +91,6 @@ fn requirement_box(
   node : Node,
   env : Env,
 ) -> @dom.Element raise LayoutError {
-  if node.look == "handDrawn" {
-    raise LayoutError("The hand-drawn look is not supported yet.")
-  }
   let styles = shape_styles(node)
   let padding = 20.0
   let gap = 20.0
@@ -222,6 +219,7 @@ fn requirement_box(
     )
   })
   if styles.node_styles != "" &&
+    !hand_drawn(node) &&
     (config.theme().flag("requirementEdgeLabelBackground") || palette > 0) {
     for path in shape_svg.descendants(["path"]) {
       path.attr("style", styles.node_styles) |> ignore

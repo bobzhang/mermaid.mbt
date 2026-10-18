@@ -1,0 +1,19 @@
+---
+config:
+  look: handDrawn
+  handDrawnSeed: 14
+  layout: dagre
+  htmlLabels: false
+---
+stateDiagram
+  direction LR
+  [*] --> A
+  A --> B: go
+  state B {
+    direction TB
+    a --> b
+    b --> a
+  }
+  B --> C
+  C --> [*]
+  style A fill:#ccf,stroke:#333,stroke-dasharray: 4 2

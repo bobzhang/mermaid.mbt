@@ -1,0 +1,9 @@
+---
+config:
+  handDrawnSeed: 6
+  look: handDrawn
+  layout: dagre
+---
+flowchart LR
+  A@{ icon: "fa:user", form: "square", label: "User", pos: "t", h: 60 } --> B@{ icon: "fa:car", form: "circle", label: "Car" }
+  B --> C@{ img: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAUCAIAAABwJOjsAAAAJElEQVR4nO3NMQ0AAAwEofdvupVxCwk7uy3RrGKxWCwWi8WJB336HQ594lo5AAAAAElFTkSuQmCC", label: "Constrained", h: 30, constraint: "on" } --> D@{ icon: "fa:bell", form: "rounded", label: "Bell" }

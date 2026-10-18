@@ -75,20 +75,45 @@ fn collapsed_group(
     "translate(\{shift_x}, \{n(-box.height / 2.0 + label_shift_y)})",
   )
   |> ignore
-  let rect = shape_svg
-    .insert_first("rect")
-    .attr("class", "basic label-container " + css_class)
-    .attr("style", styles.node_styles)
-    .attr("rx", radius)
-    .attr("ry", radius)
-    .attr_number("x", x)
-    .attr_number("y", y)
-    .attr_number("width", total_width)
-    .attr_number("height", total_height)
-    .attr("fill", fill)
-    .attr("stroke", stroke)
-  if stroke_width is Some(width) {
-    rect.attr("stroke-width", width) |> ignore
+  let rect = if hand_drawn(node) {
+    sketched_collapsed_frame(
+      shape_svg,
+      node,
+      env,
+      x,
+      y,
+      total_width,
+      total_height,
+      @string.parse_double(radius) catch {
+        _ => 0.0
+      },
+      fill,
+      stroke,
+      stroke_width.map(width => width.replace(old="px", new="")),
+      css_class,
+      styled=container_type is None ||
+        (
+          node.data is Container(metadata~) &&
+          metadata.get("cssStyles") is Some(True)
+        ),
+    )
+  } else {
+    let rect = shape_svg
+      .insert_first("rect")
+      .attr("class", "basic label-container " + css_class)
+      .attr("style", styles.node_styles)
+      .attr("rx", radius)
+      .attr("ry", radius)
+      .attr_number("x", x)
+      .attr_number("y", y)
+      .attr_number("width", total_width)
+      .attr_number("height", total_height)
+      .attr("fill", fill)
+      .attr("stroke", stroke)
+    if stroke_width is Some(width) {
+      rect.attr("stroke-width", width) |> ignore
+    }
+    rect
   }
   let separator_y = y + padding + title_height + COLLAPSED_SEPARATOR_GAP
   shape_svg
