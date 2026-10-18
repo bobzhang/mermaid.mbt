@@ -27,7 +27,7 @@ pub fn Lexer::acc_title(Self) -> String?
 pub fn Lexer::at_end(Self) -> Bool
 pub fn Lexer::eol(Self) -> Bool
 pub fn[T] Lexer::fail(Self, String) -> T raise ParseError
-pub fn Lexer::int(Self) -> Int?
+pub fn Lexer::int(Self) -> Double?
 pub fn Lexer::keyword(Self, String) -> Bool
 pub fn Lexer::new(String) -> Self
 pub fn Lexer::newline(Self) -> Bool

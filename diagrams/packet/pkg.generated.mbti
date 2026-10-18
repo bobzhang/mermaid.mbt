@@ -20,8 +20,8 @@ pub fn styles(@theme.Theme) -> String
 
 // Types and methods
 pub struct Block {
-  start : Int
-  end : Int
+  start : Double
+  end : Double
   label : String
 } derive(@debug.Debug)
 

@@ -423,13 +423,13 @@ pub fn Lexer::number(self : Lexer, signed~ : Bool = false) -> Double? {
 
 ///|
 /// INT: `0`, or a digit run without a leading zero, not followed by a `.`.
-pub fn Lexer::int(self : Lexer) -> Int32? {
+/// Its value is the JavaScript number Langium converts it to (`Number`),
+/// so long digit runs round instead of overflowing.
+pub fn Lexer::int(self : Lexer) -> Double? {
   self.skip_hidden()
   let start = self.position
   let mut cursor = start
-  let mut value = 0
   while self.unit(cursor) is ('0'..<='9') {
-    value = value * 10 + (self.unit(cursor).to_int() - '0')
     cursor += 1
   }
   if cursor == start || self.unit(cursor) == '.' {
@@ -438,7 +438,9 @@ pub fn Lexer::int(self : Lexer) -> Int32? {
   if cursor - start > 1 && self.unit(start) == '0' {
     // `0` is a complete token; what follows is another one.
     cursor = start + 1
-    value = 0
+  }
+  let value = @string.parse_double(self.input[start:cursor]) catch {
+    _ => return None
   }
   self.position = cursor
   Some(value)
