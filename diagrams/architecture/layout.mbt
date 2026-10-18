@@ -231,9 +231,6 @@ fn build_cy(db : Db, config : LayoutConfig) -> Cy raise ArchitectureError {
     if cy.edges.iter().any(e => e.id == id) {
       raise Invalid("Can not create second element with ID `\{id}`")
     }
-    if edge.lhs_id == edge.rhs_id {
-      raise Unsupported("an edge from \{edge.lhs_id} to itself")
-    }
     cy.edges.push({
       id,
       edge,

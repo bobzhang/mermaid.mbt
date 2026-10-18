@@ -144,6 +144,8 @@ priv struct EdgeGeometry {
   mid_y : Double
   /// The bend of a segmented edge.
   segment : (Double, Double)?
+  /// The two control points of a loop.
+  loop_points : ((Double, Double), (Double, Double))?
 }
 
 ///|
@@ -341,6 +343,38 @@ fn Cy::edge_geometry(self : Cy, edge : CyEdge) -> EdgeGeometry {
   let target_endpoint = endpoint_of(edge.edge.rhs_dir)
   let source_px = self.endpoint_px(source, source_endpoint)
   let target_px = self.endpoint_px(target, target_endpoint)
+  if edge.source == edge.target {
+    // `findLoopPoints`: two control points by the default loop direction
+    // (-45deg) and sweep (-90deg), one step (40) times 1.4 out; the ends at
+    // the manual endpoints, reached from the control points.
+    let loop_dir = deg2rad(-45.0)
+    let loop_sweep = deg2rad(-90.0)
+    let loop_angle = loop_dir - @math.PI / 2.0
+    let out_angle = loop_angle - loop_sweep / 2.0
+    let in_angle = loop_angle + loop_sweep / 2.0
+    let distance = 40.0
+    let j = 0.0
+    let first = (
+      source.x + @jsmath.cos(out_angle) * 1.4 * distance * (j / 3.0 + 1.0),
+      source.y + @jsmath.sin(out_angle) * 1.4 * distance * (j / 3.0 + 1.0),
+    )
+    let second = (
+      source.x + @jsmath.cos(in_angle) * 1.4 * distance * (j / 3.0 + 1.0),
+      source.y + @jsmath.sin(in_angle) * 1.4 * distance * (j / 3.0 + 1.0),
+    )
+    let (end_x, end_y) = shorten(target_px, second)
+    let (start_x, start_y) = shorten(source_px, first)
+    return {
+      start_x,
+      start_y,
+      end_x,
+      end_y,
+      mid_x: (first.0 + second.0) / 2.0,
+      mid_y: (first.1 + second.1) / 2.0,
+      segment: None,
+      loop_points: Some((first, second)),
+    }
+  }
   if edge.segments {
     // `findSegmentsPoints` with `edge-distances: endpoints`.
     let (x1, y1) = source_px
@@ -366,6 +400,7 @@ fn Cy::edge_geometry(self : Cy, edge : CyEdge) -> EdgeGeometry {
       mid_x: segment.0,
       mid_y: segment.1,
       segment: Some(segment),
+      loop_points: None,
     }
   } else {
     // The points the line is shortened towards are the other end's
@@ -384,6 +419,7 @@ fn Cy::edge_geometry(self : Cy, edge : CyEdge) -> EdgeGeometry {
       mid_x: (start_x + end_x + start_x + end_x) / 4.0,
       mid_y: (start_y + end_y + start_y + end_y) / 4.0,
       segment: None,
+      loop_points: None,
     }
   }
 }
@@ -412,6 +448,31 @@ fn Cy::edge_box(self : Cy, edge : CyEdge) -> Box raise ArchitectureError {
     ]
     for point in points {
       box.add(point.0 - half, point.1 - half, point.0 + half, point.1 + half)
+    }
+  }
+  if geometry.loop_points is Some((first, second)) {
+    // `bezierPts`: the two quadratic curves through the midpoint, sampled.
+    let curves = [
+      [
+        (geometry.start_x, geometry.start_y),
+        first,
+        (geometry.mid_x, geometry.mid_y),
+      ],
+      [
+        (geometry.mid_x, geometry.mid_y),
+        second,
+        (geometry.end_x, geometry.end_y),
+      ],
+    ]
+    let at = (p0 : Double, p1 : Double, p2 : Double, t : Double) => {
+      (1.0 - t) * (1.0 - t) * p0 + 2.0 * (1.0 - t) * t * p1 + t * t * p2
+    }
+    for curve in curves {
+      for t in [0.05, 0.225, 0.4, 0.5, 0.6, 0.775, 0.95] {
+        let x = at(curve[0].0, curve[1].0, curve[2].0, t)
+        let y = at(curve[0].1, curve[1].1, curve[2].1, t)
+        box.add(x - half, y - half, x + half, y + half)
+      }
     }
   }
   if edge.edge.title is Some(label) && label != "" {
@@ -486,4 +547,10 @@ fn js_max(a : Double, b : Double) -> Double {
   } else {
     b
   }
+}
+
+///|
+/// cytoscape's `deg2rad`.
+fn deg2rad(deg : Double) -> Double {
+  @math.PI * deg / 180.0
 }

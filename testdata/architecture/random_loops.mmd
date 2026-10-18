@@ -1,0 +1,24 @@
+architecture-beta
+    service s0(disk)[store]
+    service s1(foo)[worker]
+    service s2(database)[worker]
+    service s3(disk)[Load balancer]
+    service s4(internet)[auth]
+    service s5(foo)[store]
+    service s6(disk)[billing]
+    junction j0
+    s5:T -- T:s3
+    s1:T <--> R:s3
+    s4:R -[office]-> L:j0
+    s0:L -[worker]- L:s0
+    s1:T -[search]-> B:j0
+    s3:T --> R:s3
+    j0:R <-- T:s1
+    s4:L --> R:s5
+    s4:B -- B:s6
+    s4:B -[billing]- T:s0
+    s6:B <-[Gateway]-> B:s4
+    s3:T -- R:s2
+    s4:T -- L:s2
+    s0:T -- R:s2
+    align row s0 j0
