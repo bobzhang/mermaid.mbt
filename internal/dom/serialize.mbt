@@ -36,6 +36,50 @@ fn escape_text(value : String, out : StringBuilder) -> Unit {
 }
 
 ///|
+/// Whether `c` is white space or a line terminator to JavaScript, as
+/// `String.prototype.trim` and `\s` take them.
+fn is_js_space(c : Char) -> Bool {
+  c
+  is ('\t'
+  | '\n'
+  | '\u{0b}'
+  | '\u{0c}'
+  | '\r'
+  | ' '
+  | '\u{a0}'
+  | '\u{1680}'
+  | '\u{2000}'..<='\u{200a}'
+  | '\u{2028}'
+  | '\u{2029}'
+  | '\u{202f}'
+  | '\u{205f}'
+  | '\u{3000}'
+  | '\u{feff}')
+}
+
+///|
+/// `String.prototype.trim`. Every such space is in the basic plane, so
+/// code units can be tested one by one.
+fn js_trim(value : String) -> String {
+  let space = (i : Int32) => {
+    is_js_space(Int32::unsafe_to_char(value[i].to_int()))
+  }
+  let mut start = 0
+  let mut end = value.length()
+  while start < end && space(start) {
+    start += 1
+  }
+  while end > start && space(end - 1) {
+    end -= 1
+  }
+  if start == 0 && end == value.length() {
+    value
+  } else {
+    value[start:end].to_owned()
+  }
+}
+
+///|
 /// HTML elements that never have an end tag.
 fn is_void(tag : String) -> Bool {
   tag
@@ -60,14 +104,18 @@ fn Element::write(self : Element, out : StringBuilder) -> Unit {
   out.write_char('<')
   out.write_string(self.tag)
   for attribute in self.attributes {
+    // The sanitizer mermaid runs its output through trims attribute values
+    // as `String.prototype.trim` does (except `value`), then removes those
+    // that could end a comment or raw-text element (`SAFE_FOR_XML`).
+    let value = decode_entities(attribute.1)
+    let value = if attribute.0 == "value" { value } else { js_trim(value) }
+    if !is_safe_for_xml(value) {
+      continue
+    }
     out.write_char(' ')
     out.write_string(attribute.0)
     out.write_string("=\"")
-    // The sanitizer mermaid runs its output through trims attribute values.
-    escape_attribute(
-      decode_entities(attribute.1).trim(chars=" \t\n\r\u{0c}").to_owned(),
-      out,
-    )
+    escape_attribute(value, out)
     out.write_char('"')
   }
   out.write_char('>')
