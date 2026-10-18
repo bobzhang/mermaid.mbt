@@ -11,13 +11,6 @@ pub fn draw(
   if db.unsupported() is Some(message) {
     raise @rendering.LayoutError(message)
   }
-  // The flowchart copies the root `arrowMarkerAbsolute` into its own
-  // section, which the edges read.
-  if config.flag("arrowMarkerAbsolute") && !db.edges.is_empty() {
-    raise @rendering.LayoutError(
-      "arrowMarkerAbsolute puts the page's address in the marker references, which is not ported",
-    )
-  }
   let layout = config.text("layout").unwrap_or("elk")
   if layout != "elk" &&
     layout != "swimlane" &&

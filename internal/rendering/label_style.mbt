@@ -141,11 +141,7 @@ fn check_label_styles(data : LayoutData) -> Unit raise LayoutError {
   }
   // Marker references then start with the address of the page, which
   // a renderer without a page does not have.
-  if !data.edges.is_empty() &&
-    (
-      data.config.flag("flowchart.arrowMarkerAbsolute") ||
-      data.config.flag("state.arrowMarkerAbsolute")
-    ) {
+  if !data.edges.is_empty() && marker_references_absolute(data) {
     raise LayoutError(
       "arrowMarkerAbsolute puts the page's address in the marker references, which is not ported",
     )
@@ -271,4 +267,21 @@ fn keeps_on_one_line(style : String) -> Bool {
     }
   }
   false
+}
+
+///|
+/// Whether `insertEdge` writes marker references with the page's address:
+/// `flowchart.arrowMarkerAbsolute || state.arrowMarkerAbsolute` as the
+/// configuration reads when the diagram is drawn. The flowchart's diagrams
+/// (flowcharts, swimlanes) and agentflow `setConfig` the root option over
+/// `flowchart.arrowMarkerAbsolute` when they are set up, so there the root
+/// one counts and the section's own is lost; the other diagrams' `init`
+/// only change a copy of the configuration.
+fn marker_references_absolute(data : LayoutData) -> Bool {
+  let flowchart = match data.diagram_type {
+    "flowchart-v2" | "flowchart-elk" | "swimlane" | "agentflow" =>
+      data.config.flag("arrowMarkerAbsolute")
+    _ => data.config.flag("flowchart.arrowMarkerAbsolute")
+  }
+  flowchart || data.config.flag("state.arrowMarkerAbsolute")
 }

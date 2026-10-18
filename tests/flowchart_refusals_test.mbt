@@ -46,9 +46,39 @@ test "markers referenced by the page's address" {
     ),
     content=message,
   )
+  // The flowchart sets its section's option to the root one when it is
+  // set up, so the section's own is lost (fixtures
+  // `marker_absolute_section*`); the edges also read the state diagram's.
   inspect(
     refusal(
       "---\nconfig:\n  flowchart:\n    arrowMarkerAbsolute: true\n---\nflowchart TD\nA --> B\n",
+    ),
+    content="rendered",
+  )
+  inspect(
+    refusal(
+      "---\nconfig:\n  state:\n    arrowMarkerAbsolute: true\n---\nflowchart TD\nA <--> B\n",
+    ),
+    content=message,
+  )
+  // Agentflow does the same as the flowchart.
+  inspect(
+    refusal(
+      "---\nconfig:\n  arrowMarkerAbsolute: true\n---\nagentflow-beta TB\n  a --> b\n",
+    ),
+    content=message,
+  )
+  // Other diagrams leave the sections alone, and the root option to the
+  // final clean-up, which only rewrites absolute references.
+  inspect(
+    refusal(
+      "---\nconfig:\n  arrowMarkerAbsolute: true\n---\nclassDiagram\nA <|-- B\n",
+    ),
+    content="rendered",
+  )
+  inspect(
+    refusal(
+      "---\nconfig:\n  flowchart:\n    arrowMarkerAbsolute: true\n---\nclassDiagram\nA <|-- B\n",
     ),
     content=message,
   )
