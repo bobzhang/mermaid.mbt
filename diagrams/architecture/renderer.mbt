@@ -7,36 +7,8 @@ priv struct DrawConfig {
   layout : LayoutConfig
   use_max_width : Bool
   /// The font size of the page's text, which `-webkit-line-clamp` of icon
-  /// text is computed from.
-  text_font_size : Double
-}
-
-///|
-/// `parseInt(getComputedStyle(div).fontSize.replace(/\D/g, ""))` for the
-/// theme's font size: every character that is not a digit goes, the point
-/// of `15.5px` too.
-fn computed_font_size(theme_size : Json) -> Double {
-  let text = match theme_size {
-    String(text) => text
-    // A number is no CSS length; the page keeps 16px.
-    _ => "16px"
-  }
-  let digits = StringBuilder()
-  for c in text {
-    if c >= '0' && c <= '9' {
-      digits.write_char(c)
-    }
-  }
-  let digits = digits.to_string()
-  if digits == "" {
-    // `parseInt("")` is NaN, which `?? 16` keeps.
-    return @double.not_a_number
-  }
-  let mut value = 0.0
-  for c in digits {
-    value = value * 10.0 + (c.to_int() - '0'.to_int()).to_double()
-  }
-  value
+  /// text is computed from; `None` for a setting the port does not resolve.
+  text_font_size : Double?
 }
 
 ///|
@@ -76,7 +48,9 @@ fn draw_services(
       |> ignore
     }
     let bkg_elem = service_elem.append("g")
-    match (icon, icon_text) {
+    // Upstream tests both for truthiness: an empty one is none.
+    let nonempty = (text : String?) => text.filter(text => text != "")
+    match (nonempty(icon), nonempty(icon_text)) {
       (Some(icon), _) =>
         bkg_elem.set_inner_html("<g>\{icon_svg(icon, icon_size, icon_ids)}</g>")
       (None, Some(text)) => {
@@ -99,7 +73,12 @@ fn draw_services(
           raise Unsupported("markup in the text of an icon: \{text}")
         }
         div.text(source) |> ignore
-        let lines = ((icon_size - 2.0) / config.text_font_size).floor()
+        guard config.text_font_size is Some(font_size) else {
+          raise Unsupported(
+            "the font size of icon text: \{context.theme().get("fontSize").stringify()}",
+          )
+        }
+        let lines = ((icon_size - 2.0) / font_size).floor()
         div.attr("style", "-webkit-line-clamp: \{n(lines)};") |> ignore
       }
       (None, None) =>
