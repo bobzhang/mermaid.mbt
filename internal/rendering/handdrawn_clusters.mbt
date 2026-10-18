@@ -151,3 +151,61 @@ fn sketched_flow_group(
   }
   frame
 }
+
+///|
+/// A lane of the hand-drawn look: its title band and body sketched in
+/// place of the rectangles the classic look draws (whose attributes give
+/// the geometry), the title hachured in the colours of clusters with the
+/// lane's border and background styles, the body unfilled.
+fn sketch_lane(
+  shape_svg : @dom.Element,
+  node : Node,
+  env : Env,
+  title_rect : @dom.Element,
+  body_rect : @dom.Element,
+  title_fill_weight : Double?,
+) -> Unit {
+  let number = (element : @dom.Element, name : String) => {
+    @string.parse_double(element.get_attr(name).unwrap_or("0")) catch {
+      _ => 0.0
+    }
+  }
+  let box = (element : @dom.Element) => {
+    (
+      number(element, "x"),
+      number(element, "y"),
+      number(element, "width"),
+      number(element, "height"),
+    )
+  }
+  let (tx, ty, tw, th) = box(title_rect)
+  let (bx, by, bw, bh) = box(body_rect)
+  let theme = env.config.theme()
+  let title_options = rough_options(node, env)
+  title_options.roughness = 0.7
+  title_options.fill = theme.text("clusterBkg")
+  title_options.stroke = theme.text("clusterBorder")
+  if title_fill_weight is Some(weight) {
+    title_options.fill_weight = weight
+  }
+  let body_options = rough_options(node, env)
+  body_options.roughness = 0.7
+  body_options.fill = "none"
+  body_options.stroke = theme.text("clusterBorder")
+  title_rect.remove()
+  body_rect.remove()
+  let title = @rough.rectangle(tx, ty, tw, th, title_options)
+  prepend(shape_svg, title)
+  title.attr("class", "swimlane-title") |> ignore
+  let body = @rough.rectangle(bx, by, bw, bh, body_options)
+  prepend(shape_svg, body)
+  body.attr("class", "swimlane-body") |> ignore
+  let (border, background) = border_and_background(node)
+  let paths = title.child_elements()
+  if paths.get(1) is Some(path) {
+    path.attr("style", border) |> ignore
+  }
+  if paths.get(0) is Some(path) {
+    path.attr("style", background.replace(old="fill", new="stroke")) |> ignore
+  }
+}

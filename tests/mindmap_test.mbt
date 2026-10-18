@@ -41,10 +41,6 @@ test "mindmaps the port refuses rather than draw differently" {
     content="Unsupported: subscripts and superscripts in mindmap labels are not measured: H<sub>2</sub>O",
   )
   inspect(
-    refusal("---\nconfig:\n  look: handDrawn\n---\nmindmap\n  root\n"),
-    content="Unsupported: The hand-drawn look is not supported yet.",
-  )
-  inspect(
     refusal("---\nconfig:\n  layout: swimlane\n---\nmindmap\n  root\n"),
     content="Unsupported: The swimlane layout is not supported yet.",
   )

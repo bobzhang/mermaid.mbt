@@ -12,10 +12,7 @@ fn swimlane_cluster(
   node : Node,
   model : @swimlane_model.Node,
   env : Env,
-) -> Unit raise LayoutError {
-  if node.look == "handDrawn" {
-    raise LayoutError("The hand-drawn look is not supported yet.")
-  }
+) -> Unit {
   let theme = env.config.theme()
   let cluster_bkg = theme.text("clusterBkg")
   let lane_stroke = theme.text("clusterBorder")
@@ -123,6 +120,10 @@ fn swimlane_cluster(
     .attr("fill", "none")
     .attr("stroke", lane_stroke)
     |> ignore
+    if hand_drawn(node) {
+      // The title of a lane across keeps the default hachure weight.
+      sketch_lane(shape_svg, node, env, title_rect, body_rect, None)
+    }
     let label_center_x = lane_left + title_width / 2.0
     let label_center_y = node.y
     label_el.attr(
@@ -158,6 +159,9 @@ fn swimlane_cluster(
     .attr("fill", "none")
     .attr("stroke", lane_stroke)
     |> ignore
+    if hand_drawn(node) {
+      sketch_lane(shape_svg, node, env, title_rect, body_rect, Some(3.0))
+    }
     let label_x = node.x - bbox.width / 2.0
     let label_y = lane_top + (title_height - bbox.height) / 2.0
     label_el.attr("transform", "translate(\{n(label_x)}, \{n(label_y)})")
