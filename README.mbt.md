@@ -30,7 +30,12 @@ diagram are honored.
 
 ## Status
 
-Work in progress.
+Every diagram type of mermaid 12.2.0 is ported. Of the 598 examples in
+upstream's documentation, 595 render byte for byte as upstream does; the
+other three need an image fetched from the network (flowchart), a YAML
+form the `moonbit-community/yaml` dependency rejects (Gantt), and the
+metrics of Apple Color Emoji (tree view). Input the port cannot reproduce
+exactly raises `Unsupported` rather than rendering something close.
 
 | Diagram | State |
 | --- | --- |
@@ -65,8 +70,8 @@ Work in progress.
 | Use case | byte-identical with the ELK and dagre layouts |
 | Mindmap | byte-identical with its default cose-bilkent layout (`internal/cose`) and with dagre |
 | Swimlanes | byte-identical, with the swimlane layout engine (`internal/swimlane`) |
+| Architecture | byte-identical, with the fcose layout (`internal/fcose`) |
 | Venn | byte-identical, including the hand-drawn look; the layout optimiser of venn.js is transcribed step by step |
-| everything else | not ported yet — `render` raises `Unsupported` |
 
 Git graphs name commits at random upstream (`Math.random`), so a graph
 whose commits have no explicit `id:` differs from render to render there;
