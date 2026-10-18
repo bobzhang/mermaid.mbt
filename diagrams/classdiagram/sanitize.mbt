@@ -17,29 +17,18 @@ fn sanitize_text(text : String) -> String raise ClassError {
 }
 
 ///|
-/// mermaid's `formatUrl`: outside the loose security level a link is
-/// sanitized; a `javascript:` URL becomes `about:blank`.
-fn format_url(link : String, config : @config.Config) -> String {
+/// mermaid's `formatUrl`: outside the loose security level a link goes
+/// through `sanitizeUrl`, which blanks scripting schemes and spells web
+/// addresses as the browser's URL parser does.
+fn format_url(
+  link : String,
+  config : @config.Config,
+) -> String raise ClassError {
   let url = js_trim(link)
-  if url == "" {
+  if url == "" || config.text("securityLevel") is Some("loose") {
     return url
   }
-  if config.text("securityLevel") is Some("loose") {
-    return url
-  }
-  // Like @braintree/sanitize-url: script-capable schemes are refused.
-  let stripped = try! @jsregex.Regex::compile("[\\u0000-\\u0020]")
-  let compact = stripped.replace_all(url.to_lower(), _ => "")
-  for scheme in ["javascript:", "data:", "vbscript:"] {
-    if compact.has_prefix(scheme) {
-      return "about:blank"
-    }
-  }
-  // The URL comes back normalized: a bare origin gains its root path.
-  let origin = try! @jsregex.Regex::compile("^https?://[^/?#]+$", flags="i")
-  if origin.matches(url) {
-    url + "/"
-  } else {
-    url
+  @sanitizeurl.sanitize_url(url) catch {
+    @sanitizeurl.Unsupported(message) => raise Unsupported(message)
   }
 }
