@@ -51,6 +51,9 @@ jobs:
       - name: test (native, with the fixtures)
         run: moon test --target native
 
+      - name: test (js, the playground's backend)
+        run: moon test --target js
+
       - name: playground builds
         run: |
           moon build --target js --release playground
