@@ -56,6 +56,8 @@ fn Env::styled(self : Env, style : String, faces~ : Bool = true) -> Env {
         match css_length(value) {
           // A negative size is invalid, and refused before this.
           Some((size, "px")) if size >= 0.0 => env = { ..env, font_size: size, }
+          // Zero needs no unit.
+          Some((0.0, "")) => env = { ..env, font_size: 0.0, }
           // Relative sizes compound over the elements the style is
           // written on, which differ from label to label; not modelled.
           _ => ()
@@ -88,7 +90,9 @@ fn label_declaration_measured(key : String, value : String) -> Bool {
     | "font-family"
     | "font-weight"
     | "font-style" => true
-    "font-size" => css_length(value) is Some((size, "px")) && size >= 0.0
+    "font-size" =>
+      (css_length(value) is Some((size, "px")) && size >= 0.0) ||
+      css_length(value) is Some((0.0, ""))
     "text-transform" => value == "none"
     "letter-spacing" | "word-spacing" => value is ("normal" | "0" | "0px" | "")
     "white-space" => value is ("normal" | "nowrap")
@@ -225,20 +229,22 @@ fn label_font(style : String) -> LabelFont {
         bold = match value {
           "bold" | "bolder" => true
           _ =>
-            match (@string.parse_double(value) catch { _ => 0.0 }) {
+            match css_length(value) {
               // With a regular and a bold face to choose from, font matching
-              // takes the bold one for any weight above 500.
-              weight => weight > 500.0
+              // takes the bold one for any weight above 500; one outside 1
+              // to 1000 is invalid.
+              Some((weight, "")) if weight >= 1.0 && weight <= 1000.0 =>
+                weight > 500.0
+              _ => bold
             }
         }
       "font-style" => italic = value is ("italic" | "oblique")
       "font-size" =>
-        if value.has_suffix("px") {
-          size = Some(
-            @string.parse_double(value[:value.length() - 2].to_owned()) catch {
-              _ => continue
-            },
-          )
+        match css_length(value) {
+          // A negative size is invalid; zero needs no unit.
+          Some((value, "px")) if value >= 0.0 => size = Some(value)
+          Some((0.0, "")) => size = Some(0.0)
+          _ => ()
         }
       _ => ()
     }

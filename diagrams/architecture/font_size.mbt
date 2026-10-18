@@ -38,6 +38,8 @@ fn css_font_size(theme_size : Json) -> Double? {
     return Some(page)
   }
   let size = match unit {
+    // A number without a unit is no length, but for zero.
+    "" if number == 0.0 => 0.0
     "px" => number
     "em" | "rem" => number * page
     "%" => number / 100.0 * page
@@ -102,7 +104,7 @@ test "computed font sizes as Chrome reports them" {
 test "font sizes with a sign or an exponent" {
   let sizes = [
     "+12px", "1e1px", "1E1px", "1e+1px", "12.5e0px", "12PX", "1.px", "+-1px", "+12",
-    "1e1.5px", "+ 12px", "1e", "1e+px", "1e1",
+    "1e1.5px", "+ 12px", "1e", "1e+px", "1e1", "0", "0px",
   ].map(size => {
     match computed_font_size(Json::string(size)) {
       Some(value) => @dom.number(value)
@@ -110,6 +112,9 @@ test "font sizes with a sign or an exponent" {
     }
   })
   // Chrome: 12px 10px 10px 10px 12.5px 12px, then 16px for the invalid
-  // ones.
-  inspect(sizes.join(" "), content="12 10 10 10 125 12 16 16 16 16 16 16 16 16")
+  // ones; zero, with a unit or without, is not derived.
+  inspect(
+    sizes.join(" "),
+    content="12 10 10 10 125 12 16 16 16 16 16 16 16 16 - -",
+  )
 }

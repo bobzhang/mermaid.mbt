@@ -163,6 +163,10 @@ fn normalize_value(name : String, value : String) -> String {
   if name == "font-weight" && single_dimension(value) is Some((weight, "")) {
     // `+700` and `7e2` are `700`.
     css_number(weight)
+  } else if single_dimension(value) is Some((0.0, "")) &&
+    is_length_property(name) {
+    // A length may be a zero without a unit, and is written in pixels.
+    "0px"
   } else if is_color_property(name) {
     serialize_color(value)
   } else if name == "animation" {
@@ -180,6 +184,48 @@ fn normalize_value(name : String, value : String) -> String {
     let value = value.trim().to_owned()
     css_length(value).unwrap_or(value)
   }
+}
+
+///|
+/// Properties whose value is a length (or a percentage, or a keyword),
+/// never a bare number: there the CSSOM writes a unitless zero as `0px`,
+/// where `stroke-width` or `line-height` keep `0`.
+fn is_length_property(name : String) -> Bool {
+  name
+  is ("font-size"
+  | "width"
+  | "height"
+  | "min-width"
+  | "max-width"
+  | "min-height"
+  | "max-height"
+  | "padding"
+  | "padding-top"
+  | "padding-right"
+  | "padding-bottom"
+  | "padding-left"
+  | "margin"
+  | "margin-top"
+  | "margin-right"
+  | "margin-bottom"
+  | "margin-left"
+  | "letter-spacing"
+  | "word-spacing"
+  | "text-indent"
+  | "border-width"
+  | "border-radius"
+  | "outline-width"
+  | "top"
+  | "right"
+  | "bottom"
+  | "left"
+  | "x"
+  | "y"
+  | "cx"
+  | "cy"
+  | "r"
+  | "rx"
+  | "ry")
 }
 
 ///|

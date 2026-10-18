@@ -292,8 +292,9 @@ fn Env::new(config : @config.Config, diagram_id : String) -> Env {
       // The leading number as CSS writes one: `15.5px` is 15.5 pixels,
       // `+12px` and `1.2e1px` are 12.
       match @dom.css_dimension(text) {
-        // A negative size is invalid: the browser's stays.
-        Some((value, _)) if value > 0.0 => value
+        // A negative size is invalid: the browser's stays. Zero, with a
+        // unit or without, is a size.
+        Some((value, _)) if value >= 0.0 => value
         _ => 16.0
       }
     _ => 16.0

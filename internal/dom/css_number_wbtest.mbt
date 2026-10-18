@@ -136,3 +136,19 @@ test "values the CSSOM rejects leave the declaration out" {
     "opacity: 0.5;",
   )
 }
+
+///|
+test "a unitless zero length is written in pixels" {
+  // `style.setProperty(name, "0")` in the reference browser.
+  let element = Element::new("div")
+  element
+  .style("font-size", "0")
+  .style("stroke-width", "0")
+  .style("line-height", "0")
+  .style("width", "0")
+  |> ignore
+  assert_eq(
+    element.to_html(),
+    "<div style=\"font-size: 0px; stroke-width: 0; line-height: 0; width: 0px;\"></div>",
+  )
+}

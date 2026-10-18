@@ -26,12 +26,11 @@ pub fn css_font_size(value : Json, parent : Double) -> Double? {
     "rem" => number * 16.0
     "%" => number / 100.0 * parent
     "pt" => number * 4.0 / 3.0
+    // A number without a unit is no length, but for zero.
+    "" if number == 0.0 => 0.0
     "" => return Some(parent)
     _ => return None
   }
-  if size > 0.0 {
-    Some(size)
-  } else {
-    None
-  }
+  // Zero is a size: text set in it takes no room.
+  Some(size)
 }

@@ -46,4 +46,6 @@ test "the theme's font size for label measurement" {
   inspect(size("1.2e1px"), content="12")
   inspect(size("-16px"), content="16")
   inspect(size("-1.2e1px"), content="16")
+  inspect(size("0"), content="0")
+  inspect(size("0px"), content="0")
 }

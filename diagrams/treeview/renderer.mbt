@@ -88,14 +88,13 @@ fn css_font_size(value : Json, parent : Double) -> Double raise Unsupported {
     "rem" => number * 16.0
     "%" => number / 100.0 * parent
     "pt" => number * 4.0 / 3.0
+    // A number without a unit is no length, but for zero.
+    "" if number == 0.0 => 0.0
     "" => return parent
     _ => raise unsupported
   }
-  if size > 0.0 {
-    size
-  } else {
-    raise unsupported
-  }
+  // Zero is a size: text set in it takes no room.
+  size
 }
 
 ///|

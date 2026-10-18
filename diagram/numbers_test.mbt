@@ -53,4 +53,15 @@ test "css_font_size reads signs and exponents as CSS does" {
     @diagram.css_font_size(Json::string("-1em"), 20.0).unwrap_or(0.0),
     content="20",
   )
+  // Zero is a length with a unit or without; other bare numbers are not.
+  inspect(
+    ["0", "0px", "-0", "0em", "1"]
+    .map(size => {
+      @diagram.css_font_size(Json::string(size), 20.0)
+      .unwrap_or(-1.0)
+      .to_string()
+    })
+    .join(" "),
+    content="0 0 0 0 20",
+  )
 }
