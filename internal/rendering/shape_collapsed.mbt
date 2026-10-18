@@ -91,7 +91,11 @@ fn collapsed_group(
       stroke,
       stroke_width.map(width => width.replace(old="px", new="")),
       css_class,
-      styled=container_type is None,
+      styled=container_type is None ||
+        (
+          node.data is Container(metadata~) &&
+          metadata.get("cssStyles") is Some(True)
+        ),
     )
   } else {
     let rect = shape_svg
