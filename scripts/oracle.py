@@ -53,7 +53,18 @@ if (fixedNow !== null) {
   window.Date = FixedDate;
 }
 </script>
+<script>
+// iconify draws the prefix of icon ids from the clock and Math.random when
+// the bundle loads: both answer 0 meanwhile (see pin_iconify_ids).
+const loadNow = Date.now, loadRandom = Math.random;
+Date.now = () => 0;
+Math.random = () => 0;
+</script>
 <script src="%(bundle)s"></script>
+<script>
+Date.now = loadNow;
+Math.random = loadRandom;
+</script>
 <script>
 const jobs = %(jobs)s;
 const expression = %(expression)s;
@@ -123,33 +134,24 @@ def pin_random_ids(svg):
     return RANDOM_STATE_ID.sub(lambda match: names[match.group(0)], svg)
 
 
-ICONIFY_ID = re.compile(r"IconifyId[0-9a-f]+")
+ICONIFY_ID = re.compile(r"IconifyId00(\d+)")
 
 
-def pin_iconify_ids(results):
-    """Name the ids iconify gives the elements of icons as the port does.
+def pin_iconify_ids(svg):
+    """Number the ids iconify gives the elements of icons as the port does.
 
     iconify's `replaceIDs` names them `"IconifyId" + Date.now().toString(16)
-    + (Math.random() * 16777216 | 0).toString(16)` followed by a counter
-    that runs on over the lifetime of the page. The port draws the prefix
-    as `IconifyId00` (a clock and random numbers at zero) and counts per
-    diagram from 0. The page's first id is counter 0, which gives away the
-    prefix; every diagram's ids are then renumbered from its first.
+    + (Math.random() * 16777216 | 0).toString(16)` (drawn when the bundle
+    loads, which the page does with both at zero: `IconifyId00`) followed by
+    a counter that runs on over the lifetime of the page. The port counts
+    per diagram from 0; the ids of every diagram are renumbered from its
+    first.
     """
-    first = next((m.group(0) for r in results if isinstance(r.get("svg"), str)
-                  for m in [ICONIFY_ID.search(r["svg"])] if m), None)
-    if first is None or not first.endswith("0"):
-        return
-    prefix = first[:-1]
-    for result in results:
-        svg = result.get("svg")
-        if not isinstance(svg, str):
-            continue
-        ids = ICONIFY_ID.findall(svg)
-        if not ids or not all(i.startswith(prefix) and i[len(prefix):].isdigit() for i in ids):
-            continue
-        base = min(int(i[len(prefix):]) for i in ids)
-        result["svg"] = ICONIFY_ID.sub(lambda m: "IconifyId00" + str(int(m.group(0)[len(prefix):]) - base), svg)
+    numbers = [int(match.group(1)) for match in ICONIFY_ID.finditer(svg)]
+    if not numbers:
+        return svg
+    base = min(numbers)
+    return ICONIFY_ID.sub(lambda match: "IconifyId00" + str(int(match.group(1)) - base), svg)
 
 
 # Diagram types whose renderer keeps state for as long as the page lives: the
@@ -228,8 +230,7 @@ def run_page(jobs, config, expression=None, now=None):
     results = json.loads(base64.b64decode(match.group(1)).decode("utf-8"))
     for result in results:
         if isinstance(result.get("svg"), str):
-            result["svg"] = pin_random_ids(result["svg"])
-    pin_iconify_ids(results)
+            result["svg"] = pin_iconify_ids(pin_random_ids(result["svg"]))
     return results
 
 

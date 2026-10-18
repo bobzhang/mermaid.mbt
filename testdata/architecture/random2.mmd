@@ -1,0 +1,13 @@
+architecture-beta
+    service s0(foo)[worker]
+    service s1(server)[auth]
+    service s2(disk)[Load balancer]
+    service s3(internet)[profile]
+    service s4(disk)[profile]
+    junction j0
+    s0:T --> T:s2
+    s3:R <-- L:s1
+    s2:R -- B:s1
+    s4:L --> L:s3
+    s4:B <-- T:s0
+    s3:R -- T:j0

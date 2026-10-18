@@ -62,6 +62,21 @@ def port(paths, trace=False):
     return out
 
 
+def normalized_run(run):
+    """Upstream's trace of a run in the port's terms: the nodes as built,
+    once the constraints are enforced, after every iteration, at the end,
+    and the centre the result moves to."""
+    rect = lambda nodes: [{k: node[k] for k in ("id", "x", "y", "width", "height")} for node in nodes]
+    out = {"start": rect(run["nodes"]), "ticks": [rect(tick) for tick in run["ticks"]]}
+    if "enforced" in run:
+        out["enforced"] = rect(run["enforced"])
+    if "center" in run:
+        out["center"] = {"x": run["center"]["x"], "y": run["center"]["y"]}
+    if run["ticks"]:
+        out["final"] = out["ticks"][-1]
+    return out
+
+
 def collect(paths):
     files = []
     for path in map(pathlib.Path, paths):
@@ -112,6 +127,8 @@ def main():
             print(f"{path}: upstream {theirs.get('error', 'renders')}; port {ours.get('error', 'renders')}")
             continue
         keys = ["runs", "nodes", "edges"] if args.trace else ["nodes", "edges"]
+        if args.trace:
+            theirs = dict(theirs, runs=[normalized_run(run) for run in theirs.get("runs", [])])
         found = first_difference({k: ours.get(k) for k in keys}, {k: theirs.get(k) for k in keys})
         if found:
             where, a, b = found

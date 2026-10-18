@@ -178,7 +178,7 @@ fn draw_edges(
   cy : Cy,
   context : @diagram.Context,
   config : DrawConfig,
-) -> Unit raise ArchitectureError {
+) -> Unit {
   let padding = config.layout.padding
   let icon_size = config.layout.icon_size
   let half_icon_size = icon_size / 2.0
@@ -293,19 +293,18 @@ fn draw_edges(
       arrow(edge.rhs_dir, end_x, end_y)
     }
     if edge.title is Some(label) && label != "" {
-      if is_xy(edge.lhs_dir, edge.rhs_dir) {
-        raise Unsupported(
-          "a label on a bent edge, placed by getBoundingClientRect: \{label}",
-        )
-      }
-      let horizontal = edge.lhs_dir.is_x()
-      let width = if horizontal {
-        (start_x - end_x).abs()
+      let axis = if is_xy(edge.lhs_dir, edge.rhs_dir) {
+        None
       } else {
-        (start_y - end_y).abs() / 1.5
+        Some(edge.lhs_dir.is_x())
+      }
+      let width = match axis {
+        Some(true) => (start_x - end_x).abs()
+        Some(false) => (start_y - end_y).abs() / 1.5
+        None => (start_x - end_x).abs() / 2.0
       }
       let text_elem = g.append("g")
-      @rendering.create_svg_text(
+      let middle = @rendering.create_svg_text(
         text_elem,
         label,
         context.config,
@@ -314,7 +313,6 @@ fn draw_edges(
         anchor_middle=true,
         baseline=Middle,
       )
-      |> ignore
       text_elem
       .attr("dy", "1em")
       .attr("alignment-baseline", "middle")
@@ -322,17 +320,79 @@ fn draw_edges(
       .attr("text-anchor", "middle")
       |> ignore
       let translate = "translate(" + n(mid_x) + ", " + n(mid_y) + ")"
-      text_elem.attr(
-        "transform",
-        if horizontal {
-          translate
-        } else {
-          translate + " rotate(-90)"
-        },
-      )
-      |> ignore
+      match axis {
+        Some(true) => text_elem.attr("transform", translate) |> ignore
+        Some(false) =>
+          text_elem.attr("transform", translate + " rotate(-90)") |> ignore
+        None => {
+          // `getArchitectureDirectionXYFactors`
+          let (fx, fy) = match (edge.lhs_dir, edge.rhs_dir) {
+            (L, T) | (T, L) => (1.0, 1.0)
+            (B, L) | (L, B) => (1.0, -1.0)
+            (B, R) | (R, B) => (-1.0, -1.0)
+            _ => (-1.0, 1.0)
+          }
+          let angle = -1.0 * fx * fy * 45.0
+          let original = client_rect(middle.box, 0.0)
+          // On the alphabetic baseline once `dominant-baseline` is `auto`.
+          let alphabetic = @rendering.create_svg_text(
+            @dom.Element::new("g"),
+            label,
+            context.config,
+            context.id,
+            width~,
+            anchor_middle=true,
+          )
+          middle.text.set_text_box(alphabetic.box)
+          let rotated = client_rect(alphabetic.box, angle)
+          text_elem
+          .attr("dominant-baseline", "auto")
+          .attr(
+            "transform",
+            "translate(\{n(mid_x)}, \{n(mid_y - original.1 / 2.0)})\n                translate(\{n(fx * rotated.0 / 2.0)}, \{n(fy * rotated.1 / 2.0)})\n                rotate(\{n(angle)}, 0, \{n(original.1 / 2.0)})",
+          )
+          |> ignore
+        }
+      }
     }
   }
+}
+
+///|
+/// The width and height `getBoundingClientRect()` reports for a label
+/// whose text has the box `box`, turned by `angle` degrees: the corners
+/// turned and rounded to single precision, then moved by where the
+/// `<svg>` sits in the oracle's page (the body's margin of 8px), and the
+/// size of the box around them.
+fn client_rect(box : @dom.Rect, angle : Double) -> (Double, Double) {
+  let f = Float::from_double
+  let page = f(8.0)
+  let radians = angle * @math.PI / 180.0
+  let cos = @jsmath.cos(radians)
+  let sin = @jsmath.sin(radians)
+  let corners = [
+    (box.x, box.y),
+    (box.x + box.width, box.y),
+    (box.x, box.y + box.height),
+    (box.x + box.width, box.y + box.height),
+  ]
+  let xs = corners.map(corner => {
+    let (x, y) = corner
+    let turned = if angle == 0.0 { x } else { x * cos + y * -sin }
+    f(turned) + page
+  })
+  let ys = corners.map(corner => {
+    let (x, y) = corner
+    let turned = if angle == 0.0 { y } else { x * sin + y * cos }
+    f(turned) + page
+  })
+  let min = (values : Array[Float]) => {
+    values.fold(init=values[0], (a, b) => if b < a { b } else { a })
+  }
+  let max = (values : Array[Float]) => {
+    values.fold(init=values[0], (a, b) => if b > a { b } else { a })
+  }
+  ((max(xs) - min(xs)).to_double(), (max(ys) - min(ys)).to_double())
 }
 
 ///|

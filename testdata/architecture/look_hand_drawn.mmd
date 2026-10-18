@@ -1,0 +1,14 @@
+---
+config:
+  look: handDrawn
+  handDrawnSeed: 3
+---
+architecture-beta
+    service s0(server)[Load balancer]
+    service s1[files]
+    service s2(server)[queue]
+    service s3(disk)[office]
+    service s4(internet)[worker]
+    service s5(disk)[office]
+    service s6(foo)[Cache]
+    junction j0

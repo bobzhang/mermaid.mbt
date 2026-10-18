@@ -1,0 +1,17 @@
+---
+config:
+  architecture:
+    fontSize: 20
+---
+architecture-beta
+    group g0(disk)[Notification service]
+    group g1[billing]
+    service s0 in g1
+    service s1(server) in g0
+    service s2(disk)[Gateway] in g0
+    service s3(server) in g1
+    junction j0
+    s1:L <--> T:s2
+    s0:R --> T:j0
+    s1:T <-[Notification service]-> B:s0{group}
+    s2:B <-- B:s0

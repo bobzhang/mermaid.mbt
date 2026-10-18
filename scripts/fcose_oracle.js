@@ -149,6 +149,29 @@ function driver(sources, trace) {
     }
     return result;
   };
+  // The `architecture` options of a diagram's frontmatter, which
+  // `getDiagramFromText` leaves to `render`: flat `key: value` lines.
+  const frontmatterArchitecture = (source) => {
+    const match = /^---\s*\n([\s\S]*?)\n---/.exec(source);
+    const out = {};
+    if (!match) return out;
+    let inside = null;
+    for (const line of match[1].split('\n')) {
+      const indent = line.length - line.trimStart().length;
+      if (/^\s*architecture:\s*$/.test(line)) {
+        inside = indent;
+        continue;
+      }
+      if (inside === null) continue;
+      if (indent <= inside) {
+        inside = null;
+        continue;
+      }
+      const [, key, value] = /^\s*(\w+):\s*(.*)$/.exec(line) || [];
+      if (key) out[key] = value === 'true' ? true : value === 'false' ? false : isNaN(+value) ? value : +value;
+    }
+    return out;
+  };
   return (async () => {
     const results = [];
     for (const source of sources) {
@@ -156,7 +179,7 @@ function driver(sources, trace) {
       try {
         const diagram = await mermaid.mermaidAPI.getDiagramFromText(source);
         const parsed = diagram.db;
-        harnessConfig = parsed.getConfig();
+        harnessConfig = { ...parsed.getConfig(), ...frontmatterArchitecture(source) };
         const db = new ArchitectureDB();
         parsed.getGroups().forEach((group) => db.addGroup(group));
         parsed.getServices().forEach((service) => db.addService({ ...service }));

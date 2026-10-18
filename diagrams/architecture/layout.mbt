@@ -229,7 +229,7 @@ fn build_cy(db : Db, config : LayoutConfig) -> Cy raise ArchitectureError {
     let id = "\{edge.lhs_id}-\{edge.rhs_id}"
     // cytoscape refuses a second element with an id.
     if cy.edges.iter().any(e => e.id == id) {
-      raise Unsupported("two edges between \{edge.lhs_id} and \{edge.rhs_id}")
+      raise Invalid("Can not create second element with ID `\{id}`")
     }
     if edge.lhs_id == edge.rhs_id {
       raise Unsupported("an edge from \{edge.lhs_id} to itself")
@@ -354,7 +354,7 @@ let layout_failure = "Architecture layout failed: a declared `align row|column` 
 /// The handler mermaid runs when the first layout stops: every edge whose
 /// ends are on neither a row nor a column gets the weight and distance
 /// that put a bend at the corner of its endpoints (`getSegmentWeights`).
-fn bend_edges(cy : Cy) -> Unit {
+fn bend_edges(cy : Cy) -> Unit raise ArchitectureError {
   for edge in cy.edges {
     let source = cy.nodes[edge.source]
     let target = cy.nodes[edge.target]
@@ -393,6 +393,11 @@ fn bend_edges(cy : Cy) -> Unit {
     }
     d = d.abs() * delta1
     w = w * delta2
+    // cytoscape's style parser refuses a number that is not one, and fails
+    // reading what it refused.
+    if d.is_nan() || w.is_nan() {
+      raise Invalid("Cannot read properties of null (reading 'value')")
+    }
     edge.distances = d
     edge.weights = w
   }

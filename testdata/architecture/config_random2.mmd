@@ -1,0 +1,18 @@
+---
+config:
+  architecture:
+    fontSize: 20
+    idealEdgeLengthMultiplier: 1
+    seed: 7
+    useMaxWidth: false
+---
+architecture-beta
+    group g0(internet)
+    service s0(foo) in g0
+    service s1(server)[store] in g0
+    service s2[Gateway] in g0
+    service s3(internet)[Cache] in g0
+    service s4(internet) in g0
+    service s5(cloud)[Load balancer]
+    junction j0
+    junction j1 in g0
