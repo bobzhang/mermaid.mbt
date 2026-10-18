@@ -120,8 +120,12 @@ fn rough_options(node : Node, env : Env) -> @rough.Options {
     }
   }
   let options = @rough.Options::new()
-  options.roughness = 0.0
-  options.fill_style = "solid"
+  if hand_drawn(node) {
+    sketch_fill(options)
+  } else {
+    options.roughness = 0.0
+    options.fill_style = "solid"
+  }
   options.fill = pick("fill", theme.text("mainBkg"))
   options.stroke = pick("stroke", theme.text("nodeBorder"))
   options.stroke_width = match map.get("stroke-width") {

@@ -140,9 +140,12 @@ fn shaded_process(
   .attr("class", "basic label-container outer-path")
   .attr("style", node.css_styles.join(","))
   |> ignore
-  // Upstream writes the compiled styles here whether or not there are any.
+  // Upstream writes the compiled styles here whether or not there are any,
+  // outside the hand-drawn look.
   for path in outline.descendants(["path"]) {
-    path.attr("style", styles.node_styles) |> ignore
+    if !hand_drawn(node) {
+      path.attr("style", styles.node_styles) |> ignore
+    }
   }
   // The label sits in the part right of the line.
   place_label(labelled, frame / 2.0 - box.width / 2.0, -(box.height / 2.0))
@@ -344,8 +347,16 @@ fn multi_rect(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
   ]
   let options = rough_options(node, env)
   let stack = labelled.shape_svg.insert_first("g")
-  stack.append_child(merge_paths(@rough.path(path_from_points(outer), options)))
-  stack.append_child(merge_paths(@rough.path(path_from_points(inner), options)))
+  let outer_sketch = @rough.path(path_from_points(outer), options)
+  let inner_sketch = @rough.path(path_from_points(inner), options)
+  // Only the hand-drawn look keeps rough.js's fill and stroke apart.
+  if hand_drawn(node) {
+    stack.append_child(outer_sketch)
+    stack.append_child(inner_sketch)
+  } else {
+    stack.append_child(merge_paths(outer_sketch))
+    stack.append_child(merge_paths(inner_sketch))
+  }
   stack.attr("class", "basic label-container outer-path") |> ignore
   style_rough_paths(stack, node, styles)
   place_label(
@@ -402,7 +413,7 @@ fn tagged_rect(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
   let options = rough_options(node, env)
   let rect = @rough.path(path_from_points(rect_points), options)
   // The tag is the outer group; the rectangle goes inside it, first.
-  let tag = @rough.path(path_from_points(tag_points), options)
+  let tag = @rough.path(path_from_points(tag_points), solid_options(options))
   prepend(tag, rect)
   insert_rough_outline(labelled.shape_svg, tag, node, styles) |> ignore
   update_node_bounds(node, tag)
@@ -421,6 +432,10 @@ fn datastore(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
     label_padding_x=node.padding * 2.0,
     label_padding_y=node.padding,
   )
+  if hand_drawn(node) {
+    sketch_datastore_rims(shape_svg, node, env)
+    return shape_svg
+  }
   let width = node.width.unwrap_or(0.0)
   let height = node.height.unwrap_or(0.0)
   if width > 0.0 &&

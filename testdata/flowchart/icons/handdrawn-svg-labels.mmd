@@ -1,0 +1,13 @@
+---
+config:
+  handDrawnSeed: 8
+  look: handDrawn
+  htmlLabels: false
+---
+flowchart TD
+  A@{ icon: "fa:user", form: "circle", label: "Person", pos: "t" } --> B@{ img: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAUCAIAAABwJOjsAAAAJElEQVR4nO3NMQ0AAAwEofdvupVxCwk7uy3RrGKxWCwWi8WJB336HQ594lo5AAAAAElFTkSuQmCC", label: "Pic", w: 60, constraint: "on", h: 30 }
+  B --> C@{ icon: "fa:z", form: "rounded" }
+  click A "https://example.com"
+  subgraph S [Group]
+    C
+  end

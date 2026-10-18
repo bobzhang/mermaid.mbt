@@ -14,9 +14,6 @@ pub fn draw(
     !@rendering.is_dagre_layout(layout) {
     raise @rendering.LayoutError("The \{layout} layout is not supported yet.")
   }
-  if config.text("look") == Some("handDrawn") {
-    raise @rendering.LayoutError("The hand-drawn look is not supported yet.")
-  }
   let (nodes, edges) = db.layout_data()
   let data : @rendering.LayoutData = {
     nodes,
@@ -29,6 +26,7 @@ pub fn draw(
     markers: ["point", "circle", "cross"],
   }
   @rendering.render(data, context.svg)
+  @rendering.order_image_nodes(context.svg)
   insert_title(db.title, context)
   let padding = config.number("flowchart.diagramPadding").unwrap_or(8.0)
   @rendering.setup_viewport(

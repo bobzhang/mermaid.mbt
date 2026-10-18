@@ -94,8 +94,8 @@ fn has_stroke(o : Options) -> Bool {
 
 ///|
 /// Whether the fill is a plain one. Of the sketchy fill styles of the
-/// hand-drawn look, ellipses, paths and rectangles have `hachure` and
-/// `cross-hatch` (see `hachure.mbt`).
+/// hand-drawn look, ellipses, paths, polygons and rectangles have
+/// `hachure` and `cross-hatch` (see `hachure.mbt`).
 fn solid(o : Options) -> Bool {
   o.fill_style == "solid"
 }
@@ -108,7 +108,7 @@ pub fn path(d : String, options : Options) -> @dom.Element {
   if d == "" {
     return draw(sets, o, false)
   }
-  let d = d.replace_all(old="\n", new=" ")
+  let d = join_minus_signs(d.replace_all(old="\n", new=" "))
   let filled = has_fill(o) && o.fill != "transparent" && o.fill != "none"
   let polygons = points_on_path(d, (1.0 + o.roughness) / 2.0)
   let shape = svg_path(d, o)
@@ -179,6 +179,10 @@ pub fn polygon(
   let outline = linear_path(points, true, o)
   if has_fill(o) && solid(o) {
     sets.push({ kind: FillPath, ops: solid_fill_polygon([points], o), })
+  } else if has_fill(o) && pattern_fill_polygons([points], o) is Some(ops) {
+    // The scan turns `points` and turns them back in place, as rough.js
+    // does with the arrays it is given.
+    sets.push({ kind: FillSketch, ops, })
   }
   if has_stroke(o) {
     sets.push({ kind: Stroke, ops: outline, })

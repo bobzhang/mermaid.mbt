@@ -1,0 +1,24 @@
+---
+config:
+  look: handDrawn
+  handDrawnSeed: 19
+  layout: dagre
+  htmlLabels: false
+---
+classDiagram
+  classA <|-- classB
+  classC *-- classD : composition
+  classE o-- classF
+  classG <-- classH
+  classI -- classJ : link
+  classK <.. classL
+  classM <|.. classN
+  classO .. classP
+  Customer "1" --> "*" Ticket
+  class Shape{
+    <<abstract>>
+    noOfVertices
+    draw()
+  }
+  classDef pink fill:#fdd,stroke:#c33
+  class classA:::pink

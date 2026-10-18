@@ -83,9 +83,6 @@ pub fn draw(
   if !(layout is ("cose-bilkent" | "dagre")) {
     raise Unsupported("The \{layout} layout is not supported yet.")
   }
-  if config.text("look") == Some("handDrawn") {
-    raise Unsupported("The hand-drawn look is not supported yet.")
-  }
   check_measurable(db, config)
   let (nodes, edges) = db.layout_data()
   let data : @rendering.LayoutData = {

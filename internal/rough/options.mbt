@@ -132,3 +132,9 @@ fn Options::stroke_width_number(self : Options) -> Double {
     _ => 0.0 / 0.0
   }
 }
+
+///|
+/// A copy to change some options of, as `{ ...options, ... }` does.
+pub fn Options::copy(self : Options) -> Options {
+  self.fresh()
+}

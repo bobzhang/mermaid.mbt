@@ -1,0 +1,18 @@
+---
+config:
+  look: handDrawn
+  handDrawnSeed: 5
+---
+flowchart TD
+    F@{ shape: folder, label: "Folder" } --> U@{ shape: bucket, label: "Object storage bucket" }
+    F --> W@{ shape: browser, label: "Browser window" }
+    U --> C@{ shape: console, label: "Console" }
+    W --> C
+    C --> L@{ shape: cloud, label: "A cloud" }
+    C --> G@{ shape: bang, label: "Bang" }
+    L --> D@{ shape: directory, label: "A directory with<br/>a longer name" }
+    G --> D
+    D --> K@{ shape: bucket, label: "B" }
+    style W fill:#fdd,stroke:#900
+    classDef hot fill:#ffd,stroke:#f80,stroke-width:2px,color:#333
+    class F,U,L,G hot

@@ -80,16 +80,28 @@ fn usecase_system_boundary(
   } else {
     0.0
   }
-  shape_svg
-  .insert_first("rect")
-  .attr("class", "boundary-body label-container")
-  .attr("style", styles.node_styles)
-  .attr_number("x", x)
-  .attr_number("y", body_y)
-  .attr_number("width", width)
-  .attr_number("height", body_height)
-  |> ignore
-  if tabbed {
+  if hand_drawn(node) {
+    sketched_boundary_part(
+      shape_svg, node, env, "boundary-body label-container", x, body_y, width, body_height,
+    )
+    if tabbed {
+      sketched_boundary_part(
+        shape_svg, node, env, "boundary-tab system-boundary-package-tab label-container",
+        x, y, tab_width, tab_height,
+      )
+    }
+  } else {
+    shape_svg
+    .insert_first("rect")
+    .attr("class", "boundary-body label-container")
+    .attr("style", styles.node_styles)
+    .attr_number("x", x)
+    .attr_number("y", body_y)
+    .attr_number("width", width)
+    .attr_number("height", body_height)
+    |> ignore
+  }
+  if tabbed && !hand_drawn(node) {
     shape_svg
     .insert_first("rect")
     .attr("class", "boundary-tab system-boundary-package-tab label-container")

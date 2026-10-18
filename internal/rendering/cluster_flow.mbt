@@ -62,7 +62,19 @@ fn flow_group(parent : @dom.Element, node : Node, env : Env) -> ClusterFrame {
     node_width
   }
   let stroke = flow_container_stroke(env)
-  let outline = shape_svg
+  let outline = if hand_drawn(node) {
+    sketched_flow_group(
+      shape_svg,
+      node,
+      env,
+      node.x - width / 2.0,
+      node.y - height / 2.0,
+      width,
+      height,
+      stroke,
+    )
+  } else {
+    shape_svg
     .insert_first("rect")
     .attr("rx", "10")
     .attr("ry", "10")
@@ -73,6 +85,7 @@ fn flow_group(parent : @dom.Element, node : Node, env : Env) -> ClusterFrame {
     .attr("fill", "none")
     .attr("stroke", stroke)
     .attr("stroke-width", "0.75px")
+  }
   let diff = if node_width <= box.width + node.padding {
     (width - node_width) / 2.0 - node.padding
   } else {

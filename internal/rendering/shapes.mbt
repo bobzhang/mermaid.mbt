@@ -41,16 +41,40 @@ fn draw_rect(
   let total_height = (labelled.bbox.height + label_padding_y * 2.0).max(
     node.height.unwrap_or(0.0),
   )
-  let rect = labelled.shape_svg
-    .insert_first("rect")
-    .attr("class", "basic label-container")
-    .attr("style", styles.node_styles)
   // The radii the shape rounds its corners by, else those the node came
   // with, if any.
   let (rx, ry) = match radius {
     Some(radius) if radius != 0.0 => (Some(radius), Some(radius))
     _ => (node.rx, node.ry)
   }
+  if hand_drawn(node) {
+    let outline = sketched_rect(
+      labelled.shape_svg,
+      node,
+      env,
+      -total_width / 2.0,
+      -total_height / 2.0,
+      total_width,
+      total_height,
+      rx,
+      ry,
+    )
+    update_node_bounds(node, outline)
+    node.intersect = Some(point => {
+      intersect_rect(
+        node.x,
+        node.y,
+        node.width.unwrap_or(0.0),
+        node.height.unwrap_or(0.0),
+        point,
+      )
+    })
+    return labelled.shape_svg
+  }
+  let rect = labelled.shape_svg
+    .insert_first("rect")
+    .attr("class", "basic label-container")
+    .attr("style", styles.node_styles)
   if rx is Some(rx) {
     rect.attr_number("rx", rx) |> ignore
   }
@@ -106,7 +130,19 @@ fn polygon_shape(
   let styles = shape_styles(node)
   let labelled = label_helper(parent, node, node_classes(node), env)
   let (w, h, points) = outline(labelled.bbox)
-  let polygon = insert_polygon(labelled.shape_svg, w, h, points)
+  let polygon = if hand_drawn(node) {
+    sketched_polygon(
+      labelled.shape_svg,
+      node,
+      env,
+      styles,
+      points,
+      -w / 2.0,
+      h / 2.0,
+    )
+  } else {
+    insert_polygon(labelled.shape_svg, w, h, points)
+  }
   if styles.node_styles != "" {
     polygon.attr("style", styles.node_styles) |> ignore
   }
@@ -131,11 +167,23 @@ fn question(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
       { x: 0.0, y: -s / 2.0, },
     ]
   }
-  let n = @dom.number
-  let polygon = insert_polygon(labelled.shape_svg, s, s, outline(s)).attr(
-    "transform",
-    "translate(\{n(-s / 2.0 + 0.5)}, \{n(s / 2.0)})",
-  )
+  let polygon = if hand_drawn(node) {
+    sketched_polygon(
+      labelled.shape_svg,
+      node,
+      env,
+      styles,
+      outline(s),
+      -s / 2.0 + 0.5,
+      s / 2.0,
+    )
+  } else {
+    let n = @dom.number
+    insert_polygon(labelled.shape_svg, s, s, outline(s)).attr(
+      "transform",
+      "translate(\{n(-s / 2.0 + 0.5)}, \{n(s / 2.0)})",
+    )
+  }
   if styles.node_styles != "" {
     polygon.attr("style", styles.node_styles) |> ignore
   }
@@ -172,13 +220,17 @@ fn circle(
   } else {
     label_radius + padding.unwrap_or(node.padding / 2.0)
   }
-  let element = labelled.shape_svg
+  let element = if hand_drawn(node) {
+    sketched_circle(labelled.shape_svg, node, env, radius)
+  } else {
+    labelled.shape_svg
     .insert_first("circle")
     .attr("class", "basic label-container")
     .attr("style", styles.node_styles)
     .attr_number("r", radius)
     .attr("cx", "0")
     .attr("cy", "0")
+  }
   update_node_bounds(node, element)
   node.intersect = Some(point => intersect_ellipse(node, radius, radius, point))
   labelled.shape_svg
@@ -207,6 +259,20 @@ fn double_circle(parent : @dom.Element, node : Node, env : Env) -> @dom.Element 
     }) +
     label_padding
   let outer_radius = inner_radius + gap
+  if hand_drawn(node) {
+    let group = sketched_double_circle(
+      labelled.shape_svg,
+      node,
+      env,
+      outer_radius,
+      inner_radius,
+    )
+    update_node_bounds(node, group)
+    node.intersect = Some(point => {
+      intersect_ellipse(node, outer_radius, outer_radius, point)
+    })
+    return labelled.shape_svg
+  }
   let group = labelled.shape_svg.insert_first("g")
   let outer = group.append("circle")
   let inner = group.append("circle")
@@ -287,6 +353,21 @@ fn prepend(parent : @dom.Element, child : @dom.Element) -> Unit {
 /// look: the node's own styles, replaced by the compiled ones when there
 /// are any.
 fn style_rough_paths(
+  outline : @dom.Element,
+  node : Node,
+  styles : SplitStyles,
+) -> Unit {
+  // The hand-drawn look keeps the colours rough.js gave the paths.
+  if hand_drawn(node) {
+    return
+  }
+  style_paths(outline, node, styles)
+}
+
+///|
+/// Style every path of an outline with the node's own styles, replaced by
+/// the compiled ones when there are any, whatever the look.
+fn style_paths(
   outline : @dom.Element,
   node : Node,
   styles : SplitStyles,
@@ -509,6 +590,10 @@ fn draw_shape(
     "rectWithTitle" => rect_with_title(parent, node, env)
     "collapsedGroup" => collapsed_group(parent, node, env)
     "labelRect" => label_rect(parent, node, env)
+    "icon" | "iconCircle" | "iconRounded" | "iconSquare" =>
+      icon_shape(parent, node, env, handler)
+    "imageSquare" => image_square(parent, node, env)
+    "subroutine" if hand_drawn(node) => sketched_subroutine(parent, node, env)
     "subroutine" =>
       polygon_shape(parent, node, env, box => {
         let label_padding_x = if neo { 28.0 } else { padding }

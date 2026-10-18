@@ -1,0 +1,14 @@
+---
+config:
+  look: handDrawn
+  handDrawnSeed: 5
+  layout: swimlane
+---
+stateDiagram-v2
+  [*] --> A
+  A --> B: go
+  state Grp {
+    C --> D
+  }
+  B --> C
+  D --> [*]

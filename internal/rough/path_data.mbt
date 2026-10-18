@@ -394,3 +394,43 @@ fn normalize(segments : Array[Segment]) -> Array[Segment] {
   }
   out
 }
+
+///|
+/// `d.replace(/(-\s)/g, '-')`: rough.js joins a minus sign to the number
+/// after it.
+fn join_minus_signs(d : String) -> String {
+  guard d.contains("-") else { return d }
+  let out = StringBuilder()
+  let mut skip = false
+  for c in d {
+    if skip {
+      skip = false
+      if is_js_space(c) {
+        continue
+      }
+    }
+    out.write_char(c)
+    if c == '-' {
+      skip = true
+    }
+  }
+  out.to_string()
+}
+
+///|
+/// JavaScript's `\s`.
+fn is_js_space(c : Char) -> Bool {
+  let code = c.to_int()
+  code
+  is (0x09..<=0x0d
+  | 0x20
+  | 0xa0
+  | 0x1680
+  | 0x2028
+  | 0x2029
+  | 0x202f
+  | 0x205f
+  | 0x3000
+  | 0xfeff) ||
+  (code >= 0x2000 && code <= 0x200a)
+}

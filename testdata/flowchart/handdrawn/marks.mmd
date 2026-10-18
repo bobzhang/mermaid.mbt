@@ -1,0 +1,12 @@
+---
+config:
+  look: handDrawn
+  handDrawnSeed: 9
+---
+flowchart LR
+  A@{ shape: sm-circ } --> B@{ shape: f-circ } --> C@{ shape: fr-circ }
+  C --> D@{ shape: cross-circ } --> E@{ shape: fork } --> F@{ shape: hourglass }
+  F --> G@{ shape: bolt } --> H@{ shape: dbl-circ, label: "Stop" }
+  H --> I@{ shape: circle, label: "Start" } --> J@{ shape: datastore, label: "Store" }
+  J --> K@{ shape: cloud, label: "Cloud" } --> L@{ shape: bang, label: "Bang" }
+  L --> M@{ shape: comment, label: "Note" }

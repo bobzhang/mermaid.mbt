@@ -1,0 +1,17 @@
+---
+config:
+  look: handDrawn
+  handDrawnSeed: 5
+---
+C4Context
+Person(a, "Alice", "A person")
+System(s, "System", "Does things")
+SystemDb(d, "Database")
+Rel(a, s, "Uses", "HTTPS")
+Rel(s, d, "Reads", "JDBC")
+Rel(a, d, "Looks at")
+UpdateElementStyle(a, $fontColor="red", $bgColor="grey", $borderColor="red")
+UpdateElementStyle(s, "#ff0000", "black", "#00ff00")
+UpdateRelStyle(a, s, $textColor="blue", $lineColor="blue", $offsetX="5")
+UpdateRelStyle(s, d, "green", "red", "-10", "20")
+UpdateRelStyle(a, d, $offsetY="-30")
