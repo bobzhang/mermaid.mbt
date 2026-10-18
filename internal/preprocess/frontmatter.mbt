@@ -116,13 +116,32 @@ priv struct FrontMatter {
 }
 
 ///|
-/// `String(value)` for a YAML scalar.
+/// `value.toString()` for a truthy YAML value, `None` for a falsy one, as
+/// in `if (parsed.title) metadata.title = parsed.title.toString()`.
 fn scalar_text(value : Json) -> String? {
   match value {
-    String(s) => if s == "" { None } else { Some(s) }
-    Number(n, ..) => if n == 0.0 { None } else { Some(n.to_string()) }
-    True => Some("true")
-    _ => None
+    Null | False | String("") => None
+    Number(n, ..) if n == 0.0 || n != n => None
+    value => Some(js_string(value))
+  }
+}
+
+///|
+/// JavaScript's `String(value)` for a value of JSON: arrays join their
+/// elements with commas (`null` as nothing), objects are
+/// `[object Object]`.
+fn js_string(value : Json) -> String {
+  match value {
+    Null => "null"
+    True => "true"
+    False => "false"
+    Number(n, ..) => if n == 0.0 { "0" } else { n.to_string() }
+    String(s) => s
+    Array(items) =>
+      items
+      .map(item => if item is Null { "" } else { js_string(item) })
+      .join(",")
+    Object(_) => "[object Object]"
   }
 }
 
