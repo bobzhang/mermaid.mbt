@@ -99,40 +99,40 @@ each as an argument that defaults to the reference page's value:
 - the page the diagram sits in, whose width the chart takes and whose
   scrollbar changes how labels measure: `page`.
 
-### Flowcharts
+### Flowcharts and the unified renderer
 
-Flowcharts, entity relationship, requirement, state and class diagrams go through a port
-of mermaid's unified renderer (`internal/rendering`): HTML labels, node
-shapes, subgraph frames, edge routing with rounded corners and line hops,
-class and link styling. The layout is ELK's, as upstream, computed by
-[bobzhang/elk](https://github.com/bobzhang/elk), a fork of
-[moon_elk](https://github.com/moonbit-community/moon_elk).
+Flowcharts, state, class, entity relationship, requirement, use case,
+agentflow, block, C4, kanban, mindmap and swimlane diagrams draw through a
+port of mermaid's unified renderer (`internal/rendering`): HTML labels and
+SVG-text labels, every node shape (the classic ones, those of the
+`@{ shape: ... }` syntax, icons and images), group frames, edges with
+markers, rounded corners and line hops, class and link styling, the
+classic, neo and hand-drawn looks.
 
-What is missing:
+Layouts, each a transcription checked against upstream's own code:
 
-- Matching elkjs 0.9.3 exactly needs fixes to moon_elk that live in the
-  fork, published as `bobzhang/elk`, until they are merged upstream. With
-  them, every graph tried so far lays out exactly as in elkjs: the
-  fixtures, upstream's documentation examples and some eight hundred
-  generated graphs.
-- The node shapes of flowcharts are ported, the classic ones and those of
-  the `@{ shape: ... }` syntax. `render` raises `Unsupported` for the rest:
-  icons and images, `person`, collapsed groups, and `state`, which upstream
-  draws with `NaN` coordinates.
-- Upstream draws most shapes (stadium, flag, documents, ...) through
-  rough.js even outside the hand-drawn look, and rough.js places the control
-  points of every line at random. With `handDrawnSeed` set, the port (`internal/rough`)
-  reproduces upstream exactly; without a seed upstream's own output differs
-  from render to render, and the port's is merely equivalent.
-- Markdown labels cover paragraphs, emphasis, escapes and inline HTML; other
-  markdown blocks pass through as text.
-- Labels are HTML in a `foreignObject` by default, as upstream; with
-  `htmlLabels: false` they are plain SVG text, which every SVG viewer
-  shows.
-- Layouts: ELK (the default), dagre (for `layout: dagre` and for layout
-  names mermaid does not register) and the swimlane engine (`layout:
-  swimlane`). The hand-drawn look is
-  not ported for these diagrams; `render` raises `Unsupported` for it.
+- ELK, the default, computed by [bobzhang/elk](https://github.com/bobzhang/elk),
+  a fork of [moon_elk](https://github.com/moonbit-community/moon_elk) with
+  the fixes it needs to match elkjs 0.9.3, until they are merged upstream;
+- dagre (`internal/dagre`), for `layout: dagre` and for layout names mermaid
+  does not register;
+- the swimlane engine (`internal/swimlane`), for `layout: swimlane`;
+- cose-bilkent (`internal/cose`), the default of mindmaps.
+
+Limits:
+
+- rough.js places the control points of every line at random. With
+  `handDrawnSeed` set, the port (`internal/rough`) reproduces upstream
+  exactly; without a seed upstream's own output differs from render to
+  render, and the port's is merely equivalent. Upstream draws some shapes
+  (stadium, flag, documents, ...) through rough.js even in the classic look.
+- Icon packs cannot be registered: every icon is drawn as mermaid's unknown
+  icon, which is also what upstream draws without packs.
+- Images take their size from the image: the port reads it from PNG and GIF
+  `data:` URLs, and draws other addresses only when the node gives `w` and
+  `h` without a `constraint`; otherwise `render` raises `Unsupported`.
+- Markdown labels cover paragraphs, emphasis, strikethrough, escapes, HTML
+  blocks and inline HTML; other markdown blocks pass through as text.
 - Line breaking inside labels knows Blink's rules for ASCII text; other
   scripts break at spaces only.
 
