@@ -459,10 +459,9 @@ pub fn draw(
 ) -> Unit raise ArchitectureError {
   let config : DrawConfig = {
     layout: layout_config(context.config),
-    use_max_width: match context.config.get("architecture.useMaxWidth") {
-      False => false
-      _ => true
-    },
+    // `setupGraphViewbox` takes the setting for its truthiness.
+    use_max_width: context.config.get("architecture.useMaxWidth") is Null ||
+    context.config.flag("architecture.useMaxWidth"),
     text_font_size: computed_font_size(context.theme().get("fontSize")),
   }
   let svg = context.svg
