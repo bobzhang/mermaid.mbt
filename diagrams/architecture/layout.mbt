@@ -11,7 +11,7 @@ priv struct LayoutConfig {
   padding : Double
   idealEdgeLengthMultiplier : Double
   edge_elasticity : Double
-  num_iter : Int32
+  num_iter : Double
   seed : Double
   randomize : Bool
   node_separation : Double
@@ -508,7 +508,7 @@ fn layout_config(config : @config.Config) -> LayoutConfig {
     padding: number("padding", 40.0),
     idealEdgeLengthMultiplier: number("idealEdgeLengthMultiplier", 1.5),
     edge_elasticity: number("edgeElasticity", 0.45),
-    num_iter: number("numIter", 2500.0).to_int(),
+    num_iter: number("numIter", 2500.0),
     seed: number("seed", 1.0),
     randomize: config.flag("architecture.randomize"),
     node_separation: number("nodeSeparation", 75.0),

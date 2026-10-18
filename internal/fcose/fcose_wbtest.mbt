@@ -34,7 +34,7 @@ test "a relative placement holds after the layout" {
       horizontal: Some([["a", "b"]]),
       relative: Some([Horizontal(left="a", right="b", gap=120.0)]),
     },
-    { num_iter: 2500, seed: 1, },
+    { num_iter: 2500.0, seed: 1, },
   )
   let a = placed[0]
   let b = placed[1]

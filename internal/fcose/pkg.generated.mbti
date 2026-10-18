@@ -43,7 +43,7 @@ pub(all) struct Node {
 }
 
 pub(all) struct Options {
-  num_iter : Int
+  num_iter : Double
   seed : UInt
 }
 
