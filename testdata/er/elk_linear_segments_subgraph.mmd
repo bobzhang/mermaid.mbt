@@ -1,0 +1,10 @@
+---
+config:
+  elk:
+    nodePlacementStrategy: LINEAR_SEGMENTS
+---
+erDiagram
+  CUSTOMER ||--o{ ORDER : places
+  ORDER ||--|{ LINE-ITEM : contains
+  CUSTOMER }|..|{ DELIVERY-ADDRESS : uses
+  PRODUCT ||--o{ LINE-ITEM : "ordered in"

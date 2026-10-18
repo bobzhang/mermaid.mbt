@@ -1,0 +1,13 @@
+swimlane-beta LR
+  subgraph Ops
+    subgraph Inner [Inner team]
+      x[Do x]
+      y[Do y]
+    end
+    z[Do z]
+  end
+  subgraph QA
+    q[Check]
+  end
+  x --> y --> z --> q
+  q -->|fail| x

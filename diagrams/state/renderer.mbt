@@ -82,7 +82,9 @@ pub fn draw(
   let config = context.config
   // What the port cannot draw yet is refused rather than drawn differently.
   let layout = config.text("layout").unwrap_or("elk")
-  if layout != "elk" && !@rendering.is_dagre_layout(layout) {
+  if layout != "elk" &&
+    layout != "swimlane" &&
+    !@rendering.is_dagre_layout(layout) {
     raise @rendering.LayoutError("The \{layout} layout is not supported yet.")
   }
   let look = config.text("look").unwrap_or("classic")

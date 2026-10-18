@@ -1,0 +1,35 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/internal/swimlane/post"
+
+import {
+  "bobzhang/mermaid/internal/swimlane/model",
+}
+
+// Values
+pub fn anchor_labels_to_polyline(Array[@model.Edge], Map[String, @model.Node]) -> Unit
+
+pub fn apply_bt_direction_transform(@model.Layout) -> Bool
+
+pub fn apply_lr_direction_transform(@model.Layout, String) -> Bool
+
+pub fn clip_edge_endpoints_to_node_boundaries(Array[@model.Edge], Map[String, @model.Node]) -> Unit
+
+pub fn collapse_short_terminal_stub(Array[@model.Edge], Map[String, @model.Node]) -> Unit
+
+pub fn nudge_shared_interior_subpaths(Array[@model.Edge], Map[String, @model.Node]) -> Unit
+
+pub fn port_swap_to_l_shape(Array[@model.Edge], Array[@model.Node]) -> Unit
+
+pub fn prepare_edge_endpoints_for_renderer(Array[@model.Edge], Map[String, @model.Node]) -> Unit
+
+pub fn simplify_detoured_edges(Array[@model.Edge], Array[@model.Node]) -> Unit
+
+pub fn straighten_collinear_sibling_detours(Array[@model.Edge], Array[@model.Node]) -> Unit
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits

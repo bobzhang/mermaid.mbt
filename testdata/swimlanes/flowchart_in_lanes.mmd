@@ -1,0 +1,13 @@
+---
+config:
+  layout: swimlane
+---
+flowchart LR
+  subgraph Sales
+    a[Lead] --> b[Quote]
+  end
+  subgraph Legal
+    c[Contract]
+  end
+  b -->|send| c
+  c --> d[Archive]

@@ -275,18 +275,30 @@ fn script_of(c : Char) -> Script? {
 /// has a ligature for (`fi` and `fl` in Times and Helvetica) become one
 /// glyph.
 fn Stack::glyphs(self : Stack, text : StringView) -> Array[Drawn] {
+  self.glyphs_after(text, Ref(None))
+}
+
+///|
+/// `glyphs` of a piece of text that continues the script run `run` of
+/// the pieces before it, as the `<tspan>`s of a line do: the script of a
+/// character without one of its own (a space) is that of the run it is
+/// in. `run` is left at the script the piece ends in.
+fn Stack::glyphs_after(
+  self : Stack,
+  text : StringView,
+  run : Ref[Script?],
+) -> Array[Drawn] {
   let drawn : Array[Drawn] = []
-  let mut run : Script? = None
   for c in text {
     if is_default_ignorable(c) {
       drawn.push(Ignorable)
       continue
     }
     if script_of(c) is Some(script) {
-      if run is Some(current) && current != script {
+      if run.val is Some(current) && current != script {
         drawn.push(ScriptChange)
       }
-      run = Some(script)
+      run.val = Some(script)
     }
     let face = self.face_for(c)
     guard face.glyphs.get(c.to_int()) is Some(glyph) else {
@@ -338,13 +350,52 @@ pub fn Stack::sans_serif(bold~ : Bool = false) -> Stack {
 /// symbols were read off it, the rest is approximated with half an em, or
 /// a full one for the wide scripts.
 fn fallback_em(c : Char) -> Double {
+  match measured_fallback_em(c) {
+    Some(em) => em
+    None => if c.to_int() >= 0x1100 { 1.0 } else { 0.5 }
+  }
+}
+
+///|
+/// The advances in ems read off the reference browser for characters no
+/// embedded face has.
+fn measured_fallback_em(c : Char) -> Double? {
   match c.to_int() {
     // BLACK HEART SUIT
-    0x2665 => 0.59375
+    0x2665 => Some(0.59375)
     // HEAVY BLACK HEART
-    0x2764 => 0.91015625
-    code => if code >= 0x1100 { 1.0 } else { 0.5 }
+    0x2764 => Some(0.91015625)
+    // Emoji, from Apple Color Emoji: 20 pixels at 16. Not the skin tone
+    // modifiers (U+1F3FB..U+1F3FF), which join the emoji before them, nor
+    // the alchemical symbols, arrows and chess symbols between the emoji
+    // blocks, which come from other fonts.
+    code if (code >= 0x1F300 && code <= 0x1F3FA) ||
+      (code >= 0x1F400 && code <= 0x1F64F) ||
+      (code >= 0x1F680 && code <= 0x1F6FF) ||
+      (code >= 0x1F900 && code <= 0x1F9FF) ||
+      (code >= 0x1FA70 && code <= 0x1FAFF) => Some(1.25)
+    _ => None
   }
+}
+
+///|
+/// The first character of `text` the stack cannot measure the advance of
+/// exactly: one that no face has and whose fallback advance was not read
+/// off the reference browser.
+pub fn Stack::first_unmeasured(self : Stack, text : StringView) -> Char? {
+  // Emoji sequences are drawn as one glyph: joiners, variation selectors
+  // and skin tone modifiers are not measured.
+  for c in text {
+    if c.to_int() is (0x200D | 0xFE0E | 0xFE0F | 0x1F3FB..<=0x1F3FF) {
+      return Some(c)
+    }
+  }
+  for drawn in self.glyphs(text) {
+    if drawn is Missing(c) && measured_fallback_em(c) is None {
+      return Some(c)
+    }
+  }
+  None
 }
 
 ///|
@@ -466,6 +517,7 @@ fn Stack::shape_after(
   text : StringView,
   size : Double,
   before : (Face, Glyph)?,
+  run~ : Ref[Script?] = Ref(None),
 ) -> (Shaped, (Face, Glyph)?) {
   let shaped = { pen: 0.0, ink: { x: 0.0, y: 0.0, width: 0.0, height: 0.0, }, }
   // A finished run adds its width, as a float, and its box.
@@ -479,7 +531,7 @@ fn Stack::shape_after(
   // The glyph of the piece before, until anything is shaped.
   let mut carried = before
   let mut last : (Face, Glyph)? = None
-  for drawn in self.glyphs(text) {
+  for drawn in self.glyphs_after(text, run) {
     let (face, glyph) = match drawn {
       Glyph(face, glyph) => (face, glyph)
       Missing(c) => {
@@ -571,6 +623,18 @@ pub fn Stack::advance(self : Stack, text : StringView, size : Double) -> Double 
 }
 
 ///|
+/// The advance width of `text` at `size` pixels before it is rounded to
+/// layout units: the position, in single precision, that the browser's
+/// line breaker measures text to.
+pub fn Stack::advance_unrounded(
+  self : Stack,
+  text : StringView,
+  size : Double,
+) -> Double {
+  self.shape(text, size).pen.to_double()
+}
+
+///|
 /// The widths of consecutive pieces of text shaped as one run, as SVG
 /// text lays out the `<tspan>`s of a line: kerning reaches across the
 /// pieces, and every piece takes whole layout units. An adjustment from
@@ -585,8 +649,10 @@ pub fn Stack::item_advances(
   // Exact sums in 16.16 fixed point, like the advances of a run.
   let sums : Array[Int64] = items.map(_ => 0L)
   let mut previous : (Face, Glyph, Int32)? = None
+  // The script run goes on from one piece to the next.
+  let run = Ref(None)
   for index, item in items {
-    for drawn in self.glyphs(item) {
+    for drawn in self.glyphs_after(item, run) {
       let (face, glyph) = match drawn {
         Glyph(face, glyph) => (face, glyph)
         Missing(c) => {
@@ -630,8 +696,9 @@ pub fn Stack::item_inks(
   let size = effective_size(size)
   let inks : Array[Rect] = []
   let mut previous : (Face, Glyph)? = None
+  let run = Ref(None)
   for item in items {
-    let (shaped, last) = self.shape_after(item, size, previous)
+    let (shaped, last) = self.shape_after(item, size, previous, run~)
     previous = last
     inks.push({
       x: shaped.ink.x.to_double(),

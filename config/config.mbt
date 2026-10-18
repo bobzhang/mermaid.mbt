@@ -5,6 +5,9 @@
 pub struct Config {
   priv data : Map[String, Json]
   priv variables : @theme.Theme
+  /// What the site configuration and the diagram's directives set, without
+  /// the defaults: mermaid's `getUserDefinedConfig`.
+  priv user : Json
 }
 
 ///|
@@ -147,8 +150,12 @@ pub fn Config::new(
   }
   directive = sanitize(directive, secure)
   let sum = assign_with_depth(Json::object(Map([])), directive)
+  let user = assign_with_depth(
+    assign_with_depth(Json::object(Map([])), clone(site)),
+    sum,
+  )
   guard assign_with_depth(clone(site_config), sum) is Object(config) else {
-    { data: Map([]), variables: @theme.Theme::from_variables(Map([])), }
+    { data: Map([]), variables: @theme.Theme::from_variables(Map([])), user, }
   }
   // Resolve theme, look and layout onto the top level, where renderers
   // read them: most specific layer first.
@@ -187,7 +194,19 @@ pub fn Config::new(
     Some(Object(variables)) => @theme.Theme::from_variables(variables)
     _ => @theme.Theme::from_variables(Map([]))
   }
-  { data: config, variables, }
+  { data: config, variables, user, }
+}
+
+///|
+/// The value at a dotted path such as `layout` as the site configuration
+/// and the diagram's directives set it, `Json::null()` where they leave
+/// it to the defaults: mermaid's `getUserDefinedConfig`.
+pub fn Config::user_defined(self : Config, path : String) -> Json {
+  let mut value = self.user
+  for key in path.split(".") {
+    value = field(value, key.to_owned())
+  }
+  value
 }
 
 ///|

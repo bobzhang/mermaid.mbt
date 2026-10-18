@@ -1,0 +1,22 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/internal/cose"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn layout(Array[(Double, Double)], Array[(Int, Int)], on_tick? : (Array[(Double, Double)]) -> Unit) -> Array[(Double, Double)] raise Unsupported
+
+pub fn straight_edge((Double, Double), (Double, Double)) -> Array[(Double, Double)]?
+
+// Errors
+pub(all) suberror Unsupported {
+  Unsupported(String)
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+
+// Type aliases
+
+// Traits

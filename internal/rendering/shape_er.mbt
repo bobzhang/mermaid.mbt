@@ -150,6 +150,14 @@ fn er_add_text(
   // Upstream appends what the label code returned, the text, to the
   // group, which takes it out of the group it was created in.
   label.append_child(element)
+  // An empty text with its empty line, alone in a moved group, still
+  // counts in Chrome as a point at the group's origin: the entity's box
+  // reaches the empty key and comment columns. (Probed: it counts under a
+  // translated group, and not under two untransformed ones, as the empty
+  // edge labels of mindmaps are.)
+  if text == "" && !element.child_elements().is_empty() {
+    element.set_text_box({ x: 0.0, y: 0.0, width: 0.0, height: 0.0, })
+  }
   if flatten && element.child_elements() is [first, ..] {
     // The same assignment turns the first line into a single run of text.
     let content = first.text_content()

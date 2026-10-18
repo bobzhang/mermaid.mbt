@@ -63,6 +63,8 @@ Work in progress.
 | Agentflow | byte-identical with the ELK and dagre layouts, including collapsed containers |
 | Kanban | byte-identical, including the hand-drawn look |
 | Use case | byte-identical with the ELK and dagre layouts |
+| Mindmap | byte-identical with its default cose-bilkent layout (`internal/cose`) and with dagre |
+| Swimlanes | byte-identical, with the swimlane layout engine (`internal/swimlane`) |
 | Venn | byte-identical, including the hand-drawn look; the layout optimiser of venn.js is transcribed step by step |
 | everything else | not ported yet — `render` raises `Unsupported` |
 
@@ -127,8 +129,9 @@ What is missing:
 - Labels are HTML in a `foreignObject` by default, as upstream; with
   `htmlLabels: false` they are plain SVG text, which every SVG viewer
   shows.
-- Layouts: ELK (the default) and dagre, as upstream for `layout: dagre`
-  and for layout names mermaid does not register. The hand-drawn look is
+- Layouts: ELK (the default), dagre (for `layout: dagre` and for layout
+  names mermaid does not register) and the swimlane engine (`layout:
+  swimlane`). The hand-drawn look is
   not ported for these diagrams; `render` raises `Unsupported` for it.
 - Line breaking inside labels knows Blink's rules for ASCII text; other
   scripts break at spaces only.

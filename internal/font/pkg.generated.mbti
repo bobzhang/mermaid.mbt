@@ -46,11 +46,13 @@ pub struct Stack {
   // private fields
 }
 pub fn Stack::advance(Self, StringView, Double) -> Double
+pub fn Stack::advance_unrounded(Self, StringView, Double) -> Double
 pub fn Stack::bbox(Self, StringView, Double, baseline? : Baseline) -> Rect
 pub fn Stack::chunks_box(Self, Array[Chunk], Double, anchor? : String, baseline? : Baseline, scale? : Double) -> Rect
 pub fn Stack::covers(Self, StringView) -> Bool
 pub fn Stack::default(bold? : Bool, italic? : Bool) -> Self
 pub fn Stack::first_uncovered(Self, StringView) -> Char?
+pub fn Stack::first_unmeasured(Self, StringView) -> Char?
 pub fn Stack::for_css(String, bold? : Bool) -> Self
 pub fn Stack::for_family(String, bold? : Bool, italic? : Bool) -> Self
 pub fn Stack::ink(Self, StringView, Double) -> Rect

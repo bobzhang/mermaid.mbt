@@ -2,6 +2,7 @@ import {
   "moonbitlang/core/string",
   "moonbitlang/core/double",
   "bobzhang/mermaid/config",
+  "bobzhang/mermaid/internal/cose",
   "bobzhang/mermaid/internal/d3",
   "bobzhang/mermaid/internal/dagre",
   "bobzhang/mermaid/internal/graphlib",
@@ -9,6 +10,9 @@ import {
   "bobzhang/mermaid/internal/font",
   "bobzhang/mermaid/internal/jsmath",
   "bobzhang/mermaid/internal/rough",
+  "bobzhang/mermaid/internal/swimlane",
+  "bobzhang/mermaid/internal/swimlane/layering" @swimlane_layering,
+  "bobzhang/mermaid/internal/swimlane/model" @swimlane_model,
   "bobzhang/elk/engine/all" @elk,
 }
 

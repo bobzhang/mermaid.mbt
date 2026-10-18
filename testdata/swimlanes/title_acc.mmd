@@ -1,0 +1,13 @@
+---
+title: Order flow
+---
+swimlane-beta
+  accTitle: Orders
+  accDescr: How an order moves
+  subgraph Shop
+    a[Take order] --> b[Pack]
+  end
+  subgraph Post
+    c[Ship]
+  end
+  b --> c

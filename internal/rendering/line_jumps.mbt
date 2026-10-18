@@ -183,7 +183,11 @@ priv struct Jump {
 
 ///|
 /// The path of an edge with its jumps: mermaid's `rewriteEdgePath`.
-fn rewrite_edge_path(edge : Edge, jumps : Array[Crossing]) -> String {
+fn rewrite_edge_path(
+  edge : Edge,
+  jumps : Array[Crossing],
+  gap~ : Bool = false,
+) -> String {
   let raw = edge.points
   if raw.length() < 2 {
     return ""
@@ -294,9 +298,14 @@ fn rewrite_edge_path(edge : Edge, jumps : Array[Crossing]) -> String {
         y: jump.point.y + uy * jump.r,
       }
       parts.push("L" + point_text(pre))
-      parts.push(
-        "A\{fmt3(jump.r)},\{fmt3(jump.r)} 0 0 \{sweep} \{point_text(post)}",
-      )
+      if gap {
+        // The `gap` style leaves the line open where it crosses.
+        parts.push("M" + point_text(post))
+      } else {
+        parts.push(
+          "A\{fmt3(jump.r)},\{fmt3(jump.r)} 0 0 \{sweep} \{point_text(post)}",
+        )
+      }
     }
     match upcoming {
       Some(corner) if rounded => {
@@ -410,17 +419,23 @@ fn replace_dasharray(style : String, pattern : String) -> String {
 
 ///|
 /// Redraw the edges that have to jump over others: mermaid's
-/// `applyLineJumpsToSvg`.
+/// `applyLineJumpsToSvg`. `key` is the setting that turns line hops off,
+/// `edges` the edges in the order the layout left them (the diagram's
+/// order by default), and `gap` the style that breaks the line instead of
+/// arching over.
 fn apply_line_jumps(
   data : LayoutData,
   paths : Map[String, @dom.Element],
+  key~ : String = "elk.lineHops",
+  edges? : Array[Edge],
+  gap~ : Bool = false,
 ) -> Unit {
-  if data.config.get("elk.lineHops") is False {
+  if data.config.get(key) is False {
     return
   }
-  let edges = data.edges.filter(edge => {
-    edge.points.length() >= 2 && paths.contains(edge.id)
-  })
+  let edges = edges
+    .unwrap_or(data.edges)
+    .filter(edge => edge.points.length() >= 2 && paths.contains(edge.id))
   let crossings = find_crossings(edges)
   if crossings.is_empty() {
     return
@@ -436,7 +451,7 @@ fn apply_line_jumps(
     }
     guard paths.get(edge.id) is Some(path) else { continue }
     let original_style = path.get_attr("style").unwrap_or("")
-    let new_d = rewrite_edge_path(edge, jumps)
+    let new_d = rewrite_edge_path(edge, jumps, gap~)
     path.attr("d", new_d) |> ignore
     if dash_gaps(original_style) is Some((start, end)) {
       let start = parse_number(start)

@@ -1,0 +1,12 @@
+---
+config:
+  layout: swimlane
+  handDrawnSeed: 1
+---
+usecase-beta
+direction LR
+actor Customer("Customer")
+systemBoundary "Order system"
+  Checkout("Place order")
+end
+Customer --> Checkout

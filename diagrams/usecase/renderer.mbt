@@ -288,7 +288,9 @@ pub fn draw(
   // Only `elk` names the layered ELK layout; every other name, known or
   // not, ends in another engine upstream.
   let layout = config.text("layout").unwrap_or("elk")
-  if layout != "elk" && !@rendering.is_dagre_layout(layout) {
+  if layout != "elk" &&
+    layout != "swimlane" &&
+    !@rendering.is_dagre_layout(layout) {
     raise Unsupported("The \{layout} layout is not supported yet.")
   }
   let look = config.text("look").unwrap_or("neo")

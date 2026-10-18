@@ -30,6 +30,8 @@ pub fn place_background_nodes(@dom.Element) -> Unit
 
 pub fn render(LayoutData, @dom.Element) -> Unit raise LayoutError
 
+pub fn render_cose(LayoutData, @dom.Element) -> Unit raise LayoutError
+
 pub fn safe_look(String) -> String
 
 pub fn setup_viewport(@dom.Element, Double, String, Bool) -> Unit
@@ -126,6 +128,7 @@ pub struct Node {
   center_label : Bool
   wrapping_width : Double?
   description : Array[String]
+  icon : String?
   spread_ports : Bool
   mut label_style : String
   mut width : Double?
@@ -137,7 +140,7 @@ pub struct Node {
   mut intersect : ((Point) -> Point)?
 }
 pub fn Node::leaves_at(Self, Point) -> Point?
-pub fn Node::new(id~ : String, label~ : String, label_type? : String, parent_id? : String, padding~ : Double, css_styles? : Array[String], css_compiled_styles? : Array[String], css_classes? : String, dir? : String, dom_id? : String, look~ : String, is_group? : Bool, shape~ : String, min_width? : Double, color_index? : Int, link? : String, link_target? : String, tooltip? : String, have_callback? : Bool, data? : NodeData, rx? : Double, ry? : Double, center_label? : Bool, wrapping_width? : Double, description? : Array[String], spread_ports? : Bool) -> Self
+pub fn Node::new(id~ : String, label~ : String, label_type? : String, parent_id? : String, padding~ : Double, css_styles? : Array[String], css_compiled_styles? : Array[String], css_classes? : String, dir? : String, dom_id? : String, look~ : String, is_group? : Bool, shape~ : String, min_width? : Double, color_index? : Int, link? : String, link_target? : String, tooltip? : String, have_callback? : Bool, data? : NodeData, rx? : Double, ry? : Double, center_label? : Bool, wrapping_width? : Double, description? : Array[String], icon? : String, spread_ports? : Bool) -> Self
 pub fn Node::placed(Self, x~ : Double, y~ : Double, width? : Double, height? : Double, label_style~ : String) -> Self
 pub fn Node::with_styles(Self, css_styles~ : Array[String], css_compiled_styles~ : Array[String], css_classes~ : String) -> Self
 

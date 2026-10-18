@@ -439,6 +439,17 @@ fn insert_edge_label(
       markdown~,
       sanitize=false,
     )
+    if edge.label == "" {
+      // An empty label is its text alone, moved into the label's group;
+      // the group with the background stays where it was created, after
+      // the edge's label in the group of all of them. It measures nothing.
+      group.append_child(text.group)
+      label.append_child(text.element)
+      label.attr("transform", "translate(0, 0)") |> ignore
+      edge.width = 0.0
+      edge.height = 0.0
+      return edge_label
+    }
     let centre = if env.font_size == base_env.font_size {
       text.text_box
     } else {

@@ -1,0 +1,23 @@
+---
+config:
+  handDrawnSeed: 1
+  theme: redux-dark-color
+---
+swimlane-beta LR
+  subgraph Ops0
+    N1[Start]
+    N2[Ship]
+    a3_x[Ask]
+  end
+  subgraph Team_1 [Engineering]
+    N4[[Start]]
+  end
+  subgraph Ops2
+    n5>Review]
+    a6_x[Notify customer]
+    step7{{Test}}
+  end
+  N1 ==> N4
+  N4 -.-> a6_x
+  step7 --> N2
+  step7 --> N1

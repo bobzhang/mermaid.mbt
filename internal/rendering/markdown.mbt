@@ -236,6 +236,14 @@ fn inline_tokens(text : Array[Char]) -> Array[MdToken] {
         continue
       }
     }
+    // A strikethrough (GFM's `del`), which labels do not support either:
+    // `^(~~?)(?=[^\s~])((?:\\[\s\S]|[^\\])*?(?:\\[\s\S]|[^\s~\\]))\1(?=[^~]|$)`.
+    if c == '~' && strikethrough_end(text, i) is Some(close) {
+      flush()
+      out.push(MdRaw(String::from_array(text[i:close])))
+      i = close
+      continue
+    }
     if c is ('*' | '_') {
       let mut run_end = i
       while run_end < n && text[run_end] == c {
@@ -308,6 +316,39 @@ fn inline_tokens(text : Array[Char]) -> Array[MdToken] {
   }
   flush()
   out
+}
+
+///|
+/// Where a strikethrough that starts at `start` ends, if one does: one or
+/// two tildes, text that neither starts with a space or a tilde nor ends
+/// with a space, a tilde or a backslash, and as many tildes not followed by
+/// another.
+fn strikethrough_end(text : Array[Char], start : Int32) -> Int32? {
+  let n = text.length()
+  let run = if start + 1 < n && text[start + 1] == '~' { 2 } else { 1 }
+  // `~~?` backtracks to one tilde when two are not followed by text.
+  for run in (if run == 2 { [2, 1] } else { [1] }) {
+    let from = start + run
+    guard from < n && !is_md_space(text[from]) && text[from] != '~' else {
+      continue
+    }
+    let mut j = from
+    while j < n {
+      // The last character of the text, and the tildes after it.
+      let escaped = text[j] == '\\' && j + 1 < n
+      let last = if escaped { j + 1 } else { j }
+      let fits = escaped || !(is_md_space(text[j]) || text[j] is ('~' | '\\'))
+      let close = last + 1
+      if fits &&
+        close + run <= n &&
+        text[close:close + run].iter().all(c => c == '~') &&
+        (close + run == n || text[close + run] != '~') {
+        return Some(close + run)
+      }
+      j = if escaped { j + 2 } else { j + 1 }
+    }
+  }
+  None
 }
 
 ///|

@@ -261,7 +261,7 @@ fn label_helper(
       classes=if markdown { "markdown-node-label" } else { "" },
       markdown~,
       style=node.label_style,
-      add_background~,
+      add_background=add_background || node.icon is Some(_),
       paragraph_padding~,
     )
     let box = if box.width < min_label_width {
@@ -287,19 +287,26 @@ fn label_helper(
       style=node.label_style,
       markdown~,
       anchor_middle=env.node_text_centred,
-      add_background~,
+      add_background=add_background || node.icon is Some(_),
     )
+    // A label with a background is measured with it.
+    let text_box = if (add_background || node.icon is Some(_)) &&
+      node.label != "" {
+      text.group.bbox()
+    } else {
+      text.text_box
+    }
     let box : LabelBox = {
-      width: text.text_box.width.max(min_label_width),
-      height: text.text_box.height,
+      width: text_box.width.max(min_label_width),
+      height: text_box.height,
     }
     // A box widened to the minimum width is centred on the text.
-    offset_x = if text.text_box.width < min_label_width {
-      text.text_box.x - (min_label_width - text.text_box.width) / 2.0
+    offset_x = if text_box.width < min_label_width {
+      text_box.x - (min_label_width - text_box.width) / 2.0
     } else {
-      text.text_box.x
+      text_box.x
     }
-    offset_y = text.text_box.y
+    offset_y = text_box.y
     label.attr("transform", "translate(0, \{n(-box.height / 2.0)})") |> ignore
     box
   }

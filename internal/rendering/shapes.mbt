@@ -196,8 +196,14 @@ fn question(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
 }
 
 ///|
-/// A circle around the label.
-fn circle(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
+/// A circle around the label, `padding` away from its corners (by default
+/// half the node's padding); `mindmapCircle` asks for the whole padding.
+fn circle(
+  parent : @dom.Element,
+  node : Node,
+  env : Env,
+  padding? : Double,
+) -> @dom.Element {
   let styles = shape_styles(node)
   let labelled = label_helper(
     parent,
@@ -212,7 +218,7 @@ fn circle(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
   let radius = if node.look == "neo" {
     label_radius + 16.0
   } else {
-    label_radius + node.padding / 2.0
+    label_radius + padding.unwrap_or(node.padding / 2.0)
   }
   let element = if hand_drawn(node) {
     sketched_circle(labelled.shape_svg, node, env, radius)
@@ -537,6 +543,8 @@ fn draw_shape(
     "stadium" => stadium(parent, node, env)
     "rect_left_inv_arrow" => rect_left_inv_arrow(parent, node, env)
     "circle" => circle(parent, node, env)
+    "mindmapCircle" => circle(parent, node, env, padding~)
+    "defaultMindmapNode" => default_mindmap_node(parent, node, env)
     "doublecircle" => double_circle(parent, node, env)
     "text" => text_block(parent, node, env)
     "card" => card(parent, node, env)
