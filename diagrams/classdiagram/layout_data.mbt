@@ -34,10 +34,9 @@ fn ClassDb::layout_data(
   let config = self.config
   let look = config.text("look").unwrap_or("default")
   let theme = config.theme()
-  let hierarchical = match config.get("class.hierarchicalNamespaces") {
-    Null => true
-    value => !(value is False)
-  }
+  // `hierarchicalNamespaces ?? true`, then taken for its truthiness.
+  let hierarchical = config.get("class.hierarchicalNamespaces") is Null ||
+    config.flag("class.hierarchicalNamespaces")
   let parent_of = (parent : String?) => {
     if hierarchical {
       parent

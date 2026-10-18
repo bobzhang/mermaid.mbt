@@ -5,6 +5,7 @@ import {
   "bobzhang/mermaid/internal/jison",
   "bobzhang/mermaid/internal/jsregex",
   "bobzhang/mermaid/internal/rendering",
+  "bobzhang/mermaid/internal/sanitizeurl",
 }
 
 warnings = "-implicit_impl_as_method"

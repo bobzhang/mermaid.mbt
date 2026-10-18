@@ -117,7 +117,8 @@ pub fn draw(
     context.svg,
     8.0,
     "statediagram",
-    config.get("state.useMaxWidth") is (True | Null),
+    // `conf?.useMaxWidth ?? true`, then taken for its truthiness.
+    config.get("state.useMaxWidth") is Null || config.flag("state.useMaxWidth"),
   )
 }
 

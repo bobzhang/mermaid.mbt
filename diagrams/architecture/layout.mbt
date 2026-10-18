@@ -11,7 +11,7 @@ priv struct LayoutConfig {
   padding : Double
   idealEdgeLengthMultiplier : Double
   edge_elasticity : Double
-  num_iter : Int32
+  num_iter : Double
   seed : Double
   randomize : Bool
   node_separation : Double
@@ -228,8 +228,8 @@ fn build_cy(db : Db, config : LayoutConfig) -> Cy raise ArchitectureError {
   }
   for edge in db.edges {
     let id = "\{edge.lhs_id}-\{edge.rhs_id}"
-    // cytoscape refuses a second element with an id.
-    if cy.edges.iter().any(e => e.id == id) {
+    // cytoscape refuses a second element with an id, a node's as well.
+    if cy.by_id.contains(id) || cy.edges.iter().any(e => e.id == id) {
       raise Invalid("Can not create second element with ID `\{id}`")
     }
     cy.edges.push({
@@ -508,7 +508,7 @@ fn layout_config(config : @config.Config) -> LayoutConfig {
     padding: number("padding", 40.0),
     idealEdgeLengthMultiplier: number("idealEdgeLengthMultiplier", 1.5),
     edge_elasticity: number("edgeElasticity", 0.45),
-    num_iter: number("numIter", 2500.0).to_int(),
+    num_iter: number("numIter", 2500.0),
     seed: number("seed", 1.0),
     randomize: config.flag("architecture.randomize"),
     node_separation: number("nodeSeparation", 75.0),

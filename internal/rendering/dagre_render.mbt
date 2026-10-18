@@ -74,6 +74,8 @@ fn dagre_spacing(data : LayoutData) -> (Double?, Double?) {
         own("state.nodeSpacing", 50.0, true),
         own("state.rankSpacing", 50.0, true),
       )
+    // The mindmap db's `getData` puts fixed spacings on the layout data.
+    "mindmap" => (Some(50.0), Some(50.0))
     // The use case renderer passes its own setting, which has a default.
     "usecase" =>
       (
