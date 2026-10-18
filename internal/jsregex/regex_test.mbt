@@ -111,3 +111,15 @@ test "invalid patterns are rejected" {
     _ => fail("expected an error")
   }
 }
+
+///|
+test "back references" {
+  inspect(prefix("(`+)a\\1(?!`)", "``a``b"), content="[``a``]")
+  inspect(prefix("(`+)a\\1(?!`)", "``a```"), content="no match")
+  inspect(
+    prefix("<(pre)>.*?</\\1>", "<PRE>x</pre>", flags="i"),
+    content="[<PRE>x</pre>]",
+  )
+  // A group that took no part in the match matches nothing.
+  inspect(prefix("(?:(a)|b)\\1c", "bc"), content="[bc]")
+}

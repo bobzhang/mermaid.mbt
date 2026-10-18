@@ -8,6 +8,16 @@ pub fn draw(
 ) -> Unit raise @rendering.LayoutError {
   let config = context.config
   // What the port cannot draw yet is refused rather than drawn differently.
+  if db.unsupported() is Some(message) {
+    raise @rendering.LayoutError(message)
+  }
+  // The flowchart copies the root `arrowMarkerAbsolute` into its own
+  // section, which the edges read.
+  if config.flag("arrowMarkerAbsolute") && !db.edges.is_empty() {
+    raise @rendering.LayoutError(
+      "arrowMarkerAbsolute puts the page's address in the marker references, which is not ported",
+    )
+  }
   let layout = config.text("layout").unwrap_or("elk")
   if layout != "elk" &&
     layout != "swimlane" &&
@@ -28,7 +38,11 @@ pub fn draw(
   @rendering.render(data, context.svg, image_loader?=context.image_loader)
   @rendering.order_image_nodes(context.svg)
   insert_title(db.title, context)
-  let padding = config.number("flowchart.diagramPadding").unwrap_or(8.0)
+  // `diagramPadding ?? 8`, coerced to a number by the arithmetic.
+  let padding = match config.get("flowchart.diagramPadding") {
+    Null => 8.0
+    value => @diagram.to_number(value)
+  }
   @rendering.setup_viewport(
     context.svg,
     padding,

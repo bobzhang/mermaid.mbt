@@ -183,6 +183,27 @@ fn Run::step(self : Run, node : Node, at : Int32, k : (Int32) -> Bool) -> Bool {
       let after = at < n && is_word(self.unit(at))
       (before != after) != negated && k(at)
     }
+    Backref(index) => {
+      let start = if 2 * index + 1 < self.captures.length() {
+        self.captures[2 * index]
+      } else {
+        -1
+      }
+      let end = if start >= 0 { self.captures[2 * index + 1] } else { -1 }
+      if start < 0 || end < 0 {
+        return k(at)
+      }
+      let length = end - start
+      guard at + length <= n else { return false }
+      for i in 0..<length {
+        let a = self.unit(start + i)
+        let b = self.unit(at + i)
+        guard a == b || (self.ignore_case && canonical(a) == canonical(b)) else {
+          return false
+        }
+      }
+      k(at + length)
+    }
     Group(inner, capture=None) => self.step(inner, at, k)
     Group(inner, capture=Some(index)) => {
       let old_start = self.captures[2 * index]

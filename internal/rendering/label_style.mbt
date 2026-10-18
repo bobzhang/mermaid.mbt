@@ -73,6 +73,92 @@ fn Env::styled(self : Env, style : String, faces~ : Bool = true) -> Env {
 }
 
 ///|
+/// Whether the label measurement models a label style declaration. The
+/// style is written on the label before the browser measures it, so a
+/// declaration that changes how its text lays out (spacing, case, line
+/// height, a relative size, other wrapping rules) changes the size of the
+/// node; those are refused rather than measured wrong.
+fn label_declaration_measured(key : String, value : String) -> Bool {
+  let value = value
+    .replace_all(old="!important", new="")
+    .trim()
+    .to_lower()
+    .to_owned()
+  match key {
+    "color"
+    | "text-decoration"
+    | "text-align"
+    | "text-shadow"
+    | "text-overflow"
+    | "font-family"
+    | "font-weight"
+    | "font-style" => true
+    "font-size" => css_length(value) is Some((_, "px"))
+    "text-transform" => value == "none"
+    "letter-spacing" | "word-spacing" => value is ("normal" | "0" | "0px" | "")
+    "white-space" => value is ("normal" | "nowrap")
+    "word-wrap" | "overflow-wrap" | "word-break" => value == "normal"
+    "hyphens" => value == "manual"
+    // `line-height` and anything not a label style upstream.
+    _ => !is_label_style(key)
+  }
+}
+
+///|
+/// Refuse a diagram whose node or edge labels carry a style the label
+/// measurement does not model (see `label_declaration_measured`), whose
+/// image or icon sizes are not numbers, or whose markers would be
+/// absolute references.
+fn check_label_styles(data : LayoutData) -> Unit raise LayoutError {
+  let check = (styles : Array[String]) => {
+    for key, value in styles_map(styles) {
+      if !label_declaration_measured(key, value) {
+        raise LayoutError(
+          "the label style `\{key}:\{value}` changes the label's size, which is not ported",
+        )
+      }
+    }
+  }
+  for node in data.nodes {
+    // `Number("abc")`: a size that is not a number makes upstream's
+    // geometry `NaN`, which the port does not follow.
+    if node.data is Asset(asset_width~, asset_height~, ..) &&
+      [asset_width, asset_height].any(size => {
+        size is Some(size) && size.is_nan()
+      }) {
+      raise LayoutError(
+        "the image or icon size of \{node.id} is not a number, which is not ported",
+      )
+    }
+    let styles = [..node.css_compiled_styles, ..node.css_styles]
+    for style in node.label_style.split(";") {
+      let style = style.trim().to_owned()
+      if style != "" {
+        styles.push(style)
+      }
+    }
+    check(styles)
+  }
+  // Marker references then start with the address of the page, which
+  // a renderer without a page does not have.
+  if !data.edges.is_empty() &&
+    (
+      data.config.flag("flowchart.arrowMarkerAbsolute") ||
+      data.config.flag("state.arrowMarkerAbsolute")
+    ) {
+    raise LayoutError(
+      "arrowMarkerAbsolute puts the page's address in the marker references, which is not ported",
+    )
+  }
+  let own_styles = edge_label_uses_own_styles(data.diagram_type)
+  for edge in data.edges {
+    check(
+      [..edge.css_compiled_styles, ..if own_styles { edge.style } else { [] }],
+    )
+  }
+}
+
+///|
 /// The size edge labels are set in: some diagrams' stylesheets fix it,
 /// whatever the theme's font size.
 fn edge_label_font_size(diagram_type : String, font_size : Double) -> Double {

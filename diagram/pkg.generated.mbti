@@ -6,6 +6,7 @@ import {
   "bobzhang/mermaid/internal/dom",
   "bobzhang/mermaid/internal/font",
   "bobzhang/mermaid/theme",
+  "moonbitlang/core/debug",
 }
 
 // Values
@@ -19,9 +20,16 @@ pub fn parse_float(String) -> Double
 
 pub fn parse_font_size(String) -> Double?
 
+pub fn sanitize_url(String) -> String raise UnsupportedUrl
+
 pub fn to_fixed0(Double) -> String
 
+pub fn to_number(Json) -> Double
+
 // Errors
+pub(all) suberror UnsupportedUrl {
+  UnsupportedUrl(String)
+} derive(Eq, @debug.Debug)
 
 // Types and methods
 pub struct Context {

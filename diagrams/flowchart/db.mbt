@@ -86,6 +86,9 @@ pub struct FlowDb {
   mut acc_title : String
   mut acc_description : String
   mut title : String
+  /// A link the port cannot sanitize as upstream does; the diagram is
+  /// refused when drawn.
+  priv mut unsupported_link : String?
 }
 
 ///|
@@ -114,6 +117,7 @@ pub fn FlowDb::new(config : @config.Config) -> FlowDb {
     acc_title: "",
     acc_description: "",
     title: "",
+    unsupported_link: None,
   }
 }
 
@@ -372,6 +376,9 @@ fn FlowDb::add_vertex(
       raise FlowError("No such shape: \{shape}.")
     }
     vertex.shape = Some(shape)
+  } else if doc.get("shape") is Some(shape) && truthy(Some(shape)) {
+    // Upstream calls `doc.shape.toLowerCase()` on whatever is there.
+    raise FlowError("doc.shape.toLowerCase is not a function")
   }
   let label = metadata_string(doc, "label")
   if label is Some(label) {
@@ -400,11 +407,12 @@ fn FlowDb::add_vertex(
   if metadata_string(doc, "constraint") is Some(constraint) {
     vertex.constraint = Some(constraint)
   }
-  if truthy(doc.get("w")) && doc.get("w") is Some(Number(w, ..)) {
-    vertex.asset_width = Some(w)
+  // `Number(doc.w)`: a size may be given as text.
+  if doc.get("w") is Some(w) && truthy(Some(w)) {
+    vertex.asset_width = Some(@diagram.to_number(w))
   }
-  if truthy(doc.get("h")) && doc.get("h") is Some(Number(h, ..)) {
-    vertex.asset_height = Some(h)
+  if doc.get("h") is Some(h) && truthy(Some(h)) {
+    vertex.asset_height = Some(@diagram.to_number(h))
   }
 }
 
@@ -700,7 +708,7 @@ pub fn FlowDb::set_link(
 ) -> Unit {
   for id in ids.split(",") {
     if self.vertices.get(id.to_owned()) is Some(vertex) {
-      vertex.link = Some(format_url(link, self.config))
+      vertex.link = Some(self.format_url(link))
       vertex.link_target = target
     }
   }
@@ -722,31 +730,29 @@ pub fn FlowDb::set_click_event(self : FlowDb, ids : String) -> Unit {
 }
 
 ///|
-/// mermaid's `formatUrl`: outside the loose security level a link is
-/// sanitized; a `javascript:` URL becomes `about:blank`.
-fn format_url(link : String, config : @config.Config) -> String {
+/// mermaid's `formatUrl`: outside the loose security level a link goes
+/// through `sanitizeUrl`, which decodes it, blanks scripting schemes and
+/// normalizes web addresses as the browser's URL parser does.
+fn FlowDb::format_url(self : FlowDb, link : String) -> String {
   let url = link.trim().to_owned()
   if url == "" {
     return url
   }
-  if config.text("securityLevel") is Some("loose") {
+  if self.config.text("securityLevel") is Some("loose") {
     return url
   }
-  // Like @braintree/sanitize-url: script-capable schemes are refused.
-  let stripped = try! @jsregex.Regex::compile("[\\u0000-\\u0020]")
-  let compact = stripped.replace_all(url.to_lower(), _ => "")
-  for scheme in ["javascript:", "data:", "vbscript:"] {
-    if compact.has_prefix(scheme) {
-      return "about:blank"
+  @diagram.sanitize_url(url) catch {
+    UnsupportedUrl(message) => {
+      self.unsupported_link = Some(message)
+      url
     }
   }
-  // The URL comes back normalized: a bare origin gains its root path.
-  let origin = try! @jsregex.Regex::compile("^https?://[^/?#]+$", flags="i")
-  if origin.matches(url) {
-    url + "/"
-  } else {
-    url
-  }
+}
+
+///|
+/// The reason the diagram cannot be drawn exactly, if it has one.
+pub fn FlowDb::unsupported(self : FlowDb) -> String? {
+  self.unsupported_link
 }
 
 ///|
@@ -775,8 +781,9 @@ fn FlowDb::add_sub_graph(
     Some(_) => Some(id_text.trim().to_owned())
     None => None
   }
-  // `subgraph some title` without an id: the text is only a title.
-  if same_text && title_text.iter().any(c => c is (' ' | '\t' | '\n' | '\r')) {
+  // `subgraph some title` without an id: the text is only a title
+  // (`/\s/`, JavaScript's white space).
+  if same_text && title_text.iter().any(@diagram.is_js_space) {
     sub_graph_id = None
   }
   // Flatten one level, drop directions and blanks, keep first occurrences.

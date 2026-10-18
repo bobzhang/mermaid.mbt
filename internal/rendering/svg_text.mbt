@@ -16,12 +16,13 @@ fn non_markdown_to_lines(text : String) -> Array[Array[Word]] {
   for line in text.split("\n") {
     // Tags stay whole; everything else splits at white space.
     let words = []
-    let chars = line.trim().to_owned().to_array()
+    // `line.trim().match(/<[^>]+>|[^\s<>]+/g)`, JavaScript's white space.
+    let chars = js_trim_text(line.to_owned()).to_array()
     let n = chars.length()
     let mut i = 0
     while i < n {
       let c = chars[i]
-      if c is (' ' | '\t' | '\n' | '\r') {
+      if is_js_space_unit(c.to_int()) {
         i += 1
         continue
       }
@@ -48,7 +49,8 @@ fn non_markdown_to_lines(text : String) -> Array[Array[Word]] {
         i += 1
         continue
       }
-      while j < n && !(chars[j] is (' ' | '\t' | '\n' | '\r' | '<' | '>')) {
+      while j < n &&
+            !(is_js_space_unit(chars[j].to_int()) || chars[j] is ('<' | '>')) {
         j += 1
       }
       words.push({ content: String::from_array(chars[i:j]), kind: "normal", })
@@ -328,6 +330,12 @@ priv struct SvgLabel {
 }
 
 ///|
+/// The error upstream raises while measuring a label, which aborts the
+/// render: `render` reports it once the diagram is drawn. Labels are
+/// measured deep inside the shapes, which do not fail otherwise.
+let upstream_failure : Ref[String?] = Ref(None)
+
+///|
 /// mermaid's `createText` for SVG labels: a group with a background
 /// rectangle and a `<text>` of one `<tspan>` per line, each word in a
 /// `<tspan>` of its own. Lines wider than `width` are broken.
@@ -382,6 +390,13 @@ fn create_svg_label(
     if fits(line) {
       lines.push(line)
     } else {
+      // A raw markdown block keeps its line breaks in one word, which
+      // upstream refuses to break.
+      if line.iter().any(word => word.content.contains("\n")) {
+        upstream_failure.val = Some(
+          "splitLineToFitWidth does not support newlines in the line",
+        )
+      }
       lines.append(split_line_to_fit(line, fits))
     }
   }
@@ -554,7 +569,9 @@ fn markdown_to_lines(markdown : String) -> Array[Array[Word]] {
   for block in markdown_blocks(dedent(collapsed.to_string())) {
     match block {
       Paragraph(tokens) => walk(tokens, "normal")
-      Raw(text) => push_word(text, "normal")
+      // Whatever is not a paragraph is a word as written, white space
+      // between blocks included.
+      Raw(text) | Space(text) => push_word(text, "normal")
     }
   }
   lines

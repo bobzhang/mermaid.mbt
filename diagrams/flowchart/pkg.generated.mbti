@@ -107,6 +107,7 @@ pub fn FlowDb::set_direction(Self, String) -> Unit
 pub fn FlowDb::set_link(Self, String, String, String?) -> Unit
 pub fn FlowDb::set_title(Self, String) -> Unit
 pub fn FlowDb::set_tooltip(Self, String, String) -> Unit
+pub fn FlowDb::unsupported(Self) -> String?
 pub fn FlowDb::update_link(Self, Array[Int?], Array[String]) -> Unit raise
 pub fn FlowDb::update_link_interpolate(Self, Array[Int?], String) -> Unit raise FlowError
 pub fn FlowDb::vertex_counter(Self) -> Int

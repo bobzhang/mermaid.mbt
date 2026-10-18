@@ -1,0 +1,5 @@
+flowchart TD
+  A["`*a **b** c*`"] --> B["`**a *b***`"]
+  B --> C["`*a *b* c* and ***both***`"]
+  C --> D["`foo*bar* x_y_z __a__b *(**c**)*`"]
+  D -->|"`**edge** *label* a**b**c`"| E["`*foo**bar**baz* **a**_b_`"]

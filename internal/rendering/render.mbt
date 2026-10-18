@@ -123,6 +123,22 @@ pub fn render(
   svg : @dom.Element,
   image_loader? : (String) -> Bytes?,
 ) -> Unit raise LayoutError {
+  check_label_styles(data)
+  upstream_failure.val = None
+  render_layout(data, svg, image_loader)
+  if upstream_failure.val is Some(message) {
+    upstream_failure.val = None
+    raise UpstreamError(message)
+  }
+}
+
+///|
+/// `render` once the labels are known to be measurable.
+fn render_layout(
+  data : LayoutData,
+  svg : @dom.Element,
+  image_loader : ((String) -> Bytes?)?,
+) -> Unit raise LayoutError {
   if data.config.text("layout") == Some("swimlane") {
     return render_swimlane(data, svg, image_loader)
   }
