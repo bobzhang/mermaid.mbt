@@ -1,0 +1,11 @@
+---
+config:
+  handDrawnSeed: 7
+  themeCSS: "g.classGroup rect { fill: #abc } :is(.label, .nodeLabel) { color: RED } @keyframes pulse { from { opacity: 0 } to { opacity: 1 } } .relation { stroke: currentColor; transform: translate(0) }"
+---
+classDiagram
+  class Animal {
+    +String name
+    +eat()
+  }
+  Animal <|-- Duck

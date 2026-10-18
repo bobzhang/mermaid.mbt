@@ -1,0 +1,17 @@
+---
+config:
+  themeCSS: |
+    .node rect { fill: #FFE4E1; stroke: DarkRed; stroke-width: 2 }
+    .edgePath .path, .flowchart-link { stroke-dasharray: 5 3; stroke: rgb(0 0 128 / 50%) }
+    #flowchart-A-0 rect, .label:not(.x) { FONT-WEIGHT: 400; color: Navy !important }
+    garbage // not a rule { fill: red }
+    .cluster rect { fill: hsl(60, 100%, 90%); rx: 8px }
+    @media (prefers-color-scheme: dark) { .node rect { fill: black } }
+---
+flowchart LR
+  A[Start] --> B{Choose}
+  B -->|one| C[First]
+  B -->|two| D[Second]
+  subgraph S [Group]
+    C
+  end

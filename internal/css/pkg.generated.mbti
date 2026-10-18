@@ -1,10 +1,19 @@
 // Generated using `moon info`, DON'T EDIT IT
 package "bobzhang/mermaid/internal/css"
 
+import {
+  "moonbitlang/core/debug",
+}
+
 // Values
 pub fn compile(String, String) -> String
 
+pub fn serialize_style_sheet(String) -> Array[String] raise CssUnsupported
+
 // Errors
+pub(all) suberror CssUnsupported {
+  CssUnsupported(String)
+} derive(Eq, @debug.Debug)
 
 // Types and methods
 

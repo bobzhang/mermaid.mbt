@@ -39,6 +39,8 @@ let usage : String =
   #|  time <cases.json>      evaluate dayjs and d3 time operations
   #|  format <cases.json>    format numbers; cases are {specifier, value}
   #|  colors <colors.json>   serialize CSS colors as the CSSOM does
+  #|  cssom <sheets.json>    print the cssText of the rules of each style sheet
+  #|                         as Chrome's replaceSync and cssText give them
   #|  image-size <urls.json> print the natural size of the image in each
   #|                         data: URL, as Chrome reports it
   #|  swimlane <capture.json> [--stages]
@@ -531,6 +533,7 @@ async fn main {
       ["format", path] => formats(path)
       ["colors", path] => colors(path)
       ["image-size", path] => image_sizes(path)
+      ["cssom", path] => style_sheets(path)
       ["swimlane", .. options] => swimlane(options)
       _ => println(usage)
     }

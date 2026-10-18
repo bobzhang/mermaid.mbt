@@ -147,7 +147,10 @@ fn extract_front_matter(text : String) -> FrontMatter raise {
     .collect()
     .join("\n")
   }
-  let parsed : Json = match @yaml.Yaml::load_from_string(body) {
+  // mermaid loads it with js-yaml, which takes quoted scalars indented
+  // less than YAML 1.2 asks.
+  let parsed : Json = match
+    @yaml.Yaml::load_from_string(body, lenient_quoted_scalar_indentation=true) {
     [document, ..] => Json(document)
     [] => Json::null()
   }

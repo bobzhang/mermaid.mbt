@@ -8,9 +8,13 @@ priv struct StyleClass {
 
 ///|
 /// The rules mermaid derives from configuration rather than from a theme:
-/// the font custom properties. Upstream builds them in a `CSSStyleSheet`
-/// and reads back the browser's serialization.
-fn user_styles(config : @config.Config, classes : Array[StyleClass]) -> String {
+/// `themeCSS`, the font custom properties and the classes of the diagram.
+/// Upstream builds them in `CSSStyleSheet`s and reads back the browser's
+/// serialization (`createCssStyles`).
+fn user_styles(
+  config : @config.Config,
+  classes : Array[StyleClass],
+) -> String raise MermaidError {
   let rules = []
   let declaration = (value : String) => value.trim(chars=" \t\n;").to_owned()
   if config.text("fontFamily") is Some(family) {
@@ -52,8 +56,16 @@ fn user_styles(config : @config.Config, classes : Array[StyleClass]) -> String {
       rules.push(".\{style_class.id} tspan { \{important(styles)} }")
     }
   }
+  // `themeCSS` goes through `replaceSync`, which drops what the browser
+  // does not take and writes the rest in its own way.
   let theme_css = match config.text("themeCSS") {
-    Some(css) => css + "\n"
+    Some(css) => {
+      let rules = @css.serialize_style_sheet(css) catch {
+        CssUnsupported(what) =>
+          raise Unsupported("themeCSS: \{what} is not ported")
+      }
+      rules.join("\n") + "\n"
+    }
     None => ""
   }
   theme_css + rules.join("\n")
@@ -67,7 +79,7 @@ fn diagram_stylesheet(
   diagram_styles : String,
   config : @config.Config,
   classes : Array[StyleClass],
-) -> String {
+) -> String raise MermaidError {
   let theme = config.theme()
   let v = (name : String) => theme.text(name)
   let stroke_width = match theme.get("strokeWidth") {
@@ -220,7 +232,7 @@ fn compiled_styles(
   diagram_styles : String,
   config : @config.Config,
   classes : Array[StyleClass],
-) -> String {
+) -> String raise MermaidError {
   let svg_id = "#" + id
   @css.compile(
     svg_id,
