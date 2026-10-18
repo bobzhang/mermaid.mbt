@@ -348,6 +348,11 @@ pub fn Lexer::string(self : Lexer) -> String? {
     if unit == '\\' {
       guard cursor + 1 < self.input.length() else { return None }
       let escaped = self.unit(cursor + 1)
+      // The escape is `\\.` and `.` matches no line terminator, so a
+      // backslash before one ends the match: the string does not lex.
+      if escaped is ('\n' | '\r' | '\u{2028}' | '\u{2029}') {
+        return None
+      }
       out.write_char(
         match escaped {
           'b' => '\b'

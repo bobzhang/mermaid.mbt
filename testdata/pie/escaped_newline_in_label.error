@@ -1,0 +1,2 @@
+Parsing failed: Lexer error on line 2, column 1: unexpected character: ->"<- at offset: 4, skipped 3 characters.
+Lexer error on line 3, column 1: unexpected character: ->B<- at offset: 8, skipped 2 characters. Parse error on line 3, column 3: Expecting token of type 'EOF' but found `:`.
