@@ -778,8 +778,9 @@ fn FlowDb::add_sub_graph(
     Some(_) => Some(id_text.trim().to_owned())
     None => None
   }
-  // `subgraph some title` without an id: the text is only a title.
-  if same_text && title_text.iter().any(c => c is (' ' | '\t' | '\n' | '\r')) {
+  // `subgraph some title` without an id: the text is only a title
+  // (`/\s/`, JavaScript's white space).
+  if same_text && title_text.iter().any(@diagram.is_js_space) {
     sub_graph_id = None
   }
   // Flatten one level, drop directions and blanks, keep first occurrences.
