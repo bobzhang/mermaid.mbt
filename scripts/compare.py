@@ -9,6 +9,11 @@ any difference is reported with its first diverging position.
 A fixture the oracle itself rejects stores `<name>.error` instead, and the
 port is expected to fail on it too.
 
+A fixture may have `<name>.site.json` beside it: the site configuration,
+passed to `mermaid.initialize` (and to the port as `--config`), for what
+frontmatter cannot set (secure keys such as `maxTextSize`) or sets
+differently (site theme variables).
+
 A directory may hold `oracle-prelude.js`: JavaScript evaluated in the oracle
 page before its fixtures are rendered. That is how output upstream leaves to
 `Math.random()` (the ids of git graph commits) is made reproducible.
@@ -21,6 +26,7 @@ Usage:
 """
 
 import argparse
+import json
 import pathlib
 import subprocess
 import sys
@@ -32,6 +38,13 @@ ROOT = oracle.ROOT
 SVG_ID = "mermaid-svg"
 BATCH = 40
 PRELUDE = "oracle-prelude.js"
+SITE = ".site.json"
+
+
+def site_config(path):
+    """The fixture's site configuration file, if it has one."""
+    site = path.with_suffix(SITE)
+    return site if site.exists() else None
 
 
 def collect(paths):
@@ -56,20 +69,24 @@ def refresh(inputs, force):
     for path in inputs:
         references = [path.with_suffix(".svg"), path.with_suffix(".error")]
         newest = max((r.stat().st_mtime for r in references if r.exists()), default=0)
-        if force or newest < path.stat().st_mtime:
+        site = site_config(path)
+        changed = max(path.stat().st_mtime, site.stat().st_mtime if site else 0)
+        if force or newest < changed:
             stale.append(path)
     # Fixtures of a directory holding PRELUDE are rendered after that
-    # JavaScript has run in the page.
+    # JavaScript has run in the page; one with a site configuration in a
+    # page initialized with it.
     groups = {}
     for path in stale:
         prelude = path.parent / PRELUDE
-        groups.setdefault(prelude if prelude.exists() else None, []).append(path)
-    for prelude, paths in groups.items():
+        groups.setdefault((prelude if prelude.exists() else None, site_config(path)), []).append(path)
+    for (prelude, site), paths in groups.items():
         expression = prelude.read_text() if prelude else None
+        config = json.loads(site.read_text()) if site else {}
         for start in range(0, len(paths), BATCH):
             batch = paths[start:start + BATCH]
             jobs = [{"id": SVG_ID, "text": path.read_text(newline="")} for path in batch]
-            results = oracle.run(jobs, {}, expression)
+            results = oracle.run(jobs, config, expression)
             if expression is not None:
                 results = results[1:]
             for path, result in zip(batch, results):
@@ -99,7 +116,9 @@ def build():
 def render(binary, path):
     # Bytes, not text mode: universal newlines would hide a CR the port
     # writes differently.
-    done = subprocess.run([str(binary), "render", str(path), "--id", SVG_ID], capture_output=True)
+    site = site_config(path)
+    options = ["--config", str(site)] if site else []
+    done = subprocess.run([str(binary), "render", str(path), "--id", SVG_ID, *options], capture_output=True)
     stdout = done.stdout.decode()
     if done.returncode != 0:
         return None, stdout.strip()

@@ -29,6 +29,10 @@ fn layout_failure(error : @rendering.LayoutError) -> MermaidError {
 const MAX_TEXT_LENGTH : Double = 50000.0
 
 ///|
+/// What is drawn instead of a diagram longer than that.
+const MAX_TEXT_LENGTH_EXCEEDED : String = "graph TB;a[Maximum text size in diagram exceeded];style a fill:#faa"
+
+///|
 /// What a diagram contributes to the rendering pipeline once parsed.
 priv struct Parsed {
   styles : String
@@ -869,9 +873,25 @@ pub fn render(
     @config.InvalidColor(color) =>
       raise Config("Unsupported color format: \"\{color}\"")
   }
+  // A sandboxed diagram is serialized into an `<iframe>` holding an HTML
+  // document in a base64 `data:` URL, which is not ported.
+  if config.text("securityLevel") is Some("sandbox") {
+    raise Unsupported("securityLevel sandbox")
+  }
+  // Text longer than `maxTextSize` is replaced by a flowchart saying so,
+  // drawn with the configuration of the diagram it replaces.
   let max_length = config.number("maxTextSize").unwrap_or(MAX_TEXT_LENGTH)
-  if processed.code.length().to_double() > max_length {
-    raise Syntax("Maximum text size in diagram exceeded")
+  let (code, with_comments, diagram_type) = if processed.code
+    .length()
+    .to_double() >
+    max_length {
+    let code = MAX_TEXT_LENGTH_EXCEEDED
+    let diagram_type = @preprocess.detect_type(code) catch {
+      @preprocess.UnknownDiagramError(message) => raise UnknownDiagram(message)
+    }
+    (code, code, diagram_type)
+  } else {
+    (processed.code, processed.with_comments, diagram_type)
   }
   let svg = @dom.Element::new("svg")
     .attr("id", id)
@@ -882,10 +902,10 @@ pub fn render(
   // comments (`preserveCommentsWhenParsing`), as long as that is not too
   // long.
   let source = if diagram_type is ("eventmodeling" | "agentflow") &&
-    processed.with_comments.length().to_double() <= max_length {
-    processed.with_comments
+    with_comments.length().to_double() <= max_length {
+    with_comments
   } else {
-    processed.code
+    code
   }
   // Entity codes are shielded from the grammars, as in Diagram.fromText.
   let parsed = parse_diagram(
