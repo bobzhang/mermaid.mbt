@@ -123,3 +123,36 @@ test "back references" {
   // A group that took no part in the match matches nothing.
   inspect(prefix("(?:(a)|b)\\1c", "bc"), content="[bc]")
 }
+
+///|
+test "repetitions of alternatives backtrack into their iterations" {
+  // Results of the same patterns in JavaScript.
+  inspect(prefix("(?:ab|a)+c", "ababac"), content="[ababac]")
+  inspect(prefix("(?:ab|a)+?b", "abab"), content="[abab]")
+  inspect(prefix("(?:a|ab)*b", "aab"), content="[aab]")
+  inspect(prefix("(?:a|ab){2}c", "aabc"), content="[aabc]")
+  inspect(prefix("(?:a|b)+?$", "abab"), content="[abab]")
+  inspect(prefix("(?:x(?!y)|y)+", "xyxxz"), content="no match")
+  inspect(prefix("(?:a|)*b", "aab"), content="[aab]")
+  inspect(prefix("(?:a|){3,}b", "ab"), content="[ab]")
+  inspect(prefix("(?:aa|a){2,3}?a$", "aaaaa"), content="[aaaaa]")
+  inspect(prefix("(?:.|\\n(?!\\n))+?\\n\\n", "a\nb\n\nc"), content="[a\nb\n\n]")
+  inspect(prefix("(?:(?!b).)+", "aab"), content="[aa]")
+  inspect(prefix("(a|ab)+c", "abac"), content="[abac]")
+}
+
+///|
+test "repetitions of more than one code unit take long subjects" {
+  // One call deeper per iteration overflowed the stack of wasm-gc and
+  // JavaScript after about a thousand.
+  let long = "a".repeat(100000)
+  inspect(
+    prefix("(?:.|\\n(?!x))+?$", long).length(),
+    content=(long.length() + 2).to_string(),
+  )
+  inspect(prefix("(?:a\\n?)*b", long), content="no match")
+  inspect(
+    prefix("(?:\\n(?!x)[^\\n]+)*", "\na".repeat(20000)).length(),
+    content="40002",
+  )
+}

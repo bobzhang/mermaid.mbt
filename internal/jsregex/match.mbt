@@ -257,6 +257,8 @@ fn Run::step(self : Run, node : Node, at : Int32, k : (Int32) -> Bool) -> Bool {
     Repeat(inner, min~, max~, greedy~) =>
       if is_single(inner) {
         self.repeat_single(inner, min, max, greedy, at, k)
+      } else if !has_capture(inner) {
+        self.repeat_stack(inner, min, max, greedy, at, k)
       } else {
         self.repeat(inner, min, max, greedy, 0, at, k)
       }
@@ -311,6 +313,87 @@ fn Run::repeat_single(
   } else {
     for end = at + min; end <= reach; end = end + 1 {
       if k(end) {
+        return true
+      }
+    }
+  }
+  false
+}
+
+///|
+/// Whether a match of `node` can leave captures behind: a capture group
+/// in it, except in a negative lookahead, which keeps none.
+fn has_capture(node : Node) -> Bool {
+  match node {
+    Group(_, capture=Some(_)) => true
+    Look(_, negated=true) => false
+    Group(inner, ..) | Repeat(inner, ..) | Look(inner, ..) => has_capture(inner)
+    Seq(items) | Alt(items) => items.iter().any(has_capture)
+    _ => false
+  }
+}
+
+///|
+/// A repetition's place in `repeat_stack`: the iterations so far, where
+/// they ended, and where the next one can end, in the order backtracking
+/// tries them.
+priv struct RepeatFrame {
+  count : Int32
+  at : Int32
+  ends : Array[Int32]
+  mut next : Int32
+}
+
+///|
+/// `repeat` for something that leaves no captures, with the iterations on
+/// an explicit stack rather than one call deeper each, which long subjects
+/// cannot afford. The search is the same: each iteration's ends in order,
+/// the deeper iterations before the continuation when greedy, after it
+/// when lazy. Without captures an iteration is done once its ends are
+/// known, and the continuation depends on the position only.
+fn Run::repeat_stack(
+  self : Run,
+  inner : Node,
+  min : Int32,
+  max : Int32?,
+  greedy : Bool,
+  at : Int32,
+  k : (Int32) -> Bool,
+) -> Bool {
+  let frames : Array[RepeatFrame] = []
+  // Start the iteration after `count` at `at`; whether a lazy
+  // continuation succeeded there.
+  let enter = (count : Int32, at : Int32) => {
+    if !greedy && count >= min && k(at) {
+      return true
+    }
+    let ends = []
+    if !(max is Some(max) && count >= max) {
+      let _ = self.step(inner, at, end => {
+        // An iteration that matches nothing past the minimum ends the
+        // loop.
+        if !(end == at && count >= min) {
+          ends.push(end)
+        }
+        false
+      })
+    }
+    frames.push({ count, at, ends, next: 0, })
+    false
+  }
+  if enter(0, at) {
+    return true
+  }
+  while frames.last() is Some(top) {
+    if top.next < top.ends.length() {
+      let end = top.ends[top.next]
+      top.next += 1
+      if enter(top.count + 1, end) {
+        return true
+      }
+    } else {
+      frames.unsafe_pop() |> ignore
+      if greedy && top.count >= min && k(top.at) {
         return true
       }
     }
