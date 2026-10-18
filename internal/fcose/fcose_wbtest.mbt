@@ -41,3 +41,10 @@ test "a relative placement holds after the layout" {
   assert_true(b.x - a.x >= 120.0)
   assert_eq(a.y, b.y)
 }
+
+///|
+test "the singular values of a small matrix" {
+  let decomposition = svd([[3.0, 0.0], [0.0, 4.0]])
+  assert_eq(decomposition.s[0], 4.0)
+  assert_eq(decomposition.s[1], 3.0)
+}

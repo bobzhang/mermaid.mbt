@@ -129,6 +129,9 @@ priv struct Layout {
   min_repulsion_dist : Double
   ideal_edge_length : Double
   random : Random
+  /// `TRANSFORM_ON_CONSTRAINT_HANDLING`: a randomized layout is first
+  /// turned and reflected to suit the constraints.
+  transform : Bool
   mut nodes_with_gravity : Array[Int32]
   mut cooling_factor : Double
   mut max_iterations : Int32
@@ -170,6 +173,8 @@ pub fn layout(
   constraints : Constraints,
   options : Options,
   tracer? : Tracer,
+  random? : SeededRandom,
+  transform~ : Bool = false,
 ) -> Array[Placed] raise FcoseError {
   let manager = Manager::new()
   // The parent of the root graph, which has no padding.
@@ -262,7 +267,11 @@ pub fn layout(
     } else {
       default_edge_length
     },
-    random: { state: options.seed, },
+    random: match random {
+      Some(shared) => shared.random
+      None => { state: options.seed, }
+    },
+    transform,
     nodes_with_gravity: [],
     cooling_factor: initial_cooling_factor,
     max_iterations: options.num_iter,

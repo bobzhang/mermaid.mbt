@@ -303,6 +303,9 @@ fn Layout::handle_constraints(self : Layout) -> Unit {
     sum / set.length().to_double()
   }
   let { vertical, horizontal, relative, } = self.constraints
+  if self.transform {
+    self.transform_onto_constraints(node_indexes, x_coords, y_coords, mean)
+  }
   if vertical is Some(lists) {
     for list in lists {
       let x = mean(x_coords, list)
@@ -657,6 +660,102 @@ fn Layout::update_displacements(self : Layout) -> Unit {
           node(id).displacement_y = displacement
         }
       None => node(id).displacement_y = displacement
+    }
+  }
+}
+
+///|
+/// The transformation of `handleConstraints`: with alignments, the drawing
+/// is turned (an orthogonal Procrustes fit, by SVD) towards where the
+/// alignments want the nodes, then reflected if most relative placements
+/// are the wrong way round.
+fn Layout::transform_onto_constraints(
+  self : Layout,
+  node_indexes : Map[String, Int32],
+  x_coords : Array[Double],
+  y_coords : Array[Double],
+  mean : (Array[Double], Array[String]) -> Double,
+) -> Unit {
+  let { vertical, horizontal, relative, } = self.constraints
+  let coordinate = (coords : Array[Double], id : String) => {
+    match node_indexes.get(id) {
+      Some(index) => coords[index]
+      None => @double.not_a_number
+    }
+  }
+  let target : Array[Array[Double]] = []
+  let source : Array[Array[Double]] = []
+  let mut standard = false
+  if vertical is Some(lists) {
+    for list in lists {
+      let x = mean(x_coords, list)
+      for id in list {
+        target.push([x, coordinate(y_coords, id)])
+        source.push([coordinate(x_coords, id), coordinate(y_coords, id)])
+      }
+    }
+    standard = true
+  }
+  if horizontal is Some(lists) {
+    for list in lists {
+      let y = mean(y_coords, list)
+      for id in list {
+        target.push([coordinate(x_coords, id), y])
+        source.push([coordinate(x_coords, id), coordinate(y_coords, id)])
+      }
+    }
+    standard = true
+  }
+  guard standard else { return }
+  let target_t = transpose(target)
+  let source_t = transpose(source)
+  for i in 0..<target_t.length() {
+    target_t[i] = mult_gamma(target_t[i])
+    source_t[i] = mult_gamma(source_t[i])
+  }
+  let temp = mult_mat(target_t, transpose(source_t))
+  let decomposition = svd(temp)
+  let matrix = mult_mat(decomposition.v, transpose(decomposition.u))
+  for i in 0..<node_indexes.length() {
+    let point = [x_coords[i], y_coords[i]]
+    x_coords[i] = dot_product(point, [matrix[0][0], matrix[1][0]])
+    y_coords[i] = dot_product(point, [matrix[0][1], matrix[1][1]])
+  }
+  // `applyReflectionForRelativePlacement`
+  guard relative is Some(constraints) else { return }
+  let mut reflect_on_y = 0
+  let mut not_reflect_on_y = 0
+  let mut reflect_on_x = 0
+  let mut not_reflect_on_x = 0
+  for constraint in constraints {
+    match constraint {
+      Horizontal(left~, right~, ..) =>
+        if coordinate(x_coords, left) - coordinate(x_coords, right) >= 0.0 {
+          reflect_on_y += 1
+        } else {
+          not_reflect_on_y += 1
+        }
+      Vertical(top~, bottom~, ..) =>
+        if coordinate(y_coords, top) - coordinate(y_coords, bottom) >= 0.0 {
+          reflect_on_x += 1
+        } else {
+          not_reflect_on_x += 1
+        }
+    }
+  }
+  let size = node_indexes.length()
+  if reflect_on_y > not_reflect_on_y && reflect_on_x > not_reflect_on_x {
+    for i in 0..<size {
+      x_coords[i] = -1.0 * x_coords[i]
+      y_coords[i] = -1.0 * y_coords[i]
+    }
+  } else if reflect_on_y > not_reflect_on_y {
+    for i in 0..<size {
+      x_coords[i] = -1.0 * x_coords[i]
+    }
+  } else if reflect_on_x > not_reflect_on_x {
+    for i in 0..<size {
+      y_coords[i] = -1.0 * y_coords[i]
     }
   }
 }

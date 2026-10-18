@@ -1,0 +1,9 @@
+---
+config:
+  architecture:
+    randomize: true
+---
+architecture-beta
+    service a(server)[A]
+    service b(disk)[B]
+    a:R -- L:b

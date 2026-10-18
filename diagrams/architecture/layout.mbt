@@ -14,6 +14,7 @@ priv struct LayoutConfig {
   num_iter : Int32
   seed : Double
   randomize : Bool
+  node_separation : Double
 }
 
 ///|
@@ -291,12 +292,25 @@ fn run_fcose(
     }
   }
   let fcose_tracer = tracer.map(t => t.fcose)
+  let random = @fcose.SeededRandom::new(to_uint32(config.seed))
+  let nodes = if config.randomize {
+    let spectral = @fcose.spectral_layout(
+      spectral_graph(cy),
+      random,
+      config.node_separation,
+    )
+    spectral_nodes(cy, roots, spectral)
+  } else {
+    fcose_nodes(cy, roots)
+  }
   let placed = @fcose.layout(
-    fcose_nodes(cy, roots),
+    nodes,
     edges,
     constraints,
     { num_iter: config.num_iter, seed: to_uint32(config.seed), },
     tracer?=fcose_tracer,
+    random~,
+    transform=config.randomize,
   ) catch {
     @fcose.Unsupported(message) => raise Unsupported(message)
     @fcose.InvalidArrayLength => raise Invalid(layout_failure)
@@ -416,14 +430,11 @@ fn layout(
   config : LayoutConfig,
   tracer? : RunTracer,
 ) -> Cy raise ArchitectureError {
-  if config.randomize {
-    raise Unsupported("architecture.randomize: the spectral layout")
-  }
   let cy = build_cy(db, config)
   let { spatial_maps, group_alignments, } = db.data_structures()
   let (horizontal, vertical) = alignments(db, spatial_maps, group_alignments)
   let relative = relative_constraints(db, spatial_maps, config)
-  if config.seed == 0.0 && !relative.is_empty() {
+  if config.seed == 0.0 && (config.randomize || !relative.is_empty()) {
     raise Unsupported("architecture.seed 0: Math.random")
   }
   // fcose forgets empty lists of constraints.
@@ -500,6 +511,7 @@ fn layout_config(config : @config.Config) -> LayoutConfig {
     num_iter: number("numIter", 2500.0).to_int(),
     seed: number("seed", 1.0),
     randomize: config.flag("architecture.randomize"),
+    node_separation: number("nodeSeparation", 75.0),
   }
 }
 
@@ -586,4 +598,118 @@ pub fn layout_report(
     report["runs"] = Json::array(runs.map(Json::object))
   }
   Json::object(report)
+}
+
+///|
+/// The cytoscape graph as the spectral layout reads it.
+fn spectral_graph(cy : Cy) -> @fcose.SpectralGraph {
+  let edges = cy.edges.map(edge => (edge.source, edge.target))
+  {
+    nodes: cy.nodes.map(node => {
+      let index = cy.by_id[node.id]
+      let connected = []
+      for i, edge in edges {
+        if edge.0 == index || edge.1 == index {
+          connected.push(i)
+        }
+      }
+      {
+        id: node.id,
+        parent: node.parent.map(parent => cy.by_id[parent]),
+        children: node.children,
+        x: node.x,
+        y: node.y,
+        width: cy.width(node),
+        height: cy.height(node),
+        outer_width: cy.outer_width(node),
+        edges: connected,
+      }
+    }),
+    edges,
+  }
+}
+
+///|
+/// The nodes as fcose builds them from a spectral layout: the leaves
+/// around their spectral positions, compound nodes around their leaves
+/// (`calcBoundingBox`, by their inner sizes).
+fn spectral_nodes(
+  cy : Cy,
+  indexes : Array[Int32],
+  spectral : @fcose.SpectralResult,
+) -> Array[@fcose.Node] {
+  let leaves_of = (index : Int32) => {
+    let out = []
+    fn add(children : Array[Int32]) -> Unit {
+      for child in children {
+        if !cy.is_parent(cy.nodes[child]) {
+          out.push(child)
+        }
+        add(cy.nodes[child].children)
+      }
+    }
+
+    add(cy.nodes[index].children)
+    out
+  }
+  let coordinate = (coords : Array[Double], id : String) => {
+    match spectral.indexes.get(id) {
+      Some(i) => coords[i]
+      None => @double.not_a_number
+    }
+  }
+  indexes.map(index => {
+    let node = cy.nodes[index]
+    let mut w = cy.outer_width(node)
+    let mut h = cy.outer_height(node)
+    if w == 0.0 || h == 0.0 {
+      w = 1.0
+      h = 1.0
+    }
+    let (x, y, width, height) = if cy.is_parent(node) {
+      let mut left = 9007199254740991.0
+      let mut right = -9007199254740991.0
+      let mut top = 9007199254740991.0
+      let mut bottom = -9007199254740991.0
+      for leaf in leaves_of(index) {
+        let n = cy.nodes[leaf]
+        let x = coordinate(spectral.x, n.id)
+        let y = coordinate(spectral.y, n.id)
+        let node_left = x - cy.width(n) / 2.0
+        let node_right = x + cy.width(n) / 2.0
+        let node_top = y - cy.height(n) / 2.0
+        let node_bottom = y + cy.height(n) / 2.0
+        if left > node_left {
+          left = node_left
+        }
+        if right < node_right {
+          right = node_right
+        }
+        if top > node_top {
+          top = node_top
+        }
+        if bottom < node_bottom {
+          bottom = node_bottom
+        }
+      }
+      (left, top, right - left, bottom - top)
+    } else {
+      (
+        coordinate(spectral.x, node.id) - w / 2.0,
+        coordinate(spectral.y, node.id) - h / 2.0,
+        w,
+        h,
+      )
+    }
+    @fcose.Node::{
+      id: node.id,
+      x,
+      y,
+      width,
+      height,
+      padding: cy.node_padding(node).to_int().to_double(),
+      repulsion: 4500.0,
+      children: spectral_nodes(cy, node.children, spectral),
+    }
+  })
 }
