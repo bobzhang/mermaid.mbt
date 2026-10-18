@@ -26,6 +26,8 @@ pub fn sanitized_text(String) -> String
 
 pub fn serialize_declarations(String) -> String
 
+pub fn settle_references(String) -> String
+
 // Errors
 pub(all) suberror SanitizeError {
   Unmodelled(String)
@@ -54,7 +56,7 @@ pub fn Element::new(String) -> Self
 pub fn Element::parent(Self) -> Self?
 pub fn Element::remove(Self) -> Unit
 pub fn Element::remove_attr(Self, String) -> Self
-pub fn Element::set_inner_html(Self, String) -> Unit
+pub fn Element::set_inner_html(Self, String, context? : String) -> Unit
 pub fn Element::set_text_box(Self, Rect) -> Unit
 pub fn Element::style(Self, String, String) -> Self
 pub fn Element::take_first_text(Self) -> String?

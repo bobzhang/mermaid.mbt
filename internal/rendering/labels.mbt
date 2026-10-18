@@ -55,7 +55,9 @@ fn create_html_label(
   fo.attr("width", initial).attr("height", initial) |> ignore
   let div = fo.append("div")
   let span = div.append("span")
-  span.set_inner_html(html)
+  // `addHtmlSpan` runs the label through DOMPurify before `span.html()`,
+  // and that parse, into a document's body, decides its references.
+  span.set_inner_html(html, context="body")
   let label_style = style.replace(old="fill:", new="color:")
   // The style is written on the label, so its text is laid out with it.
   let env = env.styled(label_style)

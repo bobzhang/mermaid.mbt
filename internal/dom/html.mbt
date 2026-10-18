@@ -3,8 +3,14 @@
 /// `&amp;`, `&#38;`, `&#x26;`, also without their semicolon where the
 /// parser allows it. `in_attribute` tells whether the text is an attribute
 /// value, where a legacy name followed by a letter, digit or `=` is no
-/// reference. An ampersand that starts none is text.
-fn resolve_references(text : String, in_attribute~ : Bool = false) -> String {
+/// reference. An ampersand that starts none is text. `fast_path` reads
+/// them as Chrome's fast-path parser does (see `FastPath`): attribute
+/// values as text, and `&#x;` as U+FFFD.
+fn resolve_references(
+  text : String,
+  in_attribute~ : Bool = false,
+  fast_path~ : Bool = false,
+) -> String {
   if !text.contains("&") {
     return text
   }
@@ -26,7 +32,12 @@ fn resolve_references(text : String, in_attribute~ : Bool = false) -> String {
           length += 1
         }
         if length == 0 {
-          out.write_char('&')
+          if fast_path && radix == 16 && digits is [';', .. tail] {
+            out.write_char('\u{fffd}')
+            rest = tail
+          } else {
+            out.write_char('&')
+          }
           continue
         }
         out.write_string(
@@ -48,6 +59,7 @@ fn resolve_references(text : String, in_attribute~ : Bool = false) -> String {
             continue
           }
           if in_attribute &&
+            !fast_path &&
             after[length - 1] != ';' &&
             after[length:] is ['a'..<='z' | 'A'..<='Z' | '0'..<='9' | '=', ..] {
             break
@@ -73,7 +85,16 @@ fn resolve_references(text : String, in_attribute~ : Bool = false) -> String {
 /// `innerHTML`. This covers what labels contain: nested tags with quoted
 /// attributes, void elements such as `<br>`, text and character
 /// references. Anything malformed is kept as text.
-pub fn Element::set_inner_html(self : Element, html : String) -> Unit {
+///
+/// Character references are resolved as Chrome resolves them for markup
+/// parsed into an element named `context`, by default this one: with
+/// its fast-path parser where that takes the markup.
+pub fn Element::set_inner_html(
+  self : Element,
+  html : String,
+  context? : String,
+) -> Unit {
+  let fast_path = fast_path_parses(html, context.unwrap_or(self.tag))
   self.children.clear()
   let n = html.length()
   let stack = [self]
@@ -81,7 +102,7 @@ pub fn Element::set_inner_html(self : Element, html : String) -> Unit {
   let flush = () => {
     if !text.is_empty() {
       stack[stack.length() - 1].children.push(
-        Text(resolve_references(text.to_string())),
+        Text(resolve_references(text.to_string(), fast_path~)),
       )
       text.reset()
     }
@@ -182,7 +203,11 @@ pub fn Element::set_inner_html(self : Element, html : String) -> Unit {
         }
       }
       if name != "" && element.get_attr(name) is None {
-        element.attr(name, resolve_references(value)) |> ignore
+        element.attr(
+          name,
+          resolve_references(value, in_attribute=true, fast_path~),
+        )
+        |> ignore
       }
     }
     let parent = stack[stack.length() - 1]

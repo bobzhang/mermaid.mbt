@@ -139,10 +139,12 @@ pub fn FlowDb::default_style(self : FlowDb) -> Array[String]? {
 
 ///|
 /// mermaid's `sanitizeText` for text without markup. Text carrying HTML is
-/// passed through for now; upstream runs it through DOMPurify.
+/// passed through for now; upstream runs it through DOMPurify. What that
+/// parse decides about character references is kept, as later parses of
+/// the label would decide differently.
 pub fn FlowDb::sanitize_text(self : FlowDb, text : String) -> String {
   ignore(self)
-  text
+  @dom.settle_references(text)
 }
 
 ///|
