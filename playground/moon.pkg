@@ -1,0 +1,12 @@
+import {
+  "bobzhang/mermaid" @lib,
+  "moonbitlang/core/json",
+}
+
+supported_targets = "js"
+
+warnings = "-implicit_impl_as_method"
+
+options(
+  link: { "js": { "exports": [ "render_svg" ], "format": "esm" } },
+)

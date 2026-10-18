@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>mermaid.mbt playground</title>
+  <meta name="description" content="Mermaid diagrams rendered by mermaid.mbt, a MoonBit port of mermaid 12.2, compiled to JavaScript.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>mermaid.mbt <span>playground</span></h1>
+    <p class="tagline">Every diagram type of mermaid 12.2, ported to <a href="https://www.moonbitlang.com">MoonBit</a> and compiled to JavaScript. Nothing leaves your browser.</p>
+    <nav>
+      <a href="https://github.com/bobzhang/mermaid.mbt">GitHub</a>
+      <a href="https://mooncakes.io/docs/bobzhang/mermaid">mooncakes.io</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="pane input">
+      <div class="toolbar">
+        <label>Example
+          <select id="example"></select>
+        </label>
+        <label>Theme
+          <select id="theme">
+            <option value="">diagram default</option>
+            <option>default</option>
+            <option>neutral</option>
+            <option>dark</option>
+            <option>forest</option>
+            <option>base</option>
+            <option>neo</option>
+            <option>neo-dark</option>
+            <option>redux</option>
+            <option>redux-dark</option>
+            <option>redux-color</option>
+            <option>redux-dark-color</option>
+          </select>
+        </label>
+        <label>Look
+          <select id="look">
+            <option value="">diagram default</option>
+            <option>classic</option>
+            <option>neo</option>
+            <option value="handDrawn">hand-drawn</option>
+          </select>
+        </label>
+      </div>
+      <textarea id="code" spellcheck="false" aria-label="Diagram text"></textarea>
+      <details>
+        <summary>Site configuration (JSON, as passed to <code>mermaid.initialize</code>)</summary>
+        <textarea id="config" spellcheck="false" aria-label="Configuration JSON" placeholder='{"fontFamily": "arial"}'></textarea>
+      </details>
+      <div class="toolbar bottom">
+        <button id="share" type="button">Copy link</button>
+        <button id="download" type="button">Download SVG</button>
+        <button id="copysvg" type="button">Copy SVG</button>
+        <label class="check"><input type="checkbox" id="compare"> Compare with mermaid.js 12.2.0</label>
+      </div>
+    </section>
+
+    <section class="pane output">
+      <div class="status"><span id="status">Loading…</span><span id="identical"></span></div>
+      <div class="renders">
+        <figure>
+          <figcaption>mermaid.mbt</figcaption>
+          <div id="port" class="svg"></div>
+        </figure>
+        <figure id="upstream-figure" hidden>
+          <figcaption>mermaid.js 12.2.0 (from jsDelivr)</figcaption>
+          <div id="upstream" class="svg"></div>
+        </figure>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    The port writes byte for byte what mermaid 12.2 writes in headless Chrome on macOS, whose fonts it measures text with. mermaid.js itself writes something else in other browsers, on other systems and on high-DPI screens, so the comparison can show differences that come from this browser, not from the port.
+  </footer>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

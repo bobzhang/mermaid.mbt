@@ -1,0 +1,70 @@
+name: playground
+
+# Builds the playground (playground/) and publishes it with GitHub Pages.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: install moon
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> $GITHUB_PATH
+
+      - name: moon version
+        run: |
+          moon version --all
+          moon update
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: install esbuild
+        run: npm install --global esbuild@0.24
+
+      - name: build
+        run: playground/build.sh _site
+
+      - name: smoke test
+        run: |
+          cat > smoke.mjs <<'EOF'
+          import { render_svg } from './_site/mermaid-port.js';
+          const result = JSON.parse(render_svg('flowchart LR\n  A --> B', '', 'smoke'));
+          if (!result.svg || !result.svg.startsWith('<svg id="smoke"')) {
+            console.error(result);
+            process.exit(1);
+          }
+          console.log('rendered', result.svg.length, 'bytes');
+          EOF
+          node smoke.mjs
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
