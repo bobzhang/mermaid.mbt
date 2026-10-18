@@ -7,7 +7,7 @@ import {
 }
 
 // Values
-pub fn render(String, id? : String, config? : Json, now? : Double, page? : @diagram.Page) -> String raise MermaidError
+pub fn render(String, id? : String, config? : Json, now? : Double, page? : @diagram.Page, image_loader? : (String) -> Bytes?) -> String raise MermaidError
 
 // Errors
 pub(all) suberror MermaidError {
@@ -15,6 +15,7 @@ pub(all) suberror MermaidError {
   Syntax(String)
   Config(String)
   Unsupported(String)
+  Render(String)
 } derive(Eq, @debug.Debug)
 
 // Types and methods

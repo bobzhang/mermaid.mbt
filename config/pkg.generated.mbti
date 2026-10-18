@@ -7,7 +7,7 @@ import {
 }
 
 // Values
-pub fn assign_with_depth(Json, Json, depth? : Int) -> Json
+pub fn assign_with_depth(Json, Json, depth? : Int32) -> Json
 
 pub fn diagram_config_key(String) -> String
 

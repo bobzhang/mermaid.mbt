@@ -112,6 +112,7 @@ fn swimlane_clipped_points(
 fn render_swimlane(
   data : LayoutData,
   svg : @dom.Element,
+  image_loader : ((String) -> Bytes?)?,
 ) -> Unit raise LayoutError {
   for node in data.nodes {
     node.dom_id = "\{data.diagram_id}-\{node.dom_id}"
@@ -130,6 +131,7 @@ fn render_swimlane(
   let env = {
     ..Env::new(data.config, data.diagram_id),
     node_text_centred: node_text_centred(data.diagram_type),
+    image_loader,
   }
   // The layout's view of the diagram.
   let rendering_edges : Map[String, Edge] = Map([])

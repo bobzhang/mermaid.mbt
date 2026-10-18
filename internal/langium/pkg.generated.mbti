@@ -15,7 +15,7 @@ pub fn tokenize(String, Array[TokenType]) -> Array[Token] raise ParseError
 
 // Errors
 pub(all) suberror ParseError {
-  ParseError(message~ : String, offset~ : Int)
+  ParseError(message~ : String, offset~ : Int32)
 } derive(Eq, @debug.Debug)
 
 // Types and methods
@@ -27,12 +27,12 @@ pub fn Lexer::acc_title(Self) -> String?
 pub fn Lexer::at_end(Self) -> Bool
 pub fn Lexer::eol(Self) -> Bool
 pub fn[T] Lexer::fail(Self, String) -> T raise ParseError
-pub fn Lexer::int(Self) -> Int?
+pub fn Lexer::int(Self) -> Int32?
 pub fn Lexer::keyword(Self, String) -> Bool
 pub fn Lexer::new(String) -> Self
 pub fn Lexer::newline(Self) -> Bool
 pub fn Lexer::number(Self, signed? : Bool) -> Double?
-pub fn Lexer::offset(Self) -> Int
+pub fn Lexer::offset(Self) -> Int32
 pub fn Lexer::string(Self) -> String?
 pub fn Lexer::symbol(Self, String) -> Bool
 pub fn Lexer::title(Self) -> String?
@@ -40,7 +40,7 @@ pub fn Lexer::title(Self) -> String?
 pub(all) struct Token {
   kind : String
   text : String
-  offset : Int
+  offset : Int32
 } derive(@debug.Debug)
 
 pub(all) enum TokenPattern {
@@ -55,8 +55,8 @@ pub fn TokenStream::accept(Self, String) -> Token?
 pub fn TokenStream::at(Self, String) -> Bool
 pub fn TokenStream::expect(Self, String) -> Token raise ParseError
 pub fn[T] TokenStream::fail(Self, String) -> T raise ParseError
-pub fn TokenStream::new(Array[Token], Int) -> Self
-pub fn TokenStream::peek(Self, ahead? : Int) -> String
+pub fn TokenStream::new(Array[Token], Int32) -> Self
+pub fn TokenStream::peek(Self, ahead? : Int32) -> String
 
 pub(all) struct TokenType {
   name : String

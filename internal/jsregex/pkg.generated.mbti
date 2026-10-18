@@ -14,19 +14,19 @@ pub(all) suberror RegexError {
 
 // Types and methods
 pub struct Match {
-  start : Int
-  end : Int
+  start : Int32
+  end : Int32
   // private fields
 }
-pub fn Match::group(Self, Int) -> String?
+pub fn Match::group(Self, Int32) -> String?
 pub fn Match::text(Self) -> String
 
 pub struct Regex {
   // private fields
 }
 pub fn Regex::compile(String, flags? : String) -> Self raise RegexError
-pub fn Regex::exec(Self, String, from? : Int) -> Match?
-pub fn Regex::match_prefix(Self, String, from? : Int) -> Match?
+pub fn Regex::exec(Self, String, from? : Int32) -> Match?
+pub fn Regex::match_prefix(Self, String, from? : Int32) -> Match?
 pub fn Regex::matches(Self, String) -> Bool
 pub fn Regex::replace(Self, String, (Match) -> String) -> String
 pub fn Regex::replace_all(Self, String, (Match) -> String) -> String

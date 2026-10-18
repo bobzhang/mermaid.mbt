@@ -9,7 +9,19 @@ pub(all) suberror MermaidError {
   Config(String)
   /// The diagram type is recognized but not ported yet.
   Unsupported(String)
+  /// Upstream fails as well while drawing the diagram, with this message:
+  /// an image that cannot be decoded.
+  Render(String)
 } derive(Eq, Debug)
+
+///|
+/// What a failure of the unified renderer is to the caller.
+fn layout_failure(error : @rendering.LayoutError) -> MermaidError {
+  match error {
+    LayoutError(message) => Unsupported(message)
+    UpstreamError(message) => Render(message)
+  }
+}
 
 ///|
 /// Diagrams longer than this are refused unless `maxTextSize` says
@@ -106,7 +118,7 @@ fn parse_diagram(
         .collect(),
         draw: context => {
           @flowchart.draw(db, context, diagram_type~) catch {
-            @rendering.LayoutError(message) => raise Unsupported(message)
+            error => raise layout_failure(error)
           }
         },
       }
@@ -135,7 +147,7 @@ fn parse_diagram(
         .collect(),
         draw: context => {
           @agentflow.draw(db, context) catch {
-            @rendering.LayoutError(message) => raise Unsupported(message)
+            error => raise layout_failure(error)
           }
         },
       }
@@ -165,7 +177,7 @@ fn parse_diagram(
         .collect(),
         draw: context => {
           @flowchart.draw(db, context, diagram_type="swimlane") catch {
-            @rendering.LayoutError(message) => raise Unsupported(message)
+            error => raise layout_failure(error)
           }
         },
       }
@@ -279,7 +291,7 @@ fn parse_diagram(
         classes: [],
         draw: context => {
           @er.draw(db, context) catch {
-            @rendering.LayoutError(message) => raise Unsupported(message)
+            error => raise layout_failure(error)
           }
         },
       }
@@ -300,7 +312,7 @@ fn parse_diagram(
         classes: [],
         draw: context => {
           @requirement.draw(db, context) catch {
-            @rendering.LayoutError(message) => raise Unsupported(message)
+            error => raise layout_failure(error)
           }
         },
       }
@@ -331,7 +343,7 @@ fn parse_diagram(
         .collect(),
         draw: context => {
           @state.draw(db, context) catch {
-            @rendering.LayoutError(message) => raise Unsupported(message)
+            error => raise layout_failure(error)
           }
         },
       }
@@ -519,6 +531,7 @@ fn parse_diagram(
         draw: context => {
           @block.draw(db, context) catch {
             @rendering.LayoutError(message) => raise Unsupported(message)
+            @rendering.UpstreamError(message) => raise Render(message)
             @block.BlockError(message) => raise Syntax(message)
             error => raise Unsupported(error.to_string())
           }
@@ -549,7 +562,7 @@ fn parse_diagram(
         classes: classes.map(c => { id: c.0, styles: c.1, text_styles: [], }),
         draw: context => {
           @classdiagram.draw(db, context) catch {
-            @rendering.LayoutError(message) => raise Unsupported(message)
+            error => raise layout_failure(error)
           }
         },
       }
@@ -780,6 +793,7 @@ fn parse_diagram(
           @kanban.Invalid(message) => Syntax(message)
           @kanban.Unsupported(message) => Unsupported(message)
           @rendering.LayoutError(message) => Unsupported(message)
+          @rendering.UpstreamError(message) => Render(message)
           error => Syntax(error.to_string())
         }
       }
@@ -820,6 +834,14 @@ fn parse_diagram(
 /// - `page` describes the page the diagram is rendered in, which a Gantt
 ///   chart takes its width from. The default is the page the reference
 ///   renderings are made in.
+/// - `image_loader` loads the images of image nodes (`@{ img: ... }`),
+///   whose natural size mermaid takes from the image: it gives the bytes
+///   of the image at a URL, or `None` when it cannot load it. Rendering
+///   does no input or output of its own: without a loader, or when it
+///   gives `None`, an image is drawn only when the node gives its width
+///   and height without a constraint, and the rendering fails with
+///   `Unsupported` otherwise. Images in `data:` URLs need no loader. An
+///   image that is no image fails as upstream does, with `Render`.
 ///
 /// The output is byte for byte what mermaid produces in the reference
 /// browser, for the diagram types and features ported so far. Local times
@@ -830,6 +852,7 @@ pub fn render(
   config~ : Json = Json::object(Map([])),
   now? : Double,
   page~ : @diagram.Page = @diagram.Page::new(),
+  image_loader? : (String) -> Bytes?,
 ) -> String raise MermaidError {
   let processed = @preprocess.preprocess(text) catch {
     @preprocess.UnknownDiagramError(message) => raise UnknownDiagram(message)
@@ -880,7 +903,9 @@ pub fn render(
     Some(now) => now
     None => @env.now().to_double()
   }
-  (parsed.draw)(@diagram.Context::new(id, config, svg, now~, page~))
+  (parsed.draw)(
+    @diagram.Context::new(id, config, svg, now~, page~, image_loader?),
+  )
   // Accessibility: the diagram type, then its title and description.
   svg
   .attr("role", "graphics-document document")

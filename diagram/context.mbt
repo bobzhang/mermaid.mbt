@@ -12,6 +12,9 @@ pub struct Context {
   now : Double
   /// The page the diagram is rendered in.
   page : Page
+  /// What loads images by URL, for the diagrams that need their size
+  /// (see `@mermaid.render`).
+  image_loader : ((String) -> Bytes?)?
 }
 
 ///|
@@ -56,8 +59,9 @@ pub fn Context::new(
   svg : @dom.Element,
   now~ : Double,
   page~ : Page,
+  image_loader? : (String) -> Bytes?,
 ) -> Context {
-  { id, config, svg, now, page, }
+  { id, config, svg, now, page, image_loader, }
 }
 
 ///|
