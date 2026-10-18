@@ -43,7 +43,9 @@ pub struct Edge {
   mut style : Array[String]?
   mut interpolate : String?
   classes : Array[String]
-  mut animate : Bool?
+  /// The `animate` metadata as it was written, any YAML value: upstream
+  /// keeps it as it is and tests it both for truthiness and for `true`.
+  mut animate : Json?
   mut animation : String?
 }
 
@@ -247,13 +249,12 @@ pub fn FlowDb::annotate_edge(
   for edge in self.edges {
     if edge.id == id {
       if doc is Some(doc) {
-        // Upstream assigns every value that is not `undefined`, and its
-        // readers test truthiness, so `null`, `false` and `""` clear an
-        // earlier setting.
-        match doc.get("animate") {
-          Some(True) => edge.animate = Some(true)
-          Some(_) => edge.animate = Some(false)
-          None => ()
+        // Upstream assigns every value that is not `undefined`, so a
+        // later `null`, `false` or `0` clears an earlier setting and a
+        // later `1` replaces `true` by a value that is truthy but not
+        // `true`.
+        if doc.get("animate") is Some(animate) {
+          edge.animate = Some(animate)
         }
         if doc.contains("animation") {
           edge.animation = metadata_string(doc, "animation")
@@ -938,4 +939,22 @@ fn destruct_link(text : String, start? : String) -> Json {
     combined
   }
   { "type": combined, "stroke": start_stroke, "length": length }
+}
+
+///|
+/// `if (edge.animate)`: whether the `animate` metadata is truthy, as
+/// JavaScript tests the value YAML gave.
+pub fn Edge::animate_truthy(self : Edge) -> Bool {
+  match self.animate {
+    None | Some(Null | False) => false
+    Some(Number(n, ..)) => n == n && n != 0.0
+    Some(String(s)) => s != ""
+    Some(True | Array(_) | Object(_)) => true
+  }
+}
+
+///|
+/// `edge.animate === true`.
+pub fn Edge::animate_is_true(self : Edge) -> Bool {
+  self.animate is Some(True)
 }

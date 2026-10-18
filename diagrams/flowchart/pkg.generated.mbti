@@ -70,9 +70,11 @@ pub struct Edge {
   mut style : Array[String]?
   mut interpolate : String?
   classes : Array[String]
-  mut animate : Bool?
+  mut animate : Json?
   mut animation : String?
 }
+pub fn Edge::animate_is_true(Self) -> Bool
+pub fn Edge::animate_truthy(Self) -> Bool
 
 pub struct FlowDb {
   vertices : Map[String, Vertex]

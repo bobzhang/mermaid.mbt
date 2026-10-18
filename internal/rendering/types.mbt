@@ -157,7 +157,11 @@ pub struct Edge {
   css_compiled_styles : Array[String]
   style : Array[String]
   look : String
+  /// `edge.animate` is truthy: the edge has the fast animation's class.
   animate : Bool
+  /// `edge.animate === true`: the edge counts as animated, which keeps the
+  /// neo look's dashes and marker margins off it.
+  animate_is_true : Bool
   animation : String?
   /// The labels at the two ends of the edge, on the left and on the
   /// right of its direction.
@@ -199,6 +203,7 @@ pub fn Edge::new(
   style~ : Array[String] = [],
   look~ : String,
   animate~ : Bool = false,
+  animate_is_true? : Bool,
   animation? : String,
   start_label_left~ : String = "",
   start_label_right~ : String = "",
@@ -223,6 +228,7 @@ pub fn Edge::new(
     style,
     look,
     animate,
+    animate_is_true: animate_is_true.unwrap_or(animate),
     animation,
     start_label_left,
     start_label_right,

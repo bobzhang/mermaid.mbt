@@ -72,6 +72,7 @@ pub struct Edge {
   style : Array[String]
   look : String
   animate : Bool
+  animate_is_true : Bool
   animation : String?
   start_label_left : String
   start_label_right : String
@@ -87,7 +88,7 @@ pub struct Edge {
   mut position : Point?
   // private fields
 }
-pub fn Edge::new(id~ : String, start~ : String, end~ : String, label? : String, label_type? : String, thickness? : String, pattern? : String, classes? : String, arrow_type_start? : String, arrow_type_end? : String, css_compiled_styles? : Array[String], style? : Array[String], look~ : String, animate? : Bool, animation? : String, start_label_left? : String, start_label_right? : String, end_label_left? : String, end_label_right? : String, minlen? : Double, labelpos? : String, curve? : String) -> Self
+pub fn Edge::new(id~ : String, start~ : String, end~ : String, label? : String, label_type? : String, thickness? : String, pattern? : String, classes? : String, arrow_type_start? : String, arrow_type_end? : String, css_compiled_styles? : Array[String], style? : Array[String], look~ : String, animate? : Bool, animate_is_true? : Bool, animation? : String, start_label_left? : String, start_label_right? : String, end_label_left? : String, end_label_right? : String, minlen? : Double, labelpos? : String, curve? : String) -> Self
 
 pub(all) struct EntityAttribute {
   type_ : String

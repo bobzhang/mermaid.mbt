@@ -351,7 +351,7 @@ fn insert_edge(
   }
   let animated = sketched_stroke is None &&
     (
-      edge.animate ||
+      edge.animate_is_true ||
       animation is Some(_) ||
       styles_from_classes.contains("animation")
     )
