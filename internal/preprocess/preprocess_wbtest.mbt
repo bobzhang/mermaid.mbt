@@ -118,8 +118,19 @@ test "directives are found and removed" {
   json_inspect(detect_init(text), content=[
     { "theme": "dark", "pie": { "textPosition": 0.2 } },
   ])
-  inspect(has_wrap_directive(text), content="true")
-  inspect(has_wrap_directive("pie"), content="false")
+  debug_inspect(wrap_directive(text), content="Some(true)")
+  debug_inspect(wrap_directive("pie"), content="None")
+  // Only a type of exactly `wrap` turns wrapping on; with several
+  // wrap-like directives the setting is whether any is `wrap`.
+  debug_inspect(wrap_directive("%%{nowrap}%%\npie"), content="None")
+  debug_inspect(
+    wrap_directive("%%{nowrap}%%\n%%{nowrap}%%\npie"),
+    content="Some(false)",
+  )
+  debug_inspect(
+    wrap_directive("%%{nowrap}%%\n%%{wrap}%%\npie"),
+    content="Some(true)",
+  )
   inspect(detect_init("pie") is None, content="true")
   // Several init directives merge; `initialize` is accepted too.
   json_inspect(

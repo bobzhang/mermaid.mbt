@@ -1,7 +1,10 @@
 ///|
-/// Resolve the character references in HTML text: `&amp;`, `&#38;`,
-/// `&#x26;`. Unknown names are left as written.
-fn resolve_references(text : String) -> String {
+/// Resolve the character references in HTML text as the HTML parser does:
+/// `&amp;`, `&#38;`, `&#x26;`, also without their semicolon where the
+/// parser allows it. `in_attribute` tells whether the text is an attribute
+/// value, where a legacy name followed by a letter, digit or `=` is no
+/// reference. An ampersand that starts none is text.
+fn resolve_references(text : String, in_attribute~ : Bool = false) -> String {
   if !text.contains("&") {
     return text
   }
@@ -10,52 +13,55 @@ fn resolve_references(text : String) -> String {
   while rest.find("&") is Some(start) {
     out.write_view(rest[:start])
     let after = rest[start + 1:]
-    let end = after.find(";")
-    guard end is Some(end) && end > 0 && end <= 32 else {
-      out.write_char('&')
-      rest = after
-      continue
-    }
-    let name = after[:end].to_owned()
-    let hex = match name.strip_prefix("#x") {
-      Some(digits) => Some(digits)
-      None => name.strip_prefix("#X")
-    }
-    let radix_digits = (digits : StringView, radix : Int32) => {
-      let mut value = 0
-      let mut ok = digits.length() > 0
-      for c in digits {
-        let digit = match c {
-          '0'..<='9' => c.to_int() - '0'
-          'a'..<='f' => c.to_int() - 'a' + 10
-          'A'..<='F' => c.to_int() - 'A' + 10
-          _ => 99
+    rest = after
+    match after {
+      ['#', 'x' | 'X', .. digits] | ['#', .. digits] => {
+        let radix = if after is ['#', 'x' | 'X', ..] { 16 } else { 10 }
+        let mut length = 0
+        while length < digits.length() &&
+              (
+                digits[length] is ('0'..<='9') ||
+                (radix == 16 && digits[length] is ('a'..<='f' | 'A'..<='F'))
+              ) {
+          length += 1
         }
-        if digit >= radix {
-          ok = false
+        if length == 0 {
+          out.write_char('&')
+          continue
         }
-        value = value * radix + digit
+        out.write_string(
+          numeric_reference(reference_code(digits[:length], radix)),
+        )
+        rest = if digits[length:] is [';', .. tail] {
+          tail
+        } else {
+          digits[length:]
+        }
       }
-      if ok {
-        Some(value)
-      } else {
-        None
+      ['a'..<='z' | 'A'..<='Z' | '0'..<='9', ..] => {
+        // The longest name of the table the text starts with; none is
+        // longer than 32 characters, semicolon included.
+        let longest = if after.length() < 32 { after.length() } else { 32 }
+        let mut matched = false
+        for length = longest; length > 0; length = length - 1 {
+          guard named_references.get(after[:length].to_owned()) is Some(value) else {
+            continue
+          }
+          if in_attribute &&
+            after[length - 1] != ';' &&
+            after[length:] is ['a'..<='z' | 'A'..<='Z' | '0'..<='9' | '=', ..] {
+            break
+          }
+          out.write_string(value)
+          rest = after[length:]
+          matched = true
+          break
+        }
+        if !matched {
+          out.write_char('&')
+        }
       }
-    }
-    let code = match (hex, name.strip_prefix("#")) {
-      (Some(digits), _) => radix_digits(digits, 16)
-      (None, Some(digits)) => radix_digits(digits, 10)
-      (None, None) => named_entities.get(name)
-    }
-    match code.bind(Int32::to_char) {
-      Some(c) => {
-        out.write_char(c)
-        rest = after[end + 1:]
-      }
-      None => {
-        out.write_char('&')
-        rest = after
-      }
+      _ => out.write_char('&')
     }
   }
   out.write_view(rest)

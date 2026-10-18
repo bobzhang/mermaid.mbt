@@ -108,6 +108,19 @@ fn to_int(value : Json) -> Int32 {
 }
 
 ///|
+/// The exclusive end of `for (let i = start; i < end; i++)` over integers:
+/// the loop runs while `i < end`, up to the smallest integer not below a
+/// fractional `end`; `NaN` stops it at once.
+fn loop_end(value : Json) -> Int32 {
+  let end = to_number(value)
+  if end != end {
+    -0x80000000
+  } else {
+    end.ceil().to_int()
+  }
+}
+
+///|
 fn to_array(value : Json) -> Array[Json] {
   match value {
     Array(items) => items

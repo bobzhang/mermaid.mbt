@@ -401,7 +401,7 @@ fn redux_dark_color_update_colors(t : Theme) -> Unit raise @color.ColorError {
     "altSectionBkgColor",
     or_else(t.get("altSectionBkgColor"), () => t.get("background")),
   )
-  for i_ in to_int(num(0.0))..<to_int(t.get("THEME_COLOR_LIMIT")) {
+  for i_ in to_int(num(0.0))..<loop_end(t.get("THEME_COLOR_LIMIT")) {
     let i = num(i_.to_double())
     t.set(
       to_string(add(str("cScaleInv"), i)),
@@ -410,7 +410,7 @@ fn redux_dark_color_update_colors(t : Theme) -> Unit raise @color.ColorError {
       }),
     )
   }
-  for i_ in to_int(num(0.0))..<to_int(t.get("THEME_COLOR_LIMIT")) {
+  for i_ in to_int(num(0.0))..<loop_end(t.get("THEME_COLOR_LIMIT")) {
     let i = num(i_.to_double())
     if truthy(t.get("darkMode")) {
       t.set(
@@ -432,7 +432,7 @@ fn redux_dark_color_update_colors(t : Theme) -> Unit raise @color.ColorError {
     "scaleLabelColor",
     or_else(t.get("scaleLabelColor"), () => t.get("labelTextColor")),
   )
-  for i_ in to_int(num(0.0))..<to_int(t.get("THEME_COLOR_LIMIT")) {
+  for i_ in to_int(num(0.0))..<loop_end(t.get("THEME_COLOR_LIMIT")) {
     let i = num(i_.to_double())
     t.set(
       to_string(add(str("cScaleLabel"), i)),
@@ -444,7 +444,7 @@ fn redux_dark_color_update_colors(t : Theme) -> Unit raise @color.ColorError {
   } else {
     num(-1.0)
   }
-  for i_ in to_int(num(0.0))..<to_int(num(5.0)) {
+  for i_ in to_int(num(0.0))..<loop_end(num(5.0)) {
     let i = num(i_.to_double())
     t.set(
       to_string(add(str("surface"), i)),
@@ -487,7 +487,7 @@ fn redux_dark_color_update_colors(t : Theme) -> Unit raise @color.ColorError {
       or_else(t.get(to_string(add(str("fillType"), i))), () => fill),
     )
   }
-  for i_ in to_int(num(0.0))..<to_int(t.get("THEME_COLOR_LIMIT")) {
+  for i_ in to_int(num(0.0))..<loop_end(t.get("THEME_COLOR_LIMIT")) {
     let i = num(i_.to_double())
     t.set(
       to_string(add(str("pie"), add(i, num(1.0)))),
@@ -531,7 +531,7 @@ fn redux_dark_color_update_colors(t : Theme) -> Unit raise @color.ColorError {
     or_else(t.get("pieOuterStrokeColor"), () => str("black")),
   )
   t.set("pieOpacity", or_else(t.get("pieOpacity"), () => str("0.7")))
-  for i_ in to_int(num(0.0))..<to_int(num(8.0)) {
+  for i_ in to_int(num(0.0))..<loop_end(num(8.0)) {
     let i = num(i_.to_double())
     t.set(
       to_string(add(str("venn"), add(i, num(1.0)))),

@@ -91,8 +91,9 @@ fn diagram_stylesheet(
   } else {
     v("nodeBorder")
   }
+  // `String.replace` with a string: the first occurrence only.
   let shadow = if theme.flag("dropShadow") {
-    v("dropShadow").replace_all(
+    v("dropShadow").replace(
       old="url(#drop-shadow)",
       new="url(\{svg_id}-drop-shadow)",
     )

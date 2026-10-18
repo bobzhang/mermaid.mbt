@@ -17,9 +17,16 @@ fn mismatches(directory : String) -> Array[String] raise {
     guard name.strip_suffix(".mmd") is Some(stem) else { continue }
     let source = @fs.read_file_to_string("\{root}/\{name}")
     count += 1
+    // A fixture may come with the site configuration it is rendered with.
+    let site = "\{root}/\{stem}.site.json"
+    let config = if @fs.path_exists(site) {
+      @json.parse(@fs.read_file_to_string(site))
+    } else {
+      Json::object(Map([]))
+    }
     // A fixture upstream rejects has an `.error` file instead of an SVG.
     if !@fs.path_exists("\{root}/\{stem}.svg") {
-      try @mermaid.render(source) catch {
+      try @mermaid.render(source, config~) catch {
         _ => ()
       } noraise {
         _ => failed.push("\{stem}: expected an error")
@@ -27,7 +34,7 @@ fn mismatches(directory : String) -> Array[String] raise {
       continue
     }
     let expected = @fs.read_file_to_string("\{root}/\{stem}.svg")
-    let actual = @mermaid.render(source) catch {
+    let actual = @mermaid.render(source, config~) catch {
       error => {
         failed.push("\{stem}: \{Repr(error)}")
         continue

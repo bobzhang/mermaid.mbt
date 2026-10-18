@@ -142,7 +142,7 @@ fn neutral_update_colors(t : Theme) -> Unit raise @color.ColorError {
   t.set("cScale9", or_else(t.get("cScale9"), () => str("#BBB")))
   t.set("cScale10", or_else(t.get("cScale10"), () => str("#999")))
   t.set("cScale11", or_else(t.get("cScale11"), () => str("#777")))
-  for i_ in to_int(num(0.0))..<to_int(t.get("THEME_COLOR_LIMIT")) {
+  for i_ in to_int(num(0.0))..<loop_end(t.get("THEME_COLOR_LIMIT")) {
     let i = num(i_.to_double())
     t.set(
       to_string(add(str("cScaleInv"), i)),
@@ -151,7 +151,7 @@ fn neutral_update_colors(t : Theme) -> Unit raise @color.ColorError {
       }),
     )
   }
-  for i_ in to_int(num(0.0))..<to_int(t.get("THEME_COLOR_LIMIT")) {
+  for i_ in to_int(num(0.0))..<loop_end(t.get("THEME_COLOR_LIMIT")) {
     let i = num(i_.to_double())
     if truthy(t.get("darkMode")) {
       t.set(
@@ -181,7 +181,7 @@ fn neutral_update_colors(t : Theme) -> Unit raise @color.ColorError {
   )
   t.set("cScaleLabel0", or_else(t.get("cScaleLabel0"), () => t.get("cScale1")))
   t.set("cScaleLabel2", or_else(t.get("cScaleLabel2"), () => t.get("cScale1")))
-  for i_ in to_int(num(0.0))..<to_int(t.get("THEME_COLOR_LIMIT")) {
+  for i_ in to_int(num(0.0))..<loop_end(t.get("THEME_COLOR_LIMIT")) {
     let i = num(i_.to_double())
     t.set(
       to_string(add(str("cScaleLabel"), i)),
@@ -190,7 +190,7 @@ fn neutral_update_colors(t : Theme) -> Unit raise @color.ColorError {
       }),
     )
   }
-  for i_ in to_int(num(0.0))..<to_int(num(5.0)) {
+  for i_ in to_int(num(0.0))..<loop_end(num(5.0)) {
     let i = num(i_.to_double())
     t.set(
       to_string(add(str("surface"), i)),
@@ -280,7 +280,7 @@ fn neutral_update_colors(t : Theme) -> Unit raise @color.ColorError {
   t.set("fillType5", adjust(t.get("secondaryColor"), h=num(-64.0)))
   t.set("fillType6", adjust(t.get("primaryColor"), h=num(128.0)))
   t.set("fillType7", adjust(t.get("secondaryColor"), h=num(128.0)))
-  for i_ in to_int(num(0.0))..<to_int(t.get("THEME_COLOR_LIMIT")) {
+  for i_ in to_int(num(0.0))..<loop_end(t.get("THEME_COLOR_LIMIT")) {
     let i = num(i_.to_double())
     t.set(
       to_string(add(str("pie"), i)),
@@ -323,7 +323,7 @@ fn neutral_update_colors(t : Theme) -> Unit raise @color.ColorError {
     or_else(t.get("pieOuterStrokeColor"), () => str("black")),
   )
   t.set("pieOpacity", or_else(t.get("pieOpacity"), () => str("0.7")))
-  for i_ in to_int(num(0.0))..<to_int(num(8.0)) {
+  for i_ in to_int(num(0.0))..<loop_end(num(8.0)) {
     let i = num(i_.to_double())
     t.set(
       to_string(add(str("venn"), add(i, num(1.0)))),

@@ -125,7 +125,26 @@ pub fn Config::new(
     site
   }
   let mut site_config = assign_with_depth(clone(defaults), site)
-  if field(site, "theme") is String(name) &&
+  // `initialize` derives the theme variables from the site's overrides
+  // whatever the theme: an unknown theme (other than "null") becomes the
+  // default one, and so does a missing one. Without overrides the default
+  // theme's variables are those of the defaults already.
+  let site_theme = match field(site, "theme") {
+    String(name) if @theme.is_theme_name(name) => Some(name)
+    Null | String("null") =>
+      if field(site, "themeVariables") is Null {
+        None
+      } else {
+        Some("default")
+      }
+    _ => {
+      if site_config is Object(fields) {
+        fields["theme"] = Json::string("default")
+      }
+      Some("default")
+    }
+  }
+  if site_theme is Some(name) &&
     theme_variables(name, field(site, "themeVariables")) is Some(variables) &&
     site_config is Object(fields) {
     fields["themeVariables"] = variables
