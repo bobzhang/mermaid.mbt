@@ -397,11 +397,12 @@ fn FlowDb::add_vertex(
   if metadata_string(doc, "constraint") is Some(constraint) {
     vertex.constraint = Some(constraint)
   }
-  if truthy(doc.get("w")) && doc.get("w") is Some(Number(w, ..)) {
-    vertex.asset_width = Some(w)
+  // `Number(doc.w)`: a size may be given as text.
+  if doc.get("w") is Some(w) && truthy(Some(w)) {
+    vertex.asset_width = Some(@diagram.to_number(w))
   }
-  if truthy(doc.get("h")) && doc.get("h") is Some(Number(h, ..)) {
-    vertex.asset_height = Some(h)
+  if doc.get("h") is Some(h) && truthy(Some(h)) {
+    vertex.asset_height = Some(@diagram.to_number(h))
   }
 }
 

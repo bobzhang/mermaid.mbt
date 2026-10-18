@@ -19,6 +19,8 @@ pub fn parse_font_size(String) -> Double?
 
 pub fn to_fixed0(Double) -> String
 
+pub fn to_number(Json) -> Double
+
 // Errors
 
 // Types and methods

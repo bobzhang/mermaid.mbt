@@ -106,7 +106,8 @@ fn label_declaration_measured(key : String, value : String) -> Bool {
 
 ///|
 /// Refuse a diagram whose node or edge labels carry a style the label
-/// measurement does not model (see `label_declaration_measured`).
+/// measurement does not model (see `label_declaration_measured`), or
+/// whose image or icon sizes are not numbers.
 fn check_label_styles(data : LayoutData) -> Unit raise LayoutError {
   let check = (styles : Array[String]) => {
     for key, value in styles_map(styles) {
@@ -118,6 +119,16 @@ fn check_label_styles(data : LayoutData) -> Unit raise LayoutError {
     }
   }
   for node in data.nodes {
+    // `Number("abc")`: a size that is not a number makes upstream's
+    // geometry `NaN`, which the port does not follow.
+    if node.data is Asset(asset_width~, asset_height~, ..) &&
+      [asset_width, asset_height].any(size => {
+        size is Some(size) && size.is_nan()
+      }) {
+      raise LayoutError(
+        "the image or icon size of \{node.id} is not a number, which is not ported",
+      )
+    }
     let styles = [..node.css_compiled_styles, ..node.css_styles]
     for style in node.label_style.split(";") {
       let style = style.trim().to_owned()

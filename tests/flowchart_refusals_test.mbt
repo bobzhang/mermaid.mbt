@@ -19,3 +19,12 @@ test "flowcharts the port refuses rather than draw differently" {
     content="Unsupported: the label style `word-spacing:4px` changes the label's size, which is not ported",
   )
 }
+
+///|
+test "image sizes that are not numbers" {
+  // `Number("abc")` is `NaN`, which upstream's geometry carries on.
+  inspect(
+    refusal("flowchart TD\nA@{ icon: \"fa:fa-car\", w: \"abc\" }\n"),
+    content="Unsupported: the image or icon size of A is not a number, which is not ported",
+  )
+}

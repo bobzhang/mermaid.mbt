@@ -28,7 +28,11 @@ pub fn draw(
   @rendering.render(data, context.svg, image_loader?=context.image_loader)
   @rendering.order_image_nodes(context.svg)
   insert_title(db.title, context)
-  let padding = config.number("flowchart.diagramPadding").unwrap_or(8.0)
+  // `diagramPadding ?? 8`, coerced to a number by the arithmetic.
+  let padding = match config.get("flowchart.diagramPadding") {
+    Null => 8.0
+    value => @diagram.to_number(value)
+  }
   @rendering.setup_viewport(
     context.svg,
     padding,
