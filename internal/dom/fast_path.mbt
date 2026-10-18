@@ -248,7 +248,7 @@ fn FastPath::reference(self : FastPath, in_attribute : Bool) -> Unit {
   // `ConsumeHTMLEntity` on the name and its `;`: the longest name of the
   // table the text starts with; what follows it is scanned again.
   let input = self.html[start:self.pos]
-  let longest = if input.length() < 32 { input.length() } else { 32 }
+  let longest = name_span(input)
   for length = longest; length > 0; length = length - 1 {
     guard named_references.contains(input[:length].to_owned()) else { continue }
     if in_attribute &&

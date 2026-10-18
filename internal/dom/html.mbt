@@ -52,7 +52,7 @@ fn resolve_references(
       ['a'..<='z' | 'A'..<='Z' | '0'..<='9', ..] => {
         // The longest name of the table the text starts with; none is
         // longer than 32 characters, semicolon included.
-        let longest = if after.length() < 32 { after.length() } else { 32 }
+        let longest = name_span(after)
         let mut matched = false
         for length = longest; length > 0; length = length - 1 {
           guard named_references.get(after[:length].to_owned()) is Some(value) else {
@@ -78,6 +78,24 @@ fn resolve_references(
   }
   out.write_view(rest)
   out.to_string()
+}
+
+///|
+/// How many code units of `text` a character reference's name can take:
+/// ASCII letters and digits, then a `;`, at most the 32 of the longest
+/// name. Names never reach into anything else, a character outside the
+/// basic plane included, whose halves must stay together.
+fn name_span(text : StringView) -> Int32 {
+  let mut length = 0
+  while length < text.length() &&
+        length < 32 &&
+        text[length] is ('a'..<='z' | 'A'..<='Z' | '0'..<='9') {
+    length += 1
+  }
+  if length < 32 && length < text.length() && text[length] == ';' {
+    length += 1
+  }
+  length
 }
 
 ///|
