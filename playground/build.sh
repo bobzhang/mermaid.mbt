@@ -5,12 +5,14 @@ set -eu
 cd "$(dirname "$0")/.."
 out=${1:-_build/playground-site}
 moon build --target js --release playground
-js=_build/js/release/build/bobzhang/mermaid/playground/playground.js
+# where moon puts the module depends on its version
+js=$(find _build/js/release/build -name playground.js -path '*/playground/*' | head -n 1)
+test -n "$js" || { echo "playground.js not built" >&2; exit 1; }
 rm -rf "$out"
 mkdir -p "$out"
 cp playground/web/* "$out"/
 if command -v esbuild >/dev/null 2>&1; then
-  esbuild "$js" --minify --format=esm --outfile="$out/mermaid-port.js" --log-level=warning
+  esbuild "./$js" --minify --format=esm --outfile="$out/mermaid-port.js" --log-level=warning
 else
   cp "$js" "$out/mermaid-port.js"
 fi
