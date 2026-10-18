@@ -156,3 +156,27 @@ test "repetitions of more than one code unit take long subjects" {
     content="40002",
   )
 }
+
+///|
+test "captures are forgotten at each iteration of their atom" {
+  // The match and its groups in JavaScript, `-` for undefined.
+  let groups = (source : String, input : String) => {
+    guard (try! @jsregex.Regex::compile(source)).match_prefix(input)
+      is Some(found) else {
+      return "no match"
+    }
+    let parts = [found.text()]
+    for index in 1..<=2 {
+      parts.push(found.group(index).unwrap_or("-"))
+    }
+    parts.join(" ")
+  }
+  inspect(groups("(?:(a)|b)+", "ab"), content="ab - -")
+  inspect(groups("(a|(b))+", "ba"), content="ba a -")
+  inspect(groups("((a)|b)*c", "abc"), content="abc b -")
+  inspect(groups("(?:(a)|(b))*?$", "ab"), content="ab - b")
+  // A positive lookahead keeps its captures, a negative one none.
+  inspect(groups("(?=(a))a\\1?", "aa"), content="aa a -")
+  inspect(groups("(?!(a)b)a\\1", "ac"), content="a - -")
+  inspect(groups("(a)?(?:b\\1)*", "bb"), content="bb - -")
+}

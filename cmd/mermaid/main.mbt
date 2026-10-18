@@ -241,8 +241,25 @@ fn regex(path : String) -> Unit raise CliError {
         continue
       }
     }
+    // With `"groups": n`, the text of every group up to `n` too.
+    let groups = match item {
+      { "groups": Number(n, ..), .. } => n.to_int()
+      _ => -1
+    }
     results.push(
       match compiled.match_prefix(input) {
+        Some(found) if groups >= 0 => {
+          let parts = [Json::string(found.text())]
+          for index in 1..<=groups {
+            parts.push(
+              match found.group(index) {
+                Some(text) => Json::string(text)
+                None => Json::null()
+              },
+            )
+          }
+          Json::array(parts)
+        }
         Some(found) => Json::string(found.text())
         None => Json::null()
       },
