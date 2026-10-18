@@ -228,9 +228,9 @@ pub fn draw(db : GanttDb, context : @diagram.Context) -> Unit raise GanttError {
   let right_padding = conf("rightPadding", 75.0)
   let grid_line_start_padding = conf("gridLineStartPadding", 35.0)
   let font_size = conf("fontSize", 11.0)
-  let section_font_size = conf("sectionFontSize", 11.0)
   let title_top_margin = conf("titleTopMargin", 25.0)
-  let number_section_styles = conf("numberSectionStyles", 4.0).to_int()
+  // A JavaScript number: `i % 1.5` is fractional for some sections.
+  let number_section_styles = conf("numberSectionStyles", 4.0)
   // The chart is as wide as the element the diagram sits in.
   let w = config.number("gantt.useWidth").unwrap_or(context.container_width())
   let tasks = db.compile(context.now)
@@ -242,7 +242,9 @@ pub fn draw(db : GanttDb, context : @diagram.Context) -> Unit raise GanttError {
     }
   }
   let section_class = (section : String) => {
-    categories.search(section).map(i => i % number_section_styles)
+    categories
+    .search(section)
+    .map(i => n(i.to_double() % number_section_styles))
   }
   // Rows per section, keyed like a JavaScript object.
   let category_heights : Map[String, Int32] = Map([])
@@ -397,7 +399,10 @@ pub fn draw(db : GanttDb, context : @diagram.Context) -> Unit raise GanttError {
     .attr_number("y", task.order.to_double() * gap + top_padding - 2.0)
     .attr_number("width", w - right_padding / 2.0)
     .attr_number("height", gap)
-    .attr("class", "section section\{section_class(task.section).unwrap_or(0)}")
+    .attr(
+      "class",
+      "section section\{section_class(task.section).unwrap_or("0")}",
+    )
     |> ignore
   }
   let group = svg.append("g")
@@ -406,7 +411,7 @@ pub fn draw(db : GanttDb, context : @diagram.Context) -> Unit raise GanttError {
     let start_x = scale(task.start_time)
     let end_x = scale(task.end_time)
     let center = start_x + left_padding + 0.5 * (end_x - start_x)
-    let section = section_class(task.section).unwrap_or(0)
+    let section = section_class(task.section).unwrap_or("0")
     let mut task_class = ""
     if task.active {
       if task.crit {
@@ -534,7 +539,7 @@ pub fn draw(db : GanttDb, context : @diagram.Context) -> Unit raise GanttError {
     } else {
       scale(task.end_time)
     }
-    let section = section_class(task.section).unwrap_or(0)
+    let section = section_class(task.section).unwrap_or("0")
     let mut task_type = ""
     if task.active {
       task_type = if task.crit {
@@ -608,8 +613,15 @@ pub fn draw(db : GanttDb, context : @diagram.Context) -> Unit raise GanttError {
         count * gap / 2.0 + top_padding
       },
     )
-    .attr_number("font-size", section_font_size)
-    .attr(
+    |> ignore
+    // Written as given: the schema allows a string such as `"20px"`.
+    match config.get("gantt.sectionFontSize") {
+      String(size) => label.attr("font-size", size) |> ignore
+      Number(size, ..) => label.attr_number("font-size", size) |> ignore
+      Null => ()
+      other => raise Unsupported("gantt.sectionFontSize: \{other.stringify()}")
+    }
+    label.attr(
       "class",
       match section_class(name) {
         Some(index) => "sectionTitle sectionTitle\{index}"
