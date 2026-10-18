@@ -123,6 +123,7 @@ pub fn render(
   svg : @dom.Element,
   image_loader? : (String) -> Bytes?,
 ) -> Unit raise LayoutError {
+  check_label_styles(data)
   if data.config.text("layout") == Some("swimlane") {
     return render_swimlane(data, svg, image_loader)
   }
