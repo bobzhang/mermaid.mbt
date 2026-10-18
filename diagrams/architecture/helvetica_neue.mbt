@@ -14,7 +14,26 @@ let helvetica_neue_advances : FixedArray[Int32] = [
 ]
 
 ///|
-/// The kerning pairs of Helvetica Neue between printable ASCII characters,
+/// The same for U+00A0 to U+017F: Latin-1 and Latin Extended-A.
+let helvetica_neue_latin_advances : FixedArray[Int32] = [
+  278, 259, 556, 556, 556, 556, 222, 556, 222, 800, 378, 463, 600, 0, 800, 222, 400,
+  600, 333, 333, 222, 556, 600, 278, 222, 333, 384, 463, 834, 834, 834, 556, 648,
+  648, 648, 648, 648, 648, 926, 722, 611, 611, 611, 611, 259, 259, 259, 259, 704,
+  722, 760, 760, 760, 760, 760, 600, 760, 722, 722, 722, 722, 648, 648, 556, 537,
+  537, 537, 537, 537, 537, 870, 537, 537, 537, 537, 537, 222, 222, 222, 222, 574,
+  556, 574, 574, 574, 574, 574, 600, 574, 556, 556, 556, 556, 500, 593, 500, 648,
+  537, 648, 537, 648, 537, 722, 537, 722, 537, 722, 537, 722, 537, 704, 593, 704,
+  598, 611, 537, 611, 537, 611, 537, 611, 537, 611, 537, 759, 574, 759, 574, 759,
+  574, 759, 574, 722, 556, 722, 561, 259, 222, 259, 222, 259, 222, 259, 222, 259,
+  222, 770, 438, 519, 222, 667, 519, 514, 556, 222, 556, 222, 556, 302, 556, 342,
+  556, 222, 722, 556, 722, 556, 722, 556, 663, 722, 556, 760, 574, 760, 574, 760,
+  574, 1074, 891, 685, 333, 685, 333, 685, 333, 648, 500, 648, 500, 648, 500, 648,
+  500, 574, 315, 574, 315, 574, 315, 722, 556, 722, 556, 722, 556, 722, 556, 722,
+  556, 722, 556, 926, 758, 648, 500, 648, 611, 480, 611, 480, 611, 480, 278,
+]
+
+///|
+/// The kerning pairs of Helvetica Neue between the characters measured,
 /// in thousandths of an em, measured as the advances were. `f` kerns with
 /// nothing; the ligatures `ff`, `fi`, `fl`, `ffi` and `ffl` take its
 /// place where they apply.
@@ -109,6 +128,24 @@ let helvetica_neue_kerning : Map[String, Int32] = {
   "w.": -55,
   "y,": -74,
   "y.": -74,
+  "ď#": 56,
+  "ď;": 52,
+  "ď^": 74,
+  "ďd": 77,
+  "ďg": 72,
+  "ďh": 72,
+  "ľ#": 55,
+  "ľ;": 51,
+  "ľ^": 73,
+  "ľd": 76,
+  "ľg": 71,
+  "ľh": 71,
+  "ť#": 5,
+  "ť;": 1,
+  "ť^": 23,
+  "ťd": 26,
+  "ťg": 21,
+  "ťh": 21,
 }
 
 ///|
@@ -149,7 +186,12 @@ fn canvas_text_width(
   let mut i = 0
   while i < chars.length() {
     let c = chars[i]
-    guard c.to_int() >= 32 && c.to_int() < 127 else {
+    let code = c.to_int()
+    let units = if code >= 32 && code < 127 {
+      helvetica_neue_advances[code - 32]
+    } else if code >= 0xa0 && code < 0x180 {
+      helvetica_neue_latin_advances[code - 0xa0]
+    } else {
       raise Unsupported(
         "a label measured in Helvetica Neue with the character \{c}",
       )
@@ -171,7 +213,7 @@ fn canvas_text_width(
         i += letters.length()
       }
       None => {
-        total += advance(helvetica_neue_advances[c.to_int() - 32])
+        total += advance(units)
         if previous is Some(p) &&
           helvetica_neue_kerning.get("\{p}\{c}") is Some(units) {
           total += kern(units)

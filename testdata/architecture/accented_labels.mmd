@@ -1,0 +1,7 @@
+architecture-beta
+    group g(cloud)[Équipe données]
+    service a(server)[Café crème] in g
+    service b(database)[Base de données] in g
+    service c(disk)[Größe Ärger] in g
+    a:R -[réseau]- L:b
+    b:B -- T:c
