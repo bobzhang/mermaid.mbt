@@ -18,9 +18,14 @@ both sides to agree on what time it is: `--now` stops both clocks.
 `--config JSON` is site configuration for both sides, merged over the
 seed: `--config '{"layout":"dagre"}'` runs every example with dagre.
 
+Image nodes with remote images take their size from the image, which the
+oracle's browser loads; `--fetch-images` lets the port fetch them too.
+Without it the port touches no network and refuses those examples.
+
 Usage: scripts/check_examples.py [docs.md ...] [--keywords flowchart graph]
                                  [--seed 1] [--now MS] [--cache DIR]
-                                 [--prelude FILE] [--config JSON] [-v]
+                                 [--prelude FILE] [--config JSON]
+                                 [--fetch-images] [-v]
 """
 
 import argparse
@@ -62,6 +67,9 @@ def main():
     parser.add_argument("--prelude", type=pathlib.Path,
                         help="JavaScript evaluated in the oracle page before rendering (see compare.py)")
     parser.add_argument("--config", default="{}", help="site configuration (JSON) for both sides")
+    parser.add_argument("--fetch-images", action="store_true",
+                        help="let the port fetch the images of image nodes (`cmd/mermaid render --fetch-images`), "
+                             "as the oracle's browser does")
     parser.add_argument("-v", "--verbose", action="store_true", help="show the first difference of each example")
     args = parser.parse_args()
 
@@ -100,7 +108,9 @@ def main():
     for index, path in enumerate(inputs):
         expected = path.with_suffix(".svg").read_text()
         clock = [] if args.now is None else ["--now", str(args.now)]
-        done = subprocess.run([str(binary), "render", str(path), "--id", compare.SVG_ID, "--config", handle.name] + clock,
+        fetch = ["--fetch-images"] if args.fetch_images else []
+        done = subprocess.run([str(binary), "render", str(path), "--id", compare.SVG_ID, "--config", handle.name]
+                              + clock + fetch,
                               capture_output=True, text=True)
         actual = done.stdout.removesuffix("\n")
         if actual == expected:

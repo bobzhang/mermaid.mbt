@@ -182,7 +182,9 @@ pub fn parse_metadata(metadata : String) -> Json raise {
   } else {
     "{\n" + metadata + "\n}"
   }
-  match @yaml.Yaml::load_from_string(source) {
+  // js-yaml's leniency, as upstream loads it with js-yaml.
+  match
+    @yaml.Yaml::load_from_string(source, lenient_quoted_scalar_indentation=true) {
     [document, ..] => Json(document)
     [] => Json::null()
   }

@@ -1,0 +1,8 @@
+---
+config:
+  themeCSS: "[id*=\"state-\"] rect { fill: Lavender } .stateLabel text, .nodeLabel { letter-spacing: 0.05em; text-transform: uppercase } .transition { stroke-width: 2px }"
+---
+stateDiagram-v2
+  [*] --> Still
+  Still --> Moving
+  Moving --> [*]

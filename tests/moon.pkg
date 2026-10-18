@@ -1,5 +1,6 @@
 import {
   "bobzhang/mermaid",
+  "moonbitlang/core/encoding/utf8",
   "moonbitlang/x/fs",
 } for "test"
 

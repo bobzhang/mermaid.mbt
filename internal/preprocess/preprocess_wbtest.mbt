@@ -91,6 +91,18 @@ test "frontmatter is split off and parsed" {
 }
 
 ///|
+test "frontmatter takes quoted scalars as js-yaml does" {
+  // A multi-line quoted scalar indented less than its key, which YAML 1.2
+  // rejects and js-yaml (upstream's loader) reads.
+  let front = extract_front_matter(
+    "---\nconfig:\n    themeCSS: \" a \\n\n  b { fill: red }\n\n c\n   \"\n---\ngantt",
+  )
+  json_inspect(front.config, content=[
+    { "themeCSS": " a \n b { fill: red }\nc " },
+  ])
+}
+
+///|
 test "invalid frontmatter YAML raises" {
   try extract_front_matter("---\n- a\n b: [\n---\nbar") catch {
     _ => ()

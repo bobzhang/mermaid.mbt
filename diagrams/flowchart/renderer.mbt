@@ -25,7 +25,7 @@ pub fn draw(
     direction: db.direction().unwrap_or("TB"),
     markers: ["point", "circle", "cross"],
   }
-  @rendering.render(data, context.svg)
+  @rendering.render(data, context.svg, image_loader?=context.image_loader)
   @rendering.order_image_nodes(context.svg)
   insert_title(db.title, context)
   let padding = config.number("flowchart.diagramPadding").unwrap_or(8.0)

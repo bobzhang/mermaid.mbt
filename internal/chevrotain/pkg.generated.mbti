@@ -9,7 +9,7 @@ import {
 
 // Errors
 pub(all) suberror ParseError {
-  ParseError(message~ : String, offset~ : Int)
+  ParseError(message~ : String, offset~ : Int32)
 } derive(Eq, @debug.Debug)
 
 // Types and methods
@@ -21,7 +21,7 @@ pub(all) enum CstElement {
 pub struct CstNode {
   name : String
   children : Map[String, Array[CstElement]]
-  mut start : Int
+  mut start : Int32
 }
 pub fn CstNode::all_tokens(Self) -> Array[Token]
 pub fn CstNode::nodes(Self, String) -> Array[Self]
@@ -33,12 +33,12 @@ pub struct Grammar {
 pub fn Grammar::accepts(Self, String, Token) -> Bool
 pub fn Grammar::new(tokens~ : Array[TokenType], modes~ : Map[String, Array[String]], default_mode~ : String, rules~ : Array[(String, Array[Production])]) -> Self
 pub fn Grammar::parse(Self, Array[Token], gate? : (String, Parser) -> Bool) -> CstNode raise ParseError
-pub fn Grammar::tokenize(Self, String, custom? : (String, String, Int) -> Int?) -> Array[Token] raise ParseError
+pub fn Grammar::tokenize(Self, String, custom? : (String, String, Int32) -> Int32?) -> Array[Token] raise ParseError
 
 pub struct Parser {
   // private fields
 }
-pub fn Parser::la(Self, Int) -> Token
+pub fn Parser::la(Self, Int32) -> Token
 
 pub(all) enum Pattern {
   Regex(String, String)
@@ -49,17 +49,17 @@ pub(all) enum Pattern {
 pub(all) enum Production {
   Terminal(String)
   NonTerminal(String)
-  Option(Int, Array[Array[String]], Array[Production])
-  Repetition(Int, Array[Array[String]], Array[Production])
-  RepetitionMandatory(Int, Array[Array[String]], Array[Production])
-  Alternation(Int, Array[(Array[Array[String]], Array[Production])])
+  Option(Int32, Array[Array[String]], Array[Production])
+  Repetition(Int32, Array[Array[String]], Array[Production])
+  RepetitionMandatory(Int32, Array[Array[String]], Array[Production])
+  Alternation(Int32, Array[(Array[Array[String]], Array[Production])])
 }
 
 pub struct Token {
   name : String
   image : String
-  start : Int
-  end : Int
+  start : Int32
+  end : Int32
   // private fields
 }
 

@@ -1,0 +1,26 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/internal/image"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub const UNDECODABLE_MESSAGE : String = "The source image cannot be decoded."
+
+pub fn data_url_size(String) -> Decoded?
+
+pub fn natural_size(Bytes, mime? : String) -> Decoded
+
+// Errors
+
+// Types and methods
+pub(all) enum Decoded {
+  Size(Int32, Int32)
+  Undecodable
+  Unknown(String)
+} derive(Eq, @debug.Debug)
+
+// Type aliases
+
+// Traits

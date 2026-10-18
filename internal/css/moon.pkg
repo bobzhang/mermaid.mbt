@@ -1,1 +1,8 @@
+import {
+  "bobzhang/mermaid/internal/dom",
+  "moonbitlang/core/double",
+  "moonbitlang/core/math",
+  "moonbitlang/core/string",
+}
+
 warnings = "-implicit_impl_as_method"

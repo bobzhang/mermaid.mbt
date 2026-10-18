@@ -270,6 +270,9 @@ priv struct Env {
   /// Whether the label being measured is bold or italic as a whole.
   bold : Bool
   italic : Bool
+  /// What loads the images of image shapes: their bytes by URL, `None`
+  /// for one that cannot be loaded (see `@mermaid.render`).
+  image_loader : ((String) -> Bytes?)?
 }
 
 ///|
@@ -314,6 +317,7 @@ fn Env::new(config : @config.Config, diagram_id : String) -> Env {
     node_text_centred: true,
     bold: false,
     italic: false,
+    image_loader: None,
   }
 }
 

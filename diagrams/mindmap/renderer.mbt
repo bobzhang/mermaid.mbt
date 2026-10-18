@@ -95,12 +95,13 @@ pub fn draw(
     markers: ["point"],
   }
   let render = if layout == "dagre" {
-    @rendering.render
+    (data, svg) => @rendering.render(data, svg)
   } else {
     @rendering.render_cose
   }
   render(data, context.svg) catch {
-    @rendering.LayoutError(message) => raise Unsupported(message)
+    @rendering.LayoutError(message) | @rendering.UpstreamError(message) =>
+      raise Unsupported(message)
   }
   let theme = config.theme()
   if theme.flag("useGradient") &&

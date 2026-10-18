@@ -28,10 +28,11 @@ pub struct Context {
   svg : @dom.Element
   now : Double
   page : Page
+  image_loader : ((String) -> Bytes?)?
 }
 pub fn Context::container_width(Self) -> Double
 pub fn Context::font(Self, bold? : Bool, italic? : Bool) -> @font.Stack
-pub fn Context::new(String, @config.Config, @dom.Element, now~ : Double, page~ : Page) -> Self
+pub fn Context::new(String, @config.Config, @dom.Element, now~ : Double, page~ : Page, image_loader? : (String) -> Bytes?) -> Self
 pub fn Context::placement(Self, Double, Double, max_width~ : Double) -> Placement
 pub fn Context::theme(Self) -> @theme.Theme
 pub fn Context::view_box_scale(Self, Double, Double, max_width? : Double, fixed? : Bool) -> Double

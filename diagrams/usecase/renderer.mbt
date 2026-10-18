@@ -405,7 +405,8 @@ pub fn draw(
     // as a node, and no node shape draws a boundary.
     @rendering.LayoutError(message) if message.has_prefix("No such shape") =>
       raise Invalid(message)
-    @rendering.LayoutError(message) => raise Unsupported(message)
+    @rendering.LayoutError(message) | @rendering.UpstreamError(message) =>
+      raise Unsupported(message)
   }
   let dom_ids : Map[String, String] = Map([])
   for node in layout_nodes {

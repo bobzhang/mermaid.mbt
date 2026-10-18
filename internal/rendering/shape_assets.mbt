@@ -5,9 +5,10 @@
 // Icon packs are registered through mermaid's JavaScript API, which has no
 // counterpart here, so every icon is the question mark upstream draws for
 // an icon it does not know, as in a page that registered none. An image is
-// loaded to learn its natural size; the port knows the size of images in
-// `data:` URLs (PNG and GIF) only, and draws any other image only when the
-// node gives both its width and its height and no constraint.
+// loaded to learn its natural size (`@image`): an image in a `data:` URL
+// is read from the URL, any other through the caller's image loader.
+// Without a size, an image is drawn only when the node gives both its
+// width and its height and no constraint.
 
 ///|
 /// The body of mermaid's `unknownIcon`, on an 80 by 80 canvas.
@@ -320,73 +321,18 @@ fn icon_shape(
 }
 
 ///|
-/// The natural size of an image the port can know without loading it:
-/// a PNG or GIF in a base64 `data:` URL, read from its header.
-fn image_natural_size(url : String) -> (Double, Double)? {
-  guard url.strip_prefix("data:") is Some(rest) &&
-    rest.find(";base64,") is Some(at) else {
-    return None
+/// What loading the node's image tells about its natural size, which
+/// upstream loads the image for: the image in a `data:` URL, or what the
+/// loader gives for any other URL.
+fn load_image(url : String, env : Env) -> @image.Decoded {
+  match @image.data_url_size(url) {
+    Some(decoded) => decoded
+    None =>
+      match env.image_loader.bind(load => load(url)) {
+        Some(data) => @image.natural_size(data)
+        None => Unknown("it is not loaded")
+      }
   }
-  let bytes = base64_prefix(rest[at + 8:].to_owned(), 32)
-  let byte = (i : Int32) => bytes[i].to_int()
-  if bytes.length() >= 24 &&
-    byte(0) == 0x89 &&
-    byte(1) == 0x50 &&
-    byte(2) == 0x4e &&
-    byte(3) == 0x47 &&
-    byte(12) == 0x49 &&
-    byte(13) == 0x48 &&
-    byte(14) == 0x44 &&
-    byte(15) == 0x52 {
-    // PNG: the IHDR chunk comes first, big-endian.
-    let be = (i : Int32) => {
-      (byte(i) << 24) | (byte(i + 1) << 16) | (byte(i + 2) << 8) | byte(i + 3)
-    }
-    let width = be(16)
-    let height = be(20)
-    guard width > 0 && height > 0 else { return None }
-    Some((width.to_double(), height.to_double()))
-  } else if bytes.length() >= 10 &&
-    byte(0) == 0x47 &&
-    byte(1) == 0x49 &&
-    byte(2) == 0x46 {
-    // GIF: the logical screen, little-endian.
-    let width = byte(6) | (byte(7) << 8)
-    let height = byte(8) | (byte(9) << 8)
-    guard width > 0 && height > 0 else { return None }
-    Some((width.to_double(), height.to_double()))
-  } else {
-    None
-  }
-}
-
-///|
-/// The first `count` bytes base64 text decodes to (fewer if it is
-/// shorter or stops being base64).
-fn base64_prefix(text : String, count : Int32) -> Array[Byte] {
-  let out : Array[Byte] = []
-  let mut buffer = 0
-  let mut bits = 0
-  for c in text {
-    if out.length() >= count {
-      break
-    }
-    let value = match c {
-      'A'..<='Z' => c.to_int() - 'A'.to_int()
-      'a'..<='z' => c.to_int() - 'a'.to_int() + 26
-      '0'..<='9' => c.to_int() - '0'.to_int() + 52
-      '+' | '-' => 62
-      '/' | '_' => 63
-      _ => break
-    }
-    buffer = (buffer << 6) | value
-    bits += 6
-    if bits >= 8 {
-      bits -= 8
-      out.push(((buffer >> bits) & 0xff).to_byte())
-    }
-  }
-  out
 }
 
 ///|
@@ -405,12 +351,13 @@ fn image_square(
   let fixed = !constrained &&
     asset.asset_width is Some(_) &&
     asset.asset_height is Some(_)
-  let (natural_width, natural_height) = match image_natural_size(url) {
-    Some(size) => size
-    None if fixed => (0.0, 0.0)
-    None =>
+  let (natural_width, natural_height) = match load_image(url, env) {
+    Size(width, height) => (width.to_double(), height.to_double())
+    Undecodable => raise UpstreamError(@image.UNDECODABLE_MESSAGE)
+    Unknown(_) if fixed => (0.0, 0.0)
+    Unknown(reason) =>
       raise LayoutError(
-        "The natural size of the image \{url} is not known to the port; give the node both w and h, without a constraint.",
+        "The natural size of the image \{url} is not known to the port (\{reason}); give the node both w and h, without a constraint.",
       )
   }
   let ratio = natural_width / natural_height

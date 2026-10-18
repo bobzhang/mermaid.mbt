@@ -32,7 +32,8 @@ fn Renderer::draw_node(
     label_style="",
   )
   let element = self.painter.draw_shape(parent, node) catch {
-    @rendering.LayoutError(message) => raise Unsupported(message)
+    @rendering.LayoutError(message) | @rendering.UpstreamError(message) =>
+      raise Unsupported(message)
   }
   (node, element)
 }

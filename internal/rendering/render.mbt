@@ -5,6 +5,9 @@
 /// The diagram could not be laid out.
 pub(all) suberror LayoutError {
   LayoutError(String)
+  /// Upstream fails as well, with this message: an image that cannot be
+  /// decoded.
+  UpstreamError(String)
 } derive(Eq, Debug)
 
 ///|
@@ -113,10 +116,15 @@ fn node_dir(node : Node, by_id : Map[String, Node], diagram : String) -> String 
 }
 
 ///|
-/// Lay out and draw `data` into the first group of `svg`.
-pub fn render(data : LayoutData, svg : @dom.Element) -> Unit raise LayoutError {
+/// Lay out and draw `data` into the first group of `svg`. `image_loader`
+/// loads the images of image shapes whose size is not in their URL.
+pub fn render(
+  data : LayoutData,
+  svg : @dom.Element,
+  image_loader? : (String) -> Bytes?,
+) -> Unit raise LayoutError {
   if data.config.text("layout") == Some("swimlane") {
-    return render_swimlane(data, svg)
+    return render_swimlane(data, svg, image_loader)
   }
   // Ids are unique across the diagrams of a page.
   for node in data.nodes {
@@ -136,6 +144,7 @@ pub fn render(data : LayoutData, svg : @dom.Element) -> Unit raise LayoutError {
   let env = {
     ..Env::new(data.config, data.diagram_id),
     node_text_centred: node_text_centred(data.diagram_type),
+    image_loader,
   }
   if is_dagre_layout(data.config.text("layout").unwrap_or("elk")) {
     let label_env = {
