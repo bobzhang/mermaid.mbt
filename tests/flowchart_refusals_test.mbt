@@ -36,3 +36,25 @@ test "links the browser's URL parser would rewrite in ways not ported" {
     content="Unsupported: Unsupported link address: https://user@x.com/",
   )
 }
+
+///|
+test "markers referenced by the page's address" {
+  let message = "Unsupported: arrowMarkerAbsolute puts the page's address in the marker references, which is not ported"
+  inspect(
+    refusal(
+      "---\nconfig:\n  arrowMarkerAbsolute: true\n---\nflowchart TD\nA --> B\n",
+    ),
+    content=message,
+  )
+  inspect(
+    refusal(
+      "---\nconfig:\n  flowchart:\n    arrowMarkerAbsolute: true\n---\nflowchart TD\nA --> B\n",
+    ),
+    content=message,
+  )
+  // Without edges there is no marker to refer to.
+  inspect(
+    refusal("---\nconfig:\n  arrowMarkerAbsolute: true\n---\nflowchart TD\nA\n"),
+    content="rendered",
+  )
+}

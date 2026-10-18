@@ -106,8 +106,9 @@ fn label_declaration_measured(key : String, value : String) -> Bool {
 
 ///|
 /// Refuse a diagram whose node or edge labels carry a style the label
-/// measurement does not model (see `label_declaration_measured`), or
-/// whose image or icon sizes are not numbers.
+/// measurement does not model (see `label_declaration_measured`), whose
+/// image or icon sizes are not numbers, or whose markers would be
+/// absolute references.
 fn check_label_styles(data : LayoutData) -> Unit raise LayoutError {
   let check = (styles : Array[String]) => {
     for key, value in styles_map(styles) {
@@ -137,6 +138,17 @@ fn check_label_styles(data : LayoutData) -> Unit raise LayoutError {
       }
     }
     check(styles)
+  }
+  // Marker references then start with the address of the page, which
+  // a renderer without a page does not have.
+  if !data.edges.is_empty() &&
+    (
+      data.config.flag("flowchart.arrowMarkerAbsolute") ||
+      data.config.flag("state.arrowMarkerAbsolute")
+    ) {
+    raise LayoutError(
+      "arrowMarkerAbsolute puts the page's address in the marker references, which is not ported",
+    )
   }
   let own_styles = edge_label_uses_own_styles(data.diagram_type)
   for edge in data.edges {
