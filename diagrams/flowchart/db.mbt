@@ -241,16 +241,19 @@ pub fn FlowDb::annotate_edge(
   for edge in self.edges {
     if edge.id == id {
       if doc is Some(doc) {
+        // Upstream assigns every value that is not `undefined`, and its
+        // readers test truthiness, so `null`, `false` and `""` clear an
+        // earlier setting.
         match doc.get("animate") {
           Some(True) => edge.animate = Some(true)
-          Some(False) => edge.animate = Some(false)
-          _ => ()
+          Some(_) => edge.animate = Some(false)
+          None => ()
         }
-        if doc.get("animation") is Some(String(animation)) {
-          edge.animation = Some(animation)
+        if doc.contains("animation") {
+          edge.animation = metadata_string(doc, "animation")
         }
-        if doc.get("curve") is Some(String(curve)) {
-          edge.interpolate = Some(curve)
+        if doc.contains("curve") {
+          edge.interpolate = metadata_string(doc, "curve")
         }
       }
       return true
