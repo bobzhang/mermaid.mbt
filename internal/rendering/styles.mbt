@@ -83,15 +83,21 @@ fn shape_styles(node : Node) -> SplitStyles {
 }
 
 ///|
-/// The dash pattern of a `stroke-dasharray` style for rough.js.
+/// The dash pattern of a `stroke-dasharray` style for rough.js: mermaid's
+/// `getStrokeDashArray`, which splits the trimmed value at runs of white
+/// space and reads each piece with `Number`, `NaN` counting as zero.
 fn stroke_dash_array(style : String?) -> Array[Double] {
   guard style is Some(style) && style != "" else { return [0.0, 0.0] }
-  let numbers = []
-  for part in style.trim().split(" ") {
-    if !part.is_empty() {
-      numbers.push(@string.parse_double(part.to_owned()) catch { _ => 0.0 })
-    }
-  }
+  let numbers = js_space_runs
+    .split(js_trim_text(style))
+    .map(part => {
+      let value = @journeycommon.js_number(part)
+      if value.is_nan() {
+        0.0
+      } else {
+        value
+      }
+    })
   match numbers {
     [] => [0.0, 0.0]
     [value] => [value, value]
