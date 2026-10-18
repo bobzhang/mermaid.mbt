@@ -877,11 +877,6 @@ pub fn render(
     @config.InvalidColor(color) =>
       raise Config("Unsupported color format: \"\{color}\"")
   }
-  // A sandboxed diagram is serialized into an `<iframe>` holding an HTML
-  // document in a base64 `data:` URL, which is not ported.
-  if config.text("securityLevel") is Some("sandbox") {
-    raise Unsupported("securityLevel sandbox")
-  }
   // Text longer than `maxTextSize` is replaced by a flowchart saying so,
   // drawn with the configuration of the diagram it replaces.
   let max_length = config.number("maxTextSize").unwrap_or(MAX_TEXT_LENGTH)
