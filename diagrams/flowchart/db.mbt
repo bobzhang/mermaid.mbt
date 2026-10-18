@@ -373,6 +373,9 @@ fn FlowDb::add_vertex(
       raise FlowError("No such shape: \{shape}.")
     }
     vertex.shape = Some(shape)
+  } else if doc.get("shape") is Some(shape) && truthy(Some(shape)) {
+    // Upstream calls `doc.shape.toLowerCase()` on whatever is there.
+    raise FlowError("doc.shape.toLowerCase is not a function")
   }
   let label = metadata_string(doc, "label")
   if label is Some(label) {
