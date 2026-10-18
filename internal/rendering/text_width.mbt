@@ -13,16 +13,13 @@ fn text_measure_size(setting : Json) -> Double {
   match setting {
     Number(size, ..) => size
     String(text) => {
-      let digits = StringBuilder()
-      for c in text.trim() {
-        guard c is ('0'..<='9' | '.') else { break }
-        digits.write_char(c)
+      // The number as CSS writes one: `+12px` and `1.2e1px` are 12.
+      // A negative size is invalid, and leaves the page's.
+      guard @dom.css_dimension(text.trim().to_owned()) is Some((value, unit)) &&
+        value >= 0.0 else {
+        return page
       }
-      let unit = text.trim()[digits.to_string().length():].trim().to_owned()
-      let value = @string.parse_double(digits.to_string()) catch {
-        _ => return page
-      }
-      match unit {
+      match unit.trim() {
         "" | "px" => value
         "em" | "rem" => value * page
         "%" => value * page / 100.0

@@ -188,6 +188,7 @@ fn Parser::atom(self : Parser) -> Node raise RegexError {
       self.position += 1
       match class_escape(escaped) {
         Some(ranges) => Class(ranges, negated=escaped is ('D' | 'W' | 'S'))
+        None if escaped >= '1' && escaped <= '9' => Backref(escaped - '0')
         None => Char(self.escape(escaped))
       }
     }

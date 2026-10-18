@@ -1,7 +1,29 @@
-// `@braintree/sanitize-url`, which the links of a popup menu go through.
+// `@braintree/sanitize-url` 7.1.2, which mermaid's `formatUrl` (flowchart
+// click links, class diagram links) and the links of sequence diagram actors
+// go through outside the loose security level.
 
 ///|
-const BLANK_URL : String = "about:blank"
+/// A link address whose normalization by the browser's URL parser the port
+/// does not reproduce: internationalized host names, credentials, IPv6 and
+/// unusual IPv4 spellings; also character references that make a lone
+/// surrogate or name a number beyond 2^53 in binary, octal or hex.
+pub(all) suberror Unsupported {
+  Unsupported(String)
+} derive(Eq, Debug)
+
+///|
+/// `String.prototype.trim`.
+fn js_trim(text : StringView) -> String {
+  text
+  .trim(
+    chars=" \t\n\u{0b}\u{0c}\r\u{a0}\u{1680}\u{2000}\u{2001}\u{2002}\u{2003}\u{2004}\u{2005}\u{2006}\u{2007}\u{2008}\u{2009}\u{200a}\u{2028}\u{2029}\u{202f}\u{205f}\u{3000}\u{feff}",
+  )
+  .to_owned()
+}
+
+///|
+/// What a link that must not be followed becomes.
+pub const BLANK_URL : String = "about:blank"
 
 ///|
 /// `decodeURIComponent`, or the text itself where that would throw.
@@ -101,7 +123,7 @@ fn percent_encode(text : StringView, reserved : String) -> String {
 /// `new URL(url).toString()` for an `http:` or `https:` address without a
 /// port or credentials, which is all that reaches here: the address has
 /// exactly one colon. `None` when the browser cannot parse it.
-fn normalize_http_url(url : String) -> String? raise SequenceError {
+fn normalize_http_url(url : String) -> String? raise Unsupported {
   guard url.find(":") is Some(colon) else { return None }
   let scheme = url[:colon].to_owned().to_lower()
   let mut rest = url[colon + 1:]
@@ -126,9 +148,11 @@ fn normalize_http_url(url : String) -> String? raise SequenceError {
   for c in host {
     if c.to_int() >= 0x80 || c == '@' || c == '[' {
       // Internationalized names, credentials and IPv6 literals.
-      raise SequenceError("Unsupported link address: \{url}")
+      raise Unsupported("Unsupported link address: \{url}")
     }
-    if c.to_int() <= 0x20 || " #/<>?\\]^|%".contains_char(c) {
+    // Forbidden domain code points; a colon or a delete can only come from
+    // a percent escape here.
+    if c.to_int() <= 0x20 || " #/:<>?\\]^|%\u{7f}".contains_char(c) {
       return None
     }
   }
@@ -152,7 +176,7 @@ fn normalize_http_url(url : String) -> String? raise SequenceError {
         label.length() <= 3 &&
         (@string.parse_double(label) catch { _ => 256.0 }) < 256.0
       })
-    guard plain else { raise SequenceError("Unsupported link address: \{url}") }
+    guard plain else { raise Unsupported("Unsupported link address: \{url}") }
   }
   let path_end = cut(after_host, "?#")
   let segments : Array[String] = []
@@ -195,10 +219,68 @@ fn normalize_http_url(url : String) -> String? raise SequenceError {
 }
 
 ///|
+/// `String.fromCharCode(reference)`: the code unit of the number a `\w+`
+/// reference stands for (`Number` reads decimal with an exponent, `0b`,
+/// `0o` and `0x` integers and `Infinity`; anything else is `NaN`, hence 0),
+/// wrapped to 16 bits. `None` for a binary, octal or hex number beyond 2^53,
+/// whose rounding is not ported.
+fn char_code(reference : String) -> Int32? {
+  let chars = reference.to_array()
+  // The value of a digit; 36 for the underscore, which no radix takes.
+  let digit = (c : Char) => {
+    match c {
+      '0'..<='9' => c.to_int() - '0'.to_int()
+      'a'..<='z' => c.to_int() - 'a'.to_int() + 10
+      'A'..<='Z' => c.to_int() - 'A'.to_int() + 10
+      _ => 36
+    }
+  }
+  let is_digits = (from : Int32, radix : Int32) => {
+    from < chars.length() && chars[from:].iter().all(c => digit(c) < radix)
+  }
+  let prefix = if chars.length() > 2 && chars[0] == '0' {
+    match chars[1] {
+      'b' | 'B' => 2
+      'o' | 'O' => 8
+      'x' | 'X' => 16
+      _ => 0
+    }
+  } else {
+    0
+  }
+  let value = if prefix > 0 && is_digits(2, prefix) {
+    let mut value = 0UL
+    for c in chars[2:] {
+      value = value * prefix.to_uint64() + digit(c).to_uint64()
+      if value > 1UL << 53 {
+        return None
+      }
+    }
+    value.to_double()
+  } else {
+    let exponent = chars.search_by(c => c is ('e' | 'E'))
+    let mantissa_end = exponent.unwrap_or(chars.length())
+    let decimal = mantissa_end > 0 &&
+      chars[:mantissa_end].iter().all(c => c is ('0'..<='9')) &&
+      (exponent is None || is_digits(mantissa_end + 1, 10))
+    if decimal {
+      @string.parse_double(reference) catch {
+        _ => 0.0
+      }
+    } else {
+      0.0
+    }
+  }
+  // `ToUint16`; `Infinity` and `NaN` give 0.
+  guard !value.is_inf() else { return Some(0) }
+  Some((value % 65536.0).to_int())
+}
+
+///|
 /// What `sanitizeUrl` makes of a link: encodings that could hide a scheme
 /// are undone, scripting schemes are replaced by a blank page, and a plain
 /// web address comes back as the browser's URL parser spells it.
-fn sanitize_url(url : String) -> String raise SequenceError {
+pub fn sanitize_url(url : String) -> String raise Unsupported {
   if url == "" {
     return BLANK_URL
   }
@@ -218,18 +300,21 @@ fn sanitize_url(url : String) -> String raise SequenceError {
   let mut decoded = decode_uri(js_trim(url))
   while true {
     decoded = control.replace_all(decoded, _ => "")
+    let mut unported = false
     decoded = entity.replace_all(decoded, found => {
       // `String.fromCharCode` of the reference, read as a number.
-      let digits = found.group(1).unwrap_or("")
-      let code = @string.parse_double(digits) catch { _ => 0.0 }
-      let unit = code.to_int() % 65536
-      if digits.iter().all(c => c is ('0'..<='9')) &&
-        !(unit >= 0xD800 && unit <= 0xDFFF) {
-        Int32::unsafe_to_char(unit).to_string()
-      } else {
-        "\u{0}"
+      match char_code(found.group(1).unwrap_or("")) {
+        Some(unit) if !(unit >= 0xD800 && unit <= 0xDFFF) =>
+          Int32::unsafe_to_char(unit).to_string()
+        _ => {
+          unported = true
+          ""
+        }
       }
     })
+    if unported {
+      raise Unsupported("Unsupported character reference in link: \{url}")
+    }
     decoded = control_entity.replace_all(decoded, _ => "")
     decoded = control.replace_all(decoded, _ => "")
     decoded = escaped_space.replace_all(decoded, _ => "")

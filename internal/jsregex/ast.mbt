@@ -20,7 +20,9 @@ priv enum Node {
   Repeat(Node, min~ : Int32, max~ : Int32?, greedy~ : Bool)
   /// `(?=...)`, or `(?!...)` when negated.
   Look(Node, negated~ : Bool)
-  /// A back reference is not something mermaid's patterns use; kept out.
+  /// `\1` to `\9`: what the group of that number matched; nothing when
+  /// it has not taken part in the match.
+  Backref(Int32)
   Empty
 }
 

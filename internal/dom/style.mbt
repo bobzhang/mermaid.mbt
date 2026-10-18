@@ -20,8 +20,10 @@ fn parse_declarations(text : String) -> Array[(String, String)] {
         if base.contains("!") && !name.has_prefix("--") {
           continue
         }
-        parsed.push((name, normalize_value(name, base) + " !important", true))
-      } else {
+        if !rejected_value(name, base) {
+          parsed.push((name, normalize_value(name, base) + " !important", true))
+        }
+      } else if !rejected_value(name, value) {
         parsed.push((name, normalize_value(name, value), false))
       }
     }
@@ -106,9 +108,66 @@ fn is_shorthand(name : String) -> Bool {
 }
 
 ///|
+/// A single number, or a number and a unit of letters or `%`: what the
+/// checks of `rejected_value` look at. Lists, functions and keywords are
+/// not.
+fn single_dimension(value : String) -> (Double, String)? {
+  guard css_dimension(value.trim().to_owned()) is Some((number, unit)) &&
+    unit.iter().all(c => c is ('a'..<='z' | 'A'..<='Z' | '%')) else {
+    return None
+  }
+  Some((number, unit))
+}
+
+///|
+/// Whether the CSSOM rejects `value` for `name`, which leaves the
+/// declaration out (and `setProperty` without effect): a negative size
+/// where sizes cannot be negative, a weight outside 1 to 1000. Measured in
+/// the reference browser through `style.setProperty`.
+fn rejected_value(name : String, value : String) -> Bool {
+  match name {
+    "font-weight" =>
+      single_dimension(value) is Some((weight, "")) &&
+      !(weight >= 1.0 && weight <= 1000.0)
+    "font-size"
+    | "stroke-width"
+    | "stroke-miterlimit"
+    | "width"
+    | "height"
+    | "min-width"
+    | "max-width"
+    | "min-height"
+    | "max-height"
+    | "r"
+    | "rx"
+    | "ry"
+    | "line-height"
+    | "padding"
+    | "padding-top"
+    | "padding-right"
+    | "padding-bottom"
+    | "padding-left"
+    | "border-width"
+    | "outline-width"
+    | "border-radius"
+    | "tab-size"
+    | "flex-grow"
+    | "flex-shrink" => single_dimension(value) is Some((size, _)) && size < 0.0
+    _ => false
+  }
+}
+
+///|
 /// A declaration value as the CSSOM serializes it.
 fn normalize_value(name : String, value : String) -> String {
-  if is_color_property(name) {
+  if name == "font-weight" && single_dimension(value) is Some((weight, "")) {
+    // `+700` and `7e2` are `700`.
+    css_number(weight)
+  } else if single_dimension(value) is Some((0.0, "")) &&
+    is_length_property(name) {
+    // A length may be a zero without a unit, and is written in pixels.
+    "0px"
+  } else if is_color_property(name) {
     serialize_color(value)
   } else if name == "animation" {
     serialize_animation(value)
@@ -125,6 +184,48 @@ fn normalize_value(name : String, value : String) -> String {
     let value = value.trim().to_owned()
     css_length(value).unwrap_or(value)
   }
+}
+
+///|
+/// Properties whose value is a length (or a percentage, or a keyword),
+/// never a bare number: there the CSSOM writes a unitless zero as `0px`,
+/// where `stroke-width` or `line-height` keep `0`.
+fn is_length_property(name : String) -> Bool {
+  name
+  is ("font-size"
+  | "width"
+  | "height"
+  | "min-width"
+  | "max-width"
+  | "min-height"
+  | "max-height"
+  | "padding"
+  | "padding-top"
+  | "padding-right"
+  | "padding-bottom"
+  | "padding-left"
+  | "margin"
+  | "margin-top"
+  | "margin-right"
+  | "margin-bottom"
+  | "margin-left"
+  | "letter-spacing"
+  | "word-spacing"
+  | "text-indent"
+  | "border-width"
+  | "border-radius"
+  | "outline-width"
+  | "top"
+  | "right"
+  | "bottom"
+  | "left"
+  | "x"
+  | "y"
+  | "cx"
+  | "cy"
+  | "r"
+  | "rx"
+  | "ry")
 }
 
 ///|
@@ -189,6 +290,15 @@ fn serialize_alpha(alpha : Double) -> String? {
 /// attributes that were set later, and its text is re-serialized from the
 /// parsed declarations: `name: value;` pairs, colors resolved.
 pub fn Element::style(self : Element, name : String, value : String) -> Element {
+  // `setProperty` with a value the property does not take does nothing.
+  let base = if value.to_lower().has_suffix("!important") {
+    value[:value.length() - 10].to_owned()
+  } else {
+    value
+  }
+  if rejected_value(name, base) {
+    return self
+  }
   let value = normalize_value(name, value)
   let mut found = false
   for i, declaration in self.declarations {

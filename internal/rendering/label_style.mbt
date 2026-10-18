@@ -3,18 +3,10 @@
 // browser lays the text out with them.
 
 ///|
-/// The number at the start of a CSS length and the unit after it.
+/// The number at the start of a CSS length, as CSS writes one (`+12`,
+/// `1e1`), and the unit right after it.
 fn css_length(value : String) -> (Double, String)? {
-  let mut end = 0
-  for c in value {
-    guard c is ('0'..<='9' | '.' | '-' | '+') else { break }
-    end += 1
-  }
-  guard end > 0 else { return None }
-  let number = @string.parse_double(value[:end].to_owned()) catch {
-    _ => return None
-  }
-  Some((number, value[end:].trim().to_owned()))
+  @dom.css_dimension(value)
 }
 
 ///|
@@ -44,7 +36,9 @@ fn Env::styled(self : Env, style : String, faces~ : Bool = true) -> Env {
             match css_length(other) {
               // With a regular and a bold face to choose from, font
               // matching takes the bold one for any weight above 500.
-              Some((weight, "")) => weight > 500.0
+              // A weight outside 1 to 1000 is invalid.
+              Some((weight, "")) if weight >= 1.0 && weight <= 1000.0 =>
+                weight > 500.0
               _ => env.bold
             }
         }
@@ -60,7 +54,10 @@ fn Env::styled(self : Env, style : String, faces~ : Bool = true) -> Env {
       }
       "font-size" =>
         match css_length(value) {
-          Some((size, "px")) => env = { ..env, font_size: size, }
+          // A negative size is invalid, and refused before this.
+          Some((size, "px")) if size >= 0.0 => env = { ..env, font_size: size, }
+          // Zero needs no unit.
+          Some((0.0, "")) => env = { ..env, font_size: 0.0, }
           // Relative sizes compound over the elements the style is
           // written on, which differ from label to label; not modelled.
           _ => ()
@@ -70,6 +67,90 @@ fn Env::styled(self : Env, style : String, faces~ : Bool = true) -> Env {
     }
   }
   env
+}
+
+///|
+/// Whether the label measurement models a label style declaration. The
+/// style is written on the label before the browser measures it, so a
+/// declaration that changes how its text lays out (spacing, case, line
+/// height, a relative size, other wrapping rules) changes the size of the
+/// node; those are refused rather than measured wrong.
+fn label_declaration_measured(key : String, value : String) -> Bool {
+  let value = value
+    .replace_all(old="!important", new="")
+    .trim()
+    .to_lower()
+    .to_owned()
+  match key {
+    "color"
+    | "text-decoration"
+    | "text-align"
+    | "text-shadow"
+    | "text-overflow"
+    | "font-family"
+    | "font-weight"
+    | "font-style" => true
+    "font-size" =>
+      (css_length(value) is Some((size, "px")) && size >= 0.0) ||
+      css_length(value) is Some((0.0, ""))
+    "text-transform" => value == "none"
+    "letter-spacing" | "word-spacing" => value is ("normal" | "0" | "0px" | "")
+    "white-space" => value is ("normal" | "nowrap")
+    "word-wrap" | "overflow-wrap" | "word-break" => value == "normal"
+    "hyphens" => value == "manual"
+    // `line-height` and anything not a label style upstream.
+    _ => !is_label_style(key)
+  }
+}
+
+///|
+/// Refuse a diagram whose node or edge labels carry a style the label
+/// measurement does not model (see `label_declaration_measured`), whose
+/// image or icon sizes are not numbers, or whose markers would be
+/// absolute references.
+fn check_label_styles(data : LayoutData) -> Unit raise LayoutError {
+  let check = (styles : Array[String]) => {
+    for key, value in styles_map(styles) {
+      if !label_declaration_measured(key, value) {
+        raise LayoutError(
+          "the label style `\{key}:\{value}` changes the label's size, which is not ported",
+        )
+      }
+    }
+  }
+  for node in data.nodes {
+    // `Number("abc")`: a size that is not a number makes upstream's
+    // geometry `NaN`, which the port does not follow.
+    if node.data is Asset(asset_width~, asset_height~, ..) &&
+      [asset_width, asset_height].any(size => {
+        size is Some(size) && size.is_nan()
+      }) {
+      raise LayoutError(
+        "the image or icon size of \{node.id} is not a number, which is not ported",
+      )
+    }
+    let styles = [..node.css_compiled_styles, ..node.css_styles]
+    for style in node.label_style.split(";") {
+      let style = style.trim().to_owned()
+      if style != "" {
+        styles.push(style)
+      }
+    }
+    check(styles)
+  }
+  // Marker references then start with the address of the page, which
+  // a renderer without a page does not have.
+  if !data.edges.is_empty() && marker_references_absolute(data) {
+    raise LayoutError(
+      "arrowMarkerAbsolute puts the page's address in the marker references, which is not ported",
+    )
+  }
+  let own_styles = edge_label_uses_own_styles(data.diagram_type)
+  for edge in data.edges {
+    check(
+      [..edge.css_compiled_styles, ..if own_styles { edge.style } else { [] }],
+    )
+  }
 }
 
 ///|
@@ -147,20 +228,22 @@ fn label_font(style : String) -> LabelFont {
         bold = match value {
           "bold" | "bolder" => true
           _ =>
-            match (@string.parse_double(value) catch { _ => 0.0 }) {
+            match css_length(value) {
               // With a regular and a bold face to choose from, font matching
-              // takes the bold one for any weight above 500.
-              weight => weight > 500.0
+              // takes the bold one for any weight above 500; one outside 1
+              // to 1000 is invalid.
+              Some((weight, "")) if weight >= 1.0 && weight <= 1000.0 =>
+                weight > 500.0
+              _ => bold
             }
         }
       "font-style" => italic = value is ("italic" | "oblique")
       "font-size" =>
-        if value.has_suffix("px") {
-          size = Some(
-            @string.parse_double(value[:value.length() - 2].to_owned()) catch {
-              _ => continue
-            },
-          )
+        match css_length(value) {
+          // A negative size is invalid; zero needs no unit.
+          Some((value, "px")) if value >= 0.0 => size = Some(value)
+          Some((0.0, "")) => size = Some(0.0)
+          _ => ()
         }
       _ => ()
     }
@@ -185,4 +268,21 @@ fn keeps_on_one_line(style : String) -> Bool {
     }
   }
   false
+}
+
+///|
+/// Whether `insertEdge` writes marker references with the page's address:
+/// `flowchart.arrowMarkerAbsolute || state.arrowMarkerAbsolute` as the
+/// configuration reads when the diagram is drawn. The flowchart's diagrams
+/// (flowcharts, swimlanes) and agentflow `setConfig` the root option over
+/// `flowchart.arrowMarkerAbsolute` when they are set up, so there the root
+/// one counts and the section's own is lost; the other diagrams' `init`
+/// only change a copy of the configuration.
+fn marker_references_absolute(data : LayoutData) -> Bool {
+  let flowchart = match data.diagram_type {
+    "flowchart-v2" | "flowchart-elk" | "swimlane" | "agentflow" =>
+      data.config.flag("arrowMarkerAbsolute")
+    _ => data.config.flag("flowchart.arrowMarkerAbsolute")
+  }
+  flowchart || data.config.flag("state.arrowMarkerAbsolute")
 }

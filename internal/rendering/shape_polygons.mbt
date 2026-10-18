@@ -46,7 +46,7 @@ fn triangle(
   node : Node,
   env : Env,
   flipped~ : Bool,
-) -> @dom.Element {
+) -> @dom.Element raise LayoutError {
   let styles = shape_styles(node)
   let label_padding_x = if node.look == "neo" {
     node.padding * 2.0
@@ -113,7 +113,7 @@ fn trapezoidal_pentagon(
   parent : @dom.Element,
   node : Node,
   env : Env,
-) -> @dom.Element {
+) -> @dom.Element raise LayoutError {
   let styles = shape_styles(node)
   let neo = node.look == "neo"
   let label_padding_x = if neo { 16.0 } else { node.padding }
@@ -143,7 +143,11 @@ fn trapezoidal_pentagon(
 
 ///|
 /// A rectangle whose top rises to the right: manual input.
-fn sloped_rect(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
+fn sloped_rect(
+  parent : @dom.Element,
+  node : Node,
+  env : Env,
+) -> @dom.Element raise LayoutError {
   let styles = shape_styles(node)
   let neo = node.look == "neo"
   let label_padding_x = if neo { 16.0 } else { node.padding }
@@ -202,7 +206,7 @@ fn curved_trapezoid(
   parent : @dom.Element,
   node : Node,
   env : Env,
-) -> @dom.Element {
+) -> @dom.Element raise LayoutError {
   let styles = shape_styles(node)
   let neo = node.look == "neo"
   let label_padding_x = if neo { 16.0 } else { node.padding }
@@ -250,7 +254,7 @@ fn half_rounded_rectangle(
   parent : @dom.Element,
   node : Node,
   env : Env,
-) -> @dom.Element {
+) -> @dom.Element raise LayoutError {
   let styles = shape_styles(node)
   let neo = node.look == "neo"
   let min_width = 15.0
@@ -336,7 +340,11 @@ fn elliptic_arc_points(
 
 ///|
 /// A rectangle whose sides bow to the left: stored data.
-fn bow_tie_rect(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
+fn bow_tie_rect(
+  parent : @dom.Element,
+  node : Node,
+  env : Env,
+) -> @dom.Element raise LayoutError {
   let styles = shape_styles(node)
   let neo = node.look == "neo"
   let label_padding_x = if neo { 16.0 } else { node.padding }

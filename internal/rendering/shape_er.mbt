@@ -95,7 +95,7 @@ fn er_add_text(
   translate_y : Double,
   class_name : String,
   style : String,
-) -> LabelBox {
+) -> LabelBox raise LayoutError {
   let label = shape_svg
     .append("g")
     .attr("class", "label \{class_name}")

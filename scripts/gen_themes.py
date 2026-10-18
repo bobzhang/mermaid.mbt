@@ -139,7 +139,7 @@ class Parser:
             self.locals.pop()
             name = snake(var)
             return [
-                f"{pad}for {name}_ in to_int({start})..<to_int({end}) {{",
+                f"{pad}for {name}_ in to_int({start})..<loop_end({end}) {{",
                 f"{pad}  let {name} = num({name}_.to_double())",
                 *body,
                 f"{pad}}}",

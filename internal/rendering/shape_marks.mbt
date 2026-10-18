@@ -157,7 +157,11 @@ fn fork_join(
 
 ///|
 /// Two triangles meeting at their tips.
-fn hourglass(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
+fn hourglass(
+  parent : @dom.Element,
+  node : Node,
+  env : Env,
+) -> @dom.Element raise LayoutError {
   let styles = shape_styles(node)
   node.label = ""
   let labelled = label_helper(parent, node, node_classes(node), env)

@@ -86,3 +86,69 @@ test "repeated and important declarations" {
     ),
   )
 }
+
+///|
+test "CSS numbers take a sign, a fraction and an exponent" {
+  let show = (text : String) => {
+    match css_dimension(text) {
+      Some((number, unit)) => "\{number} \{unit}"
+      None => "-"
+    }
+  }
+  inspect(
+    [
+      "+12px", "1e1px", "1E+1px", ".5e1px", "+.5em", "-1px", "12PX", "1.px", "+-1px",
+      "1e", "1e+px", "1e1.5px", "+ 12px", "px", "+",
+    ]
+    .map(show)
+    .join(", "),
+    content="12 px, 10 px, 10 px, 5 px, 0.5 em, -1 px, 12 PX, 1 .px, -, 1 e, 1 e+px, 10 .5px, -, -, -",
+  )
+  // `style.setProperty` in the reference browser: `+2px` is `2px`,
+  // `1e1px` is `10px`, `+.5e1px` is `5px`.
+  assert_eq(css_length("+2px"), Some("2px"))
+  assert_eq(css_length("1e1px"), Some("10px"))
+  assert_eq(css_length("+.5e1px"), Some("5px"))
+}
+
+///|
+test "values the CSSOM rejects leave the declaration out" {
+  // `style.setProperty` in the reference browser: sizes that cannot be
+  // negative and weights outside 1 to 1000 are not taken; `+700` is
+  // `700`.
+  let element = Element::new("g")
+  element.style("stroke-width", "-2px").style("font-weight", "1001") |> ignore
+  assert_eq(element.to_html(), "<g></g>")
+  element
+  .style("stroke-width", "2px")
+  .style("stroke-width", "-3px")
+  .style("font-weight", "+700")
+  .style("stroke-dashoffset", "-2px")
+  |> ignore
+  assert_eq(
+    element.to_html(),
+    "<g style=\"stroke-width: 2px; font-weight: 700; stroke-dashoffset: -2px;\"></g>",
+  )
+  assert_eq(
+    serialize_declarations(
+      "font-size:-1px;font-weight:0;opacity:0.5;width:-1px !important",
+    ),
+    "opacity: 0.5;",
+  )
+}
+
+///|
+test "a unitless zero length is written in pixels" {
+  // `style.setProperty(name, "0")` in the reference browser.
+  let element = Element::new("div")
+  element
+  .style("font-size", "0")
+  .style("stroke-width", "0")
+  .style("line-height", "0")
+  .style("width", "0")
+  |> ignore
+  assert_eq(
+    element.to_html(),
+    "<div style=\"font-size: 0px; stroke-width: 0; line-height: 0; width: 0px;\"></div>",
+  )
+}

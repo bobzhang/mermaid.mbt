@@ -15,7 +15,11 @@ fn flow_container_stroke(env : Env) -> String {
 ///|
 /// An expanded agentflow container: an unfilled rounded frame with its
 /// title at the top.
-fn flow_group(parent : @dom.Element, node : Node, env : Env) -> ClusterFrame {
+fn flow_group(
+  parent : @dom.Element,
+  node : Node,
+  env : Env,
+) -> ClusterFrame raise LayoutError {
   let styles = node_styles(node)
   let shape_svg = parent
     .append("g")

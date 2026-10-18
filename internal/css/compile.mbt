@@ -149,13 +149,21 @@ fn resolve_selectors(text : String, parents : Array[String]) -> Array[String] {
 }
 
 ///|
-/// Split a selector list at its top-level commas.
+/// Split a selector list at its top-level commas. An escaped character
+/// (`.a\,b`) is never a separator or a quote: stylis copies it with its
+/// backslash without looking at it.
 fn split_selectors(text : String) -> Array[String] {
   let parts = []
   let current = StringBuilder()
   let mut depth = 0
   let mut quote : Char? = None
+  let mut escaped = false
   for c in text {
+    if escaped || c == '\\' {
+      escaped = !escaped
+      current.write_char(c)
+      continue
+    }
     match quote {
       Some(q) => {
         if c == q {

@@ -25,8 +25,8 @@ pub(all) suberror Unsupported {
 
 // Types and methods
 pub struct Node {
-  id : Int32
-  level : Int32
+  id : Int
+  level : Int
   name : String
   directory : Bool
   icon : String?

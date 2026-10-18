@@ -131,6 +131,29 @@ test "markdown labels" {
   inspect(markdown_to_html("a b", false), content="<p>a&nbsp;b</p>")
   // Blocks other than paragraphs pass through as written.
   inspect(markdown_to_html("# Heading", true), content="# Heading")
+  // marked's results (checked in Chrome): emphasis nests, a heading is
+  // one line, a rule keeps the line break after it, a list or quote ends
+  // at a blank line, two spaces before a line break are a break token.
+  inspect(
+    markdown_to_html("*a **b** c*", true),
+    content="<p><em>a <strong>b</strong> c</em></p>",
+  )
+  inspect(
+    markdown_to_html("**a *b***", true),
+    content="<p><strong>a <em>b</em></strong></p>",
+  )
+  inspect(
+    markdown_to_html("*foo**bar*", true),
+    content="<p><em>foo**bar</em></p>",
+  )
+  inspect(
+    markdown_to_html("# h\n**b**", true),
+    content="# h\n<p><strong>b</strong></p>",
+  )
+  inspect(markdown_to_html("***\nb", true), content="***\n<p>b</p>")
+  inspect(markdown_to_html("- a\n- b\n\nc", true), content="- a\n- b<p>c</p>")
+  inspect(markdown_to_html("a\n---", true), content="a\n---")
+  inspect(markdown_to_html("a  \nb", true), content="<p>a  \nb</p>")
 }
 
 ///|

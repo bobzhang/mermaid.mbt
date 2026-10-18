@@ -43,7 +43,9 @@ pub struct Edge {
   mut style : Array[String]?
   mut interpolate : String?
   classes : Array[String]
-  mut animate : Bool?
+  /// The `animate` metadata as it was written, any YAML value: upstream
+  /// keeps it as it is and tests it both for truthiness and for `true`.
+  mut animate : Json?
   mut animation : String?
 }
 
@@ -86,6 +88,9 @@ pub struct FlowDb {
   mut acc_title : String
   mut acc_description : String
   mut title : String
+  /// A link the port cannot sanitize as upstream does; the diagram is
+  /// refused when drawn.
+  priv mut unsupported_link : String?
 }
 
 ///|
@@ -114,6 +119,7 @@ pub fn FlowDb::new(config : @config.Config) -> FlowDb {
     acc_title: "",
     acc_description: "",
     title: "",
+    unsupported_link: None,
   }
 }
 
@@ -135,10 +141,12 @@ pub fn FlowDb::default_style(self : FlowDb) -> Array[String]? {
 
 ///|
 /// mermaid's `sanitizeText` for text without markup. Text carrying HTML is
-/// passed through for now; upstream runs it through DOMPurify.
+/// passed through for now; upstream runs it through DOMPurify. What that
+/// parse decides about character references is kept, as later parses of
+/// the label would decide differently.
 pub fn FlowDb::sanitize_text(self : FlowDb, text : String) -> String {
   ignore(self)
-  text
+  @dom.settle_references(text)
 }
 
 ///|
@@ -241,16 +249,18 @@ pub fn FlowDb::annotate_edge(
   for edge in self.edges {
     if edge.id == id {
       if doc is Some(doc) {
-        match doc.get("animate") {
-          Some(True) => edge.animate = Some(true)
-          Some(False) => edge.animate = Some(false)
-          _ => ()
+        // Upstream assigns every value that is not `undefined`, so a
+        // later `null`, `false` or `0` clears an earlier setting and a
+        // later `1` replaces `true` by a value that is truthy but not
+        // `true`.
+        if doc.get("animate") is Some(animate) {
+          edge.animate = Some(animate)
         }
-        if doc.get("animation") is Some(String(animation)) {
-          edge.animation = Some(animation)
+        if doc.contains("animation") {
+          edge.animation = metadata_string(doc, "animation")
         }
-        if doc.get("curve") is Some(String(curve)) {
-          edge.interpolate = Some(curve)
+        if doc.contains("curve") {
+          edge.interpolate = metadata_string(doc, "curve")
         }
       }
       return true
@@ -369,6 +379,9 @@ fn FlowDb::add_vertex(
       raise FlowError("No such shape: \{shape}.")
     }
     vertex.shape = Some(shape)
+  } else if doc.get("shape") is Some(shape) && truthy(Some(shape)) {
+    // Upstream calls `doc.shape.toLowerCase()` on whatever is there.
+    raise FlowError("doc.shape.toLowerCase is not a function")
   }
   let label = metadata_string(doc, "label")
   if label is Some(label) {
@@ -397,11 +410,12 @@ fn FlowDb::add_vertex(
   if metadata_string(doc, "constraint") is Some(constraint) {
     vertex.constraint = Some(constraint)
   }
-  if truthy(doc.get("w")) && doc.get("w") is Some(Number(w, ..)) {
-    vertex.asset_width = Some(w)
+  // `Number(doc.w)`: a size may be given as text.
+  if doc.get("w") is Some(w) && truthy(Some(w)) {
+    vertex.asset_width = Some(@diagram.to_number(w))
   }
-  if truthy(doc.get("h")) && doc.get("h") is Some(Number(h, ..)) {
-    vertex.asset_height = Some(h)
+  if doc.get("h") is Some(h) && truthy(Some(h)) {
+    vertex.asset_height = Some(@diagram.to_number(h))
   }
 }
 
@@ -697,7 +711,7 @@ pub fn FlowDb::set_link(
 ) -> Unit {
   for id in ids.split(",") {
     if self.vertices.get(id.to_owned()) is Some(vertex) {
-      vertex.link = Some(format_url(link, self.config))
+      vertex.link = Some(self.format_url(link))
       vertex.link_target = target
     }
   }
@@ -719,31 +733,29 @@ pub fn FlowDb::set_click_event(self : FlowDb, ids : String) -> Unit {
 }
 
 ///|
-/// mermaid's `formatUrl`: outside the loose security level a link is
-/// sanitized; a `javascript:` URL becomes `about:blank`.
-fn format_url(link : String, config : @config.Config) -> String {
+/// mermaid's `formatUrl`: outside the loose security level a link goes
+/// through `sanitizeUrl`, which decodes it, blanks scripting schemes and
+/// normalizes web addresses as the browser's URL parser does.
+fn FlowDb::format_url(self : FlowDb, link : String) -> String {
   let url = link.trim().to_owned()
   if url == "" {
     return url
   }
-  if config.text("securityLevel") is Some("loose") {
+  if self.config.text("securityLevel") is Some("loose") {
     return url
   }
-  // Like @braintree/sanitize-url: script-capable schemes are refused.
-  let stripped = try! @jsregex.Regex::compile("[\\u0000-\\u0020]")
-  let compact = stripped.replace_all(url.to_lower(), _ => "")
-  for scheme in ["javascript:", "data:", "vbscript:"] {
-    if compact.has_prefix(scheme) {
-      return "about:blank"
+  @sanitizeurl.sanitize_url(url) catch {
+    @sanitizeurl.Unsupported(message) => {
+      self.unsupported_link = Some(message)
+      url
     }
   }
-  // The URL comes back normalized: a bare origin gains its root path.
-  let origin = try! @jsregex.Regex::compile("^https?://[^/?#]+$", flags="i")
-  if origin.matches(url) {
-    url + "/"
-  } else {
-    url
-  }
+}
+
+///|
+/// The reason the diagram cannot be drawn exactly, if it has one.
+pub fn FlowDb::unsupported(self : FlowDb) -> String? {
+  self.unsupported_link
 }
 
 ///|
@@ -772,8 +784,9 @@ fn FlowDb::add_sub_graph(
     Some(_) => Some(id_text.trim().to_owned())
     None => None
   }
-  // `subgraph some title` without an id: the text is only a title.
-  if same_text && title_text.iter().any(c => c is (' ' | '\t' | '\n' | '\r')) {
+  // `subgraph some title` without an id: the text is only a title
+  // (`/\s/`, JavaScript's white space).
+  if same_text && title_text.iter().any(@diagram.is_js_space) {
     sub_graph_id = None
   }
   // Flatten one level, drop directions and blanks, keep first occurrences.
@@ -926,4 +939,22 @@ fn destruct_link(text : String, start? : String) -> Json {
     combined
   }
   { "type": combined, "stroke": start_stroke, "length": length }
+}
+
+///|
+/// `if (edge.animate)`: whether the `animate` metadata is truthy, as
+/// JavaScript tests the value YAML gave.
+pub fn Edge::animate_truthy(self : Edge) -> Bool {
+  match self.animate {
+    None | Some(Null | False) => false
+    Some(Number(n, ..)) => n == n && n != 0.0
+    Some(String(s)) => s != ""
+    Some(True | Array(_) | Object(_)) => true
+  }
+}
+
+///|
+/// `edge.animate === true`.
+pub fn Edge::animate_is_true(self : Edge) -> Bool {
+  self.animate is Some(True)
 }

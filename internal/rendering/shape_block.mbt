@@ -186,7 +186,11 @@ fn class_styled(env : Env, node : Node) -> Env {
 ///|
 /// An arrow around the label, pointing where the block says: mermaid's
 /// `block_arrow`.
-fn block_arrow(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
+fn block_arrow(
+  parent : @dom.Element,
+  node : Node,
+  env : Env,
+) -> @dom.Element raise LayoutError {
   let (positioned, directions, width_in_columns, style) = match node.data {
     Block(positioned~, directions~, width_in_columns~, style~, ..) =>
       (positioned, directions, width_in_columns, Some(style))

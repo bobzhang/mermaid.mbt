@@ -15,7 +15,7 @@ pub fn arrow_types(String?) -> (String, String)
 
 pub fn draw(FlowDb, @diagram.Context, diagram_type? : String) -> Unit raise @rendering.LayoutError
 
-pub fn edge_id(String, String, counter~ : Int32, id? : String) -> String
+pub fn edge_id(String, String, counter~ : Int, id? : String) -> String
 
 pub fn fade(String, Double) -> String
 
@@ -25,11 +25,11 @@ pub fn insert_title(String, @diagram.Context, css_class? : String, section? : St
 
 pub fn is_color_theme(String, Json) -> Bool
 
-pub fn link_positions(Json) -> Array[Int32?]
+pub fn link_positions(Json) -> Array[Int?]
 
 pub fn metadata_string(Map[String, Json], String) -> String?
 
-pub fn palette_color(Json, Int32) -> String
+pub fn palette_color(Json, Int) -> String
 
 pub fn parse(String, @config.Config) -> FlowDb raise
 
@@ -66,13 +66,15 @@ pub struct Edge {
   mut text : String
   mut label_type : String
   mut stroke : String?
-  mut length : Int32?
+  mut length : Int?
   mut style : Array[String]?
   mut interpolate : String?
   classes : Array[String]
-  mut animate : Bool?
+  mut animate : Json?
   mut animation : String?
 }
+pub fn Edge::animate_is_true(Self) -> Bool
+pub fn Edge::animate_truthy(Self) -> Bool
 
 pub struct FlowDb {
   vertices : Map[String, Vertex]
@@ -98,7 +100,7 @@ pub fn FlowDb::default_style(Self) -> Array[String]?
 pub fn FlowDb::direction(Self) -> String?
 pub fn FlowDb::dump(Self) -> Json
 pub fn FlowDb::is_sub_graph(Self, String) -> Bool
-pub fn FlowDb::lexer_hook(Self, Int32, @jison.Lexer) -> @jison.HookResult
+pub fn FlowDb::lexer_hook(Self, Int, @jison.Lexer) -> @jison.HookResult
 pub fn FlowDb::new(@config.Config) -> Self
 pub fn FlowDb::sanitize_text(Self, String) -> String
 pub fn FlowDb::set_class(Self, String, String) -> Unit
@@ -107,9 +109,10 @@ pub fn FlowDb::set_direction(Self, String) -> Unit
 pub fn FlowDb::set_link(Self, String, String, String?) -> Unit
 pub fn FlowDb::set_title(Self, String) -> Unit
 pub fn FlowDb::set_tooltip(Self, String, String) -> Unit
-pub fn FlowDb::update_link(Self, Array[Int32?], Array[String]) -> Unit raise
-pub fn FlowDb::update_link_interpolate(Self, Array[Int32?], String) -> Unit raise FlowError
-pub fn FlowDb::vertex_counter(Self) -> Int32
+pub fn FlowDb::unsupported(Self) -> String?
+pub fn FlowDb::update_link(Self, Array[Int?], Array[String]) -> Unit raise
+pub fn FlowDb::update_link_interpolate(Self, Array[Int?], String) -> Unit raise FlowError
+pub fn FlowDb::vertex_counter(Self) -> Int
 
 pub struct StyleClass {
   id : String

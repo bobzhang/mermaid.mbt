@@ -70,7 +70,7 @@ pub struct ClassNote {
   id : String
   class_ : String?
   text : String
-  index : Int32
+  index : Int
   mut parent : String?
 }
 
@@ -80,8 +80,8 @@ pub struct ClassRelation {
   title1 : String
   title2 : String
   title : String?
-  type1 : Int32?
-  type2 : Int32?
+  type1 : Int?
+  type2 : Int?
   dotted : Bool
 }
 

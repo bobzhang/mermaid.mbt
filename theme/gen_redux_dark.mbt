@@ -414,7 +414,7 @@ fn redux_dark_update_colors(t : Theme) -> Unit raise @color.ColorError {
     or_else(t.get("cScale11"), () => adjust(t.get("primaryColor"), h=num(330.0))),
   )
   if truthy(t.get("darkMode")) {
-    for i_ in to_int(num(0.0))..<to_int(t.get("THEME_COLOR_LIMIT")) {
+    for i_ in to_int(num(0.0))..<loop_end(t.get("THEME_COLOR_LIMIT")) {
       let i = num(i_.to_double())
       t.set(
         to_string(add(str("cScale"), i)),
@@ -422,7 +422,7 @@ fn redux_dark_update_colors(t : Theme) -> Unit raise @color.ColorError {
       )
     }
   } else {
-    for i_ in to_int(num(0.0))..<to_int(t.get("THEME_COLOR_LIMIT")) {
+    for i_ in to_int(num(0.0))..<loop_end(t.get("THEME_COLOR_LIMIT")) {
       let i = num(i_.to_double())
       t.set(
         to_string(add(str("cScale"), i)),
@@ -430,7 +430,7 @@ fn redux_dark_update_colors(t : Theme) -> Unit raise @color.ColorError {
       )
     }
   }
-  for i_ in to_int(num(0.0))..<to_int(t.get("THEME_COLOR_LIMIT")) {
+  for i_ in to_int(num(0.0))..<loop_end(t.get("THEME_COLOR_LIMIT")) {
     let i = num(i_.to_double())
     t.set(
       to_string(add(str("cScaleInv"), i)),
@@ -439,7 +439,7 @@ fn redux_dark_update_colors(t : Theme) -> Unit raise @color.ColorError {
       }),
     )
   }
-  for i_ in to_int(num(0.0))..<to_int(t.get("THEME_COLOR_LIMIT")) {
+  for i_ in to_int(num(0.0))..<loop_end(t.get("THEME_COLOR_LIMIT")) {
     let i = num(i_.to_double())
     if truthy(t.get("darkMode")) {
       t.set(
@@ -461,7 +461,7 @@ fn redux_dark_update_colors(t : Theme) -> Unit raise @color.ColorError {
     "scaleLabelColor",
     or_else(t.get("scaleLabelColor"), () => t.get("labelTextColor")),
   )
-  for i_ in to_int(num(0.0))..<to_int(t.get("THEME_COLOR_LIMIT")) {
+  for i_ in to_int(num(0.0))..<loop_end(t.get("THEME_COLOR_LIMIT")) {
     let i = num(i_.to_double())
     t.set(
       to_string(add(str("cScaleLabel"), i)),
@@ -475,7 +475,7 @@ fn redux_dark_update_colors(t : Theme) -> Unit raise @color.ColorError {
   } else {
     num(-1.0)
   }
-  for i_ in to_int(num(0.0))..<to_int(num(5.0)) {
+  for i_ in to_int(num(0.0))..<loop_end(num(5.0)) {
     let i = num(i_.to_double())
     t.set(
       to_string(add(str("surface"), i)),

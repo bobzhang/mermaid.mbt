@@ -111,3 +111,84 @@ test "invalid patterns are rejected" {
     _ => fail("expected an error")
   }
 }
+
+///|
+test "back references" {
+  inspect(prefix("(`+)a\\1(?!`)", "``a``b"), content="[``a``]")
+  inspect(prefix("(`+)a\\1(?!`)", "``a```"), content="no match")
+  inspect(
+    prefix("<(pre)>.*?</\\1>", "<PRE>x</pre>", flags="i"),
+    content="[<PRE>x</pre>]",
+  )
+  // A group that took no part in the match matches nothing.
+  inspect(prefix("(?:(a)|b)\\1c", "bc"), content="[bc]")
+}
+
+///|
+test "repetitions of alternatives backtrack into their iterations" {
+  // Results of the same patterns in JavaScript.
+  inspect(prefix("(?:ab|a)+c", "ababac"), content="[ababac]")
+  inspect(prefix("(?:ab|a)+?b", "abab"), content="[abab]")
+  inspect(prefix("(?:a|ab)*b", "aab"), content="[aab]")
+  inspect(prefix("(?:a|ab){2}c", "aabc"), content="[aabc]")
+  inspect(prefix("(?:a|b)+?$", "abab"), content="[abab]")
+  inspect(prefix("(?:x(?!y)|y)+", "xyxxz"), content="no match")
+  inspect(prefix("(?:a|)*b", "aab"), content="[aab]")
+  inspect(prefix("(?:a|){3,}b", "ab"), content="[ab]")
+  inspect(prefix("(?:aa|a){2,3}?a$", "aaaaa"), content="[aaaaa]")
+  inspect(prefix("(?:.|\\n(?!\\n))+?\\n\\n", "a\nb\n\nc"), content="[a\nb\n\n]")
+  inspect(prefix("(?:(?!b).)+", "aab"), content="[aa]")
+  inspect(prefix("(a|ab)+c", "abac"), content="[abac]")
+}
+
+///|
+test "repetitions of more than one code unit take long subjects" {
+  // One call deeper per iteration overflowed the stack of wasm-gc and
+  // JavaScript after about a thousand.
+  let long = "a".repeat(100000)
+  inspect(
+    prefix("(?:.|\\n(?!x))+?$", long).length(),
+    content=(long.length() + 2).to_string(),
+  )
+  inspect(prefix("(?:a\\n?)*b", long), content="no match")
+  inspect(
+    prefix("(?:\\n(?!x)[^\\n]+)*", "\na".repeat(20000)).length(),
+    content="40002",
+  )
+}
+
+///|
+test "captures are forgotten at each iteration of their atom" {
+  // The match and its groups in JavaScript, `-` for undefined.
+  let groups = (source : String, input : String) => {
+    guard (try! @jsregex.Regex::compile(source)).match_prefix(input)
+      is Some(found) else {
+      return "no match"
+    }
+    let parts = [found.text()]
+    for index in 1..<=2 {
+      parts.push(found.group(index).unwrap_or("-"))
+    }
+    parts.join(" ")
+  }
+  inspect(groups("(?:(a)|b)+", "ab"), content="ab - -")
+  inspect(groups("(a|(b))+", "ba"), content="ba a -")
+  inspect(groups("((a)|b)*c", "abc"), content="abc b -")
+  inspect(groups("(?:(a)|(b))*?$", "ab"), content="ab - b")
+  // A positive lookahead keeps its captures, a negative one none.
+  inspect(groups("(?=(a))a\\1?", "aa"), content="aa a -")
+  inspect(groups("(?!(a)b)a\\1", "ac"), content="a - -")
+  inspect(groups("(a)?(?:b\\1)*", "bb"), content="bb - -")
+}
+
+///|
+test "lazy repetitions of one code unit take one more only when needed" {
+  // Results of the same patterns in JavaScript.
+  inspect(prefix("a{2,4}?b", "aaab"), content="[aaab]")
+  inspect(prefix("a{2,}?$", "aaaa"), content="[aaaa]")
+  inspect(prefix("[ab]*?c", "abac"), content="[abac]")
+  inspect(prefix("x*?", "xxx"), content="[]")
+  inspect(prefix("[^c]{1,3}?c", "abcc"), content="[abc]")
+  inspect(prefix("a{2,3}?", "aaaa"), content="[aa]")
+  inspect(prefix("a+?(?=b)", "aaab"), content="[aaa]")
+}

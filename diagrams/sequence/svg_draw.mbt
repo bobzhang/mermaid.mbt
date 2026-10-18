@@ -388,7 +388,7 @@ fn Renderer::draw_popup(
         if truthy(value) {
           raise SequenceError("url.trim is not a function")
         } else {
-          BLANK_URL
+          @sanitizeurl.BLANK_URL
         }
     }
     // The output sanitizer only lets web, mail and phone addresses and

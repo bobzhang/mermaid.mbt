@@ -26,7 +26,7 @@ fn draw_rect(
   label_padding_y~ : Double,
   radius? : Double,
   html_labels? : Bool,
-) -> @dom.Element {
+) -> @dom.Element raise LayoutError {
   let styles = shape_styles(node)
   let labelled = label_helper(
     parent,
@@ -126,7 +126,7 @@ fn polygon_shape(
   node : Node,
   env : Env,
   outline : (LabelBox) -> (Double, Double, Array[Point]),
-) -> @dom.Element {
+) -> @dom.Element raise LayoutError {
   let styles = shape_styles(node)
   let labelled = label_helper(parent, node, node_classes(node), env)
   let (w, h, points) = outline(labelled.bbox)
@@ -153,7 +153,11 @@ fn polygon_shape(
 
 ///|
 /// A diamond: mermaid's `question`.
-fn question(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
+fn question(
+  parent : @dom.Element,
+  node : Node,
+  env : Env,
+) -> @dom.Element raise LayoutError {
   let styles = shape_styles(node)
   let labelled = label_helper(parent, node, node_classes(node), env)
   let w = labelled.bbox.width + node.padding
@@ -203,7 +207,7 @@ fn circle(
   node : Node,
   env : Env,
   padding? : Double,
-) -> @dom.Element {
+) -> @dom.Element raise LayoutError {
   let styles = shape_styles(node)
   let labelled = label_helper(
     parent,
@@ -238,7 +242,11 @@ fn circle(
 
 ///|
 /// Two concentric circles around the label.
-fn double_circle(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
+fn double_circle(
+  parent : @dom.Element,
+  node : Node,
+  env : Env,
+) -> @dom.Element raise LayoutError {
   let styles = shape_styles(node)
   let neo = node.look == "neo"
   let gap = if neo { 12.0 } else { 5.0 }
@@ -400,7 +408,11 @@ fn insert_rough_outline(
 
 ///|
 /// A rectangle with half circles for sides.
-fn stadium(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
+fn stadium(
+  parent : @dom.Element,
+  node : Node,
+  env : Env,
+) -> @dom.Element raise LayoutError {
   let styles = shape_styles(node)
   let neo = node.look == "neo"
   let padding_x = if neo { 40.0 } else { node.padding }
@@ -442,7 +454,7 @@ fn rect_left_inv_arrow(
   parent : @dom.Element,
   node : Node,
   env : Env,
-) -> @dom.Element {
+) -> @dom.Element raise LayoutError {
   let styles = shape_styles(node)
   let neo = node.look == "neo"
   let label_padding_x = if neo { 21.0 } else { node.padding }

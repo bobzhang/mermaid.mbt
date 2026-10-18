@@ -8,7 +8,7 @@ fn usecase_system_boundary(
   parent : @dom.Element,
   node : Node,
   env : Env,
-) -> ClusterFrame {
+) -> ClusterFrame raise LayoutError {
   let boundary_type = match node.data {
     Usecase(boundary_type~, ..) if boundary_type != "" => boundary_type
     _ => "rect"

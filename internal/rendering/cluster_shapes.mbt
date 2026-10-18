@@ -16,7 +16,7 @@ fn rounded_with_title(
   parent : @dom.Element,
   node : Node,
   env : Env,
-) -> ClusterFrame {
+) -> ClusterFrame raise LayoutError {
   let shape_svg = parent
     .append("g")
     .attr("class", node.css_classes)

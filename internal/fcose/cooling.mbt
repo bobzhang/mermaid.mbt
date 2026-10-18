@@ -110,11 +110,15 @@ let cooling_schedules : Map[Int32, FixedArray[UInt64]] = {
 /// iterations stop at `max_iterations`.
 fn cooling_factor(
   cycle : Int32,
-  max_iterations : Int32,
+  max_iterations : Double,
 ) -> Double raise FcoseError {
-  guard cooling_schedules.get(max_iterations) is Some(schedule) &&
-    cycle >= 1 &&
-    cycle <= schedule.length() else {
+  let measured = if max_iterations == max_iterations.floor() &&
+    max_iterations.abs() < 1.0e9 {
+    cooling_schedules.get(max_iterations.to_int())
+  } else {
+    None
+  }
+  guard measured is Some(schedule) && cycle >= 1 && cycle <= schedule.length() else {
     raise Unsupported(
       "fcose: a cooling schedule for \{max_iterations} iterations was not measured",
     )

@@ -1,7 +1,16 @@
 ///|
-/// Resolve the character references in HTML text: `&amp;`, `&#38;`,
-/// `&#x26;`. Unknown names are left as written.
-fn resolve_references(text : String) -> String {
+/// Resolve the character references in HTML text as the HTML parser does:
+/// `&amp;`, `&#38;`, `&#x26;`, also without their semicolon where the
+/// parser allows it. `in_attribute` tells whether the text is an attribute
+/// value, where a legacy name followed by a letter, digit or `=` is no
+/// reference. An ampersand that starts none is text. `fast_path` reads
+/// them as Chrome's fast-path parser does (see `FastPath`): attribute
+/// values as text, and `&#x;` as U+FFFD.
+fn resolve_references(
+  text : String,
+  in_attribute~ : Bool = false,
+  fast_path~ : Bool = false,
+) -> String {
   if !text.contains("&") {
     return text
   }
@@ -10,52 +19,61 @@ fn resolve_references(text : String) -> String {
   while rest.find("&") is Some(start) {
     out.write_view(rest[:start])
     let after = rest[start + 1:]
-    let end = after.find(";")
-    guard end is Some(end) && end > 0 && end <= 32 else {
-      out.write_char('&')
-      rest = after
-      continue
-    }
-    let name = after[:end].to_owned()
-    let hex = match name.strip_prefix("#x") {
-      Some(digits) => Some(digits)
-      None => name.strip_prefix("#X")
-    }
-    let radix_digits = (digits : StringView, radix : Int32) => {
-      let mut value = 0
-      let mut ok = digits.length() > 0
-      for c in digits {
-        let digit = match c {
-          '0'..<='9' => c.to_int() - '0'
-          'a'..<='f' => c.to_int() - 'a' + 10
-          'A'..<='F' => c.to_int() - 'A' + 10
-          _ => 99
+    rest = after
+    match after {
+      ['#', 'x' | 'X', .. digits] | ['#', .. digits] => {
+        let radix = if after is ['#', 'x' | 'X', ..] { 16 } else { 10 }
+        let mut length = 0
+        while length < digits.length() &&
+              (
+                digits[length] is ('0'..<='9') ||
+                (radix == 16 && digits[length] is ('a'..<='f' | 'A'..<='F'))
+              ) {
+          length += 1
         }
-        if digit >= radix {
-          ok = false
+        if length == 0 {
+          if fast_path && radix == 16 && digits is [';', .. tail] {
+            out.write_char('\u{fffd}')
+            rest = tail
+          } else {
+            out.write_char('&')
+          }
+          continue
         }
-        value = value * radix + digit
+        out.write_string(
+          numeric_reference(reference_code(digits[:length], radix)),
+        )
+        rest = if digits[length:] is [';', .. tail] {
+          tail
+        } else {
+          digits[length:]
+        }
       }
-      if ok {
-        Some(value)
-      } else {
-        None
+      ['a'..<='z' | 'A'..<='Z' | '0'..<='9', ..] => {
+        // The longest name of the table the text starts with; none is
+        // longer than 32 characters, semicolon included.
+        let longest = name_span(after)
+        let mut matched = false
+        for length = longest; length > 0; length = length - 1 {
+          guard named_references.get(after[:length].to_owned()) is Some(value) else {
+            continue
+          }
+          if in_attribute &&
+            !fast_path &&
+            after[length - 1] != ';' &&
+            after[length:] is ['a'..<='z' | 'A'..<='Z' | '0'..<='9' | '=', ..] {
+            break
+          }
+          out.write_string(value)
+          rest = after[length:]
+          matched = true
+          break
+        }
+        if !matched {
+          out.write_char('&')
+        }
       }
-    }
-    let code = match (hex, name.strip_prefix("#")) {
-      (Some(digits), _) => radix_digits(digits, 16)
-      (None, Some(digits)) => radix_digits(digits, 10)
-      (None, None) => named_entities.get(name)
-    }
-    match code.bind(Int32::to_char) {
-      Some(c) => {
-        out.write_char(c)
-        rest = after[end + 1:]
-      }
-      None => {
-        out.write_char('&')
-        rest = after
-      }
+      _ => out.write_char('&')
     }
   }
   out.write_view(rest)
@@ -63,11 +81,38 @@ fn resolve_references(text : String) -> String {
 }
 
 ///|
+/// How many code units of `text` a character reference's name can take:
+/// ASCII letters and digits, then a `;`, at most the 32 of the longest
+/// name. Names never reach into anything else, a character outside the
+/// basic plane included, whose halves must stay together.
+fn name_span(text : StringView) -> Int32 {
+  let mut length = 0
+  while length < text.length() &&
+        length < 32 &&
+        text[length] is ('a'..<='z' | 'A'..<='Z' | '0'..<='9') {
+    length += 1
+  }
+  if length < 32 && length < text.length() && text[length] == ';' {
+    length += 1
+  }
+  length
+}
+
+///|
 /// Replace the element's content with parsed HTML, like setting
 /// `innerHTML`. This covers what labels contain: nested tags with quoted
 /// attributes, void elements such as `<br>`, text and character
 /// references. Anything malformed is kept as text.
-pub fn Element::set_inner_html(self : Element, html : String) -> Unit {
+///
+/// Character references are resolved as Chrome resolves them for markup
+/// parsed into an element named `context`, by default this one: with
+/// its fast-path parser where that takes the markup.
+pub fn Element::set_inner_html(
+  self : Element,
+  html : String,
+  context? : String,
+) -> Unit {
+  let fast_path = fast_path_parses(html, context.unwrap_or(self.tag))
   self.children.clear()
   let n = html.length()
   let stack = [self]
@@ -75,7 +120,7 @@ pub fn Element::set_inner_html(self : Element, html : String) -> Unit {
   let flush = () => {
     if !text.is_empty() {
       stack[stack.length() - 1].children.push(
-        Text(resolve_references(text.to_string())),
+        Text(resolve_references(text.to_string(), fast_path~)),
       )
       text.reset()
     }
@@ -176,7 +221,11 @@ pub fn Element::set_inner_html(self : Element, html : String) -> Unit {
         }
       }
       if name != "" && element.get_attr(name) is None {
-        element.attr(name, resolve_references(value)) |> ignore
+        element.attr(
+          name,
+          resolve_references(value, in_attribute=true, fast_path~),
+        )
+        |> ignore
       }
     }
     let parent = stack[stack.length() - 1]

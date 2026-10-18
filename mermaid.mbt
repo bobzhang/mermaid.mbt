@@ -29,6 +29,10 @@ fn layout_failure(error : @rendering.LayoutError) -> MermaidError {
 const MAX_TEXT_LENGTH : Double = 50000.0
 
 ///|
+/// What is drawn instead of a diagram longer than that.
+const MAX_TEXT_LENGTH_EXCEEDED : String = "graph TB;a[Maximum text size in diagram exceeded];style a fill:#faa"
+
+///|
 /// What a diagram contributes to the rendering pipeline once parsed.
 priv struct Parsed {
   styles : String
@@ -64,7 +68,11 @@ fn parse_diagram(
         acc_title: pie.acc_title,
         acc_description: pie.acc_description,
         classes: [],
-        draw: context => @pie.draw(pie, context),
+        draw: context => {
+          @pie.draw(pie, context) catch {
+            @pie.Unsupported(message) => raise Unsupported(message)
+          }
+        },
       }
     }
     "info" => {
@@ -869,9 +877,20 @@ pub fn render(
     @config.InvalidColor(color) =>
       raise Config("Unsupported color format: \"\{color}\"")
   }
+  // Text longer than `maxTextSize` is replaced by a flowchart saying so,
+  // drawn with the configuration of the diagram it replaces.
   let max_length = config.number("maxTextSize").unwrap_or(MAX_TEXT_LENGTH)
-  if processed.code.length().to_double() > max_length {
-    raise Syntax("Maximum text size in diagram exceeded")
+  let (code, with_comments, diagram_type) = if processed.code
+    .length()
+    .to_double() >
+    max_length {
+    let code = MAX_TEXT_LENGTH_EXCEEDED
+    let diagram_type = @preprocess.detect_type(code) catch {
+      @preprocess.UnknownDiagramError(message) => raise UnknownDiagram(message)
+    }
+    (code, code, diagram_type)
+  } else {
+    (processed.code, processed.with_comments, diagram_type)
   }
   let svg = @dom.Element::new("svg")
     .attr("id", id)
@@ -882,10 +901,10 @@ pub fn render(
   // comments (`preserveCommentsWhenParsing`), as long as that is not too
   // long.
   let source = if diagram_type is ("eventmodeling" | "agentflow") &&
-    processed.with_comments.length().to_double() <= max_length {
-    processed.with_comments
+    with_comments.length().to_double() <= max_length {
+    with_comments
   } else {
-    processed.code
+    code
   }
   // Entity codes are shielded from the grammars, as in Diagram.fromText.
   let parsed = parse_diagram(
@@ -895,6 +914,11 @@ pub fn render(
     processed.title,
     id,
   )
+  // Upstream's render hands back an <iframe> with the SVG in a data URL
+  // under the sandbox security level, not the SVG.
+  if config.text("securityLevel") is Some("sandbox") {
+    raise Unsupported("the sandbox security level")
+  }
   let style = @dom.Element::new("style").text(
     compiled_styles(id, parsed.styles, config, parsed.classes),
   )

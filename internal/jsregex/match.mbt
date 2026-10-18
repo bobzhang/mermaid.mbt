@@ -3,7 +3,7 @@
 /// leftmost match, alternatives tried in order. It works on UTF-16 code
 /// units, like a JavaScript pattern without the `u` flag.
 pub struct Regex {
-  priv node : Node
+  priv program : Program
   priv groups : Int32
   priv ignore_case : Bool
   priv multiline : Bool
@@ -23,7 +23,7 @@ pub fn Regex::compile(
     raise RegexError("unmatched )")
   }
   {
-    node,
+    program: compile_program(node, parser.groups),
     groups: parser.groups,
     ignore_case: flags.contains("i"),
     multiline: flags.contains("m"),
@@ -70,7 +70,8 @@ priv struct Run {
   base : Int32
   ignore_case : Bool
   multiline : Bool
-  captures : FixedArray[Int32]
+  /// The captures, then the program's other registers.
+  registers : FixedArray[Int32]
 }
 
 ///|
@@ -152,183 +153,6 @@ fn Run::single(self : Run, node : Node, at : Int32) -> Bool? {
 }
 
 ///|
-fn is_single(node : Node) -> Bool {
-  match node {
-    Char(_) | Any | Class(_, ..) => true
-    Group(inner, capture=None) => is_single(inner)
-    _ => false
-  }
-}
-
-///|
-/// Match `node` at `at`, then call `k` with the position after it.
-/// Returns whether the whole continuation succeeded.
-fn Run::step(self : Run, node : Node, at : Int32, k : (Int32) -> Bool) -> Bool {
-  let n = self.input.length()
-  match node {
-    Empty => k(at)
-    Char(_) | Any | Class(_, ..) =>
-      at < n && self.single(node, at) is Some(true) && k(at + 1)
-    Start =>
-      (
-        at == self.base ||
-        (self.multiline && is_line_terminator(self.unit(at - 1)))
-      ) &&
-      k(at)
-    End =>
-      (at == n || (self.multiline && is_line_terminator(self.unit(at)))) &&
-      k(at)
-    WordBoundary(negated~) => {
-      let before = at > self.base && is_word(self.unit(at - 1))
-      let after = at < n && is_word(self.unit(at))
-      (before != after) != negated && k(at)
-    }
-    Group(inner, capture=None) => self.step(inner, at, k)
-    Group(inner, capture=Some(index)) => {
-      let old_start = self.captures[2 * index]
-      let old_end = self.captures[2 * index + 1]
-      let matched = self.step(inner, at, end => {
-        let saved_start = self.captures[2 * index]
-        let saved_end = self.captures[2 * index + 1]
-        self.captures[2 * index] = at
-        self.captures[2 * index + 1] = end
-        if k(end) {
-          true
-        } else {
-          self.captures[2 * index] = saved_start
-          self.captures[2 * index + 1] = saved_end
-          false
-        }
-      })
-      if !matched {
-        self.captures[2 * index] = old_start
-        self.captures[2 * index + 1] = old_end
-      }
-      matched
-    }
-    Seq(items) => self.sequence(items, 0, at, k)
-    Alt(alternatives) => {
-      for alternative in alternatives {
-        if self.step(alternative, at, k) {
-          return true
-        }
-      }
-      false
-    }
-    Look(inner, negated~) => {
-      let saved = self.captures.copy()
-      let found = self.step(inner, at, _ => true)
-      if negated {
-        // Nothing captured inside a failed or negated lookahead survives.
-        saved.blit_to(self.captures, len=saved.length())
-        !found && k(at)
-      } else if found {
-        if k(at) {
-          true
-        } else {
-          saved.blit_to(self.captures, len=saved.length())
-          false
-        }
-      } else {
-        false
-      }
-    }
-    Repeat(inner, min~, max~, greedy~) =>
-      if is_single(inner) {
-        self.repeat_single(inner, min, max, greedy, at, k)
-      } else {
-        self.repeat(inner, min, max, greedy, 0, at, k)
-      }
-  }
-}
-
-///|
-fn Run::sequence(
-  self : Run,
-  items : Array[Node],
-  index : Int32,
-  at : Int32,
-  k : (Int32) -> Bool,
-) -> Bool {
-  if index == items.length() {
-    k(at)
-  } else {
-    self.step(items[index], at, next => self.sequence(items, index + 1, next, k))
-  }
-}
-
-///|
-/// Repetition of something that consumes one code unit: count how far it
-/// can go, then try the continuation from the preferred end.
-fn Run::repeat_single(
-  self : Run,
-  inner : Node,
-  min : Int32,
-  max : Int32?,
-  greedy : Bool,
-  at : Int32,
-  k : (Int32) -> Bool,
-) -> Bool {
-  let n = self.input.length()
-  let limit = match max {
-    Some(max) => if at + max < n { at + max } else { n }
-    None => n
-  }
-  let mut reach = at
-  while reach < limit && self.single(inner, reach) is Some(true) {
-    reach += 1
-  }
-  if reach - at < min {
-    return false
-  }
-  if greedy {
-    for end = reach; end >= at + min; end = end - 1 {
-      if k(end) {
-        return true
-      }
-    }
-  } else {
-    for end = at + min; end <= reach; end = end + 1 {
-      if k(end) {
-        return true
-      }
-    }
-  }
-  false
-}
-
-///|
-fn Run::repeat(
-  self : Run,
-  inner : Node,
-  min : Int32,
-  max : Int32?,
-  greedy : Bool,
-  count : Int32,
-  at : Int32,
-  k : (Int32) -> Bool,
-) -> Bool {
-  let can_stop = count >= min
-  let can_continue = !(max is Some(max) && count >= max)
-  let more = () => {
-    can_continue &&
-    self.step(inner, at, next => {
-      // An iteration that matches nothing past the minimum ends the loop.
-      if next == at && count >= min {
-        false
-      } else {
-        self.repeat(inner, min, max, greedy, count + 1, next, k)
-      }
-    })
-  }
-  if greedy {
-    more() || (can_stop && k(at))
-  } else {
-    (can_stop && k(at)) || more()
-  }
-}
-
-///|
 /// Try to match at exactly `at`, with the subject string taken to start at
 /// `base`.
 fn Regex::attempt(
@@ -342,17 +166,12 @@ fn Regex::attempt(
     base,
     ignore_case: self.ignore_case,
     multiline: self.multiline,
-    captures: FixedArray::make(2 * (self.groups + 1), -1),
+    registers: FixedArray::make(self.program.registers, -1),
   }
-  let mut end = -1
-  if run.step(self.node, at, position => {
-      end = position
-      true
-    }) {
-    Some({ input, start: at, end, captures: run.captures, })
-  } else {
-    None
-  }
+  guard run.execute(self.program, at) is Some(end) else { return None }
+  let captures = FixedArray::make(2 * (self.groups + 1), -1)
+  run.registers.blit_to(captures, len=captures.length())
+  Some({ input, start: at, end, captures, })
 }
 
 ///|

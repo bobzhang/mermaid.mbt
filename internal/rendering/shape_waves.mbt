@@ -60,7 +60,7 @@ fn wave_edged_rectangle(
   parent : @dom.Element,
   node : Node,
   env : Env,
-) -> @dom.Element {
+) -> @dom.Element raise LayoutError {
   let styles = shape_styles(node)
   let neo = node.look == "neo"
   let label_padding_x = if neo { 16.0 } else { node.padding }
@@ -123,7 +123,7 @@ fn lined_wave_edged_rect(
   parent : @dom.Element,
   node : Node,
   env : Env,
-) -> @dom.Element {
+) -> @dom.Element raise LayoutError {
   let styles = shape_styles(node)
   let neo = node.look == "neo"
   let label_padding_x = if neo { 16.0 } else { node.padding }
@@ -187,7 +187,7 @@ fn multi_wave_edged_rectangle(
   parent : @dom.Element,
   node : Node,
   env : Env,
-) -> @dom.Element {
+) -> @dom.Element raise LayoutError {
   let styles = shape_styles(node)
   let labelled = label_helper(parent, node, node_classes(node), env)
   let box = labelled.bbox
@@ -259,7 +259,7 @@ fn wave_rectangle(
   parent : @dom.Element,
   node : Node,
   env : Env,
-) -> @dom.Element {
+) -> @dom.Element raise LayoutError {
   let styles = shape_styles(node)
   let neo = node.look == "neo"
   let label_padding_x = if neo { 16.0 } else { node.padding }
@@ -320,7 +320,7 @@ fn tagged_wave_edged_rectangle(
   parent : @dom.Element,
   node : Node,
   env : Env,
-) -> @dom.Element {
+) -> @dom.Element raise LayoutError {
   let styles = shape_styles(node)
   let labelled = label_helper(parent, node, node_classes(node), env)
   let box = labelled.bbox

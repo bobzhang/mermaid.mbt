@@ -9,13 +9,10 @@ let line_break : @jsregex.Regex = try! @jsregex.Regex::compile(
 )
 
 ///|
-/// `text.split(lineBreakRegex)`
+/// `text.split(lineBreakRegex)`: only `<br>` tags break lines; a literal
+/// newline stays in the line, where SVG shows it as a space.
 fn split_breaks(text : String) -> Array[String] {
-  line_break
-  .replace_all(text, _ => "\n")
-  .split("\n")
-  .map(part => part.to_owned())
-  .collect()
+  line_break.split(text)
 }
 
 ///|

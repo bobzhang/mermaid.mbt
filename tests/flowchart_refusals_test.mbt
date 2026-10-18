@@ -1,0 +1,90 @@
+///|
+test "flowcharts the port refuses rather than draw differently" {
+  // Label styles that change how the text lays out, and so the size of
+  // the node upstream measures with them.
+  inspect(
+    refusal("flowchart TD\nA((AA))\nstyle A letter-spacing:10px\n"),
+    content="Unsupported: the label style `letter-spacing:10px` changes the label's size, which is not ported",
+  )
+  inspect(
+    refusal("flowchart TD\nA((AA))\nstyle A font-size:2em\n"),
+    content="Unsupported: the label style `font-size:2em` changes the label's size, which is not ported",
+  )
+  inspect(
+    refusal("flowchart TD\nclassDef c text-transform:uppercase\nA:::c --> B\n"),
+    content="Unsupported: the label style `text-transform:uppercase` changes the label's size, which is not ported",
+  )
+  inspect(
+    refusal("flowchart TD\nA -->|x| B\nlinkStyle 0 word-spacing:4px\n"),
+    content="Unsupported: the label style `word-spacing:4px` changes the label's size, which is not ported",
+  )
+}
+
+///|
+test "image sizes that are not numbers" {
+  // `Number("abc")` is `NaN`, which upstream's geometry carries on.
+  inspect(
+    refusal("flowchart TD\nA@{ icon: \"fa:fa-car\", w: \"abc\" }\n"),
+    content="Unsupported: the image or icon size of A is not a number, which is not ported",
+  )
+}
+
+///|
+test "links the browser's URL parser would rewrite in ways not ported" {
+  inspect(
+    refusal("flowchart TD\nA\nclick A \"https://user@x.com/\"\n"),
+    content="Unsupported: Unsupported link address: https://user@x.com/",
+  )
+}
+
+///|
+test "markers referenced by the page's address" {
+  let message = "Unsupported: arrowMarkerAbsolute puts the page's address in the marker references, which is not ported"
+  inspect(
+    refusal(
+      "---\nconfig:\n  arrowMarkerAbsolute: true\n---\nflowchart TD\nA --> B\n",
+    ),
+    content=message,
+  )
+  // The flowchart sets its section's option to the root one when it is
+  // set up, so the section's own is lost (fixtures
+  // `marker_absolute_section*`); the edges also read the state diagram's.
+  inspect(
+    refusal(
+      "---\nconfig:\n  flowchart:\n    arrowMarkerAbsolute: true\n---\nflowchart TD\nA --> B\n",
+    ),
+    content="rendered",
+  )
+  inspect(
+    refusal(
+      "---\nconfig:\n  state:\n    arrowMarkerAbsolute: true\n---\nflowchart TD\nA <--> B\n",
+    ),
+    content=message,
+  )
+  // Agentflow does the same as the flowchart.
+  inspect(
+    refusal(
+      "---\nconfig:\n  arrowMarkerAbsolute: true\n---\nagentflow-beta TB\n  a --> b\n",
+    ),
+    content=message,
+  )
+  // Other diagrams leave the sections alone, and the root option to the
+  // final clean-up, which only rewrites absolute references.
+  inspect(
+    refusal(
+      "---\nconfig:\n  arrowMarkerAbsolute: true\n---\nclassDiagram\nA <|-- B\n",
+    ),
+    content="rendered",
+  )
+  inspect(
+    refusal(
+      "---\nconfig:\n  flowchart:\n    arrowMarkerAbsolute: true\n---\nclassDiagram\nA <|-- B\n",
+    ),
+    content=message,
+  )
+  // Without edges there is no marker to refer to.
+  inspect(
+    refusal("---\nconfig:\n  arrowMarkerAbsolute: true\n---\nflowchart TD\nA\n"),
+    content="rendered",
+  )
+}

@@ -58,7 +58,11 @@ pub fn FlowDb::dump(self : FlowDb) -> Json {
       fields["style"] = Json(style)
     }
     if edge.animate is Some(animate) {
-      fields["animate"] = Json::boolean(animate)
+      // `JSON.stringify` writes numbers that are not finite as `null`.
+      fields["animate"] = match animate {
+        Number(n, ..) if n.is_nan() || n.is_inf() => Json::null()
+        _ => animate
+      }
     }
     edges.push(Json::object(fields))
   }

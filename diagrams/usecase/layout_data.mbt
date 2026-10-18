@@ -114,9 +114,15 @@ fn association_markers(arrow_type : Int32) -> (String, String) {
 
 ///|
 /// A label as it is read out: a markdown label without its formatting.
-fn accessible_label(label : String, label_type : String) -> String {
+fn accessible_label(
+  label : String,
+  label_type : String,
+) -> String raise UsecaseError {
   if label_type == "markdown" {
-    @rendering.markdown_plain_text(label)
+    @rendering.markdown_plain_text(label) catch {
+      @rendering.LayoutError(message) | UpstreamError(message) =>
+        raise Unsupported(message)
+    }
   } else {
     label
   }

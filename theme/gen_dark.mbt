@@ -259,7 +259,7 @@ fn dark_update_colors(t : Theme) -> Unit raise @color.ColorError {
     "cScale11",
     or_else(t.get("cScale11"), () => adjust(t.get("primaryColor"), h=num(330.0))),
   )
-  for i_ in to_int(num(0.0))..<to_int(t.get("THEME_COLOR_LIMIT")) {
+  for i_ in to_int(num(0.0))..<loop_end(t.get("THEME_COLOR_LIMIT")) {
     let i = num(i_.to_double())
     t.set(
       to_string(add(str("cScaleInv"), i)),
@@ -268,7 +268,7 @@ fn dark_update_colors(t : Theme) -> Unit raise @color.ColorError {
       }),
     )
   }
-  for i_ in to_int(num(0.0))..<to_int(t.get("THEME_COLOR_LIMIT")) {
+  for i_ in to_int(num(0.0))..<loop_end(t.get("THEME_COLOR_LIMIT")) {
     let i = num(i_.to_double())
     t.set(
       to_string(add(str("cScalePeer"), i)),
@@ -277,7 +277,7 @@ fn dark_update_colors(t : Theme) -> Unit raise @color.ColorError {
       }),
     )
   }
-  for i_ in to_int(num(0.0))..<to_int(num(5.0)) {
+  for i_ in to_int(num(0.0))..<loop_end(num(5.0)) {
     let i = num(i_.to_double())
     t.set(
       to_string(add(str("surface"), i)),
@@ -312,7 +312,7 @@ fn dark_update_colors(t : Theme) -> Unit raise @color.ColorError {
       }
     }),
   )
-  for i_ in to_int(num(0.0))..<to_int(t.get("THEME_COLOR_LIMIT")) {
+  for i_ in to_int(num(0.0))..<loop_end(t.get("THEME_COLOR_LIMIT")) {
     let i = num(i_.to_double())
     t.set(
       to_string(add(str("cScaleLabel"), i)),
@@ -321,7 +321,7 @@ fn dark_update_colors(t : Theme) -> Unit raise @color.ColorError {
       }),
     )
   }
-  for i_ in to_int(num(0.0))..<to_int(t.get("THEME_COLOR_LIMIT")) {
+  for i_ in to_int(num(0.0))..<loop_end(t.get("THEME_COLOR_LIMIT")) {
     let i = num(i_.to_double())
     t.set(
       to_string(add(str("pie"), i)),
@@ -363,7 +363,7 @@ fn dark_update_colors(t : Theme) -> Unit raise @color.ColorError {
     or_else(t.get("pieOuterStrokeColor"), () => str("black")),
   )
   t.set("pieOpacity", or_else(t.get("pieOpacity"), () => str("0.7")))
-  for i_ in to_int(num(0.0))..<to_int(num(8.0)) {
+  for i_ in to_int(num(0.0))..<loop_end(num(8.0)) {
     let i = num(i_.to_double())
     t.set(
       to_string(add(str("venn"), add(i, num(1.0)))),

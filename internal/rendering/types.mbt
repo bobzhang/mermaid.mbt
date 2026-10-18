@@ -157,7 +157,11 @@ pub struct Edge {
   css_compiled_styles : Array[String]
   style : Array[String]
   look : String
+  /// `edge.animate` is truthy: the edge has the fast animation's class.
   animate : Bool
+  /// `edge.animate === true`: the edge counts as animated, which keeps the
+  /// neo look's dashes and marker margins off it.
+  animate_is_true : Bool
   animation : String?
   /// The labels at the two ends of the edge, on the left and on the
   /// right of its direction.
@@ -199,6 +203,7 @@ pub fn Edge::new(
   style~ : Array[String] = [],
   look~ : String,
   animate~ : Bool = false,
+  animate_is_true? : Bool,
   animation? : String,
   start_label_left~ : String = "",
   start_label_right~ : String = "",
@@ -223,6 +228,7 @@ pub fn Edge::new(
     style,
     look,
     animate,
+    animate_is_true: animate_is_true.unwrap_or(animate),
     animation,
     start_label_left,
     start_label_right,
@@ -282,22 +288,15 @@ fn Env::new(config : @config.Config, diagram_id : String) -> Env {
     // A number without a unit is no CSS length: the stylesheet's
     // `font-size` is dropped and text keeps the browser's size.
     Number(_, ..) => 16.0
-    String(text) => {
-      // The leading number, fraction included: `15.5px` is 15.5 pixels.
-      let mut length = 0
-      for c in text {
-        guard c is ('0'..<='9' | '.') else { break }
-        length += 1
+    String(text) =>
+      // The leading number as CSS writes one: `15.5px` is 15.5 pixels,
+      // `+12px` and `1.2e1px` are 12.
+      match @dom.css_dimension(text) {
+        // A negative size is invalid: the browser's stays. Zero, with a
+        // unit or without, is a size.
+        Some((value, _)) if value >= 0.0 => value
+        _ => 16.0
       }
-      let value = @string.parse_double(text[:length].to_owned()) catch {
-        _ => 0.0
-      }
-      if value == 0.0 {
-        16.0
-      } else {
-        value
-      }
-    }
     _ => 16.0
   }
   let html_labels = match config.get("htmlLabels") {

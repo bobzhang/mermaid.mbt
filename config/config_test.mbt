@@ -195,3 +195,29 @@ test "a site-wide fontFamily becomes the theme's" {
   })
   inspect(config.theme().text("fontFamily"), content="verdana")
 }
+
+///|
+test "site theme variables are derived without a site theme" {
+  // `initialize` derives them with the default theme, so `titleColor`
+  // follows an overridden `textColor` (checked against the oracle).
+  let config = @config.Config::new(site={
+    "themeVariables": { "textColor": "#ff0000" },
+  })
+  inspect(
+    config.theme().text("titleColor"),
+    content=(
+      #|#ff0000
+    ),
+  )
+  // An unknown theme becomes the default one.
+  let config = @config.Config::new(site={
+    "theme": "bogus",
+    "themeVariables": { "textColor": "#ff0000" },
+  })
+  debug_inspect(
+    (config.text("theme"), config.theme().text("titleColor")),
+    content=(
+      #|(Some("default"), "#ff0000")
+    ),
+  )
+}

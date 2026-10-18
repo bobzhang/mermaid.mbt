@@ -311,7 +311,9 @@ fn insert_edge(
     "dashed" => "edge-pattern-dashed"
     _ => "edge-pattern-solid"
   }
-  let animation_class = match (edge.animation, edge.animate) {
+  // `if (edge.animation)`: an empty name is no animation.
+  let animation = edge.animation.filter(animation => animation != "")
+  let animation_class = match (animation, edge.animate) {
     (Some(animation), _) => "edge-animation-\{animation}"
     (None, true) => "edge-animation-fast"
     (None, false) => ""
@@ -349,8 +351,8 @@ fn insert_edge(
   }
   let animated = sketched_stroke is None &&
     (
-      edge.animate ||
-      edge.animation is Some(_) ||
+      edge.animate_is_true ||
+      animation is Some(_) ||
       styles_from_classes.contains("animation")
     )
   if edge.look == "neo" && !animated {
@@ -412,7 +414,7 @@ fn insert_edge_label(
   env : Env,
   padding_x~ : Double = 0.0,
   own_styles~ : Bool = true,
-) -> @dom.Element {
+) -> @dom.Element raise LayoutError {
   let split = split_styles(
     [..edge.css_compiled_styles, ..if own_styles { edge.style } else { [] }],
   )

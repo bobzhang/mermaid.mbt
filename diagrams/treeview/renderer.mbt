@@ -72,31 +72,29 @@ fn css_font_size(value : Json, parent : Double) -> Double raise Unsupported {
     // Written without a unit: not a length.
     _ => return parent
   }
-  let mut digits = 0
-  for c in text {
-    guard c is ('0'..<='9' | '.') else { break }
-    digits += 1
-  }
   let unsupported = Unsupported(
     "labelFontSize is not a font size the port measures: \{text}",
   )
-  let number = @string.parse_double(text[:digits]) catch {
-    _ => raise unsupported
+  guard @dom.css_dimension(text) is Some((number, unit)) else {
+    raise unsupported
   }
-  let size = match text[digits:] {
+  // A negative size is invalid, whatever its unit.
+  if number < 0.0 {
+    return parent
+  }
+  let size = match unit {
     "px" => number
     "em" => number * parent
     "rem" => number * 16.0
     "%" => number / 100.0 * parent
     "pt" => number * 4.0 / 3.0
+    // A number without a unit is no length, but for zero.
+    "" if number == 0.0 => 0.0
     "" => return parent
     _ => raise unsupported
   }
-  if size > 0.0 {
-    size
-  } else {
-    raise unsupported
-  }
+  // Zero is a size: text set in it takes no room.
+  size
 }
 
 ///|

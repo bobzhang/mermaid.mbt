@@ -60,7 +60,7 @@ fn insert_edge_labels(
   base_env : Env,
   env : Env,
   diagram_type : String,
-) -> @dom.Element {
+) -> @dom.Element raise LayoutError {
   let edge_label = if edge.label == "" && !env.html_labels {
     insert_empty_text_label(group, edge)
   } else {
@@ -119,7 +119,11 @@ fn insert_empty_text_label(group : @dom.Element, edge : Edge) -> @dom.Element {
 /// Create and measure the terminal labels of an edge: the second half of
 /// mermaid's `insertEdgeLabel`. Each is a group of its own, centred on
 /// its origin, to be positioned after the layout.
-fn insert_terminal_labels(group : @dom.Element, edge : Edge, env : Env) -> Unit {
+fn insert_terminal_labels(
+  group : @dom.Element,
+  edge : Edge,
+  env : Env,
+) -> Unit raise LayoutError {
   for entry in terminal_label_texts(edge) {
     insert_terminal_label(group, edge, env, entry.0, entry.1)
   }
@@ -133,7 +137,7 @@ fn insert_terminal_label(
   env : Env,
   key : String,
   text : String,
-) -> Unit {
+) -> Unit raise LayoutError {
   let n = @dom.number
   let element = group.append("g").attr("class", "edgeTerminals")
   let inner = element.append("g").attr("class", "inner")

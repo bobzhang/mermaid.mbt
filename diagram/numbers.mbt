@@ -81,3 +81,23 @@ pub fn parse_float(text : String) -> Double {
     _ => @double.not_a_number
   }
 }
+
+///|
+/// JavaScript's `Number(value)` for a value read from configuration or
+/// metadata: a number as it is, a string as a numeric literal (`"20"` is
+/// 20, `""` is 0, `"20px"` is `NaN`), `true` and `false` as 1 and 0,
+/// `null` as 0. An array goes through its text, its elements joined by
+/// commas (`[5]` is 5, `[]` is 0); an object is `NaN`.
+pub fn to_number(value : Json) -> Double {
+  match value {
+    Number(n, ..) => n
+    String(text) => @journeycommon.js_number(text)
+    True => 1.0
+    False | Null => 0.0
+    Array([]) => 0.0
+    Array([Null]) => 0.0
+    Array([String(_) | Number(_, ..) | Array(_) as element]) =>
+      to_number(element)
+    Array(_) | Object(_) => @double.not_a_number
+  }
+}

@@ -62,8 +62,9 @@ pub(all) struct Constraints {
 ///|
 /// The options the layout takes from fcose's.
 pub(all) struct Options {
-  /// `numIter`.
-  num_iter : Int32
+  /// `numIter`, any number: upstream stops at the iteration equal to it, so
+  /// a fractional limit runs until the layout converges.
+  num_iter : Double
   /// The seed of `Math.random`.
   seed : UInt32
 }
@@ -134,7 +135,7 @@ priv struct Layout {
   transform : Bool
   mut nodes_with_gravity : Array[Int32]
   mut cooling_factor : Double
-  mut max_iterations : Int32
+  mut max_iterations : Double
   mut total_iterations : Int32
   mut total_displacement : Double
   mut old_total_displacement : Double
@@ -404,8 +405,9 @@ fn Layout::calc_ideal_edge_lengths(self : Layout) -> Unit {
 /// an incremental layout.
 fn Layout::init_spring_embedder(self : Layout) -> Unit {
   let count = self.manager.all_nodes().length()
-  self.max_iterations = if count * 5 > self.max_iterations {
-    count * 5
+  // `Math.max(nodes * 5, maxIterations)`.
+  self.max_iterations = if (count * 5).to_double() > self.max_iterations {
+    (count * 5).to_double()
   } else {
     self.max_iterations
   }
@@ -421,7 +423,7 @@ fn Layout::init_spring_embedder(self : Layout) -> Unit {
 /// `FDLayout.isConverged`.
 fn Layout::is_converged(self : Layout) -> Bool {
   let mut oscillating = false
-  if self.total_iterations.to_double() > self.max_iterations.to_double() / 3.0 {
+  if self.total_iterations.to_double() > self.max_iterations / 3.0 {
     oscillating = (self.total_displacement - self.old_total_displacement).abs() <
       2.0
   }
@@ -434,7 +436,7 @@ fn Layout::is_converged(self : Layout) -> Bool {
 /// `CoSELayout.tick`: one iteration; true when the layout is done.
 fn Layout::tick(self : Layout) -> Bool raise FcoseError {
   self.total_iterations += 1
-  if self.total_iterations == self.max_iterations {
+  if self.total_iterations.to_double() == self.max_iterations {
     return true
   }
   if self.total_iterations % convergence_check_period == 0 {

@@ -1,0 +1,7 @@
+flowchart TD
+A["<a href='https://x.test/?a=1&copy=2&lt=3'>link</a>"] --> B["<span title='a&amp;b&copy=1'>x</span>"]
+C["<span title='x&copy=1 &copyz &copy;'>x&copy=1 &copyz</span>"]
+D["<span title='x&copy=1 &copyz  &copy;'>t</span>"] -- "<span title='x&copy=1 &copyz   &copy;'>t</span>" --> E["<b>a &#x; b</b>"]
+subgraph S["<i title='s&copy=1 &copy;'>s</i>"]
+H["<span title='a&copy=1'>t</span><em>&amp;</em>"]
+end

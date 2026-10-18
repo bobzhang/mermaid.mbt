@@ -49,7 +49,7 @@ pub fn Channels::parse(String) -> Self raise ColorError
 pub fn Channels::r(Self) -> Double
 pub fn Channels::s(Self) -> Double
 pub fn Channels::stringify(Self) -> String
-pub fn Channels::to_css_rgb(Self) -> (Int32, Int32, Int32)
+pub fn Channels::to_css_rgb(Self) -> (Int, Int, Int)
 pub fn Channels::to_rgb_string(Self) -> String
 
 // Type aliases

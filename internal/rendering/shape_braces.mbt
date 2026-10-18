@@ -9,7 +9,7 @@ fn curly_brace(
   node : Node,
   env : Env,
   handler : String,
-) -> @dom.Element {
+) -> @dom.Element raise LayoutError {
   let styles = shape_styles(node)
   let labelled = label_helper(parent, node, node_classes(node), env)
   let box = labelled.bbox

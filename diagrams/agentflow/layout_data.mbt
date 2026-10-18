@@ -224,7 +224,8 @@ fn AgentDb::layout_data(
         css_compiled_styles=flow.compiled_styles(raw.classes),
         style=styles,
         look~,
-        animate=raw.animate == Some(true),
+        animate=raw.animate_truthy(),
+        animate_is_true=raw.animate_is_true(),
         animation?=raw.animation,
         // `minlen: rawEdge.length`, which is set even when undefined.
         minlen=match raw.length {

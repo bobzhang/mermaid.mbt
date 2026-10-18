@@ -12,7 +12,7 @@ fn requirement_add_text(
   style : String,
   start_aligned : Bool,
   env : Env,
-) -> (@dom.Element, Double, Double, Double)? {
+) -> (@dom.Element, Double, Double, Double)? raise LayoutError {
   if text == "" {
     return None
   }
