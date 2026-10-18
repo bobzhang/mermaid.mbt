@@ -60,6 +60,7 @@ pub fn Painter::insert_node(
   parent : @dom.Element,
   node : Node,
 ) -> @dom.Element raise LayoutError {
+  check_node_quote_depth(node)
   insert_node(parent, node, self.env, self.data.direction)
 }
 
@@ -330,7 +331,8 @@ pub fn Painter::insert_edge_label(
   self : Painter,
   parent : @dom.Element,
   edge : Edge,
-) -> @dom.Element {
+) -> @dom.Element raise LayoutError {
+  check_edge_quote_depth(edge)
   let label_env = {
     ..self.env,
     font_size: edge_label_font_size(self.data.diagram_type, self.env.font_size),

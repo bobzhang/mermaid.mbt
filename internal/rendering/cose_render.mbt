@@ -11,6 +11,7 @@ pub fn render_cose(
   data : LayoutData,
   svg : @dom.Element,
 ) -> Unit raise LayoutError {
+  check_quote_depth(data)
   for node in data.nodes {
     node.dom_id = "\{data.diagram_id}-\{node.dom_id}"
   }

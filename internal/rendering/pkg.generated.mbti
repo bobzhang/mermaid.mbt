@@ -23,6 +23,8 @@ pub fn is_valid_shape(String) -> Bool
 
 pub fn markdown_plain_text(String) -> String
 
+pub fn markdown_too_deep(String) -> Bool
+
 pub fn node_palette_rules(@config.Config) -> String
 
 pub fn order_image_nodes(@dom.Element) -> Unit
@@ -169,7 +171,7 @@ pub struct Painter {
 pub fn Painter::draw_shape(Self, @dom.Element, Node) -> @dom.Element raise LayoutError
 pub fn Painter::insert_cluster(Self, @dom.Element, Node) -> @dom.Element raise LayoutError
 pub fn Painter::insert_edge(Self, @dom.Element, Edge, Array[Point], points_json? : String) -> @dom.Element raise LayoutError
-pub fn Painter::insert_edge_label(Self, @dom.Element, Edge) -> @dom.Element
+pub fn Painter::insert_edge_label(Self, @dom.Element, Edge) -> @dom.Element raise LayoutError
 pub fn Painter::insert_look_defs(Self, @dom.Element) -> Unit
 pub fn Painter::insert_node(Self, @dom.Element, Node) -> @dom.Element raise LayoutError
 pub fn Painter::new(@config.Config, diagram_type~ : String, diagram_id~ : String) -> Self

@@ -114,8 +114,18 @@ fn association_markers(arrow_type : Int32) -> (String, String) {
 
 ///|
 /// A label as it is read out: a markdown label without its formatting.
-fn accessible_label(label : String, label_type : String) -> String {
+fn accessible_label(
+  label : String,
+  label_type : String,
+) -> String raise UsecaseError {
   if label_type == "markdown" {
+    // Deep block quotes and emphasis are lexed by recursion; see
+    // `@rendering.markdown_too_deep`.
+    if @rendering.markdown_too_deep(label) {
+      raise Unsupported(
+        "a label nests block quotes or emphasis deeper than the port lexes",
+      )
+    }
     @rendering.markdown_plain_text(label)
   } else {
     label

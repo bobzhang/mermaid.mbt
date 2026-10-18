@@ -105,6 +105,7 @@ fn label_declaration_measured(key : String, value : String) -> Bool {
 /// image or icon sizes are not numbers, or whose markers would be
 /// absolute references.
 fn check_label_styles(data : LayoutData) -> Unit raise LayoutError {
+  check_quote_depth(data)
   let check = (styles : Array[String]) => {
     for key, value in styles_map(styles) {
       if !label_declaration_measured(key, value) {
