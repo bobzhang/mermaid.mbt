@@ -11,8 +11,31 @@ const LEGEND_SPACING : Double = 4.0
 const HEIGHT : Double = 450.0
 
 ///|
+/// What the port cannot reproduce exactly and therefore refuses.
+pub(all) suberror Unsupported {
+  Unsupported(String)
+} derive(Eq, Debug)
+
+///|
+/// The font size the browser computes for the theme variable `name`,
+/// which the stylesheet writes after `font-size:`, under `parent`.
+fn theme_font_size(
+  theme : @theme.Theme,
+  name : String,
+  parent : Double,
+) -> Double raise Unsupported {
+  let value = theme.get(name)
+  guard @diagram.css_font_size(value, parent) is Some(size) else {
+    raise Unsupported(
+      "\{name} is not a font size the port measures: \{value.stringify()}",
+    )
+  }
+  size
+}
+
+///|
 /// Draw the pie chart into the context's `<svg>` element.
-pub fn draw(pie : Pie, context : @diagram.Context) -> Unit {
+pub fn draw(pie : Pie, context : @diagram.Context) -> Unit raise Unsupported {
   let n = @dom.number
   let config = context.config
   let theme = context.theme()
@@ -107,12 +130,15 @@ pub fn draw(pie : Pie, context : @diagram.Context) -> Unit {
     .attr_number("x", 0.0)
     .attr_number("y", -(HEIGHT - 50.0) / 2.0)
     .attr("class", "pieTitleText")
+  // Text sizes are what the stylesheet's `font-size` declarations
+  // compute to, relative units against the diagram's `fontSize`.
+  let inherited = theme_font_size(theme, "fontSize", 16.0)
   // The legend lists every section, shown or not.
-  let legend_size = @diagram.parse_font_size(theme.text("pieLegendTextSize")).unwrap_or(
-    17.0,
-  )
+  let legend_size = theme_font_size(theme, "pieLegendTextSize", inherited)
   let legends = []
-  let mut longest_text_width = 0.0
+  // `Math.max(...widths)`: with no sections, `-Infinity`, and the view box
+  // is then the title's.
+  let mut longest_text_width = @double.neg_infinity
   for label in labels {
     let legend = group.append("g").attr("class", "legend")
     legend
@@ -134,7 +160,9 @@ pub fn draw(pie : Pie, context : @diagram.Context) -> Unit {
     .text(text)
     |> ignore
     longest_text_width = longest_text_width.max(
-      context.font().bbox(text, legend_size).width,
+      context
+      .font()
+      .bbox(@journeycommon.collapse_white_space(text), legend_size).width,
     )
     legends.push(legend)
   }
@@ -191,13 +219,14 @@ pub fn draw(pie : Pie, context : @diagram.Context) -> Unit {
     _ => chart_width += LEGEND_RECT_SIZE + LEGEND_SPACING + longest_text_width
   }
   // Widen the view box when the centered title is wider than the chart.
-  let title_size = @diagram.parse_font_size(theme.text("pieTitleTextSize")).unwrap_or(
-    25.0,
-  )
-  let title_width = if pie.title == "" {
+  let title_size = theme_font_size(theme, "pieTitleTextSize", inherited)
+  // SVG text lays its blanks out collapsed, and the box is of what is laid
+  // out.
+  let title_text = @journeycommon.collapse_white_space(pie.title)
+  let title_width = if title_text == "" {
     0.0
   } else {
-    context.font().bbox(pie.title, title_size).width
+    context.font().bbox(title_text, title_size).width
   }
   ignore(title)
   let title_left = pie_width / 2.0 - title_width / 2.0

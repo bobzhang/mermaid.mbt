@@ -64,7 +64,11 @@ fn parse_diagram(
         acc_title: pie.acc_title,
         acc_description: pie.acc_description,
         classes: [],
-        draw: context => @pie.draw(pie, context),
+        draw: context => {
+          @pie.draw(pie, context) catch {
+            @pie.Unsupported(message) => raise Unsupported(message)
+          }
+        },
       }
     }
     "info" => {

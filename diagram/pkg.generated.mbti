@@ -11,6 +11,8 @@ import {
 // Values
 pub fn configure_svg_size(@dom.Element, Double, Double, Bool) -> Unit
 
+pub fn css_font_size(Json, Double) -> Double?
+
 pub fn is_js_space(Char) -> Bool
 
 pub fn parse_float(String) -> Double
