@@ -7,7 +7,8 @@
 pub fn css_font_size(value : Json, parent : Double) -> Double? {
   let text = match value {
     String(text) => text.trim(chars=" \t\n").to_owned().to_lower()
-    // Written without a unit: not a length.
+    // A number is written without a unit: no length, but for zero.
+    Number(number, ..) if number == 0.0 => return Some(0.0)
     _ => return Some(parent)
   }
   // An empty value (what theme sanitising leaves of one it rejects) is a

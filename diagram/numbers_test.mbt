@@ -65,3 +65,19 @@ test "css_font_size reads signs and exponents as CSS does" {
     content="0 0 0 0 20",
   )
 }
+
+///|
+test "a font size given as the number zero is a length, as the string is" {
+  debug_inspect(
+    @diagram.css_font_size(Json::number(0.0), 16.0),
+    content="Some(0)",
+  )
+  debug_inspect(
+    @diagram.css_font_size(Json::string("0"), 16.0),
+    content="Some(0)",
+  )
+  debug_inspect(
+    @diagram.css_font_size(Json::number(12.0), 16.0),
+    content="Some(16)",
+  )
+}
