@@ -86,3 +86,27 @@ test "repeated and important declarations" {
     ),
   )
 }
+
+///|
+test "CSS numbers take a sign, a fraction and an exponent" {
+  let show = (text : String) => {
+    match css_dimension(text) {
+      Some((number, unit)) => "\{number} \{unit}"
+      None => "-"
+    }
+  }
+  inspect(
+    [
+      "+12px", "1e1px", "1E+1px", ".5e1px", "+.5em", "-1px", "12PX", "1.px", "+-1px",
+      "1e", "1e+px", "1e1.5px", "+ 12px", "px", "+",
+    ]
+    .map(show)
+    .join(", "),
+    content="12 px, 10 px, 10 px, 5 px, 0.5 em, -1 px, 12 PX, 1 .px, -, 1 e, 1 e+px, 10 .5px, -, -, -",
+  )
+  // `style.setProperty` in the reference browser: `+2px` is `2px`,
+  // `1e1px` is `10px`, `+.5e1px` is `5px`.
+  assert_eq(css_length("+2px"), Some("2px"))
+  assert_eq(css_length("1e1px"), Some("10px"))
+  assert_eq(css_length("+.5e1px"), Some("5px"))
+}

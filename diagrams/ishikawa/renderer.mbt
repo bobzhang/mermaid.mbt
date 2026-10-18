@@ -129,18 +129,13 @@ fn css_font_size(value : Json, parent : Double) -> Double raise Unsupported {
     // Written without a unit: not a length.
     _ => return parent
   }
-  let mut digits = 0
-  for c in text {
-    guard c is ('0'..<='9' | '.') else { break }
-    digits += 1
-  }
   let unsupported = Unsupported(
     "fontSize is not a font size the port measures: \{text}",
   )
-  let number = @string.parse_double(text[:digits]) catch {
-    _ => raise unsupported
+  guard @dom.css_dimension(text) is Some((number, unit)) else {
+    raise unsupported
   }
-  let size = match text[digits:] {
+  let size = match unit {
     "px" => number
     "em" => number * parent
     "rem" => number * 16.0

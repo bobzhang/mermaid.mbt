@@ -30,3 +30,18 @@ test "Number() of configuration and metadata values" {
   )
   inspect(number(Json::object(Map([]))), content="NaN")
 }
+
+///|
+test "css_font_size reads signs and exponents as CSS does" {
+  // The computed sizes in the reference browser, under a 16px parent;
+  // `1.5.5px`, which it ignores, is not measured.
+  let sizes = [
+    "+12px", "1e1px", "+.75em", "1.25e0em", "+150%", "1.5.5px", "1e1",
+  ].map(size => {
+    match @diagram.css_font_size(Json::string(size), 16.0) {
+      Some(value) => value.to_string()
+      None => "-"
+    }
+  })
+  inspect(sizes.join(" "), content="12 10 12 20 24 - 16")
+}

@@ -3,18 +3,10 @@
 // browser lays the text out with them.
 
 ///|
-/// The number at the start of a CSS length and the unit after it.
+/// The number at the start of a CSS length, as CSS writes one (`+12`,
+/// `1e1`), and the unit right after it.
 fn css_length(value : String) -> (Double, String)? {
-  let mut end = 0
-  for c in value {
-    guard c is ('0'..<='9' | '.' | '-' | '+') else { break }
-    end += 1
-  }
-  guard end > 0 else { return None }
-  let number = @string.parse_double(value[:end].to_owned()) catch {
-    _ => return None
-  }
-  Some((number, value[end:].trim().to_owned()))
+  @dom.css_dimension(value)
 }
 
 ///|
@@ -60,7 +52,8 @@ fn Env::styled(self : Env, style : String, faces~ : Bool = true) -> Env {
       }
       "font-size" =>
         match css_length(value) {
-          Some((size, "px")) => env = { ..env, font_size: size, }
+          // A negative size is invalid, and refused before this.
+          Some((size, "px")) if size >= 0.0 => env = { ..env, font_size: size, }
           // Relative sizes compound over the elements the style is
           // written on, which differ from label to label; not modelled.
           _ => ()
@@ -93,7 +86,7 @@ fn label_declaration_measured(key : String, value : String) -> Bool {
     | "font-family"
     | "font-weight"
     | "font-style" => true
-    "font-size" => css_length(value) is Some((_, "px"))
+    "font-size" => css_length(value) is Some((size, "px")) && size >= 0.0
     "text-transform" => value == "none"
     "letter-spacing" | "word-spacing" => value is ("normal" | "0" | "0px" | "")
     "white-space" => value is ("normal" | "nowrap")

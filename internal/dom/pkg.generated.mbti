@@ -6,6 +6,8 @@ import {
 }
 
 // Values
+pub fn css_dimension(String) -> (Double, String)?
+
 pub fn css_number_text(Double) -> String
 
 pub fn is_allowed_uri(String) -> Bool

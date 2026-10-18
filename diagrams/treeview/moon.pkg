@@ -6,7 +6,6 @@ import {
   "bobzhang/mermaid/internal/jsregex",
   "bobzhang/mermaid/internal/langium",
   "bobzhang/mermaid/theme",
-  "moonbitlang/core/string",
 }
 
 warnings = "-implicit_impl_as_method"

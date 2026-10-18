@@ -15,12 +15,7 @@ fn css_font_size(theme_size : Json) -> Double? {
     // A number is no CSS length; the page keeps 16px.
     _ => return Some(page)
   }
-  let mut digits = 0
-  for c in text {
-    guard c is ('0'..<='9' | '.') else { break }
-    digits += 1
-  }
-  if digits == 0 {
+  guard @dom.css_dimension(text) is Some((number, unit)) else {
     return match text {
       // Size keywords and functions compute to sizes the port does not
       // derive; `medium` and the global keywords leave the page's.
@@ -38,8 +33,11 @@ fn css_font_size(theme_size : Json) -> Double? {
       _ => Some(page)
     }
   }
-  let number = @string.parse_double(text[:digits]) catch { _ => return None }
-  let size = match text[digits:] {
+  // A negative size is invalid.
+  if number < 0.0 {
+    return Some(page)
+  }
+  let size = match unit {
     "px" => number
     "em" | "rem" => number * page
     "%" => number / 100.0 * page
@@ -98,4 +96,20 @@ test "computed font sizes as Chrome reports them" {
     sizes.join(" "),
     content="16 16 176 133333 151235 155 16 16 16 192 16 40 123457 16 16 -",
   )
+}
+
+///|
+test "font sizes with a sign or an exponent" {
+  let sizes = [
+    "+12px", "1e1px", "1E1px", "1e+1px", "12.5e0px", "12PX", "1.px", "+-1px", "+12",
+    "1e1.5px", "+ 12px", "1e", "1e+px", "1e1",
+  ].map(size => {
+    match computed_font_size(Json::string(size)) {
+      Some(value) => @dom.number(value)
+      None => "-"
+    }
+  })
+  // Chrome: 12px 10px 10px 10px 12.5px 12px, then 16px for the invalid
+  // ones.
+  inspect(sizes.join(" "), content="12 10 10 10 125 12 16 16 16 16 16 16 16 16")
 }

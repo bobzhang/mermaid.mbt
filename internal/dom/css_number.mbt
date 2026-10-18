@@ -88,11 +88,42 @@ fn css_number(value : Double) -> String {
 ///|
 /// A pixel length as the CSSOM serializes it, when `value` is one.
 fn css_length(value : String) -> String? {
-  guard value.has_suffix("px") else { return None }
-  let digits = value[:value.length() - 2].to_owned()
-  guard digits != "" && digits.iter().all(c => c is ('0'..<='9' | '.' | '-')) else {
+  // The number as CSS writes one: `+2px` is `2px`, `1e1px` is `10px`.
+  guard css_dimension(value) is Some((parsed, "px")) else { return None }
+  Some(css_number(parsed) + "px")
+}
+
+///|
+/// A CSS dimension at the start of `text`: its number, as CSS writes one
+/// (an optional sign, digits with an optional fraction, an optional
+/// exponent: `+12`, `.5`, `1e1`), and what follows it, the unit. `None`
+/// when no number starts `text`.
+pub fn css_dimension(text : String) -> (Double, String)? {
+  let n = text.length()
+  let digits = (from : Int32) => {
+    let mut at = from
+    while at < n && text[at] is ('0'..<='9') {
+      at += 1
+    }
+    at
+  }
+  let mut at = if n > 0 && text[0] is ('+' | '-') { 1 } else { 0 }
+  let whole = digits(at)
+  let mut end = whole
+  if end + 1 < n && text[end] == '.' && text[end + 1] is ('0'..<='9') {
+    end = digits(end + 1)
+  }
+  if end == at {
     return None
   }
-  let parsed = @string.parse_double(digits) catch { _ => return None }
-  Some(css_number(parsed) + "px")
+  at = end
+  // An exponent only where digits follow the `e` and its sign.
+  if at < n && text[at] is ('e' | 'E') {
+    let sign = if at + 1 < n && text[at + 1] is ('+' | '-') { 1 } else { 0 }
+    if at + 1 + sign < n && text[at + 1 + sign] is ('0'..<='9') {
+      end = digits(at + 1 + sign)
+    }
+  }
+  let number = @string.parse_double(text[:end]) catch { _ => return None }
+  Some((number, text[end:].to_owned()))
 }

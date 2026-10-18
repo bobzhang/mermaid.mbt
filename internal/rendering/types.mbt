@@ -289,14 +289,11 @@ fn Env::new(config : @config.Config, diagram_id : String) -> Env {
     // `font-size` is dropped and text keeps the browser's size.
     Number(_, ..) => 16.0
     String(text) => {
-      // The leading number, fraction included: `15.5px` is 15.5 pixels.
-      let mut length = 0
-      for c in text {
-        guard c is ('0'..<='9' | '.') else { break }
-        length += 1
-      }
-      let value = @string.parse_double(text[:length].to_owned()) catch {
-        _ => 0.0
+      // The leading number as CSS writes one: `15.5px` is 15.5 pixels,
+      // `+12px` and `1.2e1px` are 12.
+      let value = match @dom.css_dimension(text) {
+        Some((value, _)) => value
+        None => 0.0
       }
       if value == 0.0 {
         16.0

@@ -15,13 +15,8 @@ pub fn css_font_size(value : Json, parent : Double) -> Double? {
   if text == "" {
     return Some(parent)
   }
-  let mut digits = 0
-  for c in text {
-    guard c is ('0'..<='9' | '.') else { break }
-    digits += 1
-  }
-  let number = @string.parse_double(text[:digits]) catch { _ => return None }
-  let size = match text[digits:] {
+  guard @dom.css_dimension(text) is Some((number, unit)) else { return None }
+  let size = match unit {
     "px" => number
     "em" => number * parent
     "rem" => number * 16.0
