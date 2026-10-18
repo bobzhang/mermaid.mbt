@@ -16,12 +16,13 @@ fn non_markdown_to_lines(text : String) -> Array[Array[Word]] {
   for line in text.split("\n") {
     // Tags stay whole; everything else splits at white space.
     let words = []
-    let chars = line.trim().to_owned().to_array()
+    // `line.trim().match(/<[^>]+>|[^\s<>]+/g)`, JavaScript's white space.
+    let chars = js_trim_text(line.to_owned()).to_array()
     let n = chars.length()
     let mut i = 0
     while i < n {
       let c = chars[i]
-      if c is (' ' | '\t' | '\n' | '\r') {
+      if is_js_space_unit(c.to_int()) {
         i += 1
         continue
       }
@@ -48,7 +49,8 @@ fn non_markdown_to_lines(text : String) -> Array[Array[Word]] {
         i += 1
         continue
       }
-      while j < n && !(chars[j] is (' ' | '\t' | '\n' | '\r' | '<' | '>')) {
+      while j < n &&
+            !(is_js_space_unit(chars[j].to_int()) || chars[j] is ('<' | '>')) {
         j += 1
       }
       words.push({ content: String::from_array(chars[i:j]), kind: "normal", })
