@@ -28,3 +28,11 @@ test "image sizes that are not numbers" {
     content="Unsupported: the image or icon size of A is not a number, which is not ported",
   )
 }
+
+///|
+test "links the browser's URL parser would rewrite in ways not ported" {
+  inspect(
+    refusal("flowchart TD\nA\nclick A \"https://user@x.com/\"\n"),
+    content="Unsupported: Unsupported link address: https://user@x.com/",
+  )
+}

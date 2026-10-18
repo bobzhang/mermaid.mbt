@@ -86,6 +86,9 @@ pub struct FlowDb {
   mut acc_title : String
   mut acc_description : String
   mut title : String
+  /// A link the port cannot sanitize as upstream does; the diagram is
+  /// refused when drawn.
+  priv mut unsupported_link : String?
 }
 
 ///|
@@ -114,6 +117,7 @@ pub fn FlowDb::new(config : @config.Config) -> FlowDb {
     acc_title: "",
     acc_description: "",
     title: "",
+    unsupported_link: None,
   }
 }
 
@@ -698,7 +702,7 @@ pub fn FlowDb::set_link(
 ) -> Unit {
   for id in ids.split(",") {
     if self.vertices.get(id.to_owned()) is Some(vertex) {
-      vertex.link = Some(format_url(link, self.config))
+      vertex.link = Some(self.format_url(link))
       vertex.link_target = target
     }
   }
@@ -720,31 +724,29 @@ pub fn FlowDb::set_click_event(self : FlowDb, ids : String) -> Unit {
 }
 
 ///|
-/// mermaid's `formatUrl`: outside the loose security level a link is
-/// sanitized; a `javascript:` URL becomes `about:blank`.
-fn format_url(link : String, config : @config.Config) -> String {
+/// mermaid's `formatUrl`: outside the loose security level a link goes
+/// through `sanitizeUrl`, which decodes it, blanks scripting schemes and
+/// normalizes web addresses as the browser's URL parser does.
+fn FlowDb::format_url(self : FlowDb, link : String) -> String {
   let url = link.trim().to_owned()
   if url == "" {
     return url
   }
-  if config.text("securityLevel") is Some("loose") {
+  if self.config.text("securityLevel") is Some("loose") {
     return url
   }
-  // Like @braintree/sanitize-url: script-capable schemes are refused.
-  let stripped = try! @jsregex.Regex::compile("[\\u0000-\\u0020]")
-  let compact = stripped.replace_all(url.to_lower(), _ => "")
-  for scheme in ["javascript:", "data:", "vbscript:"] {
-    if compact.has_prefix(scheme) {
-      return "about:blank"
+  @diagram.sanitize_url(url) catch {
+    UnsupportedUrl(message) => {
+      self.unsupported_link = Some(message)
+      url
     }
   }
-  // The URL comes back normalized: a bare origin gains its root path.
-  let origin = try! @jsregex.Regex::compile("^https?://[^/?#]+$", flags="i")
-  if origin.matches(url) {
-    url + "/"
-  } else {
-    url
-  }
+}
+
+///|
+/// The reason the diagram cannot be drawn exactly, if it has one.
+pub fn FlowDb::unsupported(self : FlowDb) -> String? {
+  self.unsupported_link
 }
 
 ///|
