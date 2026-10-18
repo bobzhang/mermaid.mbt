@@ -4,10 +4,13 @@ let usage : String =
   #|
   #|commands:
   #|  render <file.mmd> [--id ID] [--config site.json] [--now MS]
-  #|         [--viewport WIDTHxHEIGHT]
+  #|         [--viewport WIDTHxHEIGHT] [--fetch-images]
   #|                         render a diagram to SVG on stdout; --now sets
-  #|                         the clock (milliseconds since the epoch) and
-  #|                         --viewport the size of the page's viewport
+  #|                         the clock (milliseconds since the epoch),
+  #|                         --viewport the size of the page's viewport, and
+  #|                         --fetch-images lets image nodes load http(s):
+  #|                         and file: URLs for their size (off by default:
+  #|                         rendering never touches the network unasked)
   #|  config [site.json]     print the effective configuration as JSON
   #|  measure <cases.json>   measure text; cases are {text, size, bold, italic},
   #|                         with {x, y, anchor, baseline, scale} for placed SVG text
@@ -65,8 +68,12 @@ fn read_json(path : String) -> Json raise CliError {
 }
 
 ///|
-fn render(path : String, options : ArrayView[String]) -> Unit raise CliError {
+async fn render(
+  path : String,
+  options : ArrayView[String],
+) -> Unit raise CliError {
   let mut id = "mermaid-svg"
+  let mut fetch_images = false
   let mut site : Json = Json::object(Map([]))
   let mut now : Double? = None
   let mut page = @diagram.Page::new()
@@ -101,11 +108,22 @@ fn render(path : String, options : ArrayView[String]) -> Unit raise CliError {
         site = read_json(value)
         rest = tail
       }
+      ["--fetch-images", .. tail] => {
+        fetch_images = true
+        rest = tail
+      }
       [] => break
       [other, ..] => raise CliError("unknown option \{other}", status=2)
     }
   }
-  let svg = @lib.render(read_text(path), id~, config=site, now?, page~) catch {
+  let text = read_text(path)
+  let svg = try {
+    if fetch_images {
+      render_fetching(text, id, site, now, page)
+    } else {
+      @lib.render(text, id~, config=site, now?, page~)
+    }
+  } catch {
     error => raise CliError(Repr(error).to_string(), status=1)
   }
   println(svg)
@@ -485,7 +503,7 @@ fn sequence_db(paths : ArrayView[String]) -> Unit raise CliError {
 }
 
 ///|
-fn main {
+async fn main {
   let arguments = @env.args()
   try {
     match arguments[1:] {
