@@ -24,7 +24,7 @@ pub(all) suberror SankeyError {
 // Types and methods
 pub struct Sankey {
   nodes : Array[String]
-  links : Array[(Int32, Int32, Double)]
+  links : Array[(Int, Int, Double)]
   // private fields
 }
 

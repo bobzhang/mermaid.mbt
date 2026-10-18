@@ -32,7 +32,7 @@ pub(all) struct Options {
   mut curve_step_count : Double
   mut fill_style : String
   mut fill : String
-  mut seed : Int32
+  mut seed : Int
   mut disable_multi_stroke : Bool
   mut preserve_vertices : Bool
   mut fill_shape_roughness_gain : Double

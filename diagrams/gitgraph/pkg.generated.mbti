@@ -27,7 +27,7 @@ pub(all) suberror Unsupported {
 pub struct Commit {
   id : String
   message : String
-  seq : Int32
+  seq : Int
   kind : CommitType
   tags : Array[String]
   parents : Array[String]

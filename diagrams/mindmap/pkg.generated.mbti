@@ -31,9 +31,9 @@ pub fn MindmapDb::nodes(Self) -> Array[MindmapNode]
 pub fn MindmapDb::root(Self) -> MindmapNode?
 
 pub struct MindmapNode {
-  id : Int32
+  id : Int
   node_id : String
-  level : Int32
+  level : Int
   descr : String
   type_ : NodeType
   children : Array[MindmapNode]
@@ -42,7 +42,7 @@ pub struct MindmapNode {
   is_root : Bool
   mut icon : String?
   mut class : String?
-  mut section : Int32?
+  mut section : Int?
 }
 
 pub(all) enum NodeType {
@@ -54,7 +54,7 @@ pub(all) enum NodeType {
   Bang
   Hexagon
 } derive(Eq, @debug.Debug)
-pub fn NodeType::number(Self) -> Int32
+pub fn NodeType::number(Self) -> Int
 
 // Type aliases
 

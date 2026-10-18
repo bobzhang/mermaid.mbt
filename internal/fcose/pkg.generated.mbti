@@ -43,8 +43,8 @@ pub(all) struct Node {
 }
 
 pub(all) struct Options {
-  num_iter : Int32
-  seed : UInt32
+  num_iter : Int
+  seed : UInt
 }
 
 pub(all) struct Placed {
@@ -63,27 +63,27 @@ pub(all) enum Relative {
 pub struct SeededRandom {
   // private fields
 }
-pub fn SeededRandom::new(UInt32) -> Self
+pub fn SeededRandom::new(UInt) -> Self
 
 pub(all) struct SpectralGraph {
   nodes : Array[SpectralNode]
-  edges : Array[(Int32, Int32)]
+  edges : Array[(Int, Int)]
 }
 
 pub(all) struct SpectralNode {
   id : String
-  parent : Int32?
-  children : Array[Int32]
+  parent : Int?
+  children : Array[Int]
   x : Double
   y : Double
   width : Double
   height : Double
   outer_width : Double
-  edges : Array[Int32]
+  edges : Array[Int]
 }
 
 pub(all) struct SpectralResult {
-  indexes : Map[String, Int32]
+  indexes : Map[String, Int]
   x : Array[Double]
   y : Array[Double]
 }

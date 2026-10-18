@@ -6,7 +6,7 @@ import {
 }
 
 // Values
-pub fn compare_strings(String, String) -> Int32
+pub fn compare_strings(String, String) -> Int
 
 // Errors
 pub(all) suberror GraphError {
@@ -26,7 +26,7 @@ pub struct Graph[G, N, E] {
 pub fn[G, N, E] Graph::children(Self[G, N, E], String) -> Array[String]
 pub fn[G, N, E] Graph::edge(Self[G, N, E], Edge) -> E?
 pub fn[G, N, E] Graph::edge_between(Self[G, N, E], String, String, name? : String) -> E?
-pub fn[G, N, E] Graph::edge_count(Self[G, N, E]) -> Int32
+pub fn[G, N, E] Graph::edge_count(Self[G, N, E]) -> Int
 pub fn[G, N, E] Graph::edges(Self[G, N, E]) -> Array[Edge]
 pub fn[G, N, E] Graph::ensure_edge(Self[G, N, E], String, String, () -> E, name? : String) -> Unit raise GraphError
 pub fn[G, N, E] Graph::ensure_node(Self[G, N, E], String) -> Unit
@@ -40,7 +40,7 @@ pub fn[G, N, E] Graph::is_multigraph(Self[G, N, E]) -> Bool
 pub fn[G, N, E] Graph::neighbors(Self[G, N, E], String) -> Array[String]
 pub fn[G, N, E] Graph::new(G, default_node~ : (String) -> N, directed? : Bool, multigraph? : Bool, compound? : Bool) -> Self[G, N, E]
 pub fn[G, N, E] Graph::node(Self[G, N, E], String) -> N?
-pub fn[G, N, E] Graph::node_count(Self[G, N, E]) -> Int32
+pub fn[G, N, E] Graph::node_count(Self[G, N, E]) -> Int
 pub fn[G, N, E] Graph::node_edges(Self[G, N, E], String, w? : String) -> Array[Edge]
 pub fn[G, N, E] Graph::nodes(Self[G, N, E]) -> Array[String]
 pub fn[G, N, E] Graph::out_edges(Self[G, N, E], String, w? : String) -> Array[Edge]
@@ -66,7 +66,7 @@ pub fn[V] JsObject::contains(Self[V], String) -> Bool
 pub fn[V] JsObject::get(Self[V], String) -> V?
 pub fn[V] JsObject::is_empty(Self[V]) -> Bool
 pub fn[V] JsObject::keys(Self[V]) -> Array[String]
-pub fn[V] JsObject::length(Self[V]) -> Int32
+pub fn[V] JsObject::length(Self[V]) -> Int
 pub fn[V] JsObject::new() -> Self[V]
 pub fn[V] JsObject::remove(Self[V], String) -> Unit
 pub fn[V] JsObject::set(Self[V], String, V) -> Unit

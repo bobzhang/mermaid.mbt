@@ -51,7 +51,7 @@ pub struct Task {
   milestone : Bool
   vert : Bool
   classes : Array[String]
-  mut order : Int32
+  mut order : Int
   mut processed : Bool
   mut manual_end_time : Bool
   mut start_time : Double?

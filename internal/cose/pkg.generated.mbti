@@ -6,7 +6,7 @@ import {
 }
 
 // Values
-pub fn layout(Array[(Double, Double)], Array[(Int32, Int32)], on_tick? : (Array[(Double, Double)]) -> Unit) -> Array[(Double, Double)] raise Unsupported
+pub fn layout(Array[(Double, Double)], Array[(Int, Int)], on_tick? : (Array[(Double, Double)]) -> Unit) -> Array[(Double, Double)] raise Unsupported
 
 pub fn straight_edge((Double, Double), (Double, Double)) -> Array[(Double, Double)]?
 

@@ -28,7 +28,7 @@ pub fn collect_node_rect_entries(Iter[Node]) -> (Array[RectEntry], Array[RectEnt
 
 pub fn collect_real_node_bounds(Array[Node]) -> (Map[String, NodeInfo], Array[RectEntry])
 
-pub fn count_orthogonal_bends(Array[Pt], epsilon? : Double) -> Int32
+pub fn count_orthogonal_bends(Array[Pt], epsilon? : Double) -> Int
 
 pub fn dedupe_consecutive_points(Array[Pt], epsilon? : Double) -> Array[Pt]
 
@@ -135,7 +135,7 @@ pub(all) struct Node {
   mut direction : String?
   dir : String?
   look : String?
-  color_index : Int32?
+  color_index : Int?
   is_edge_label : Bool
   is_dummy : Bool
   edge_start : String?
@@ -145,12 +145,12 @@ pub(all) struct Node {
   mut height : Double?
   mut x : Double?
   mut y : Double?
-  mut layer : Int32?
-  mut order : Int32?
+  mut layer : Int?
+  mut order : Int?
   mut swimlane_content_top : Double?
   mut group_title_rect : Rect?
 }
-pub fn Node::new(id~ : String, label? : String, is_group? : Bool, parent_id? : String, padding? : Double, shape? : String, direction? : String, dir? : String, look? : String, color_index? : Int32, is_edge_label? : Bool, is_dummy? : Bool, edge_start? : String, edge_end? : String, label_style? : String, width? : Double, height? : Double) -> Self
+pub fn Node::new(id~ : String, label? : String, is_group? : Bool, parent_id? : String, padding? : Double, shape? : String, direction? : String, dir? : String, look? : String, color_index? : Int, is_edge_label? : Bool, is_dummy? : Bool, edge_start? : String, edge_end? : String, label_style? : String, width? : Double, height? : Double) -> Self
 pub fn Node::to_snapshot(Self) -> Json
 
 pub(all) struct NodeInfo {
@@ -198,7 +198,7 @@ pub(all) struct RectEntry {
 }
 
 pub(all) struct Seg {
-  index : Int32
+  index : Int
   a : Pt
   b : Pt
   horizontal : Bool
