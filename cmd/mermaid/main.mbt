@@ -21,6 +21,9 @@ let usage : String =
   #|  state-db <file.mmd>... print each state diagram's layout data as JSON
   #|  usecase-db <file.mmd>...
   #|                         print each use case diagram's layout data as JSON
+  #|  architecture-layout [--trace] <file.mmd>
+  #|                         print what an architecture diagram's layout
+  #|                         leaves in cytoscape, as JSON
   #|  elk-graph <file.mmd> [--config site.json]
   #|                         print the graph a diagram hands to ELK and the
   #|                         layout that came back, one JSON document a line
@@ -375,6 +378,24 @@ fn elk_graph(path : String, options : ArrayView[String]) -> Unit raise CliError 
 }
 
 ///|
+/// Print what the architecture renderer reads from cytoscape, as
+/// scripts/fcose_oracle.js prints upstream's.
+fn architecture_layout(path : String, trace : Bool) -> Unit raise CliError {
+  let source = read_text(path)
+  let report = try {
+    let processed = @preprocess.preprocess(source)
+    let config = @config.Config::new(
+      directive=processed.config,
+      diagram_type="architecture",
+    )
+    @architecture.layout_report(processed.code, config, trace~)
+  } catch {
+    error => { "error": Repr(error).to_string() }
+  }
+  println(report.stringify())
+}
+
+///|
 /// Print the layout data of each use case diagram as one line of JSON.
 fn usecase_db(paths : ArrayView[String]) -> Unit raise CliError {
   for path in paths {
@@ -477,6 +498,9 @@ fn main {
       ["bbox", path] => bboxes(path)
       ["state-db", .. paths] => state_db(paths)
       ["usecase-db", .. paths] => usecase_db(paths)
+      ["architecture-layout", "--trace", path] =>
+        architecture_layout(path, true)
+      ["architecture-layout", path] => architecture_layout(path, false)
       ["elk-graph", path, .. options] => elk_graph(path, options)
       ["cose", .. paths] => cose(paths)
       ["mindmap-db", .. paths] => mindmap_db(paths)

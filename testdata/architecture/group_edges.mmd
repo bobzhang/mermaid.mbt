@@ -1,0 +1,14 @@
+architecture-beta
+    group left[Left]
+    group right[Right]
+    group top[Top]
+    group bottom[Bottom]
+    service l(server)[L] in left
+    service r(server)[R2] in right
+    service t(server)[T2] in top
+    service b(server)[B2] in bottom
+    service center(internet)[Center]
+    center:L --> R:l{group}
+    center:R <-- L:r{group}
+    center:T <--> B:t{group}
+    center:B -- T:b{group}

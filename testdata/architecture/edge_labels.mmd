@@ -1,0 +1,7 @@
+architecture-beta
+    service a(server)[A]
+    service b(server)[B]
+    service c(disk)[C]
+    a:R -[HTTPS requests]- L:b
+    b:B -[writes]-> T:c
+    a:B <-["quoted, label"]- T:c

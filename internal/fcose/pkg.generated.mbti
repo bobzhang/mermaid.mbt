@@ -1,0 +1,99 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/internal/fcose"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn layout(Array[Node], Array[Edge], Constraints, Options, tracer? : Tracer, random? : SeededRandom, transform? : Bool) -> Array[Placed] raise FcoseError
+
+pub fn spectral_layout(SpectralGraph, SeededRandom, Double) -> SpectralResult
+
+// Errors
+pub(all) suberror FcoseError {
+  Unsupported(String)
+  InvalidArrayLength
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+pub(all) struct Constraints {
+  vertical : Array[Array[String]]?
+  horizontal : Array[Array[String]]?
+  relative : Array[Relative]?
+}
+
+pub(all) struct Edge {
+  id : String
+  source : String
+  target : String
+  ideal_length : Double
+  elasticity : Double
+}
+
+pub(all) struct Node {
+  id : String
+  x : Double
+  y : Double
+  width : Double
+  height : Double
+  padding : Double
+  repulsion : Double
+  children : Array[Node]
+}
+
+pub(all) struct Options {
+  num_iter : Int
+  seed : UInt
+}
+
+pub(all) struct Placed {
+  id : String
+  x : Double
+  y : Double
+  width : Double
+  height : Double
+} derive(ToJson, @debug.Debug)
+
+pub(all) enum Relative {
+  Horizontal(left~ : String, right~ : String, gap~ : Double)
+  Vertical(top~ : String, bottom~ : String, gap~ : Double)
+} derive(@debug.Debug)
+
+pub struct SeededRandom {
+  // private fields
+}
+pub fn SeededRandom::new(UInt) -> Self
+
+pub(all) struct SpectralGraph {
+  nodes : Array[SpectralNode]
+  edges : Array[(Int, Int)]
+}
+
+pub(all) struct SpectralNode {
+  id : String
+  parent : Int?
+  children : Array[Int]
+  x : Double
+  y : Double
+  width : Double
+  height : Double
+  outer_width : Double
+  edges : Array[Int]
+}
+
+pub(all) struct SpectralResult {
+  indexes : Map[String, Int]
+  x : Array[Double]
+  y : Array[Double]
+}
+
+pub(all) struct Tracer {
+  start : (Array[Placed]) -> Unit
+  enforced : (Array[Placed]) -> Unit
+  tick : (Array[Placed]) -> Unit
+}
+
+// Type aliases
+
+// Traits

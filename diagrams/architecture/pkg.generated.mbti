@@ -1,0 +1,89 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/mermaid/diagrams/architecture"
+
+import {
+  "bobzhang/mermaid/config",
+  "bobzhang/mermaid/diagram",
+  "bobzhang/mermaid/theme",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn draw(Db, @diagram.Context) -> Unit raise ArchitectureError
+
+pub fn layout_report(String, @config.Config, trace? : Bool) -> Json raise
+
+pub fn parse(String) -> Db raise
+
+pub fn styles(@theme.Theme) -> String
+
+// Errors
+pub(all) suberror ArchitectureError {
+  Invalid(String)
+  Unsupported(String)
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+pub(all) enum AlignDirection {
+  Row
+  Column
+} derive(Eq, @debug.Debug)
+
+pub struct Db {
+  nodes : Map[String, Node]
+  groups : Map[String, Group]
+  edges : Array[Edge]
+  layout_hints : Array[LayoutHint]
+  registered : Map[String, Bool]
+  mut title : String
+  mut acc_title : String
+  mut acc_description : String
+}
+
+pub(all) enum Direction {
+  L
+  R
+  T
+  B
+} derive(Eq, Hash, @debug.Debug)
+pub fn Direction::to_string(Self) -> String
+
+pub(all) struct Edge {
+  lhs_id : String
+  lhs_dir : Direction
+  lhs_into : Bool
+  lhs_group : Bool
+  rhs_id : String
+  rhs_dir : Direction
+  rhs_into : Bool
+  rhs_group : Bool
+  title : String?
+} derive(@debug.Debug)
+
+pub struct Group {
+  id : String
+  icon : String?
+  title : String?
+  parent : String?
+} derive(@debug.Debug)
+
+pub(all) struct LayoutHint {
+  direction : AlignDirection
+  members : Array[String]
+} derive(@debug.Debug)
+
+pub struct Node {
+  id : String
+  kind : NodeKind
+  parent : String?
+  edges : Array[Edge]
+} derive(@debug.Debug)
+
+pub(all) enum NodeKind {
+  Service(icon~ : String?, icon_text~ : String?, title~ : String?)
+  Junction
+} derive(@debug.Debug)
+
+// Type aliases
+
+// Traits

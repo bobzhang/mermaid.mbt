@@ -1,0 +1,57 @@
+---
+config:
+  architecture:
+    iconSize: 60
+    fontSize: 10
+    idealEdgeLengthMultiplier: 1
+    seed: 123456
+---
+architecture-beta
+    group g0(database)
+    group g1(cloud)[queue]
+    group g2(server)[Gateway] in g1
+    group g3(database)[office] in g0
+    service s0(internet)[Notification service] in g2
+    service s1[Gateway] in g2
+    service s2(database)[search] in g1
+    service s3(foo)[Notification service] in g3
+    service s4(disk) in g2
+    service s5(server)[auth] in g2
+    service s6(foo)[queue]
+    service s7(disk)[api]
+    service s8(server)[billing] in g0
+    service s9(cloud)[Cache] in g3
+    service s10[queue] in g1
+    service s11(disk)[Cache] in g3
+    service s12(cloud)[billing] in g0
+    service s13(foo)[profile] in g3
+    service s14(cloud)[queue] in g3
+    service s15(server)[Notification service] in g2
+    service s16[Gateway] in g1
+    service s17(cloud)[billing] in g1
+    s16:L <-- B:s4
+    s8:B <--> L:s5
+    s2:B <--> B:s16
+    s12:T -- B:s4
+    s6:T --> B:s8
+    s10:R <-- B:s16
+    s17:L --> T:s7
+    s15:T -- R:s2{group}
+    s11{group}:B -[profile]- T:s16
+    s13:L <--> B:s11
+    s1:R <-- L:s3
+    s7:R -- B:s13
+    s4:L <-[worker]- L:s12
+    s15{group}:T <--> B:s13
+    s6:L <-[web]-> R:s15
+    s9:T <-- L:s16
+    s3:R -[profile]-> L:s5
+    s6:R --> T:s9
+    s13:R <-- R:s1
+    s4{group}:T <-[billing]- B:s16{group}
+    s14:L --> B:s3
+    s1:R <-[api]-> R:s4
+    s17:L <--> T:s2
+    s13{group}:B -- L:s12
+    s6:R <-- T:s7
+    s9:L <--> B:s8

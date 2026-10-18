@@ -1,0 +1,24 @@
+---
+config:
+  architecture:
+    randomize: true
+---
+architecture-beta
+    group g0(internet)[Notification service]
+    group g1(internet) in g0
+    group g2[Cache]
+    group g3(database)[Load balancer]
+    group g4(disk)[api]
+    service s0[web] in g1
+    service s1(foo)[Cache] in g2
+    service s2(database) in g4
+    service s3(internet)[store] in g0
+    junction j0
+    s1:R -- T:s0
+    s2:R <--> B:s0
+    j0:B -- R:s2
+    s3:B <--> T:s2{group}
+    s2:L --> B:s3
+    s3:L <-[web]-> L:j0
+    s0:T <-[profile]- T:s3
+    s2:B -- L:s1

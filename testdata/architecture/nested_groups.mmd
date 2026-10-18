@@ -1,0 +1,13 @@
+architecture-beta
+    group outer(cloud)[Outer]
+    group middle(server)[Middle] in outer
+    group inner(database)[Inner] in middle
+    service a(database)[A] in inner
+    service b(disk)[B] in inner
+    service c(server)[C] in middle
+    service d(internet)[D] in outer
+    service e(cloud)[E]
+    a:R -- L:b
+    b:B -- T:c
+    c:R -- L:d
+    d:B -- T:e

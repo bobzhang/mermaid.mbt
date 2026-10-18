@@ -1,0 +1,4 @@
+Parsing failed:  Parse error on line 4, column 9: Expecting: one of these possible Token sequences:
+  1. [--]
+  2. [-]
+but found: 'B'

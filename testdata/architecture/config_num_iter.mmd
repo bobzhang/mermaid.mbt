@@ -1,0 +1,13 @@
+---
+config:
+  architecture:
+    numIter: 1500
+---
+architecture-beta
+    group g0(internet)[billing]
+    group g1(database)[billing] in g0
+    group g2(database)[search] in g1
+    service s0(database)[files] in g0
+    service s1(cloud)[queue] in g0
+    junction j0 in g2
+    junction j1 in g0

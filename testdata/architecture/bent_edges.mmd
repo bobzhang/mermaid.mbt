@@ -1,0 +1,9 @@
+architecture-beta
+    service a(server)[A]
+    service b(server)[B]
+    service c(disk)[C]
+    service d(database)[D]
+    a:R --> T:b
+    b:B <-- L:c
+    c:T -- R:d
+    d:B <--> B:a

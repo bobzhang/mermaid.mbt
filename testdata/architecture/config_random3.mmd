@@ -1,0 +1,13 @@
+---
+config:
+  architecture:
+    padding: 30
+    edgeElasticity: 0.9
+---
+architecture-beta
+    service s0
+    service s1(internet)[web]
+    service s2(internet)[queue]
+    junction j0
+    s1:L <-- L:j0
+    s0:T -- L:s2

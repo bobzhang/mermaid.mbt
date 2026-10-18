@@ -4,10 +4,13 @@ package "bobzhang/mermaid/internal/rendering"
 import {
   "bobzhang/mermaid/config",
   "bobzhang/mermaid/internal/dom",
+  "bobzhang/mermaid/internal/font",
   "moonbitlang/core/debug",
 }
 
 // Values
+pub fn create_svg_text(@dom.Element, String, @config.Config, String, width? : Double, anchor_middle? : Bool, baseline? : @font.Baseline) -> SvgTextLabel
+
 pub fn insert_markers(@dom.Element, Array[String], String, String, config? : @config.Config) -> Unit
 
 pub fn insert_title(@dom.Element, String, String, Double, @config.Config) -> Unit
@@ -173,6 +176,12 @@ pub(all) struct Point {
   x : Double
   y : Double
 } derive(Eq, @debug.Debug)
+
+pub struct SvgTextLabel {
+  group : @dom.Element
+  text : @dom.Element
+  box : @dom.Rect
+}
 
 pub(all) struct UsecaseFont {
   family : String

@@ -1,0 +1,12 @@
+architecture-beta
+    group outer(cloud)[Outer]
+    group inner[Inner] in outer
+    service a(foo)[Unknown icon] in inner
+    service b "Text icon" [Text] in inner
+    service c[No icon] in outer
+    junction j in outer
+    service d(logos:aws)[Prefixed]
+    a:R --> L:b
+    b:B -[label]- T:j
+    j:R <--> L:c
+    c{group}:B --> T:d

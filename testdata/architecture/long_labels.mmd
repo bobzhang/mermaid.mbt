@@ -1,0 +1,7 @@
+architecture-beta
+    group platform(cloud)[A rather long platform group title for wrapping]
+    service notifier(server)[Notification office file service] in platform
+    service profile(database)[Profile configuration store with many words] in platform
+    service x(disk)[Supercalifragilisticexpialidocious] in platform
+    notifier:R -- L:profile
+    profile:B -- T:x

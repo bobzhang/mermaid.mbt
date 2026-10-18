@@ -1,0 +1,6 @@
+architecture-beta
+    service a(server)[A]
+    service b(server)[B]
+    service c(disk)[C]
+    a:R -[x]-> T:b
+    b:L <-[A much longer label that wraps around]- B:c

@@ -1,0 +1,33 @@
+---
+config:
+  architecture:
+    randomize: true
+    nodeSeparation: 61
+    seed: 41
+---
+architecture-beta
+    group g0(disk)[profile]
+    service s0(foo)[queue] in g0
+    service s1(cloud) in g0
+    service s2(disk)[queue] in g0
+    service s3[office] in g0
+    service s4(internet)[files] in g0
+    service s5(disk)[billing] in g0
+    service s6(server)[files]
+    service s7(foo)[Cache] in g0
+    junction j0
+    s1:T -- L:s2
+    s2:L --> T:s1
+    s4:B <-- B:s1
+    s4:B -[billing]-> B:s6
+    s5:B <--> R:s2
+    s4:R <--> L:s7
+    j0:B <-[search]-> B:s0
+    s6:L <-- B:s2
+    j0:B <-- L:s7
+    s5:R <-- R:s3
+    s3:T --> L:j0
+    s7:T --> L:s0
+    s2:L <--> R:s0
+    s0:B <-- B:j0
+    s5:L <--> T:s0
