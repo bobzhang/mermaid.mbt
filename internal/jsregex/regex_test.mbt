@@ -180,3 +180,15 @@ test "captures are forgotten at each iteration of their atom" {
   inspect(groups("(?!(a)b)a\\1", "ac"), content="a - -")
   inspect(groups("(a)?(?:b\\1)*", "bb"), content="bb - -")
 }
+
+///|
+test "lazy repetitions of one code unit take one more only when needed" {
+  // Results of the same patterns in JavaScript.
+  inspect(prefix("a{2,4}?b", "aaab"), content="[aaab]")
+  inspect(prefix("a{2,}?$", "aaaa"), content="[aaaa]")
+  inspect(prefix("[ab]*?c", "abac"), content="[abac]")
+  inspect(prefix("x*?", "xxx"), content="[]")
+  inspect(prefix("[^c]{1,3}?c", "abcc"), content="[abc]")
+  inspect(prefix("a{2,3}?", "aaaa"), content="[aa]")
+  inspect(prefix("a+?(?=b)", "aaab"), content="[aaa]")
+}

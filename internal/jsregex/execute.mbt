@@ -3,9 +3,13 @@
 priv enum Entry {
   /// Go on at `pc` from `at`.
   Choice(Int32, Int32)
-  /// A repetition of single code units: go on at `pc` from `next`; the
-  /// positions up to `last` (down to it when `descending`) are left.
-  Units(Int32, Int32, Int32, Bool)
+  /// A greedy repetition of single code units: go on at `pc` from
+  /// `next`; the positions down to `last` are left.
+  Units(Int32, Int32, Int32)
+  /// A lazy repetition of single code units `node`, which has matched up
+  /// to `at`: take one more, if it matches and `limit` allows, and go on
+  /// at `pc`.
+  LazyUnits(Int32, Node, Int32, Int32)
   /// Put `value` back in register `register`.
   Undo(Int32, Int32)
   /// A lookahead under way, started at `at`: its body failing means a
@@ -155,23 +159,33 @@ fn Run::execute(self : Run, program : Program, at : Int32) -> Int32? {
           Some(max) => if at + max < n { at + max } else { n }
           None => n
         }
+        // Greedy takes all it can; lazy the minimum, and one more to see
+        // whether it can go on.
+        let stop = if greedy || at + min + 1 > limit {
+          limit
+        } else {
+          at + min + 1
+        }
         let mut reach = at
-        while reach < limit && self.single(node, reach) is Some(true) {
+        while reach < stop && self.single(node, reach) is Some(true) {
           reach += 1
         }
         if reach - at < min {
           failed = true
         } else if greedy {
           if reach > at + min {
-            stack.push(Units(pc + 1, reach - 1, at + min, true))
+            stack.push(Units(pc + 1, reach - 1, at + min))
           }
           at = reach
           pc += 1
         } else {
-          if reach > at + min {
-            stack.push(Units(pc + 1, at + min + 1, reach, false))
-          }
+          // Lazy: the continuation is tried after each unit, which is
+          // taken only when it fails; scanning ahead for the longest
+          // run would make every attempt cost the rest of the subject.
           at = at + min
+          if reach > at {
+            stack.push(LazyUnits(pc + 1, node, at, limit))
+          }
           pc += 1
         }
       }
@@ -225,16 +239,21 @@ fn Run::execute(self : Run, program : Program, at : Int32) -> Int32? {
           at = position
           resumed = true
         }
-        Units(target, next, last, descending) => {
+        Units(target, next, last) => {
           pc = target
           at = next
-          if descending && next - 1 >= last {
-            stack.push(Units(target, next - 1, last, true))
-          } else if !descending && next + 1 <= last {
-            stack.push(Units(target, next + 1, last, false))
+          if next - 1 >= last {
+            stack.push(Units(target, next - 1, last))
           }
           resumed = true
         }
+        LazyUnits(target, node, position, limit) =>
+          if position < limit && self.single(node, position) is Some(true) {
+            pc = target
+            at = position + 1
+            stack.push(LazyUnits(target, node, at, limit))
+            resumed = true
+          }
         // The body of a lookahead failed.
         Look(negated, after, start) =>
           if negated {

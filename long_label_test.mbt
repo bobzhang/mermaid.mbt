@@ -69,3 +69,14 @@ test "deeply nested block quotes are refused, not overflowed" {
     content="rendered",
   )
 }
+
+///|
+test "markdown with many literal < renders in linear time" {
+  // Each `<` is a text token of its own; matching one must not cost the
+  // rest of the label, as a lazy repetition that scanned ahead did.
+  let start = @env.now()
+  let svg = @mermaid.render("flowchart TD\nA[\"`\{"<".repeat(20000)}`\"]\n")
+  let elapsed = @env.now() - start
+  assert_true(svg.contains("&lt;&lt;&lt;"))
+  assert_true(elapsed < 1000, msg="took \{elapsed} ms")
+}
