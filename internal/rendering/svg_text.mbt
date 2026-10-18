@@ -351,7 +351,7 @@ fn create_svg_label(
   anchor_middle~ : Bool = !is_node,
   sanitize~ : Bool = true,
   is_title~ : Bool = false,
-) -> SvgLabel {
+) -> SvgLabel raise LayoutError {
   // The style is written on the text, which is laid out with it.
   let env = env.styled(style, faces=false)
   // Node labels are sanitized on their way here, which resolves the
@@ -519,7 +519,7 @@ fn drop_declarations(style : String, names : Array[String]) -> String {
 ///|
 /// Markdown as lines of words: mermaid's `markdownToLines`. Line breaks
 /// inside paragraphs start new lines; paragraphs themselves do not.
-fn markdown_to_lines(markdown : String) -> Array[Array[Word]] {
+fn markdown_to_lines(markdown : String) -> Array[Array[Word]] raise LayoutError {
   // <br/> is a line break, runs of line breaks collapse, and common
   // indentation goes.
   let source = markdown.replace_all(old="<br/>", new="\n")

@@ -163,26 +163,38 @@ priv struct MdLexer {
   links : Map[String, Bool]
   /// Inside `<a>`: bare URLs are not links there.
   mut in_link : Bool
+  /// How many block quotes, or levels of emphasis, are being lexed
+  /// around the current one; and whether that went past what the port
+  /// lexes (see `max_quote_depth`), which makes the label unsupported.
+  mut depth : Int32
+  mut too_deep : Bool
 }
 
 ///|
 /// The blocks of `markdown`: marked's `lex`.
-fn markdown_blocks(markdown : String) -> Array[MdBlock] {
-  let lexer = { links: Map([]), in_link: false, }
+fn markdown_blocks(markdown : String) -> Array[MdBlock] raise LayoutError {
+  let lexer = { links: Map([]), in_link: false, depth: 0, too_deep: false, }
   let source = markdown
     .replace_all(old="\r\n", new="\n")
     .replace_all(old="\r", new="\n")
   let tokens = []
   lexer.block_tokens(source, tokens, false)
+  if lexer.too_deep {
+    raise nesting_error()
+  }
   // Inline tokens are lexed once every block is known, with all the
   // link definitions.
-  tokens.map(token => {
+  let blocks = tokens.map(token => {
     match token.kind {
       Para => Paragraph(lexer.inline_tokens(token.text))
       Space => Space(token.raw)
       _ => Raw(token.raw)
     }
   })
+  if lexer.too_deep {
+    raise nesting_error()
+  }
+  blocks
 }
 
 ///|
@@ -321,6 +333,22 @@ let js_space_runs : @jsregex.Regex = md_rule("\\s+")
 /// to find where it ends: a code block ends it, and a quote or list at its
 /// end takes in the lines after it.
 fn MdLexer::blockquote(self : MdLexer, source : String) -> BlockToken? {
+  // Each level lexes the next by recursion: past the limit, stop and
+  // let `markdown_blocks` refuse the label.
+  if self.depth >= max_quote_depth &&
+    block_blockquote.match_prefix(source) is Some(_) {
+    self.too_deep = true
+    return None
+  }
+  self.depth += 1
+  let quote = self.quote(source)
+  self.depth -= 1
+  quote
+}
+
+///|
+/// `blockquote` one level down.
+fn MdLexer::quote(self : MdLexer, source : String) -> BlockToken? {
   guard block_blockquote.match_prefix(source) is Some(found) else {
     return None
   }

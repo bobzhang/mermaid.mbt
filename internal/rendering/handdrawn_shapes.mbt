@@ -41,7 +41,7 @@ fn sketched_subroutine(
   parent : @dom.Element,
   node : Node,
   env : Env,
-) -> @dom.Element {
+) -> @dom.Element raise LayoutError {
   shape_styles(node) |> ignore
   let neo = node.look == "neo"
   let label_padding_x = if neo { 28.0 } else { node.padding }

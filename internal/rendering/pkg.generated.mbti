@@ -21,9 +21,7 @@ pub fn is_dagre_layout(String) -> Bool
 
 pub fn is_valid_shape(String) -> Bool
 
-pub fn markdown_plain_text(String) -> String
-
-pub fn markdown_too_deep(String) -> Bool
+pub fn markdown_plain_text(String) -> String raise LayoutError
 
 pub fn node_palette_rules(@config.Config) -> String
 

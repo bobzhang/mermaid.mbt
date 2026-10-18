@@ -72,7 +72,7 @@ fn insert_label(
   width? : Double,
   style~ : String = "",
   center_label~ : Bool = false,
-) -> InsertedLabel {
+) -> InsertedLabel raise LayoutError {
   let label = parent.append("g").attr("class", "label").attr("style", style)
   let width = match width {
     Some(width) if width != 0.0 && !width.is_nan() => width
@@ -411,7 +411,7 @@ fn usecase_ellipse(
   parent : @dom.Element,
   node : Node,
   env : Env,
-) -> @dom.Element {
+) -> @dom.Element raise LayoutError {
   let styles = shape_styles(node)
   let labelled = label_helper(
     parent,
@@ -456,7 +456,7 @@ fn usecase_business(
   parent : @dom.Element,
   node : Node,
   env : Env,
-) -> @dom.Element {
+) -> @dom.Element raise LayoutError {
   let stereotype = match node.data {
     Usecase(stereotype~, ..) => stereotype
     _ => None
@@ -568,7 +568,7 @@ fn usecase_json_table(
   parent : @dom.Element,
   node : Node,
   env : Env,
-) -> @dom.Element {
+) -> @dom.Element raise LayoutError {
   let rows = match node.data {
     Usecase(rows~, ..) => rows
     _ => []

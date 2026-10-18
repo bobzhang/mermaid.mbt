@@ -2,7 +2,11 @@
 /// A point-sized node that only holds a label: what a self loop is routed
 /// around in the dagre layout, and the label of an edge in the swimlane
 /// layout. Mermaid's `labelRect` shape.
-fn label_rect(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
+fn label_rect(
+  parent : @dom.Element,
+  node : Node,
+  env : Env,
+) -> @dom.Element raise LayoutError {
   // The group is no `.node`: the stylesheet does not centre SVG text in
   // it, so the text starts at its anchor.
   let labelled = label_helper(parent, node, "label", {

@@ -74,7 +74,10 @@ fn tokens_to_html(
 
 ///|
 /// Markdown to the HTML of a label.
-fn markdown_to_html(markdown : String, auto_wrap : Bool) -> String {
+fn markdown_to_html(
+  markdown : String,
+  auto_wrap : Bool,
+) -> String raise LayoutError {
   let out = StringBuilder()
   for block in markdown_blocks(markdown) {
     match block {

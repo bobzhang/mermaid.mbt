@@ -34,7 +34,7 @@ fn create_html_label(
   padding_x~ : Double = 0.0,
   auto_wrap? : Bool,
   paragraph_padding~ : Double = 0.0,
-) -> (@dom.Element, LabelBox) {
+) -> (@dom.Element, LabelBox) raise LayoutError {
   // Callers that do not hand `createText` the configuration wrap
   // markdown whatever it says.
   let auto_wrap = auto_wrap.unwrap_or(
@@ -210,7 +210,7 @@ fn label_helper(
   html_labels? : Bool,
   add_background~ : Bool = false,
   paragraph_padding~ : Double = 0.0,
-) -> Labelled {
+) -> Labelled raise LayoutError {
   // Nodes carrying a stereotype have a label of stacked sections.
   if node.data is C4(..) {
     return c4_label_helper(parent, node, classes, env)
@@ -326,7 +326,11 @@ fn label_helper(
 ///|
 /// Measure the title of a group the way its frame paints it: unwrapped.
 /// Mermaid's `measureGroupLabel`.
-fn measure_group_label(parent : @dom.Element, node : Node, env : Env) -> Unit {
+fn measure_group_label(
+  parent : @dom.Element,
+  node : Node,
+  env : Env,
+) -> Unit raise LayoutError {
   if node.label == "" {
     node.label_box = Some((0.0, 0.0))
     return

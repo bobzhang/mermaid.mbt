@@ -393,7 +393,7 @@ fn DagreState::insert_centre_label(
   self : DagreState,
   group : @dom.Element,
   edge : Edge,
-) -> Unit {
+) -> Unit raise LayoutError {
   let element = if edge.label == "" && !self.label_env.html_labels {
     insert_empty_text_label(group, edge)
   } else {
@@ -418,7 +418,7 @@ fn DagreState::insert_terminal_labels_in_rounds(
   self : DagreState,
   group : @dom.Element,
   edges : Array[Edge],
-) -> Unit {
+) -> Unit raise LayoutError {
   let env = {
     ..self.env,
     font_size: terminal_label_font_size(
@@ -446,7 +446,7 @@ fn DagreState::insert_dagre_edge_label(
   self : DagreState,
   group : @dom.Element,
   edge : Edge,
-) -> Unit {
+) -> Unit raise LayoutError {
   self.insert_centre_label(group, edge)
   self.insert_terminal_labels_in_rounds(group, [edge])
 }

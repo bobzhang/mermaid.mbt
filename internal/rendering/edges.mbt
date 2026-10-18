@@ -414,7 +414,7 @@ fn insert_edge_label(
   env : Env,
   padding_x~ : Double = 0.0,
   own_styles~ : Bool = true,
-) -> @dom.Element {
+) -> @dom.Element raise LayoutError {
   let split = split_styles(
     [..edge.css_compiled_styles, ..if own_styles { edge.style } else { [] }],
   )

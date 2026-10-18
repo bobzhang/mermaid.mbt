@@ -42,7 +42,7 @@ fn title_label(
   text : String,
   node : Node,
   env : Env,
-) -> (@dom.Element, LabelBox) {
+) -> (@dom.Element, LabelBox) raise LayoutError {
   if env.html_labels {
     let (fo, box) = create_html_label(label, text, env, style=node.label_style)
     fo.attr_number("width", box.width).attr_number("height", box.height)
@@ -70,7 +70,7 @@ fn rect_with_title(
   parent : @dom.Element,
   node : Node,
   env : Env,
-) -> @dom.Element {
+) -> @dom.Element raise LayoutError {
   let styles = shape_styles(node)
   let classes = if node.css_classes == "" {
     "node default"

@@ -12,7 +12,7 @@ fn swimlane_cluster(
   node : Node,
   model : @swimlane_model.Node,
   env : Env,
-) -> Unit {
+) -> Unit raise LayoutError {
   let theme = env.config.theme()
   let cluster_bkg = theme.text("clusterBkg")
   let lane_stroke = theme.text("clusterBorder")

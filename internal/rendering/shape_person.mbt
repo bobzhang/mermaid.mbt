@@ -1,7 +1,11 @@
 ///|
 /// A person, as in C4 model notation: a circular head above a body with
 /// round corners.
-fn person(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
+fn person(
+  parent : @dom.Element,
+  node : Node,
+  env : Env,
+) -> @dom.Element raise LayoutError {
   let styles = shape_styles(node)
   let labelled = label_helper(parent, node, node_classes(node), env)
   let box = labelled.bbox

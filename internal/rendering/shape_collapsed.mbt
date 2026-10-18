@@ -18,7 +18,7 @@ fn collapsed_group(
   parent : @dom.Element,
   node : Node,
   env : Env,
-) -> @dom.Element {
+) -> @dom.Element raise LayoutError {
   let container_type = match node.data {
     Container(metadata~) =>
       match metadata.get("containerType") {

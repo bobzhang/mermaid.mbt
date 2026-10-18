@@ -14,7 +14,11 @@ fn accent_colour(env : Env) -> String {
 
 ///|
 /// A rectangle with a tab on the left of its top edge.
-fn folder(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
+fn folder(
+  parent : @dom.Element,
+  node : Node,
+  env : Env,
+) -> @dom.Element raise LayoutError {
   let styles = shape_styles(node)
   let labelled = label_helper(parent, node, node_classes(node), env)
   let box = labelled.bbox
@@ -64,7 +68,11 @@ fn folder(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
 ///|
 /// An open container that narrows to a curved base, with an elliptical
 /// rim.
-fn bucket(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
+fn bucket(
+  parent : @dom.Element,
+  node : Node,
+  env : Env,
+) -> @dom.Element raise LayoutError {
   let styles = shape_styles(node)
   let labelled = label_helper(parent, node, node_classes(node), env)
   let box = labelled.bbox
@@ -193,7 +201,11 @@ fn finish_window(
 
 ///|
 /// A browser window: a bar with three dots and an address field.
-fn browser(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
+fn browser(
+  parent : @dom.Element,
+  node : Node,
+  env : Env,
+) -> @dom.Element raise LayoutError {
   let styles = shape_styles(node)
   let labelled = label_helper(parent, node, node_classes(node), env)
   let accent = accent_colour(env)
@@ -237,7 +249,7 @@ fn console_window(
   parent : @dom.Element,
   node : Node,
   env : Env,
-) -> @dom.Element {
+) -> @dom.Element raise LayoutError {
   let styles = shape_styles(node)
   let labelled = label_helper(parent, node, node_classes(node), env)
   let accent = accent_colour(env)
@@ -262,7 +274,11 @@ fn console_window(
 
 ///|
 /// A cloud: arcs around the label.
-fn cloud(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
+fn cloud(
+  parent : @dom.Element,
+  node : Node,
+  env : Env,
+) -> @dom.Element raise LayoutError {
   let styles = shape_styles(node)
   let labelled = label_helper(parent, node, node_classes(node), env)
   let box = labelled.bbox
@@ -306,7 +322,11 @@ fn cloud(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
 
 ///|
 /// A bang: a burst of arcs around the label.
-fn bang(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
+fn bang(
+  parent : @dom.Element,
+  node : Node,
+  env : Env,
+) -> @dom.Element raise LayoutError {
   let styles = shape_styles(node)
   let labelled = label_helper(parent, node, node_classes(node), env)
   let box = labelled.bbox

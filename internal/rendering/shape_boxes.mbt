@@ -50,7 +50,11 @@ fn place_label(labelled : Labelled, x : Double, y : Double) -> Unit {
 
 ///|
 /// Text in a rectangle that shows only through the styles it is given.
-fn text_block(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
+fn text_block(
+  parent : @dom.Element,
+  node : Node,
+  env : Env,
+) -> @dom.Element raise LayoutError {
   let styles = shape_styles(node)
   let labelled = label_helper(parent, node, node_classes(node), env)
   let total_width = (labelled.bbox.width + node.padding).max(
@@ -76,7 +80,11 @@ fn text_block(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
 
 ///|
 /// A rectangle with its top left corner cut off.
-fn card(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
+fn card(
+  parent : @dom.Element,
+  node : Node,
+  env : Env,
+) -> @dom.Element raise LayoutError {
   let neo = node.look == "neo"
   let notch = 12.0
   polygon_shape(parent, node, env, box => {
@@ -107,7 +115,7 @@ fn shaded_process(
   parent : @dom.Element,
   node : Node,
   env : Env,
-) -> @dom.Element {
+) -> @dom.Element raise LayoutError {
   let styles = shape_styles(node)
   let neo = node.look == "neo"
   let frame = 8.0
@@ -160,7 +168,7 @@ fn divided_rectangle(
   parent : @dom.Element,
   node : Node,
   env : Env,
-) -> @dom.Element {
+) -> @dom.Element raise LayoutError {
   let styles = shape_styles(node)
   let neo = node.look == "neo"
   let padding_x = if neo { 16.0 } else { node.padding }
@@ -201,7 +209,11 @@ fn divided_rectangle(
 
 ///|
 /// A rectangle with a strip along its top and one along its left side.
-fn window_pane(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
+fn window_pane(
+  parent : @dom.Element,
+  node : Node,
+  env : Env,
+) -> @dom.Element raise LayoutError {
   let styles = shape_styles(node)
   let neo = node.look == "neo"
   let rect_offset = 10.0
@@ -293,7 +305,11 @@ fn merge_paths(rough : @dom.Element) -> @dom.Element {
 
 ///|
 /// Three rectangles stacked behind one another.
-fn multi_rect(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
+fn multi_rect(
+  parent : @dom.Element,
+  node : Node,
+  env : Env,
+) -> @dom.Element raise LayoutError {
   let styles = shape_styles(node)
   let neo = node.look == "neo"
   let label_padding_x = if neo { 16.0 } else { node.padding }
@@ -371,7 +387,11 @@ fn multi_rect(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
 
 ///|
 /// A rectangle with its bottom right corner folded over.
-fn tagged_rect(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
+fn tagged_rect(
+  parent : @dom.Element,
+  node : Node,
+  env : Env,
+) -> @dom.Element raise LayoutError {
   let styles = shape_styles(node)
   let neo = node.look == "neo"
   // The tag's size relative to the height of the node.
@@ -424,7 +444,11 @@ fn tagged_rect(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
 ///|
 /// A rectangle with only its top and bottom drawn: the data store of data
 /// flow diagrams. The sides are dashed away.
-fn datastore(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
+fn datastore(
+  parent : @dom.Element,
+  node : Node,
+  env : Env,
+) -> @dom.Element raise LayoutError {
   let shape_svg = draw_rect(
     parent,
     node,
@@ -450,7 +474,11 @@ fn datastore(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
 
 ///|
 /// A note: a rectangle in the theme's note colours.
-fn note(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
+fn note(
+  parent : @dom.Element,
+  node : Node,
+  env : Env,
+) -> @dom.Element raise LayoutError {
   let styles = shape_styles(node)
   let labelled = label_helper(parent, node, node_classes(node), env)
   let box = labelled.bbox
@@ -482,7 +510,11 @@ fn note(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
 ///|
 /// The rectangle state diagrams draw around a composite state before it
 /// is laid out; a flowchart node may ask for it by name.
-fn composite(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
+fn composite(
+  parent : @dom.Element,
+  node : Node,
+  env : Env,
+) -> @dom.Element raise LayoutError {
   let classes = if node.css_classes == "" {
     "node"
   } else {

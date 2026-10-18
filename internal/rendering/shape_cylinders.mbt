@@ -35,7 +35,11 @@ fn cylinder_intersect(
 
 ///|
 /// A cylinder: an ellipse on top, straight sides, half an ellipse below.
-fn cylinder(parent : @dom.Element, node : Node, env : Env) -> @dom.Element {
+fn cylinder(
+  parent : @dom.Element,
+  node : Node,
+  env : Env,
+) -> @dom.Element raise LayoutError {
   let styles = shape_styles(node)
   let neo = node.look == "neo"
   let label_padding = if neo { 24.0 } else { node.padding }
@@ -95,7 +99,7 @@ fn lined_cylinder(
   parent : @dom.Element,
   node : Node,
   env : Env,
-) -> @dom.Element {
+) -> @dom.Element raise LayoutError {
   let styles = shape_styles(node)
   let neo = node.look == "neo"
   let label_padding_x = if neo { 16.0 } else { node.padding }
@@ -163,7 +167,7 @@ fn tilted_cylinder(
   parent : @dom.Element,
   node : Node,
   env : Env,
-) -> @dom.Element {
+) -> @dom.Element raise LayoutError {
   let styles = shape_styles(node)
   let label_padding = if node.look == "neo" { 12.0 } else { node.padding / 2.0 }
   let original_height = node.height.unwrap_or(0.0)

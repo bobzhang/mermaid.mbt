@@ -76,6 +76,21 @@ fn MdLexer::masked(self : MdLexer, source : String) -> String {
 ///|
 /// marked's `inlineTokens`.
 fn MdLexer::inline_tokens(self : MdLexer, source : String) -> Array[MdToken] {
+  // Emphasis lexes its content by recursion: past the limit, stop and
+  // let `markdown_blocks` refuse the label.
+  if self.depth >= max_emphasis_depth {
+    self.too_deep = true
+    return []
+  }
+  self.depth += 1
+  let tokens = self.inline_level(source)
+  self.depth -= 1
+  tokens
+}
+
+///|
+/// `inline_tokens` one level down.
+fn MdLexer::inline_level(self : MdLexer, source : String) -> Array[MdToken] {
   let masked = self.masked(source)
   let tokens : Array[MdToken] = []
   let push_text = (text : String) => {

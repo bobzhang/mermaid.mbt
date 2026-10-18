@@ -173,7 +173,7 @@ fn icon_shape(
   node : Node,
   env : Env,
   handler : String,
-) -> @dom.Element {
+) -> @dom.Element raise LayoutError {
   shape_styles(node) |> ignore
   let asset = asset_data(node)
   let theme = env.config.theme()

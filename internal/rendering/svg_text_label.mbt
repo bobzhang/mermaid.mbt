@@ -26,7 +26,11 @@ pub fn create_svg_text(
   baseline~ : @font.Baseline = Alphabetic,
 ) -> SvgTextLabel {
   let env = Env::new(config, diagram_id)
-  let label = create_svg_label(parent, text, env, width?, anchor_middle~)
+  // Plain text: nothing goes through the markdown lexer, which alone
+  // fails.
+  let label = create_svg_label(parent, text, env, width?, anchor_middle~) catch {
+    _ => panic()
+  }
   let box = if baseline == Alphabetic {
     label.text_box
   } else {

@@ -119,14 +119,10 @@ fn accessible_label(
   label_type : String,
 ) -> String raise UsecaseError {
   if label_type == "markdown" {
-    // Deep block quotes and emphasis are lexed by recursion; see
-    // `@rendering.markdown_too_deep`.
-    if @rendering.markdown_too_deep(label) {
-      raise Unsupported(
-        "a label nests block quotes or emphasis deeper than the port lexes",
-      )
+    @rendering.markdown_plain_text(label) catch {
+      @rendering.LayoutError(message) | UpstreamError(message) =>
+        raise Unsupported(message)
     }
-    @rendering.markdown_plain_text(label)
   } else {
     label
   }

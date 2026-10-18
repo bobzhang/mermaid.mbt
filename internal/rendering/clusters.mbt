@@ -34,7 +34,7 @@ fn insert_cluster(
   parent : @dom.Element,
   node : Node,
   env : Env,
-) -> ClusterFrame {
+) -> ClusterFrame raise LayoutError {
   let styles = node_styles(node)
   let shape_svg = parent
     .append("g")

@@ -33,7 +33,7 @@ fn c4_label_helper(
   node : Node,
   classes : String,
   env : Env,
-) -> Labelled {
+) -> Labelled raise LayoutError {
   let shape_svg = parent
     .append("g")
     .attr("class", classes)
