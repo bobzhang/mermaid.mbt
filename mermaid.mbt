@@ -899,6 +899,11 @@ pub fn render(
     processed.title,
     id,
   )
+  // Upstream's render hands back an <iframe> with the SVG in a data URL
+  // under the sandbox security level, not the SVG.
+  if config.text("securityLevel") is Some("sandbox") {
+    raise Unsupported("the sandbox security level")
+  }
   let style = @dom.Element::new("style").text(
     compiled_styles(id, parsed.styles, config, parsed.classes),
   )
