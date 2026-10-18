@@ -228,8 +228,8 @@ fn build_cy(db : Db, config : LayoutConfig) -> Cy raise ArchitectureError {
   }
   for edge in db.edges {
     let id = "\{edge.lhs_id}-\{edge.rhs_id}"
-    // cytoscape refuses a second element with an id.
-    if cy.edges.iter().any(e => e.id == id) {
+    // cytoscape refuses a second element with an id, a node's as well.
+    if cy.by_id.contains(id) || cy.edges.iter().any(e => e.id == id) {
       raise Invalid("Can not create second element with ID `\{id}`")
     }
     cy.edges.push({
