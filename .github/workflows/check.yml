@@ -1,0 +1,56 @@
+name: check
+
+# Type-checks, formats, and runs every test, including the byte-for-byte
+# comparison of all fixtures in testdata/ with mermaid's own output, on the
+# latest stable toolchain.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  # a toolchain release can change moon fmt / moon info output without a push
+  schedule:
+    - cron: "0 3 * * 1"
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: install moon
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> $GITHUB_PATH
+
+      - name: moon version
+        run: |
+          moon version --all
+          moon update
+
+      - name: moon check
+        run: |
+          moon check --deny-warn --target wasm-gc
+          moon check --deny-warn --target native
+          moon check --deny-warn --target js
+
+      - name: format diff
+        run: |
+          moon fmt
+          git diff --exit-code
+
+      - name: interface diff
+        run: |
+          moon info
+          git diff --exit-code
+
+      - name: test (wasm-gc)
+        run: moon test --target wasm-gc
+
+      - name: test (native, with the fixtures)
+        run: moon test --target native
+
+      - name: playground builds
+        run: |
+          moon build --target js --release playground
