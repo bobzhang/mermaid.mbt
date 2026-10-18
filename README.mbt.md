@@ -31,10 +31,11 @@ diagram are honored.
 ## Status
 
 Every diagram type of mermaid 12.2.0 is ported. Of the 598 examples in
-upstream's documentation, 595 render byte for byte as upstream does; the
-other three need an image fetched from the network (flowchart), a YAML
-form the `moonbit-community/yaml` dependency rejects (Gantt), and the
-metrics of Apple Color Emoji (tree view). Input the port cannot reproduce
+upstream's documentation, 597 render byte for byte as upstream does; the
+one left needs the metrics of Apple Color Emoji (tree view). One of the
+597 shows an image from the network, which the port measures when the
+caller supplies the image: `render(image_loader=...)`, or `mermaid render
+--fetch-images` on the command line. Input the port cannot reproduce
 exactly raises `Unsupported` rather than rendering something close.
 
 | Diagram | State |
@@ -133,9 +134,12 @@ Limits:
   (stadium, flag, documents, ...) through rough.js even in the classic look.
 - Icon packs cannot be registered: every icon is drawn as mermaid's unknown
   icon, which is also what upstream draws without packs.
-- Images take their size from the image: the port reads it from PNG and GIF
-  `data:` URLs, and draws other addresses only when the node gives `w` and
-  `h` without a `constraint`; otherwise `render` raises `Unsupported`.
+- Images take their size from the image. `render` never touches the
+  network: it reads `data:` URLs itself and asks the caller's optional
+  `image_loader` for other addresses (PNG, GIF, JPEG, WebP and SVG sizes are
+  decoded as Chrome decodes them). Without a loader it draws such an image
+  only when the node gives `w` and `h` without a `constraint`, and raises
+  `Unsupported` otherwise. The CLI's `--fetch-images` is such a loader.
 - Markdown labels cover paragraphs, emphasis, strikethrough, escapes, HTML
   blocks and inline HTML; other markdown blocks pass through as text.
 - Line breaking inside labels knows Blink's rules for ASCII text; other
