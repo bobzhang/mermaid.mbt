@@ -328,6 +328,12 @@ priv struct SvgLabel {
 }
 
 ///|
+/// The error upstream raises while measuring a label, which aborts the
+/// render: `render` reports it once the diagram is drawn. Labels are
+/// measured deep inside the shapes, which do not fail otherwise.
+let upstream_failure : Ref[String?] = Ref(None)
+
+///|
 /// mermaid's `createText` for SVG labels: a group with a background
 /// rectangle and a `<text>` of one `<tspan>` per line, each word in a
 /// `<tspan>` of its own. Lines wider than `width` are broken.
@@ -382,6 +388,13 @@ fn create_svg_label(
     if fits(line) {
       lines.push(line)
     } else {
+      // A raw markdown block keeps its line breaks in one word, which
+      // upstream refuses to break.
+      if line.iter().any(word => word.content.contains("\n")) {
+        upstream_failure.val = Some(
+          "splitLineToFitWidth does not support newlines in the line",
+        )
+      }
       lines.append(split_line_to_fit(line, fits))
     }
   }
@@ -554,7 +567,9 @@ fn markdown_to_lines(markdown : String) -> Array[Array[Word]] {
   for block in markdown_blocks(dedent(collapsed.to_string())) {
     match block {
       Paragraph(tokens) => walk(tokens, "normal")
-      Raw(text) => push_word(text, "normal")
+      // Whatever is not a paragraph is a word as written, white space
+      // between blocks included.
+      Raw(text) | Space(text) => push_word(text, "normal")
     }
   }
   lines
