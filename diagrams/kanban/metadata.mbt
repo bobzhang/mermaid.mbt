@@ -364,9 +364,8 @@ fn load_yaml(source : String) -> Meta? raise KanbanError {
     anchors: Map([]),
     error: None,
   }
-  let parser = @yaml.Parser::new(source)
   // js-yaml's leniency, as upstream loads it with js-yaml.
-  parser.lenient_quoted_scalar_indentation(true)
+  let parser = @yaml.Parser(source, lenient_quoted_scalar_indentation=true)
   parser.load(loader, true) catch {
     @yaml.YamlError(info~, ..) => raise Invalid("bad metadata: \{info}")
   }
