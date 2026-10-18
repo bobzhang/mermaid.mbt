@@ -107,7 +107,7 @@ fn Element::write(self : Element, out : StringBuilder) -> Unit {
     // The sanitizer mermaid runs its output through trims attribute values
     // as `String.prototype.trim` does (except `value`), then removes those
     // that could end a comment or raw-text element (`SAFE_FOR_XML`).
-    let value = decode_entities(attribute.1)
+    let value = decode_entities(attribute.1, in_attribute=true)
     let value = if attribute.0 == "value" { value } else { js_trim(value) }
     if !is_safe_for_xml(value) {
       continue
