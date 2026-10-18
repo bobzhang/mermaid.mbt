@@ -162,7 +162,7 @@ fn forest_update_colors(t : Theme) -> Unit raise @color.ColorError {
       darken(t.get("tertiaryColor"), num(40.0))
     }),
   )
-  for i_ in to_int(num(0.0))..<to_int(t.get("THEME_COLOR_LIMIT")) {
+  for i_ in to_int(num(0.0))..<loop_end(t.get("THEME_COLOR_LIMIT")) {
     let i = num(i_.to_double())
     t.set(
       to_string(add(str("cScale"), i)),
@@ -175,7 +175,7 @@ fn forest_update_colors(t : Theme) -> Unit raise @color.ColorError {
       }),
     )
   }
-  for i_ in to_int(num(0.0))..<to_int(t.get("THEME_COLOR_LIMIT")) {
+  for i_ in to_int(num(0.0))..<loop_end(t.get("THEME_COLOR_LIMIT")) {
     let i = num(i_.to_double())
     t.set(
       to_string(add(str("cScaleInv"), i)),
@@ -196,7 +196,7 @@ fn forest_update_colors(t : Theme) -> Unit raise @color.ColorError {
       t.get("labelTextColor")
     },
   )
-  for i_ in to_int(num(0.0))..<to_int(t.get("THEME_COLOR_LIMIT")) {
+  for i_ in to_int(num(0.0))..<loop_end(t.get("THEME_COLOR_LIMIT")) {
     let i = num(i_.to_double())
     t.set(
       to_string(add(str("cScaleLabel"), i)),
@@ -205,7 +205,7 @@ fn forest_update_colors(t : Theme) -> Unit raise @color.ColorError {
       }),
     )
   }
-  for i_ in to_int(num(0.0))..<to_int(num(5.0)) {
+  for i_ in to_int(num(0.0))..<loop_end(num(5.0)) {
     let i = num(i_.to_double())
     t.set(
       to_string(add(str("surface"), i)),
