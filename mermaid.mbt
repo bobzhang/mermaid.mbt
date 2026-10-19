@@ -15,6 +15,22 @@ pub(all) suberror MermaidError {
 } derive(Eq, Debug)
 
 ///|
+/// The failure as a message for people: what kind of failure it is, then
+/// what went wrong.
+pub impl Show for MermaidError with fn output(self, logger) {
+  let (kind, message) = match self {
+    UnknownDiagram(message) => ("unknown diagram", message)
+    Syntax(message) => ("syntax error", message)
+    Config(message) => ("invalid configuration", message)
+    Unsupported(message) => ("not supported", message)
+    Render(message) => ("cannot render", message)
+  }
+  logger.write_string(kind)
+  logger.write_string(": ")
+  logger.write_string(message)
+}
+
+///|
 /// What a failure of the unified renderer is to the caller.
 fn layout_failure(error : @rendering.LayoutError) -> MermaidError {
   match error {
