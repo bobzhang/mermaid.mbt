@@ -17,6 +17,7 @@ pub(all) suberror MermaidError {
   Unsupported(String)
   Render(String)
 } derive(Eq, @debug.Debug)
+pub impl Show for MermaidError
 
 // Types and methods
 

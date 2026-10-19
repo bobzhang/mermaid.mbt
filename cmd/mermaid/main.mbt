@@ -126,7 +126,7 @@ async fn render(
       @lib.render(text, id~, config=site, now?, page~)
     }
   } catch {
-    error => raise CliError(Repr(error).to_string(), status=1)
+    error => raise CliError(error.to_string(), status=1)
   }
   println(svg)
 }
