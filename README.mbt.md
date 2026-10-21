@@ -117,9 +117,9 @@ classic, neo and hand-drawn looks.
 
 Layouts, each a transcription checked against upstream's own code:
 
-- ELK, the default, computed by [bobzhang/elk](https://github.com/bobzhang/elk),
-  a fork of [moon_elk](https://github.com/moonbit-community/moon_elk) with
-  the fixes it needs to match elkjs 0.9.3, until they are merged upstream;
+- ELK, the default, computed by
+  [moonbit-community/elk](https://github.com/moonbit-community/moon_elk),
+  which matches elkjs 0.9.3;
 - dagre (`internal/dagre`), for `layout: dagre` and for layout names mermaid
   does not register;
 - the swimlane engine (`internal/swimlane`), for `layout: swimlane`;

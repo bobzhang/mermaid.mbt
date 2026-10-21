@@ -16,7 +16,7 @@ import {
   "bobzhang/mermaid/internal/swimlane",
   "bobzhang/mermaid/internal/swimlane/layering" @swimlane_layering,
   "bobzhang/mermaid/internal/swimlane/model" @swimlane_model,
-  "bobzhang/elk/engine/all" @elk,
+  "moonbit-community/elk/engine/all" @elk,
 }
 
 warnings = "-implicit_impl_as_method"
