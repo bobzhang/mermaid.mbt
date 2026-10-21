@@ -32,7 +32,7 @@ pub fn number(Double) -> String
 
 pub fn pie(Array[Double]) -> Array[PieArc]
 
-pub fn sankey(Int, Array[(Int, Int, Double)], node_width? : Double, node_padding? : Double, align? : SankeyAlign, extent? : (Double, Double, Double, Double)) -> SankeyGraph raise SankeyError
+pub fn sankey(Int32, Array[(Int32, Int32, Double)], node_width? : Double, node_padding? : Double, align? : SankeyAlign, extent? : (Double, Double, Double, Double)) -> SankeyGraph raise SankeyError
 
 pub let scheme_tableau10 : Array[String]
 
@@ -56,15 +56,15 @@ pub fn time_month(@jsdate.Zone) -> TimeInterval
 
 pub fn time_second(@jsdate.Zone) -> TimeInterval
 
-pub fn time_week(@jsdate.Zone, Int) -> TimeInterval
+pub fn time_week(@jsdate.Zone, Int32) -> TimeInterval
 
 pub fn time_year(@jsdate.Zone) -> TimeInterval
 
-pub fn to_exponential(Double, digits? : Int) -> String
+pub fn to_exponential(Double, digits? : Int32) -> String
 
-pub fn to_fixed(Double, Int) -> String
+pub fn to_fixed(Double, Int32) -> String
 
-pub fn to_precision(Double, Int) -> String
+pub fn to_precision(Double, Int32) -> String
 
 // Errors
 pub(all) suberror FormatError {
@@ -91,8 +91,8 @@ pub fn Format::apply(Self, Double) -> String
 
 pub struct HierarchyNode[T] {
   data : T
-  mut depth : Int
-  mut height : Int
+  mut depth : Int32
+  mut height : Int32
   mut parent : HierarchyNode[T]?
   mut children : Array[HierarchyNode[T]]?
   mut value : Double
@@ -137,11 +137,11 @@ pub fn Path::bezier_curve_to(Self, Double, Double, Double, Double, Double, Doubl
 pub fn Path::close(Self) -> Unit
 pub fn Path::line_to(Self, Double, Double) -> Unit
 pub fn Path::move_to(Self, Double, Double) -> Unit
-pub fn Path::new(digits? : Int) -> Self
+pub fn Path::new(digits? : Int32) -> Self
 pub fn Path::to_string(Self) -> String
 
 pub(all) struct PieArc {
-  index : Int
+  index : Int32
   value : Double
   start_angle : Double
   end_angle : Double
@@ -161,9 +161,9 @@ pub struct SankeyGraph {
 pub fn SankeyGraph::link_horizontal(Self, SankeyLink) -> String
 
 pub struct SankeyLink {
-  index : Int
-  source : Int
-  target : Int
+  index : Int32
+  source : Int32
+  target : Int32
   value : Double
   mut width : Double
   mut y0 : Double
@@ -171,13 +171,13 @@ pub struct SankeyLink {
 }
 
 pub struct SankeyNode {
-  index : Int
-  source_links : Array[Int]
-  target_links : Array[Int]
+  index : Int32
+  source_links : Array[Int32]
+  target_links : Array[Int32]
   mut value : Double
-  mut depth : Int
-  mut height : Int
-  mut layer : Int
+  mut depth : Int32
+  mut height : Int32
+  mut layer : Int32
   mut x0 : Double
   mut x1 : Double
   mut y0 : Double

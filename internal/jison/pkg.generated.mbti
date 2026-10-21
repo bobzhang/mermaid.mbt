@@ -9,16 +9,16 @@ import {
 
 // Errors
 pub(all) suberror ParseError {
-  ParseError(message~ : String, line~ : Int)
+  ParseError(message~ : String, line~ : Int32)
 } derive(Eq, @debug.Debug)
 
 // Types and methods
 pub struct Grammar {
   // private fields
 }
-pub fn Grammar::new(symbols~ : Array[String], terminals~ : Array[Int], productions~ : Array[Int], table~ : Array[Int], default_actions~ : Array[Int], rules~ : Array[(String, String)], conditions~ : Map[String, Array[Int]], lex_ops~ : Array[Array[LexOp]], flex? : Bool) -> Self
-pub fn[V] Grammar::parse(Self, String, empty~ : V, token~ : (String) -> V, reduce~ : (Reduction[V]) -> V? raise, hook? : (Int, Lexer) -> HookResult) -> V raise
-pub fn Grammar::symbol(Self, String) -> Int?
+pub fn Grammar::new(symbols~ : Array[String], terminals~ : Array[Int32], productions~ : Array[Int32], table~ : Array[Int32], default_actions~ : Array[Int32], rules~ : Array[(String, String)], conditions~ : Map[String, Array[Int32]], lex_ops~ : Array[Array[LexOp]], flex? : Bool) -> Self
+pub fn[V] Grammar::parse(Self, String, empty~ : V, token~ : (String) -> V, reduce~ : (Reduction[V]) -> V? raise, hook? : (Int32, Lexer) -> HookResult) -> V raise
+pub fn Grammar::symbol(Self, String) -> Int32?
 
 pub(all) enum HookResult {
   Continue
@@ -31,28 +31,28 @@ pub(all) enum LexOp {
   Push(String)
   Pop
   Return(String)
-  Custom(Int)
+  Custom(Int32)
 }
 
 pub struct Lexer {
   // private fields
 }
 pub fn Lexer::fail(Self, String) -> Unit
-pub fn Lexer::less(Self, Int) -> Unit
-pub fn Lexer::line(Self) -> Int
+pub fn Lexer::less(Self, Int32) -> Unit
+pub fn Lexer::line(Self) -> Int32
 pub fn Lexer::pop_state(Self) -> Unit
 pub fn Lexer::push_state(Self, String) -> Unit
 pub fn Lexer::remaining(Self) -> StringView
 pub fn Lexer::set_text(Self, String) -> Unit
 pub fn Lexer::state(Self) -> String
 pub fn Lexer::text(Self) -> String
-pub fn Lexer::unput(Self, Int) -> Unit
+pub fn Lexer::unput(Self, Int32) -> Unit
 
 pub struct Reduction[V] {
-  production : Int
+  production : Int32
   values : ArrayView[V]
   text : String
-  line : Int
+  line : Int32
 }
 
 // Type aliases
