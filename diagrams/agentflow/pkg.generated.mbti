@@ -1,12 +1,12 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "bobzhang/mermaid/diagrams/agentflow"
+package "moonbit-community/mermaid/diagrams/agentflow"
 
 import {
-  "bobzhang/mermaid/config",
-  "bobzhang/mermaid/diagram",
-  "bobzhang/mermaid/diagrams/flowchart",
-  "bobzhang/mermaid/internal/rendering",
-  "bobzhang/mermaid/theme",
+  "moonbit-community/mermaid/config",
+  "moonbit-community/mermaid/diagram",
+  "moonbit-community/mermaid/diagrams/flowchart",
+  "moonbit-community/mermaid/internal/rendering",
+  "moonbit-community/mermaid/theme",
   "moonbitlang/core/debug",
 }
 

@@ -1,9 +1,9 @@
 import {
   "moonbitlang/core/bigint",
   "moonbitlang/core/string",
-  "bobzhang/mermaid/internal/color",
-  "bobzhang/mermaid/internal/jsmath",
-  "bobzhang/mermaid/internal/libm",
+  "moonbit-community/mermaid/internal/color",
+  "moonbit-community/mermaid/internal/jsmath",
+  "moonbit-community/mermaid/internal/libm",
 }
 
 warnings = "-implicit_impl_as_method"

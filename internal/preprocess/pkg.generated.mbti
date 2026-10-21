@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "bobzhang/mermaid/internal/preprocess"
+package "moonbit-community/mermaid/internal/preprocess"
 
 import {
   "moonbitlang/core/debug",

@@ -1,8 +1,8 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "bobzhang/mermaid/config"
+package "moonbit-community/mermaid/config"
 
 import {
-  "bobzhang/mermaid/theme",
+  "moonbit-community/mermaid/theme",
   "moonbitlang/core/debug",
 }
 

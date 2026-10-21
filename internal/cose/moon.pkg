@@ -1,5 +1,5 @@
 import {
-  "bobzhang/mermaid/internal/jsmath",
+  "moonbit-community/mermaid/internal/jsmath",
 }
 
 warnings = "-implicit_impl_as_method"

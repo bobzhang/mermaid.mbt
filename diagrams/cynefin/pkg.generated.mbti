@@ -1,9 +1,9 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "bobzhang/mermaid/diagrams/cynefin"
+package "moonbit-community/mermaid/diagrams/cynefin"
 
 import {
-  "bobzhang/mermaid/diagram",
-  "bobzhang/mermaid/theme",
+  "moonbit-community/mermaid/diagram",
+  "moonbit-community/mermaid/theme",
   "moonbitlang/core/debug",
 }
 

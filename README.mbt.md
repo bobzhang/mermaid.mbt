@@ -7,6 +7,10 @@ The port is pure MoonBit: no DOM and no JavaScript. It renders diagram text
 straight to SVG on every backend, and its goal is output that is **byte for
 byte** what mermaid 12.2.0 produces in a browser.
 
+Try it in the [playground](https://moonbit-community.github.io/mermaid.mbt/).
+The module was published as `bobzhang/mermaid` up to 0.1.2; depend on
+`moonbit-community/mermaid` instead.
+
 ```mbt check
 ///|
 test {
@@ -179,7 +183,7 @@ approximately.
 
 | Package | Role |
 | --- | --- |
-| `bobzhang/mermaid` | `render` |
+| `moonbit-community/mermaid` | `render` |
 | `config`, `theme` | configuration and theme variables |
 | `diagram` | the context renderers draw into |
 | `diagrams/*` | one package per diagram type |

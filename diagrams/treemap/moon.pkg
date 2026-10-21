@@ -1,14 +1,14 @@
 import {
-  "bobzhang/mermaid/config",
-  "bobzhang/mermaid/diagram",
-  "bobzhang/mermaid/internal/color",
-  "bobzhang/mermaid/internal/d3",
-  "bobzhang/mermaid/internal/dom",
-  "bobzhang/mermaid/internal/font",
-  "bobzhang/mermaid/internal/jsregex",
-  "bobzhang/mermaid/internal/langium",
-  "bobzhang/mermaid/internal/rendering",
-  "bobzhang/mermaid/theme",
+  "moonbit-community/mermaid/config",
+  "moonbit-community/mermaid/diagram",
+  "moonbit-community/mermaid/internal/color",
+  "moonbit-community/mermaid/internal/d3",
+  "moonbit-community/mermaid/internal/dom",
+  "moonbit-community/mermaid/internal/font",
+  "moonbit-community/mermaid/internal/jsregex",
+  "moonbit-community/mermaid/internal/langium",
+  "moonbit-community/mermaid/internal/rendering",
+  "moonbit-community/mermaid/theme",
 }
 
 warnings = "-implicit_impl_as_method"

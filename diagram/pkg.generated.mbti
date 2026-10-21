@@ -1,11 +1,11 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "bobzhang/mermaid/diagram"
+package "moonbit-community/mermaid/diagram"
 
 import {
-  "bobzhang/mermaid/config",
-  "bobzhang/mermaid/internal/dom",
-  "bobzhang/mermaid/internal/font",
-  "bobzhang/mermaid/theme",
+  "moonbit-community/mermaid/config",
+  "moonbit-community/mermaid/internal/dom",
+  "moonbit-community/mermaid/internal/font",
+  "moonbit-community/mermaid/theme",
 }
 
 // Values

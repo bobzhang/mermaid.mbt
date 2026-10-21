@@ -1,9 +1,9 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "bobzhang/mermaid/internal/swimlane"
+package "moonbit-community/mermaid/internal/swimlane"
 
 import {
-  "bobzhang/mermaid/internal/swimlane/layering",
-  "bobzhang/mermaid/internal/swimlane/model",
+  "moonbit-community/mermaid/internal/swimlane/layering",
+  "moonbit-community/mermaid/internal/swimlane/model",
   "moonbitlang/core/debug",
 }
 

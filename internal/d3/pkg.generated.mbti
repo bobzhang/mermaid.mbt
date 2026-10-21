@@ -1,9 +1,9 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "bobzhang/mermaid/internal/d3"
+package "moonbit-community/mermaid/internal/d3"
 
 import {
-  "bobzhang/mermaid/internal/dom",
-  "bobzhang/mermaid/internal/jsdate",
+  "moonbit-community/mermaid/internal/dom",
+  "moonbit-community/mermaid/internal/jsdate",
   "moonbitlang/core/debug",
 }
 

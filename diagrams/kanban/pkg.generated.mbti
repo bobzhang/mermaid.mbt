@@ -1,10 +1,10 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "bobzhang/mermaid/diagrams/kanban"
+package "moonbit-community/mermaid/diagrams/kanban"
 
 import {
-  "bobzhang/mermaid/config",
-  "bobzhang/mermaid/diagram",
-  "bobzhang/mermaid/theme",
+  "moonbit-community/mermaid/config",
+  "moonbit-community/mermaid/diagram",
+  "moonbit-community/mermaid/theme",
   "moonbitlang/core/debug",
 }
 

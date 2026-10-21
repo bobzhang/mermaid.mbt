@@ -1,9 +1,9 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "bobzhang/mermaid/diagrams/railroad"
+package "moonbit-community/mermaid/diagrams/railroad"
 
 import {
-  "bobzhang/mermaid/config",
-  "bobzhang/mermaid/diagram",
+  "moonbit-community/mermaid/config",
+  "moonbit-community/mermaid/diagram",
   "moonbitlang/core/debug",
 }
 

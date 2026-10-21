@@ -1,9 +1,9 @@
 import {
-  "bobzhang/mermaid/diagram",
-  "bobzhang/mermaid/internal/dom",
-  "bobzhang/mermaid/internal/font",
-  "bobzhang/mermaid/internal/jsmath",
-  "bobzhang/mermaid/internal/langium",
+  "moonbit-community/mermaid/diagram",
+  "moonbit-community/mermaid/internal/dom",
+  "moonbit-community/mermaid/internal/font",
+  "moonbit-community/mermaid/internal/jsmath",
+  "moonbit-community/mermaid/internal/langium",
   "moonbitlang/core/double",
   "moonbitlang/core/string",
 }

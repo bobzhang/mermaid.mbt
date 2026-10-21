@@ -1,8 +1,8 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "bobzhang/mermaid/theme"
+package "moonbit-community/mermaid/theme"
 
 import {
-  "bobzhang/mermaid/internal/color",
+  "moonbit-community/mermaid/internal/color",
 }
 
 // Values

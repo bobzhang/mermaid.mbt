@@ -1,9 +1,9 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "bobzhang/mermaid/diagrams/c4"
+package "moonbit-community/mermaid/diagrams/c4"
 
 import {
-  "bobzhang/mermaid/config",
-  "bobzhang/mermaid/diagram",
+  "moonbit-community/mermaid/config",
+  "moonbit-community/mermaid/diagram",
   "moonbitlang/core/debug",
 }
 

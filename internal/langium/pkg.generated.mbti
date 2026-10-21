@@ -1,8 +1,8 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "bobzhang/mermaid/internal/langium"
+package "moonbit-community/mermaid/internal/langium"
 
 import {
-  "bobzhang/mermaid/internal/jsregex",
+  "moonbit-community/mermaid/internal/jsregex",
   "moonbitlang/core/debug",
 }
 

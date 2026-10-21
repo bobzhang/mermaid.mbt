@@ -1,10 +1,10 @@
 import {
-  "bobzhang/mermaid/diagram",
-  "bobzhang/mermaid/internal/d3",
-  "bobzhang/mermaid/internal/dom",
-  "bobzhang/mermaid/internal/journeycommon",
-  "bobzhang/mermaid/internal/langium",
-  "bobzhang/mermaid/theme",
+  "moonbit-community/mermaid/diagram",
+  "moonbit-community/mermaid/internal/d3",
+  "moonbit-community/mermaid/internal/dom",
+  "moonbit-community/mermaid/internal/journeycommon",
+  "moonbit-community/mermaid/internal/langium",
+  "moonbit-community/mermaid/theme",
   "moonbitlang/core/double",
 }
 

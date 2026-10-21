@@ -1,8 +1,8 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "bobzhang/mermaid/internal/swimlane/post"
+package "moonbit-community/mermaid/internal/swimlane/post"
 
 import {
-  "bobzhang/mermaid/internal/swimlane/model",
+  "moonbit-community/mermaid/internal/swimlane/model",
 }
 
 // Values

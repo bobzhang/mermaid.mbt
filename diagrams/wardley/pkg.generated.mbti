@@ -1,8 +1,8 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "bobzhang/mermaid/diagrams/wardley"
+package "moonbit-community/mermaid/diagrams/wardley"
 
 import {
-  "bobzhang/mermaid/diagram",
+  "moonbit-community/mermaid/diagram",
   "moonbitlang/core/debug",
 }
 

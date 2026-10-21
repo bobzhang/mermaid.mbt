@@ -1,5 +1,5 @@
 import {
-  "bobzhang/mermaid/internal/graphlib",
+  "moonbit-community/mermaid/internal/graphlib",
   "moonbitlang/core/double",
 }
 

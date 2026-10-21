@@ -1,11 +1,11 @@
 import {
-  "bobzhang/mermaid/config",
-  "bobzhang/mermaid/diagram",
-  "bobzhang/mermaid/diagrams/flowchart",
-  "bobzhang/mermaid/theme",
-  "bobzhang/mermaid/internal/jison",
-  "bobzhang/mermaid/internal/jsregex",
-  "bobzhang/mermaid/internal/rendering",
+  "moonbit-community/mermaid/config",
+  "moonbit-community/mermaid/diagram",
+  "moonbit-community/mermaid/diagrams/flowchart",
+  "moonbit-community/mermaid/theme",
+  "moonbit-community/mermaid/internal/jison",
+  "moonbit-community/mermaid/internal/jsregex",
+  "moonbit-community/mermaid/internal/rendering",
 }
 
 warnings = "-implicit_impl_as_method"

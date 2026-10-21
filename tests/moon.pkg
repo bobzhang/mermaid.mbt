@@ -1,5 +1,5 @@
 import {
-  "bobzhang/mermaid",
+  "moonbit-community/mermaid",
   "moonbitlang/core/encoding/utf8",
   "moonbitlang/core/json",
   "moonbitlang/x/fs",

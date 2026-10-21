@@ -1,7 +1,7 @@
 import {
-  "bobzhang/mermaid/internal/d3",
-  "bobzhang/mermaid/internal/jsmath",
-  "bobzhang/mermaid/internal/swimlane/model",
+  "moonbit-community/mermaid/internal/d3",
+  "moonbit-community/mermaid/internal/jsmath",
+  "moonbit-community/mermaid/internal/swimlane/model",
   "moonbitlang/core/double",
 }
 

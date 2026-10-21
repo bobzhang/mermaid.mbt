@@ -1,9 +1,9 @@
 import {
-  "bobzhang/mermaid/config",
-  "bobzhang/mermaid/internal/dom",
-  "bobzhang/mermaid/internal/font",
-  "bobzhang/mermaid/internal/journeycommon",
-  "bobzhang/mermaid/theme",
+  "moonbit-community/mermaid/config",
+  "moonbit-community/mermaid/internal/dom",
+  "moonbit-community/mermaid/internal/font",
+  "moonbit-community/mermaid/internal/journeycommon",
+  "moonbit-community/mermaid/theme",
   "moonbitlang/core/double",
   "moonbitlang/core/string",
 }

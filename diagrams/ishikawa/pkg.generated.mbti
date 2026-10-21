@@ -1,9 +1,9 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "bobzhang/mermaid/diagrams/ishikawa"
+package "moonbit-community/mermaid/diagrams/ishikawa"
 
 import {
-  "bobzhang/mermaid/diagram",
-  "bobzhang/mermaid/theme",
+  "moonbit-community/mermaid/diagram",
+  "moonbit-community/mermaid/theme",
   "moonbitlang/core/debug",
 }
 

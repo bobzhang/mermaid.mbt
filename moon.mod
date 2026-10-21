@@ -1,10 +1,10 @@
-name = "bobzhang/mermaid"
+name = "moonbit-community/mermaid"
 
-version = "0.1.2"
+version = "0.2.0"
 
 readme = "README.mbt.md"
 
-repository = "https://github.com/bobzhang/mermaid.mbt"
+repository = "https://github.com/moonbit-community/mermaid.mbt"
 
 license = "MIT"
 

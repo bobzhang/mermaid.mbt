@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "bobzhang/mermaid/internal/jsdate"
+package "moonbit-community/mermaid/internal/jsdate"
 
 // Values
 pub fn time_clip(Double) -> Double
