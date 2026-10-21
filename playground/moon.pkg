@@ -1,5 +1,5 @@
 import {
-  "bobzhang/mermaid" @lib,
+  "moonbit-community/mermaid" @lib,
   "moonbitlang/core/json",
 }
 

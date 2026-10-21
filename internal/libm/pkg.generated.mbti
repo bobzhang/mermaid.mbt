@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "bobzhang/mermaid/internal/libm"
+package "moonbit-community/mermaid/internal/libm"
 
 // Values
 pub fn atan2f(Float, Float) -> Float

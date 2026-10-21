@@ -1,6 +1,6 @@
 import {
-  "bobzhang/mermaid/internal/jsdate",
-  "bobzhang/mermaid/internal/jsregex",
+  "moonbit-community/mermaid/internal/jsdate",
+  "moonbit-community/mermaid/internal/jsregex",
   "moonbitlang/core/double",
 }
 

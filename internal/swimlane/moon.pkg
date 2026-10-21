@@ -1,9 +1,9 @@
 import {
-  "bobzhang/mermaid/internal/swimlane/layering",
-  "bobzhang/mermaid/internal/swimlane/model",
-  "bobzhang/mermaid/internal/swimlane/post",
-  "bobzhang/mermaid/internal/swimlane/rendered",
-  "bobzhang/mermaid/internal/swimlane/router",
+  "moonbit-community/mermaid/internal/swimlane/layering",
+  "moonbit-community/mermaid/internal/swimlane/model",
+  "moonbit-community/mermaid/internal/swimlane/post",
+  "moonbit-community/mermaid/internal/swimlane/rendered",
+  "moonbit-community/mermaid/internal/swimlane/router",
 }
 
 warnings = "-implicit_impl_as_method"

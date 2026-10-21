@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "bobzhang/mermaid/internal/chevrotain"
+package "moonbit-community/mermaid/internal/chevrotain"
 
 import {
   "moonbitlang/core/debug",

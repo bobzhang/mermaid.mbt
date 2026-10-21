@@ -1,8 +1,8 @@
 import {
   "moonbitlang/core/string",
-  "bobzhang/mermaid/internal/d3",
-  "bobzhang/mermaid/internal/dom",
-  "bobzhang/mermaid/internal/jsmath",
+  "moonbit-community/mermaid/internal/d3",
+  "moonbit-community/mermaid/internal/dom",
+  "moonbit-community/mermaid/internal/jsmath",
 }
 
 warnings = "-implicit_impl_as_method"

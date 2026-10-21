@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "bobzhang/mermaid/internal/dagre"
+package "moonbit-community/mermaid/internal/dagre"
 
 import {
   "moonbitlang/core/debug",

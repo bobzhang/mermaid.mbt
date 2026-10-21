@@ -1,9 +1,9 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "bobzhang/mermaid/diagrams/info"
+package "moonbit-community/mermaid/diagrams/info"
 
 import {
-  "bobzhang/mermaid/diagram",
-  "bobzhang/mermaid/internal/langium",
+  "moonbit-community/mermaid/diagram",
+  "moonbit-community/mermaid/internal/langium",
 }
 
 // Values

@@ -1,11 +1,11 @@
 import {
-  "bobzhang/mermaid/config",
-  "bobzhang/mermaid/diagram",
-  "bobzhang/mermaid/internal/chevrotain",
-  "bobzhang/mermaid/internal/dom",
-  "bobzhang/mermaid/internal/font",
-  "bobzhang/mermaid/internal/jsregex",
-  "bobzhang/mermaid/internal/rendering",
+  "moonbit-community/mermaid/config",
+  "moonbit-community/mermaid/diagram",
+  "moonbit-community/mermaid/internal/chevrotain",
+  "moonbit-community/mermaid/internal/dom",
+  "moonbit-community/mermaid/internal/font",
+  "moonbit-community/mermaid/internal/jsregex",
+  "moonbit-community/mermaid/internal/rendering",
   "moonbitlang/core/string",
 }
 

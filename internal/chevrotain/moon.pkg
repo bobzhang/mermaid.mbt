@@ -1,5 +1,5 @@
 import {
-  "bobzhang/mermaid/internal/jsregex",
+  "moonbit-community/mermaid/internal/jsregex",
 }
 
 warnings = "-implicit_impl_as_method"

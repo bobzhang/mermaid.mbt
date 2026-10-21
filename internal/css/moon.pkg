@@ -1,5 +1,5 @@
 import {
-  "bobzhang/mermaid/internal/dom",
+  "moonbit-community/mermaid/internal/dom",
   "moonbitlang/core/double",
   "moonbitlang/core/math",
   "moonbitlang/core/string",

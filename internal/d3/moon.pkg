@@ -1,11 +1,11 @@
 import {
-  "bobzhang/mermaid/internal/jsregex",
+  "moonbit-community/mermaid/internal/jsregex",
   "moonbitlang/core/double",
-  "bobzhang/mermaid/internal/jsmath",
+  "moonbit-community/mermaid/internal/jsmath",
   "moonbitlang/core/cmp",
   "moonbitlang/core/string",
-  "bobzhang/mermaid/internal/dom",
-  "bobzhang/mermaid/internal/jsdate",
+  "moonbit-community/mermaid/internal/dom",
+  "moonbit-community/mermaid/internal/jsdate",
 }
 
 warnings = "-implicit_impl_as_method"

@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "bobzhang/mermaid/internal/font"
+package "moonbit-community/mermaid/internal/font"
 
 import {
   "moonbitlang/core/debug",

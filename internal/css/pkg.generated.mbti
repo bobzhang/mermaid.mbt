@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "bobzhang/mermaid/internal/css"
+package "moonbit-community/mermaid/internal/css"
 
 import {
   "moonbitlang/core/debug",

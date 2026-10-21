@@ -1,9 +1,9 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "bobzhang/mermaid/diagrams/xychart"
+package "moonbit-community/mermaid/diagrams/xychart"
 
 import {
-  "bobzhang/mermaid/diagram",
-  "bobzhang/mermaid/internal/journeycommon",
+  "moonbit-community/mermaid/diagram",
+  "moonbit-community/mermaid/internal/journeycommon",
   "moonbitlang/core/debug",
 }
 

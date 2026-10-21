@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "bobzhang/mermaid/internal/fcose"
+package "moonbit-community/mermaid/internal/fcose"
 
 import {
   "moonbitlang/core/debug",

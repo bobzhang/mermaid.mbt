@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "bobzhang/mermaid/internal/jsregex"
+package "moonbit-community/mermaid/internal/jsregex"
 
 import {
   "moonbitlang/core/debug",

@@ -1,8 +1,8 @@
 import {
-  "bobzhang/mermaid/internal/dom",
-  "bobzhang/mermaid/internal/font",
-  "bobzhang/mermaid/internal/jsregex",
-  "bobzhang/mermaid/theme",
+  "moonbit-community/mermaid/internal/dom",
+  "moonbit-community/mermaid/internal/font",
+  "moonbit-community/mermaid/internal/jsregex",
+  "moonbit-community/mermaid/theme",
   "moonbitlang/core/double",
   "moonbitlang/core/string",
 }
@@ -10,6 +10,6 @@ import {
 warnings = "-implicit_impl_as_method"
 
 import {
-  "bobzhang/mermaid/internal/font",
-  "bobzhang/mermaid/theme",
+  "moonbit-community/mermaid/internal/font",
+  "moonbit-community/mermaid/theme",
 } for "test"

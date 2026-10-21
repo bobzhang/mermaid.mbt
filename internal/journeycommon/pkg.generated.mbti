@@ -1,9 +1,9 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "bobzhang/mermaid/internal/journeycommon"
+package "moonbit-community/mermaid/internal/journeycommon"
 
 import {
-  "bobzhang/mermaid/internal/font",
-  "bobzhang/mermaid/theme",
+  "moonbit-community/mermaid/internal/font",
+  "moonbit-community/mermaid/theme",
   "moonbitlang/core/debug",
 }
 

@@ -1,8 +1,8 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "bobzhang/mermaid/internal/rough"
+package "moonbit-community/mermaid/internal/rough"
 
 import {
-  "bobzhang/mermaid/internal/dom",
+  "moonbit-community/mermaid/internal/dom",
 }
 
 // Values

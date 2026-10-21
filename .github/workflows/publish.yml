@@ -1,0 +1,91 @@
+name: publish
+
+# Publishes moonbit-community/mermaid to mooncakes.io, from main only.
+# Needs the organization secret MOONCAKES_MOONBIT_COMMUNITY_TOKEN: the
+# contents of ~/.moon/credentials.json of an account allowed to publish
+# moonbit-community modules (`moon login`).
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Validate the package without publishing it
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-mooncakes
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: require main
+        run: |
+          test "$GITHUB_REF" = "refs/heads/main" || { echo "::error::publish from main"; exit 1; }
+
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: install moon
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> $GITHUB_PATH
+
+      - name: moon version
+        run: |
+          moon version --all
+          moon update
+
+      # the same gate as the check workflow, on exactly what gets published
+      - name: validate
+        run: |
+          set -euo pipefail
+          moon check --deny-warn --target wasm-gc
+          moon check --deny-warn --target native
+          moon check --deny-warn --target js
+          moon fmt
+          git diff --exit-code
+          moon info
+          git diff --exit-code
+          moon test --target wasm-gc
+          moon test --target native
+          moon test --target js
+
+      - name: version not yet published
+        run: |
+          set -euo pipefail
+          name=$(sed -n 's/^name = "\(.*\)"$/\1/p' moon.mod)
+          version=$(sed -n 's/^version = "\(.*\)"$/\1/p' moon.mod)
+          published=$(curl -fsSL "https://mooncakes.io/api/v0/modules/$name" | jq -r '.version // empty' || true)
+          echo "$name: moon.mod $version, mooncakes ${published:-none}"
+          test "$version" != "$published" || { echo "::error::$name $version is already published; bump version in moon.mod"; exit 1; }
+
+      - name: publish
+        env:
+          SECRET: ${{ secrets.MOONCAKES_MOONBIT_COMMUNITY_TOKEN }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          test -n "$SECRET" || { echo "::error::missing secret MOONCAKES_MOONBIT_COMMUNITY_TOKEN; an organization admin must grant this repository access"; exit 1; }
+          mkdir -p "$HOME/.moon"
+          trap 'rm -f "$HOME/.moon/credentials.json"' EXIT
+          (umask 077; printf '%s\n' "$SECRET" > "$HOME/.moon/credentials.json")
+          if [ "$DRY_RUN" = "true" ]; then
+            log="$RUNNER_TEMP/dry-run.log"
+            if moon publish --dry-run > "$log" 2>&1; then
+              cat "$log"
+            else
+              cat "$log"
+              # Some moon versions treat the registry's HTTP 202 as an error;
+              # accept only its explicit dry-run success.
+              grep -Fq 'Dry run completed successfully' "$log"
+            fi
+          else
+            moon publish
+          fi
